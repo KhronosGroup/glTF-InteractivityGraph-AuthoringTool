@@ -29,6 +29,6 @@ export class Dot extends BehaveEngineNode {
                 throw Error("Invalid type")
         }
 
-        return {id: "val", value: val, type: typeIndexA}
+        return {id: "val", value: val, type: this.getTypeIndex('float')}
     }
 }

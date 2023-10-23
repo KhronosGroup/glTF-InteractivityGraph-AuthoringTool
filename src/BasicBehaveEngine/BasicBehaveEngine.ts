@@ -52,6 +52,7 @@ import {SquareRoot} from "./nodes/math/exponential/SquareRoot";
 import {CubeRoot} from "./nodes/math/exponential/CubeRoot";
 import {Random} from "./nodes/experimental/Random";
 import {LessThan} from "./nodes/experimental/LessThan";
+import {Dot} from "./nodes/math/vector/Dot";
 
 
 export interface ICustomEventListener {
@@ -268,6 +269,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/cbrt", CubeRoot);
         this.registerBehaveEngineNode("math/random", Random);
         this.registerBehaveEngineNode("math/lessThan", LessThan);
+        this.registerBehaveEngineNode("math/dot", Dot);
     }
 
     protected validateGraph = (behaviorGraph: any) => {
@@ -322,13 +324,13 @@ export class BasicBehaveEngine implements IBehaveEngine {
             const timeSinceLastTick = timeNow - this.lastTickTime;
             if (timeSinceLastTick > 1000 / this.fps) {
                 const tickFlow: IFlow = {node: this.nodes[this.onTickNodeIndex].id, id: "tick"}
-                this.addEventToWorkQueue(tickFlow)
                 this.lastTickTime = timeNow;
+                this.addEventToWorkQueue(tickFlow)
             } else {
                 setTimeout(() => {
                     const tickFlow: IFlow = {node: this.nodes[this.onTickNodeIndex].id, id: "tick"}
-                    this.addEventToWorkQueue(tickFlow)
                     this.lastTickTime = timeNow;
+                    this.addEventToWorkQueue(tickFlow)
                 }, 1000 / this.fps - timeSinceLastTick)
             }
         }

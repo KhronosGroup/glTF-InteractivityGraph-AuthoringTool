@@ -109,7 +109,13 @@ export const worldNodeSpecs: IAuthoringNode[] = [
                 {
                     id: "a",
                     description: "The value to set",
-                    types: ["int", "float", "float3", "bool"]
+                    types: [
+                        "int",
+                        "float",
+                        "float3",
+                        "float4",
+                        "bool"
+                    ]
                 }
             ]
         },
@@ -155,8 +161,9 @@ export const worldNodeSpecs: IAuthoringNode[] = [
                     id: "a",
                     types: [
                         "int",
+                        "float",
                         "float3",
-                        "float"
+                        "float4"
                     ],
                     description: "Target value to set"
                 }

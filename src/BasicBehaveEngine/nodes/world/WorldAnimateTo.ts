@@ -59,8 +59,7 @@ export class WorldAnimateTo extends BehaveEngineNode {
         const requiredVals = this.evaluateAllValues([...this.REQUIRED_VALUES].map(val => val.id));
         const populatedPath = this.populatePath(this._path, configVals)
         const targetValue = requiredVals.a;
-        console.log("ANIMATE");
-        console.log(targetValue)
+
         this.graphEngine.processNodeStarted(this)
 
         if (this.graphEngine.isValidJsonPtr(populatedPath)) {

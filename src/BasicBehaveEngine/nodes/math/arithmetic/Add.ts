@@ -35,10 +35,6 @@ export class Add extends BehaveEngineNode {
             default:
                 throw Error("Invalid type")
         }
-        console.log("ADD")
-        console.log(a)
-        console.log(b)
-        console.log(val)
 
         return {id: "val", value: val, type: typeIndexA}
     }

@@ -156,10 +156,10 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
             }
 
             if (props.node.type === "world/set" || props.node.type === "world/animateTo") {
-                setInputValues([...inputValues, {id: "a", types: ["int", "float", "float3", "bool"], description: "Target value to set"}]);
+                setInputValues([...inputValues, {id: "a", types: ["int", "float", "float3", "float4", "bool"], description: "Target value to set"}]);
             } else if (props.node.type === "world/get") {
                 setInputValues(inputValues);
-                setOutputValues([...outputValues, {id: "value", types: ["int", "float", "float3", "bool"], description: "Output value of getting"}])
+                setOutputValues([...outputValues, {id: "value", types: ["int", "float", "float3", "float4", "bool"], description: "Output value of getting"}])
             }
         } else if (props.data.configuration.variable !== undefined) {
             const variableId: number = JSON.parse(props.data.configuration.variable);

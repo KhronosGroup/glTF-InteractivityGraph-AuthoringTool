@@ -111,7 +111,6 @@ export class BehaveEngineNode {
      * @param flowSocket - The socket associated with the flow (optional).
      */
     public processNode(flowSocket?: string): any {
-        console.log(`DOING: ${this.name}`);
         if (this.flows !== undefined && this.flows.out !== undefined) {
             this.processFlow(this.flows.out);
         }
@@ -211,12 +210,13 @@ export class BehaveEngineNode {
                 //socket has already been evaluated so return it
                 valueToReturn = dependentNode.outValues[val.socket!].value;
                 typeIndex = dependentNode.outValues[val.socket!].type;
+                this.values[val.id] = {...this.values[val.id], type: typeIndex};
             } else {
                 //this node has not been evaluated yet, so we need to process it in order to get the output
                 const dependentValue = dependentNode.processNode();
-                this.values[val.id] = {...this.values[val.id], type: dependentValue.type};
                 typeIndex = dependentValue.type
                 valueToReturn = dependentValue.value
+                this.values[val.id] = {...this.values[val.id], type: dependentValue.type};
             }
             this.graphEngine.addEntryToValueEvaluationCache(`${val.node}-${val.socket}`, {id: val.socket!, value: valueToReturn, type: typeIndex});
             return valueToReturn;

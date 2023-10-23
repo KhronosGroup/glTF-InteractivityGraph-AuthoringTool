@@ -18,7 +18,6 @@ export class Send extends BehaveEngineNode {
         this.graphEngine.clearValueEvaluationCache();
         const vals = this.evaluateAllValues([...customEventDesc.values].map(val => val.id));
         this.graphEngine.processNodeStarted(this);
-        console.log(`Sending ${this.values}`);
 
         const e = new CustomEvent(`KHR_INTERACTIVITY:${customEventDesc.id}`, {detail: vals});
         document.dispatchEvent(e);

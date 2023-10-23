@@ -37,7 +37,6 @@ export class BabylonDecorator extends ADecorator {
     animateProperty = (type: string, path: string, easingType: string, easingDuration: number, initialValue: any, targetValue: any, callback: () => void) => {
         const startTime = Date.now();
 
-
         const action = async () => {
             const elapsedDuration = (Date.now() - startTime) / 1000;
             const t = Math.min(elapsedDuration / easingDuration, 1);

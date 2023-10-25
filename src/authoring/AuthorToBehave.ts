@@ -1,12 +1,12 @@
-import { Edge, Node } from "reactflow";
+import {Edge, Node} from "reactflow";
 import {
+    authoringNodeSpecs,
     IAuthoringNode,
     ICustomEvent,
     IFlowSocketDescriptor,
-    authoringNodeSpecs,
+    IVariable,
     standardTypes
 } from "./AuthoringNodeSpecs";
-import {IVariable} from "./AuthoringNodeSpecs";
 
 /**
  * Converts authoring data to Behave graph format.
@@ -40,14 +40,16 @@ export const authorToBehave = (nodes: Node[], edges: Edge[], customEvents: ICust
             }, // Metadata is left in for ease of placing nodes when re-imported to authoring, but is not part of the spec
         };
 
+        const nodeSpec = authoringNodeSpecs.find((nodeSpec: IAuthoringNode) => nodeSpec.type === node.type)!
+
         // embed configuration
         if (node.data.configuration !== undefined) {
             Object.entries(node.data.configuration).forEach(([key, value]) => {
-                behaveNode.configuration.push({id: key, value: value as string})
+                const configEntry = nodeSpec.configuration.find(config => config.id === key);
+                const configVal = castParameter(value, configEntry!.type);
+                behaveNode.configuration.push({id: key, value: configVal})
             });
         }
-
-        const nodeSpec = authoringNodeSpecs.find((nodeSpec: IAuthoringNode) => nodeSpec.type === node.type)!
 
         // for all the inlined values (i.e. does not reference the outValue of another node) embed the value into the graph
         if (node.data.values !== undefined) {
@@ -129,7 +131,7 @@ const isNullish = (value: any): boolean => value === undefined || value === null
 const castParameter = (value: any, signature: string) => {
     switch (signature) {
         case "bool":
-            return value === "true";
+            return value === "true" || value === true;
         case "int":
         case "float":
             return Number(value);
@@ -137,12 +139,18 @@ const castParameter = (value: any, signature: string) => {
         case "float3":
         case "float4":
         case "float4x4":
-            return value
+            return typeof value === "string" ? stringToListOfNumbers(value) : value
         case "AMZN_interactivity_string":
             return String(value)
         default:
             return String(value)
     }
+}
+
+const stringToListOfNumbers = (inputString: string) => {
+    const numberStrings = inputString.split(',');
+
+    return numberStrings.map(numberString => parseFloat(numberString));
 }
 
 const topologicalSort = (nodes: any[]) => {

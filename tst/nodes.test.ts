@@ -98,7 +98,7 @@ describe('nodes', () => {
         const receive: Receive = new Receive({
             ...defaultProps,
             configuration: [{ id: 'customEvent', value: 0 }],
-            customEvents: [{ id: 'testCustomEvent', values: [{ id: 'text' , type: 7}] }],
+            customEvents: [{ id: 'testCustomEvent', values: [{ id: 'text', type: 7 }] }],
             flows: [{ id: 'out' }],
         });
         await new Promise((resolve) => setTimeout(resolve, 500));
@@ -113,7 +113,7 @@ describe('nodes', () => {
         const send: Send = new Send({
             ...defaultProps,
             configuration: [{ id: 'customEvent', value: 0 }],
-            customEvents: [{ id: 'testCustomEvent', values: [{ id: 'text', type: 7 }] }],
+            customEvents: [{ id: 'testCustomEvent', values: [{ id: 'text' }] }],
             values: [{ id: 'text', value: 'test', type: 7}],
         });
 
@@ -401,7 +401,8 @@ describe('nodes', () => {
             (path, value) => {
                 const parts: string[] = path.split('/');
                 world.nodes[Number(parts[1])].value = value;
-            }, "float"
+            },
+            "float"
         );
 
         const res  = worldGet.processNode();
@@ -427,7 +428,8 @@ describe('nodes', () => {
             (path, value) => {
                 const parts: string[] = path.split('/');
                world.nodes[Number(parts[1])].value = value;
-            }, "float"
+            },
+            "float"
         );
         const worldSet: WorldSet = new WorldSet({
             ...defaultProps,
@@ -456,7 +458,8 @@ describe('nodes', () => {
             (path, value) => {
                 const parts: string[] = path.split('/');
                 world.nodes[Number(parts[1])].value = value;
-            }, "float"
+            },
+            "float"
         );
         const worldAnimateTo: WorldAnimateTo = new WorldAnimateTo({
             ...defaultProps,
@@ -466,7 +469,7 @@ describe('nodes', () => {
                 { id: "easingType", value: "linear"}
             ],
             values: [
-                { id: 'index', value: 0 , type: 1},
+                { id: 'index', value: 0, type: 1 },
                 { id: 'a', value: 42, type: 2 },
             ],
         });
@@ -538,7 +541,7 @@ describe('nodes', () => {
         abs = new AbsoluteValue({
             ...defaultProps,
             values: [
-                {id: 'a', value: "[-10, 12, -20]" , type: 4}
+                {id: 'a', value: [-10, 12, -20] , type: 4}
             ]
         });
 
@@ -562,7 +565,7 @@ describe('nodes', () => {
         sign = new Sign({
             ...defaultProps,
             values: [
-                {id: 'a', value: "[-10, 0, 10]" , type: 4}
+                {id: 'a', value: [-10, 0, 10] , type: 4}
             ]
         });
 
@@ -586,7 +589,7 @@ describe('nodes', () => {
         trunc = new Truncate({
             ...defaultProps,
             values: [
-                {id: 'a', value: "[-10.123, 0.493, 10.12]" , type: 4}
+                {id: 'a', value: [-10.123, 0.493, 10.12] , type: 4}
             ]
         });
 
@@ -610,7 +613,7 @@ describe('nodes', () => {
         floor = new Floor({
             ...defaultProps,
             values: [
-                {id: 'a', value: "[-10.123, 0.493, 10.12]" , type: 4}
+                {id: 'a', value: [-10.123, 0.493, 10.12] , type: 4}
             ]
         });
 
@@ -634,7 +637,7 @@ describe('nodes', () => {
         ceil = new Ceil({
             ...defaultProps,
             values: [
-                {id: 'a', value: "[-10.123, 0.493, 10.12]" , type: 4}
+                {id: 'a', value: [-10.123, 0.493, 10.12] , type: 4}
             ]
         });
 
@@ -659,8 +662,8 @@ describe('nodes', () => {
         add = new Add({
             ...defaultProps,
             values: [
-                {id: 'a', value: "[-10.5, 0.5, 9]" , type: 4},
-                {id: 'b', value: "[4, -6, 10]" , type: 4}
+                {id: 'a', value: [-10.5, 0.5, 9] , type: 4},
+                {id: 'b', value: [4, -6, 10] , type: 4}
             ]
         });
 
@@ -685,8 +688,8 @@ describe('nodes', () => {
         sub = new Subtract({
             ...defaultProps,
             values: [
-                {id: 'a', value: "[-10.5, 0.5, 9]" , type: 4},
-                {id: 'b', value: "[4, -6, 10]" , type: 4}
+                {id: 'a', value: [-10.5, 0.5, 9] , type: 4},
+                {id: 'b', value: [4, -6, 10] , type: 4}
             ]
         });
 
@@ -711,8 +714,8 @@ describe('nodes', () => {
         mul = new Multiply({
             ...defaultProps,
             values: [
-                {id: 'a', value: "[-10, -0.5, 9]" , type: 4},
-                {id: 'b', value: "[5, -6, 10]" , type: 4}
+                {id: 'a', value: [-10, -0.5, 9], type: 4},
+                {id: 'b', value: [5, -6, 10], type: 4}
             ]
         });
 
@@ -737,8 +740,8 @@ describe('nodes', () => {
         div = new Divide({
             ...defaultProps,
             values: [
-                {id: 'a', value: "[0, -6, 9]" , type: 4},
-                {id: 'b', value: "[-5, -0.5, 0]" , type: 4}
+                {id: 'a', value: [0, -6, 9] , type: 4},
+                {id: 'b', value: [-5, -0.5, 0] , type: 4}
             ]
         });
 
@@ -763,8 +766,8 @@ describe('nodes', () => {
         rem = new Remainder({
             ...defaultProps,
             values: [
-                {id: 'a', value: "[-10, 10, 9]" , type: 4},
-                {id: 'b', value: "[5, 6, 10]" , type: 4}
+                {id: 'a', value: [-10, 10, 9] , type: 4},
+                {id: 'b', value: [5, 6, 10] , type: 4}
             ]
         });
 
@@ -789,8 +792,8 @@ describe('nodes', () => {
         max = new Max({
             ...defaultProps,
             values: [
-                {id: 'a', value: "[-10, 10, -9]" , type: 4},
-                {id: 'b', value: "[5, 6, -10]" , type: 4}
+                {id: 'a', value: [-10, 10, -9] , type: 4},
+                {id: 'b', value: [5, 6, -10] , type: 4}
             ]
         });
 
@@ -815,8 +818,8 @@ describe('nodes', () => {
         min = new Min({
             ...defaultProps,
             values: [
-                {id: 'a', value: "[-10, 10, -9]" , type: 4},
-                {id: 'b', value: "[5, 6, -10]" , type: 4}
+                {id: 'a', value: [-10, 10, -9] , type: 4},
+                {id: 'b', value: [5, 6, -10] , type: 4}
             ]
         });
 
@@ -840,7 +843,7 @@ describe('nodes', () => {
         rad = new DegreeToRadians({
             ...defaultProps,
             values: [
-                {id: 'a', value: "[-180, 45, 270]" , type: 4}
+                {id: 'a', value: [-180, 45, 270] , type: 4}
             ]
         });
 
@@ -864,7 +867,7 @@ describe('nodes', () => {
         deg = new RadiansToDegrees({
             ...defaultProps,
             values: [
-                {id: 'a', value: `[${Math.PI * 2}, ${-Math.PI}, ${Math.PI * 4}]` , type: 4}
+                {id: 'a', value: [Math.PI * 2, -Math.PI, Math.PI * 4] , type: 4}
             ]
         });
 
@@ -888,7 +891,7 @@ describe('nodes', () => {
         sin = new Sine({
             ...defaultProps,
             values: [
-                {id: 'a', value: `[${Math.PI * 2}, ${-Math.PI/2}, ${Math.PI/2}]` , type: 4}
+                {id: 'a', value: [Math.PI * 2, -Math.PI/2, Math.PI/2] , type: 4}
             ]
         });
 
@@ -912,7 +915,7 @@ describe('nodes', () => {
         cos = new Cosine({
             ...defaultProps,
             values: [
-                {id: 'a', value: `[${Math.PI * 2}, ${-Math.PI/2}, ${Math.PI/2}]`, type: 4}
+                {id: 'a', value: [Math.PI * 2, -Math.PI/2, Math.PI/2], type: 4}
             ]
         });
 
@@ -936,7 +939,7 @@ describe('nodes', () => {
         tan = new Tangent({
             ...defaultProps,
             values: [
-                {id: 'a', value: `[${Math.PI}, ${Math.PI / 2}, ${3 * Math.PI / 4}]`, type: 4}
+                {id: 'a', value: [Math.PI, Math.PI / 2, 3 * Math.PI / 4], type: 4}
             ]
         });
 
@@ -961,7 +964,7 @@ describe('nodes', () => {
         asin = new Arcsine({
             ...defaultProps,
             values: [
-                { id: 'a', value: `[0.86602540378, 0, -0.86602540378]`, type: 4 }
+                { id: 'a', value: [0.86602540378, 0, -0.86602540378], type: 4 }
             ]
         });
 
@@ -985,7 +988,7 @@ describe('nodes', () => {
         acos = new Arccosine({
             ...defaultProps,
             values: [
-                { id: 'a', value: `[0.86602540378, 1, -0.86602540378]`, type: 4 }
+                { id: 'a', value: [0.86602540378, 1, -0.86602540378], type: 4 }
             ]
         });
 
@@ -1009,7 +1012,7 @@ describe('nodes', () => {
         atan = new Arctangent({
             ...defaultProps,
             values: [
-                { id: 'a', value: `[0.57735026919, 0, -0.57735026919]`, type: 4 }
+                { id: 'a', value: [0.57735026919, 0, -0.57735026919], type: 4 }
             ]
         });
 
@@ -1034,8 +1037,8 @@ describe('nodes', () => {
         atan2 = new Arctangent2({
             ...defaultProps,
             values: [
-                { id: 'a', value: `[0.5, 0, -0.5]`, type: 4 },
-                { id: 'b', value: `[0.86602540378, 1, -0.86602540378]`, type: 4 },
+                { id: 'a', value: [0.5, 0, -0.5], type: 4 },
+                { id: 'b', value: [0.86602540378, 1, -0.86602540378], type: 4 },
             ]
         });
 
@@ -1059,7 +1062,7 @@ describe('nodes', () => {
         log = new Log({
             ...defaultProps,
             values: [
-                { id: 'a', value: `[1, ${Math.E}, 10]`, type: 4 }
+                { id: 'a', value: [1, Math.E, 10], type: 4 }
             ]
         });
 
@@ -1083,7 +1086,7 @@ describe('nodes', () => {
         log2 = new Log2({
             ...defaultProps,
             values: [
-                { id: 'a', value: `[1, 2, 16]`, type: 4 }
+                { id: 'a', value: [1, 2, 16], type: 4 }
             ]
         });
 
@@ -1107,7 +1110,7 @@ describe('nodes', () => {
         log10 = new Log10({
             ...defaultProps,
             values: [
-                { id: 'a', value: `[1, 10, 1000]`, type: 4 }
+                { id: 'a', value: [1, 10, 1000], type: 4 }
             ]
         });
 
@@ -1131,7 +1134,7 @@ describe('nodes', () => {
         cubeRoot = new CubeRoot({
             ...defaultProps,
             values: [
-                { id: 'a', value: `[1, 27, 125]`, type: 4 }
+                { id: 'a', value: [1, 27, 125], type: 4 }
             ]
         });
 
@@ -1155,7 +1158,7 @@ describe('nodes', () => {
         sqrt = new SquareRoot({
             ...defaultProps,
             values: [
-                { id: 'a', value: `[1, 4, 9]`, type: 4}
+                { id: 'a', value: [1, 4, 9], type: 4}
             ]
         });
 
@@ -1180,8 +1183,8 @@ describe('nodes', () => {
         pow = new Power({
             ...defaultProps,
             values: [
-                {id: 'a', value: "[2, 0.5, 10]" , type: 4},
-                {id: 'b', value: "[-2, 3, 3]" , type: 4}
+                {id: 'a', value: [2, 0.5, 10] , type: 4},
+                {id: 'b', value: [-2, 3, 3] , type: 4}
             ]
         });
 
@@ -1205,7 +1208,7 @@ describe('nodes', () => {
         exp = new Exponential({
             ...defaultProps,
             values: [
-                {id: 'a', value: "[2, 0.5, -1]" , type: 4},
+                {id: 'a', value: [2, 0.5, -1] , type: 4},
             ]
         });
 
@@ -1231,9 +1234,9 @@ describe('nodes', () => {
         clamp = new Clamp({
             ...defaultProps,
             values: [
-                {id: 'a', value: "[-1, 0.5, 10]" , type: 4},
-                {id: 'b', value: "[0, 0, 3]" , type: 4},
-                {id: 'c', value: "[1, 1, 9]" , type: 4},
+                {id: 'a', value: [-1, 0.5, 10] , type: 4},
+                {id: 'b', value: [0, 0, 3] , type: 4},
+                {id: 'c', value: [1, 1, 9] , type: 4},
             ]
         });
 
@@ -1257,7 +1260,7 @@ describe('nodes', () => {
         saturate = new Saturate({
             ...defaultProps,
             values: [
-                {id: 'a', value: "[-1, 0.5, 10]" , type: 4},
+                {id: 'a', value: [-1, 0.5, 10] , type: 4},
             ]
         });
 
@@ -1283,9 +1286,9 @@ describe('nodes', () => {
         mix = new Interpolate({
             ...defaultProps,
             values: [
-                {id: 'a', value: "[-1, 0.5, 10]" , type: 4},
-                {id: 'b', value: "[0, 0, 0]" , type: 4},
-                {id: 'c', value: "[0.75, 0, 2]" , type: 4},
+                {id: 'a', value: [-1, 0.5, 10] , type: 4},
+                {id: 'b', value: [0, 0, 0] , type: 4},
+                {id: 'c', value: [0.75, 0, 2] , type: 4},
             ]
         });
 
@@ -1309,7 +1312,7 @@ describe('nodes', () => {
         neg = new Negate({
             ...defaultProps,
             values: [
-                {id: 'a', value: "[-1, 0.5, 10]" , type: 4},
+                {id: 'a', value: [-1, 0.5, 10] , type: 4},
             ]
         });
 
@@ -1333,7 +1336,7 @@ describe('nodes', () => {
         fract = new Fraction({
             ...defaultProps,
             values: [
-                {id: 'a', value: "[-1, 0.5, 10.11]" , type: 4},
+                {id: 'a', value: [-1, 0.5, 10.11] , type: 4},
             ]
         });
 
@@ -1357,7 +1360,7 @@ describe('nodes', () => {
         cosh = new HyperbolicCosine({
             ...defaultProps,
             values: [
-                { id: 'a', value: `[1, 0, 0.5]`, type: 4 }
+                { id: 'a', value: [1, 0, 0.5], type: 4 }
             ]
         });
 
@@ -1381,7 +1384,7 @@ describe('nodes', () => {
         sinh = new HyperbolicSine({
             ...defaultProps,
             values: [
-                { id: 'a', value: `[1, 0, 0.5]`, type: 4 }
+                { id: 'a', value: [1, 0, 0.5], type: 4 }
             ]
         });
 
@@ -1405,7 +1408,7 @@ describe('nodes', () => {
         tanh = new HyperbolicTangent({
             ...defaultProps,
             values: [
-                { id: 'a', value: `[1, 0, 0.5]`, type: 4 }
+                { id: 'a', value: [1, 0, 0.5], type: 4 }
             ]
         });
 
@@ -1429,7 +1432,7 @@ describe('nodes', () => {
         acosh = new InverseHyperbolicCosine({
             ...defaultProps,
             values: [
-                { id: 'a', value: `[1, 2, 3]`, type: 4 }
+                { id: 'a', value: [1, 2, 3], type: 4 }
             ]
         });
 
@@ -1453,7 +1456,7 @@ describe('nodes', () => {
         asinh = new InverseHyperbolicSine({
             ...defaultProps,
             values: [
-                { id: 'a', value: `[1, 2, 3]`, type: 4 }
+                { id: 'a', value: [1, 2, 3], type: 4 }
             ]
         });
 
@@ -1477,7 +1480,7 @@ describe('nodes', () => {
         atanh = new InverseHyperbolicTangent({
             ...defaultProps,
             values: [
-                { id: 'a', value: `[0.8, 0.2, 0.4]`, type: 4 }
+                { id: 'a', value: [0.8, 0.2, 0.4], type: 4 }
             ]
         });
 
@@ -1491,7 +1494,7 @@ describe('nodes', () => {
         const normalize: Normalize = new Normalize({
             ...defaultProps,
             values: [
-                { id: 'a', value: '[3.0, 4.0, 5.0]', type: 4 },
+                { id: 'a', value: [3.0, 4.0, 5.0], type: 4 },
             ]
         });
 
@@ -1508,7 +1511,7 @@ describe('nodes', () => {
         const vectorLen: VectorLength = new VectorLength({
             ...defaultProps,
             values: [
-                { id: 'a', value: '[3.0, 4.0, 5.0]', type: 4 },
+                { id: 'a', value: [3.0, 4.0, 5.0], type: 4 },
             ]
         });
 
@@ -1523,8 +1526,8 @@ describe('nodes', () => {
         const dot = new Dot({
             ...defaultProps,
             values: [
-                {id: 'a', value: "[-10.5, 0.5, 9]" , type: 4},
-                {id: 'b', value: "[4, -6, 10]" , type: 4}
+                {id: 'a', value: [-10.5, 0.5, 9] , type: 4},
+                {id: 'b', value: [4, -6, 10] , type: 4}
             ]
         });
 
@@ -1537,8 +1540,8 @@ describe('nodes', () => {
         const cross: Cross = new Cross({
             ...defaultProps,
             values: [
-                { id: 'a', value: "[2.0, 1.0, 3.0]", type: 4 },
-                { id: 'b', value: "[4.0, -2.0, 1.0]", type: 4 }
+                { id: 'a', value: [2.0, 1.0, 3.0], type: 4 },
+                { id: 'b', value: [4.0, -2.0, 1.0], type: 4 }
             ]
         });
 
@@ -1559,8 +1562,8 @@ describe('nodes', () => {
         const rotate3D: Rotate3D = new Rotate3D({
             ...defaultProps,
             values: [
-                { id: 'a', value: "[1.0, 0.0, 0.0]", type: 4 },
-                { id: 'b', value: "[0.0, 1.0, 0.0]", type: 4 },
+                { id: 'a', value: [1.0, 0.0, 0.0], type: 4 },
+                { id: 'b', value: [0.0, 1.0, 0.0], type: 4 },
                 { id: 'c', value: Math.PI / 2, type: 2 },
             ]
         });

@@ -100,13 +100,40 @@ export interface IBehaveEngine {
      */
     setPathValue: (path: string, targetValue: any) => void;
 
+    /**
+     * Retrieves the value associated with a specific path.
+     *
+     * @param {string} path - The path to the desired value.
+     * @returns {any} The value found at the specified path.
+     */
     getPathValue: (path: string) => any;
 
+    /**
+     * Retrieves the type name associated with a specific path.
+     *
+     * @param {string} path - The path to the desired type name.
+     * @returns {any} The type name found at the specified path.
+     */
     getPathtypeName: (path: string) => any;
 
+    /**
+     * Clears the cache used for value evaluations.
+     */
     clearValueEvaluationCache: () => void;
 
+    /**
+     * Adds an entry to the value evaluation cache.
+     *
+     * @param {string} key - The cache key for the entry.
+     * @param {IValue} val - The value to be cached.
+     */
     addEntryToValueEvaluationCache: (key: string, val: IValue) => void;
 
+    /**
+     * Retrieves the cached value associated with a specific key from the value evaluation cache.
+     *
+     * @param {string} key - The cache key for the desired value.
+     * @returns {IValue | undefined} The cached value or undefined if not found.
+     */
     getValueEvaluationCacheValue: (key: string) => IValue | undefined;
 }

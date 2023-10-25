@@ -17,7 +17,7 @@ describe("authoring", () => {
                         },
                         {
                             "id": "a",
-                            "value": "[1,2,3]",
+                            "value": [1,2,3],
                             "type": 3
                         }
                     ],

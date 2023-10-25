@@ -68,7 +68,7 @@ export class LoggingDecorator extends ADecorator {
             if (this.world.nodes && this.world.nodes[Number(parts[1])] && this.world.nodes[Number(parts[1])].rotation !== undefined) {
                 this.world.nodes[Number(parts[1])].rotation = value
             }
-        }, 'float3')
+        }, 'float4')
 
         this.registerJsonPointer("nodes/99/translation", (path) => {
             const parts: string[] = path.split("/");

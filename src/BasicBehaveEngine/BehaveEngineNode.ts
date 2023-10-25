@@ -262,13 +262,13 @@ export class BehaveEngineNode {
             case "float":
                 return Number(val);
             case "float2":
-                return JSON.parse(val);
+                return val;
             case "float3":
-                return JSON.parse(val);
+                return val;
             case "float4":
-                return JSON.parse(val);
+                return val;
             case "float4x4":
-                return JSON.parse(val);
+                return val;
             default:
                 return val
         }

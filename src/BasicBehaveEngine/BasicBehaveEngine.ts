@@ -313,26 +313,20 @@ export class BasicBehaveEngine implements IBehaveEngine {
     }
 
     private executeNextEvent = () => {
-        const eventToStart = this.eventQueue[0];
-        eventToStart.behaveNode.processNode(eventToStart.inSocketId);
+        while (this.eventQueue.length > 0) {
+            const eventToStart = this.eventQueue[0];
+            eventToStart.behaveNode.processNode(eventToStart.inSocketId);
+            this.eventQueue.splice(0, 1);
+        }
 
-        this.eventQueue.splice(0, 1);
-        if (this.eventQueue.length > 0) {
-            this.executeNextEvent();
-        } else if (this.onTickNodeIndex !== -1) {
+        if (this.onTickNodeIndex !== -1) {
             const timeNow = Date.now();
             const timeSinceLastTick = timeNow - this.lastTickTime;
-            if (timeSinceLastTick > 1000 / this.fps) {
+            setTimeout(() => {
                 const tickFlow: IFlow = {node: this.nodes[this.onTickNodeIndex].id, id: "tick"}
-                this.lastTickTime = timeNow;
                 this.addEventToWorkQueue(tickFlow)
-            } else {
-                setTimeout(() => {
-                    const tickFlow: IFlow = {node: this.nodes[this.onTickNodeIndex].id, id: "tick"}
-                    this.lastTickTime = timeNow;
-                    this.addEventToWorkQueue(tickFlow)
-                }, 1000 / this.fps - timeSinceLastTick)
-            }
+                this.lastTickTime = timeNow;
+            }, Math.max(1000 / this.fps - timeSinceLastTick,0))
         }
     }
 }

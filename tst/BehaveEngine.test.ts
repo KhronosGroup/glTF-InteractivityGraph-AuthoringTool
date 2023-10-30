@@ -16,57 +16,28 @@ describe('BehaveEngine', () => {
         const behaviorGraph = {
             "nodes": [
                 {
-                    "id": 3,
-                    "type": "customEvent/send",
-                    "values": [
+                    "type": "lifecycle/onStart",
+                    "values": [],
+                    "configuration": [],
+                    "flows": [
                         {
-                            "id": "float3ToSend",
-                            "type": 3,
-                            "value": "[1,2,3]"
+                            "id": "out",
+                            "node": 1,
+                            "socket": "in"
                         }
                     ],
-                    "configuration": [
-                        {
-                            "id": "customEvent",
-                            "value": "1"
-                        }
-                    ],
-                    "flows": [],
                     "metadata": {
-                        "positionX": "1617.59375",
-                        "positionY": "540.609375"
+                        "positionX": "510.59375",
+                        "positionY": "347.609375"
                     }
                 },
                 {
-                    "id": 2,
-                    "type": "customEvent/send",
-                    "values": [
-                        {
-                            "id": "number",
-                            "value": 1,
-                            "type": 1
-                        }
-                    ],
-                    "configuration": [
-                        {
-                            "id": "customEvent",
-                            "value": "0"
-                        }
-                    ],
-                    "flows": [],
-                    "metadata": {
-                        "positionX": "1536.59375",
-                        "positionY": "112.609375"
-                    }
-                },
-                {
-                    "id": 1,
                     "type": "flow/sequence",
                     "values": [],
                     "configuration": [
                         {
                             "id": "numberOutputFlows",
-                            "value": "2"
+                            "value": 2
                         }
                     ],
                     "flows": [
@@ -87,20 +58,45 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "id": 0,
-                    "type": "lifecycle/onStart",
-                    "values": [],
-                    "configuration": [],
-                    "flows": [
+                    "type": "customEvent/send",
+                    "values": [
                         {
-                            "id": "out",
-                            "node": 1,
-                            "socket": "in"
+                            "id": "number",
+                            "value": 1,
+                            "type": 1
                         }
                     ],
+                    "configuration": [
+                        {
+                            "id": "customEvent",
+                            "value": 0
+                        }
+                    ],
+                    "flows": [],
                     "metadata": {
-                        "positionX": "510.59375",
-                        "positionY": "347.609375"
+                        "positionX": "1536.59375",
+                        "positionY": "112.609375"
+                    }
+                },
+                {
+                    "type": "customEvent/send",
+                    "values": [
+                        {
+                            "id": "float3ToSend",
+                            "type": 3,
+                            "value": [1,2,3]
+                        }
+                    ],
+                    "configuration": [
+                        {
+                            "id": "customEvent",
+                            "value": 1
+                        }
+                    ],
+                    "flows": [],
+                    "metadata": {
+                        "positionX": "1617.59375",
+                        "positionY": "540.609375"
                     }
                 }
             ],
@@ -147,146 +143,29 @@ describe('BehaveEngine', () => {
         loggingBehaveEngine = new LoggingDecorator(new BasicBehaveEngine( 1), (line:string) => executionLog += line, {});
         loggingBehaveEngine.loadBehaveGraph(behaviorGraph);
         await new Promise((resolve) => setTimeout(resolve, 250));
-        expect(executionLog).toEqual("Adding {\"node\":0,\"id\":\"start\"} flow to queueRunning OnStart: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":1,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":1,\"socket\":\"in\"} flowRunning Sequence: input values: {}, output flows: {\"0\":{\"id\":\"0\",\"node\":2,\"socket\":\"in\"},\"1\":{\"id\":\"1\",\"node\":3,\"socket\":\"in\"}}Executing {\"id\":\"0\",\"node\":2,\"socket\":\"in\"} flowRunning Send: input values: {\"number\":{\"id\":\"number\",\"value\":1,\"type\":1}}, output flows: {}Executing {\"id\":\"1\",\"node\":3,\"socket\":\"in\"} flowRunning Send: input values: {\"float3ToSend\":{\"id\":\"float3ToSend\",\"type\":3,\"value\":\"[1,2,3]\"}}, output flows: {}");
+        expect(executionLog).toEqual( "Adding {\"node\":0,\"id\":\"start\"} flow to queueRunning OnStart: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":1,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":1,\"socket\":\"in\"} flowRunning Sequence: input values: {}, output flows: {\"0\":{\"id\":\"0\",\"node\":2,\"socket\":\"in\"},\"1\":{\"id\":\"1\",\"node\":3,\"socket\":\"in\"}}Executing {\"id\":\"0\",\"node\":2,\"socket\":\"in\"} flowRunning Send: input values: {\"number\":{\"id\":\"number\",\"value\":1,\"type\":1}}, output flows: {}Executing {\"id\":\"1\",\"node\":3,\"socket\":\"in\"} flowRunning Send: input values: {\"float3ToSend\":{\"id\":\"float3ToSend\",\"type\":3,\"value\":[1,2,3]}}, output flows: {}");
     });
 
     it('should execute behavior graph queue', async () => {
         const behaviorGraph = {
             "nodes": [
                 {
-                    "id": 9,
-                    "type": "world/get",
+                    "type": "lifecycle/onStart",
                     "values": [],
-                    "configuration": [
-                        {
-                            "id": "path",
-                            "value": "nodes/0/translation"
-                        }
-                    ],
-                    "flows": [],
-                    "metadata": {
-                        "positionX": "1869.6851257404824",
-                        "positionY": "-116.80364277896092"
-                    }
-                },
-                {
-                    "id": 10,
-                    "type": "customEvent/send",
-                    "values": [
-                        {
-                            "id": "float3ToLog",
-                            "node": 9,
-                            "socket": "value"
-                        }
-                    ],
-                    "configuration": [
-                        {
-                            "id": "customEvent",
-                            "value": 0
-                        }
-                    ],
-                    "flows": [],
-                    "metadata": {
-                        "positionX": "2362.8544812335363",
-                        "positionY": "-464.7354210879766"
-                    }
-                },
-                {
-                    "id": 7,
-                    "type": "world/get",
-                    "values": [],
-                    "configuration": [
-                        {
-                            "id": "path",
-                            "value": "nodes/0/rotation"
-                        }
-                    ],
-                    "flows": [],
-                    "metadata": {
-                        "positionX": "1671.7789766105834",
-                        "positionY": "-769.5747314412886"
-                    }
-                },
-                {
-                    "id": 8,
-                    "type": "customEvent/send",
-                    "values": [
-                        {
-                            "id": "float3ToLog",
-                            "node": 7,
-                            "socket": "value"
-                        }
-                    ],
-                    "configuration": [
-                        {
-                            "id": "customEvent",
-                            "value": 0
-                        }
-                    ],
-                    "flows": [],
-                    "metadata": {
-                        "positionX": "2238.3651293615035",
-                        "positionY": "-858.9517020160816"
-                    }
-                },
-                {
-                    "id": 2,
-                    "type": "world/set",
-                    "values": [
-                        {
-                            "id": "a",
-                            "value": [1.57,0,0,1],
-                            "type": 5
-                        }
-                    ],
-                    "configuration": [
-                        {
-                            "id": "path",
-                            "value": "nodes/0/rotation"
-                        }
-                    ],
+                    "configuration": [],
                     "flows": [
                         {
                             "id": "out",
-                            "node": 8,
+                            "node": 1,
                             "socket": "in"
                         }
                     ],
                     "metadata": {
-                        "positionX": "1469.0847754856063",
-                        "positionY": "-1186.1352550130919"
+                        "positionX": "54.44864077166517",
+                        "positionY": "-358.06924570662386"
                     }
                 },
                 {
-                    "id": 3,
-                    "type": "world/set",
-                    "values": [
-                        {
-                            "id": "a",
-                            "value": [10,20,30],
-                            "type": 4
-                        }
-                    ],
-                    "configuration": [
-                        {
-                            "id": "path",
-                            "value": "nodes/0/translation"
-                        }
-                    ],
-                    "flows": [
-                        {
-                            "id": "out",
-                            "node": 10,
-                            "socket": "in"
-                        }
-                    ],
-                    "metadata": {
-                        "positionX": "1462.7007061588354",
-                        "positionY": "-297.68228200136275"
-                    }
-                },
-                {
-                    "id": 1,
                     "type": "flow/sequence",
                     "values": [],
                     "configuration": [
@@ -318,45 +197,60 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "id": 5,
-                    "type": "world/get",
-                    "values": [],
+                    "type": "world/set",
+                    "values": [
+                        {
+                            "id": "a",
+                            "value": [1.57,0,0,1],
+                            "type": 5
+                        }
+                    ],
                     "configuration": [
                         {
                             "id": "path",
-                            "value": "nodes/0/scale"
+                            "value": "nodes/0/rotation"
                         }
                     ],
-                    "flows": [],
+                    "flows": [
+                        {
+                            "id": "out",
+                            "node": 8,
+                            "socket": "in"
+                        }
+                    ],
                     "metadata": {
-                        "positionX": "804.59375",
-                        "positionY": "582.609375"
+                        "positionX": "1469.0847754856063",
+                        "positionY": "-1186.1352550130919"
                     }
                 },
                 {
-                    "id": 6,
-                    "type": "customEvent/send",
+                    "type": "world/set",
                     "values": [
                         {
-                            "id": "float3ToLog",
-                            "node": 5,
-                            "socket": "value"
+                            "id": "a",
+                            "value": [10,20,30],
+                            "type": 4
                         }
                     ],
                     "configuration": [
                         {
-                            "id": "customEvent",
-                            "value": 0
+                            "id": "path",
+                            "value": "nodes/0/translation"
                         }
                     ],
-                    "flows": [],
+                    "flows": [
+                        {
+                            "id": "out",
+                            "node": 10,
+                            "socket": "in"
+                        }
+                    ],
                     "metadata": {
-                        "positionX": "1589.1812856653175",
-                        "positionY": "478.7743975698712"
+                        "positionX": "1462.7007061588354",
+                        "positionY": "-297.68228200136275"
                     }
                 },
                 {
-                    "id": 4,
                     "type": "world/set",
                     "values": [
                         {
@@ -384,20 +278,111 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "id": 0,
-                    "type": "lifecycle/onStart",
+                    "type": "world/get",
                     "values": [],
-                    "configuration": [],
-                    "flows": [
+                    "configuration": [
                         {
-                            "id": "out",
-                            "node": 1,
-                            "socket": "in"
+                            "id": "path",
+                            "value": "nodes/0/scale"
                         }
                     ],
+                    "flows": [],
                     "metadata": {
-                        "positionX": "54.44864077166517",
-                        "positionY": "-358.06924570662386"
+                        "positionX": "804.59375",
+                        "positionY": "582.609375"
+                    }
+                },
+                {
+                    "type": "customEvent/send",
+                    "values": [
+                        {
+                            "id": "float3ToLog",
+                            "node": 5,
+                            "socket": "value"
+                        }
+                    ],
+                    "configuration": [
+                        {
+                            "id": "customEvent",
+                            "value": 0
+                        }
+                    ],
+                    "flows": [],
+                    "metadata": {
+                        "positionX": "1589.1812856653175",
+                        "positionY": "478.7743975698712"
+                    }
+                },
+                {
+                    "type": "world/get",
+                    "values": [],
+                    "configuration": [
+                        {
+                            "id": "path",
+                            "value": "nodes/0/rotation"
+                        }
+                    ],
+                    "flows": [],
+                    "metadata": {
+                        "positionX": "1671.7789766105834",
+                        "positionY": "-769.5747314412886"
+                    }
+                },
+                {
+                    "type": "customEvent/send",
+                    "values": [
+                        {
+                            "id": "float3ToLog",
+                            "node": 7,
+                            "socket": "value"
+                        }
+                    ],
+                    "configuration": [
+                        {
+                            "id": "customEvent",
+                            "value": 0
+                        }
+                    ],
+                    "flows": [],
+                    "metadata": {
+                        "positionX": "2238.3651293615035",
+                        "positionY": "-858.9517020160816"
+                    }
+                },
+                {
+                    "type": "world/get",
+                    "values": [],
+                    "configuration": [
+                        {
+                            "id": "path",
+                            "value": "nodes/0/translation"
+                        }
+                    ],
+                    "flows": [],
+                    "metadata": {
+                        "positionX": "1869.6851257404824",
+                        "positionY": "-116.80364277896092"
+                    }
+                },
+                {
+                    "type": "customEvent/send",
+                    "values": [
+                        {
+                            "id": "float3ToLog",
+                            "node": 9,
+                            "socket": "value"
+                        }
+                    ],
+                    "configuration": [
+                        {
+                            "id": "customEvent",
+                            "value": 0
+                        }
+                    ],
+                    "flows": [],
+                    "metadata": {
+                        "positionX": "2362.8544812335363",
+                        "positionY": "-464.7354210879766"
                     }
                 }
             ],
@@ -471,23 +456,22 @@ describe('BehaveEngine', () => {
         const invalidNodeGraph = {
             "nodes": [
                 {
-                    "id": 2,
-                    "type": "customEvent/send",
+                    "type": "lifecycle/onStart",
                     "values": [],
-                    "configuration": [
+                    "configuration": [],
+                    "flows": [
                         {
-                            "id": "customEvent",
-                            "value": "0"
+                            "id": "out",
+                            "node": 1,
+                            "socket": "in"
                         }
                     ],
-                    "flows": [],
                     "metadata": {
-                        "positionX": "1232.59375",
-                        "positionY": "262.609375"
+                        "positionX": "220.59375",
+                        "positionY": "161.609375"
                     }
                 },
                 {
-                    "id": 1,
                     "type": "invalid/node",
                     "flows": [
                         {
@@ -502,20 +486,18 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "id": 0,
-                    "type": "lifecycle/onStart",
+                    "type": "customEvent/send",
                     "values": [],
-                    "configuration": [],
-                    "flows": [
+                    "configuration": [
                         {
-                            "id": "out",
-                            "node": 1,
-                            "socket": "in"
+                            "id": "customEvent",
+                            "value": "0"
                         }
                     ],
+                    "flows": [],
                     "metadata": {
-                        "positionX": "220.59375",
-                        "positionY": "161.609375"
+                        "positionX": "1232.59375",
+                        "positionY": "262.609375"
                     }
                 }
             ],
@@ -567,43 +549,18 @@ describe('BehaveEngine', () => {
         const mathExampleNodeGraph = {
             "nodes": [
                 {
-                    "id": 3,
-                    "type": "math/sub",
-                    "values": [
-                        {
-                            "id": "b",
-                            "value": 78,
-                            "type": 2
-                        },
-                        {
-                            "id": "a",
-                            "node": 2,
-                            "socket": "val"
-                        }
-                    ],
+                    "type": "lifecycle/onStart",
+                    "values": [],
                     "configuration": [],
-                    "flows": []
+                    "flows": [
+                        {
+                            "id": "out",
+                            "node": 4,
+                            "socket": "in"
+                        }
+                    ]
                 },
                 {
-                    "id": 2,
-                    "type": "math/mul",
-                    "values": [
-                        {
-                            "id": "b",
-                            "value": 2,
-                            "type": 2
-                        },
-                        {
-                            "id": "a",
-                            "node": 1,
-                            "socket": "val"
-                        }
-                    ],
-                    "configuration": [],
-                    "flows": []
-                },
-                {
-                    "id": 1,
                     "type": "math/dot",
                     "values": [
                         {
@@ -621,7 +578,40 @@ describe('BehaveEngine', () => {
                     "flows": []
                 },
                 {
-                    "id": 4,
+                    "type": "math/mul",
+                    "values": [
+                        {
+                            "id": "b",
+                            "value": 2,
+                            "type": 2
+                        },
+                        {
+                            "id": "a",
+                            "node": 1,
+                            "socket": "val"
+                        }
+                    ],
+                    "configuration": [],
+                    "flows": []
+                },
+                {
+                    "type": "math/sub",
+                    "values": [
+                        {
+                            "id": "b",
+                            "value": 78,
+                            "type": 2
+                        },
+                        {
+                            "id": "a",
+                            "node": 2,
+                            "socket": "val"
+                        }
+                    ],
+                    "configuration": [],
+                    "flows": []
+                },
+                {
                     "type": "customEvent/send",
                     "values": [
                         {
@@ -638,19 +628,7 @@ describe('BehaveEngine', () => {
                     ],
                     "flows": []
                 },
-                {
-                    "id": 0,
-                    "type": "lifecycle/onStart",
-                    "values": [],
-                    "configuration": [],
-                    "flows": [
-                        {
-                            "id": "out",
-                            "node": 4,
-                            "socket": "in"
-                        }
-                    ]
-                }
+
             ],
             "variables": [],
             "customEvents": [
@@ -698,74 +676,18 @@ describe('BehaveEngine', () => {
         const worldPointerGraph = {
             "nodes": [
                 {
-                    "id": 4,
-                    "type": "world/get",
-                    "values": [
-                        {
-                            "id": "nodeIndex",
-                            "value": 0,
-                            "type": 1
-                        }
-                    ],
-                    "configuration": [
-                        {
-                            "id": "path",
-                            "value": "nodes/{nodeIndex}/translation"
-                        }
-                    ],
-                    "flows": []
-                },
-                {
-                    "id": 5,
-                    "type": "math/add",
-                    "values": [
-                        {
-                            "id": "b",
-                            "value": [0,5,0],
-                            "type": 4
-                        },
-                        {
-                            "id": "a",
-                            "node": 4,
-                            "socket": "value"
-                        }
-                    ],
+                    "type": "lifecycle/onStart",
+                    "values": [],
                     "configuration": [],
-                    "flows": []
+                    "flows": [
+                        {
+                            "id": "out",
+                            "node": 1,
+                            "socket": "in"
+                        }
+                    ]
                 },
                 {
-                    "id": 6,
-                    "type": "world/animateTo",
-                    "values": [
-                        {
-                            "id": "nodeIndex",
-                            "value": 0,
-                            "type": 1
-                        },
-                        {
-                            "id": "a",
-                            "node": 5,
-                            "socket": "val"
-                        }
-                    ],
-                    "configuration": [
-                        {
-                            "id": "path",
-                            "value": "nodes/{nodeIndex}/translation"
-                        },
-                        {
-                            "id": "easingType",
-                            "value": "linear"
-                        },
-                        {
-                            "id": "easingDuration",
-                            "value": 0.1
-                        }
-                    ],
-                    "flows": []
-                },
-                {
-                    "id": 1,
                     "type": "flow/sequence",
                     "values": [],
                     "configuration": [
@@ -788,25 +710,6 @@ describe('BehaveEngine', () => {
                     ]
                 },
                 {
-                    "id": 3,
-                    "type": "world/set",
-                    "values": [
-                        {
-                            "id": "a",
-                            "value": [1,1,1],
-                            "type": 4
-                        }
-                    ],
-                    "configuration": [
-                        {
-                            "id": "path",
-                            "value": "nodes/0/scale"
-                        }
-                    ],
-                    "flows": []
-                },
-                {
-                    "id": 2,
                     "type": "world/animateTo",
                     "values": [
                         {
@@ -838,17 +741,85 @@ describe('BehaveEngine', () => {
                     ]
                 },
                 {
-                    "id": 0,
-                    "type": "lifecycle/onStart",
-                    "values": [],
-                    "configuration": [],
-                    "flows": [
+                    "type": "world/set",
+                    "values": [
                         {
-                            "id": "out",
-                            "node": 1,
-                            "socket": "in"
+                            "id": "a",
+                            "value": [1,1,1],
+                            "type": 4
                         }
-                    ]
+                    ],
+                    "configuration": [
+                        {
+                            "id": "path",
+                            "value": "nodes/0/scale"
+                        }
+                    ],
+                    "flows": []
+                },
+                {
+                    "type": "world/get",
+                    "values": [
+                        {
+                            "id": "nodeIndex",
+                            "value": 0,
+                            "type": 1
+                        }
+                    ],
+                    "configuration": [
+                        {
+                            "id": "path",
+                            "value": "nodes/{nodeIndex}/translation"
+                        }
+                    ],
+                    "flows": []
+                },
+                {
+                    "type": "math/add",
+                    "values": [
+                        {
+                            "id": "b",
+                            "value": [0,5,0],
+                            "type": 4
+                        },
+                        {
+                            "id": "a",
+                            "node": 4,
+                            "socket": "value"
+                        }
+                    ],
+                    "configuration": [],
+                    "flows": []
+                },
+                {
+                    "type": "world/animateTo",
+                    "values": [
+                        {
+                            "id": "nodeIndex",
+                            "value": 0,
+                            "type": 1
+                        },
+                        {
+                            "id": "a",
+                            "node": 5,
+                            "socket": "val"
+                        }
+                    ],
+                    "configuration": [
+                        {
+                            "id": "path",
+                            "value": "nodes/{nodeIndex}/translation"
+                        },
+                        {
+                            "id": "easingType",
+                            "value": "linear"
+                        },
+                        {
+                            "id": "easingDuration",
+                            "value": 0.1
+                        }
+                    ],
+                    "flows": []
                 }
             ],
             "variables": [],
@@ -891,55 +862,18 @@ describe('BehaveEngine', () => {
         const tickGraph = {
             "nodes": [
                 {
-                    "id": 4,
-                    "type": "world/set",
-                    "values": [
-                        {
-                            "id": "a",
-                            "node": 3,
-                            "socket": "val"
-                        }
-                    ],
-                    "configuration": [
-                        {
-                            "id": "path",
-                            "value": "nodes/0/translation"
-                        }
-                    ],
-                    "flows": []
-                },
-                {
-                    "id": 2,
-                    "type": "world/get",
+                    "type": "lifecycle/onTick",
                     "values": [],
-                    "configuration": [
-                        {
-                            "id": "path",
-                            "value": "nodes/0/translation"
-                        }
-                    ],
-                    "flows": []
-                },
-                {
-                    "id": 3,
-                    "type": "math/add",
-                    "values": [
-                        {
-                            "id": "b",
-                            "value": [0,0.25,0],
-                            "type": 4
-                        },
-                        {
-                            "id": "a",
-                            "node": 2,
-                            "socket": "value"
-                        }
-                    ],
                     "configuration": [],
-                    "flows": []
+                    "flows": [
+                        {
+                            "id": "out",
+                            "node": 1,
+                            "socket": "in"
+                        }
+                    ]
                 },
                 {
-                    "id": 1,
                     "type": "flow/doN",
                     "values": [
                         {
@@ -963,17 +897,49 @@ describe('BehaveEngine', () => {
                     ]
                 },
                 {
-                    "id": 0,
-                    "type": "lifecycle/onTick",
+                    "type": "world/get",
                     "values": [],
-                    "configuration": [],
-                    "flows": [
+                    "configuration": [
                         {
-                            "id": "out",
-                            "node": 1,
-                            "socket": "in"
+                            "id": "path",
+                            "value": "nodes/0/translation"
                         }
-                    ]
+                    ],
+                    "flows": []
+                },
+                {
+                    "type": "math/add",
+                    "values": [
+                        {
+                            "id": "b",
+                            "value": [0,0.25,0],
+                            "type": 4
+                        },
+                        {
+                            "id": "a",
+                            "node": 2,
+                            "socket": "value"
+                        }
+                    ],
+                    "configuration": [],
+                    "flows": []
+                },
+                {
+                    "type": "world/set",
+                    "values": [
+                        {
+                            "id": "a",
+                            "node": 3,
+                            "socket": "val"
+                        }
+                    ],
+                    "configuration": [
+                        {
+                            "id": "path",
+                            "value": "nodes/0/translation"
+                        }
+                    ],
+                    "flows": []
                 }
             ],
             "variables": [],
@@ -1014,7 +980,27 @@ describe('BehaveEngine', () => {
         const customEventGraph = {
             "nodes": [
                 {
-                    "id": 1,
+                    "type": "customEvent/receive",
+                    "values": [],
+                    "configuration": [
+                        {
+                            "id": "customEvent",
+                            "value": 0
+                        }
+                    ],
+                    "flows": [
+                        {
+                            "id": "out",
+                            "node": 1,
+                            "socket": "in"
+                        }
+                    ],
+                    "metadata": {
+                        "positionX": "334.55482355488107",
+                        "positionY": "328.8151290670574"
+                    }
+                },
+                {
                     "type": "world/set",
                     "values": [
                         {
@@ -1042,7 +1028,6 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "id": 2,
                     "type": "customEvent/send",
                     "values": [
                         {
@@ -1061,28 +1046,6 @@ describe('BehaveEngine', () => {
                     "metadata": {
                         "positionX": "1488.0654625305283",
                         "positionY": "327.50249727444015"
-                    }
-                },
-                {
-                    "id": 0,
-                    "type": "customEvent/receive",
-                    "values": [],
-                    "configuration": [
-                        {
-                            "id": "customEvent",
-                            "value": 0
-                        }
-                    ],
-                    "flows": [
-                        {
-                            "id": "out",
-                            "node": 1,
-                            "socket": "in"
-                        }
-                    ],
-                    "metadata": {
-                        "positionX": "334.55482355488107",
-                        "positionY": "328.8151290670574"
                     }
                 }
             ],
@@ -1151,51 +1114,27 @@ describe('BehaveEngine', () => {
         const variablesGraph = {
             "nodes": [
                 {
-                    "id": 5,
-                    "type": "customEvent/send",
-                    "values": [
-                        {
-                            "id": "sum",
-                            "node": 1,
-                            "socket": "cum"
-                        }
-                    ],
-                    "configuration": [
-                        {
-                            "id": "customEvent",
-                            "value": 1
-                        }
-                    ],
-                    "flows": [],
-                    "metadata": {
-                        "positionX": "1427.59375",
-                        "positionY": "-217.390625"
-                    }
-                },
-                {
-                    "id": 4,
                     "type": "customEvent/receive",
                     "values": [],
                     "configuration": [
                         {
                             "id": "customEvent",
-                            "value": 2
+                            "value": 0
                         }
                     ],
                     "flows": [
                         {
                             "id": "out",
-                            "node": 5,
+                            "node": 3,
                             "socket": "in"
                         }
                     ],
                     "metadata": {
-                        "positionX": "501.59375",
-                        "positionY": "-274.390625"
+                        "positionX": "-7",
+                        "positionY": "439"
                     }
                 },
                 {
-                    "id": 1,
                     "type": "variable/get",
                     "values": [],
                     "configuration": [
@@ -1211,7 +1150,6 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "id": 2,
                     "type": "math/add",
                     "values": [
                         {
@@ -1233,7 +1171,6 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "id": 3,
                     "type": "variable/set",
                     "values": [
                         {
@@ -1255,25 +1192,45 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "id": 0,
                     "type": "customEvent/receive",
                     "values": [],
                     "configuration": [
                         {
                             "id": "customEvent",
-                            "value": 0
+                            "value": 2
                         }
                     ],
                     "flows": [
                         {
                             "id": "out",
-                            "node": 3,
+                            "node": 5,
                             "socket": "in"
                         }
                     ],
                     "metadata": {
-                        "positionX": "-7",
-                        "positionY": "439"
+                        "positionX": "501.59375",
+                        "positionY": "-274.390625"
+                    }
+                },
+                {
+                    "type": "customEvent/send",
+                    "values": [
+                        {
+                            "id": "sum",
+                            "node": 1,
+                            "socket": "cum"
+                        }
+                    ],
+                    "configuration": [
+                        {
+                            "id": "customEvent",
+                            "value": 1
+                        }
+                    ],
+                    "flows": [],
+                    "metadata": {
+                        "positionX": "1427.59375",
+                        "positionY": "-217.390625"
                     }
                 }
             ],
@@ -1354,97 +1311,37 @@ describe('BehaveEngine', () => {
         const whileLoopGraph = {
             "nodes": [
                 {
-                    "id": 4,
-                    "type": "world/set",
-                    "values": [
-                        {
-                            "id": "a",
-                            "value": [
-                                5,
-                                6,
-                                7
-                            ],
-                            "type": 4
-                        }
-                    ],
-                    "configuration": [
-                        {
-                            "id": "path",
-                            "value": "nodes/0/translation"
-                        }
-                    ],
+                    "type": "math/random",
+                    "values": [],
+                    "configuration": [],
                     "flows": [],
                     "metadata": {
-                        "positionX": "1798.1705923629859",
-                        "positionY": "303.1538526143007"
+                        "positionX": "560.1142272949219",
+                        "positionY": "335.1455383300781"
                     }
                 },
                 {
-                    "id": 6,
-                    "type": "math/mul",
+                    "type": "math/lessThan",
                     "values": [
                         {
                             "id": "b",
-                            "value": [
-                                1.01,
-                                1.01,
-                                1.01
-                            ],
-                            "type": 4
+                            "value": 0.99,
+                            "type": 2
                         },
                         {
                             "id": "a",
-                            "node": 5,
-                            "socket": "value"
+                            "node": 0,
+                            "socket": "val"
                         }
                     ],
                     "configuration": [],
                     "flows": [],
                     "metadata": {
-                        "positionX": "647.7160034179688",
-                        "positionY": "564.9638977050781"
+                        "positionX": "933.708984375",
+                        "positionY": "253.6966552734375"
                     }
                 },
                 {
-                    "id": 5,
-                    "type": "world/get",
-                    "values": [],
-                    "configuration": [
-                        {
-                            "id": "path",
-                            "value": "nodes/0/scale"
-                        }
-                    ],
-                    "flows": [],
-                    "metadata": {
-                        "positionX": "56.85950927734393",
-                        "positionY": "637.0478820800781"
-                    }
-                },
-                {
-                    "id": 7,
-                    "type": "world/set",
-                    "values": [
-                        {
-                            "id": "a",
-                            "node": 6,
-                            "socket": "val"
-                        }
-                    ],
-                    "configuration": [
-                        {
-                            "id": "path",
-                            "value": "nodes/0/scale"
-                        }
-                    ],
-                    "flows": [],
-                    "metadata": {
-                        "positionX": "1813.3783294677733",
-                        "positionY": "-36.328094482421875"
-                    }
-                },
-                {
-                    "id": 2,
                     "type": "lifecycle/onStart",
                     "values": [],
                     "configuration": [],
@@ -1461,7 +1358,6 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "id": 3,
                     "type": "flow/whileLoop",
                     "values": [
                         {
@@ -1494,36 +1390,89 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "id": 1,
-                    "type": "math/lessThan",
+                    "type": "world/set",
+                    "values": [
+                        {
+                            "id": "a",
+                            "value": [
+                                5,
+                                6,
+                                7
+                            ],
+                            "type": 4
+                        }
+                    ],
+                    "configuration": [
+                        {
+                            "id": "path",
+                            "value": "nodes/0/translation"
+                        }
+                    ],
+                    "flows": [],
+                    "metadata": {
+                        "positionX": "1798.1705923629859",
+                        "positionY": "303.1538526143007"
+                    }
+                },
+                {
+                    "type": "world/get",
+                    "values": [],
+                    "configuration": [
+                        {
+                            "id": "path",
+                            "value": "nodes/0/scale"
+                        }
+                    ],
+                    "flows": [],
+                    "metadata": {
+                        "positionX": "56.85950927734393",
+                        "positionY": "637.0478820800781"
+                    }
+                },
+                {
+                    "type": "math/mul",
                     "values": [
                         {
                             "id": "b",
-                            "value": 0.99,
-                            "type": 2
+                            "value": [
+                                1.01,
+                                1.01,
+                                1.01
+                            ],
+                            "type": 4
                         },
                         {
                             "id": "a",
-                            "node": 0,
-                            "socket": "val"
+                            "node": 5,
+                            "socket": "value"
                         }
                     ],
                     "configuration": [],
                     "flows": [],
                     "metadata": {
-                        "positionX": "933.708984375",
-                        "positionY": "253.6966552734375"
+                        "positionX": "647.7160034179688",
+                        "positionY": "564.9638977050781"
                     }
                 },
                 {
-                    "id": 0,
-                    "type": "math/random",
-                    "values": [],
-                    "configuration": [],
+                    "type": "world/set",
+                    "values": [
+                        {
+                            "id": "a",
+                            "node": 6,
+                            "socket": "val"
+                        }
+                    ],
+                    "configuration": [
+                        {
+                            "id": "path",
+                            "value": "nodes/0/scale"
+                        }
+                    ],
                     "flows": [],
                     "metadata": {
-                        "positionX": "560.1142272949219",
-                        "positionY": "335.1455383300781"
+                        "positionX": "1813.3783294677733",
+                        "positionY": "-36.328094482421875"
                     }
                 }
             ],

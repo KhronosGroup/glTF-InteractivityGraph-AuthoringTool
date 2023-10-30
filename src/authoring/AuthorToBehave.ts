@@ -126,7 +126,7 @@ export const authorToBehave = (nodes: Node[], edges: Edge[], customEvents: ICust
     return graph;
 };
 
-const isNullish = (value: any): boolean => value === undefined || value === null;
+const isNullish = (value: any): boolean => value === undefined || value === null || value === 'undefined';
 
 const castParameter = (value: any, signature: string) => {
     switch (signature) {
@@ -214,11 +214,6 @@ const topologicalSort = (nodes: any[]) => {
         }
     }
 
-    // remove fake Links
-    for (const node of nodes) {
-        delete node.fakeLinks;
-    }
-
     // validate no cycle
     if (sortedList.length !== nodes.length) {
         throw Error("Cycle Detected");
@@ -244,7 +239,13 @@ const topologicalSort = (nodes: any[]) => {
                 }
             })
         }
-
     }
 
+    nodes.sort((a, b) => {return a.id - b.id});
+
+    // remove fake Links
+    for (const node of nodes) {
+        delete node.fakeLinks;
+        delete node.id;
+    }
 }

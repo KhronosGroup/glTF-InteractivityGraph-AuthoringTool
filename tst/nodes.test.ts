@@ -81,12 +81,11 @@ describe('nodes', () => {
         graphEngine = new BasicBehaveEngine(1);
 
         defaultProps = {
-            idToBehaviourNodeMap: new Map<string, BehaveEngineNode>(),
+            idToBehaviourNodeMap: new Map<number, BehaveEngineNode>(),
             graphEngine: graphEngine,
             variables: [],
             customEvents: [],
             types: standardTypes,
-            id: '0',
             flows: [],
             values: [],
             configuration: [],
@@ -133,27 +132,27 @@ describe('nodes', () => {
             ...defaultProps,
             values: [{ id: 'condition', value: "true", type: 0 }],
             flows: [
-                { id: 'true', node: '0' },
-                { id: 'false', node: '1' },
+                { id: 'true', node: 0 },
+                { id: 'false', node: 1 },
             ],
         });
 
         trueBranch.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
         await trueBranch.processNode();
-        expect(trueBranch.processFlow).toHaveBeenCalledWith({ id: 'true', node: '0' });
+        expect(trueBranch.processFlow).toHaveBeenCalledWith({ id: 'true', node: 0 });
 
         const falseBranch: Branch = new Branch({
             ...defaultProps,
             values: [{ id: 'condition', value: "false", type: 0 }],
             flows: [
-                { id: 'true', node: '0' },
-                { id: 'false', node: '1' },
+                { id: 'true', node: 0 },
+                { id: 'false', node: 1 },
             ],
         });
 
         falseBranch.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
         await falseBranch.processNode();
-        expect(falseBranch.processFlow).toHaveBeenCalledWith({ id: 'false', node: '1' });
+        expect(falseBranch.processFlow).toHaveBeenCalledWith({ id: 'false', node: 1 });
     });
 
     it('flow/delay', async () => {
@@ -161,14 +160,14 @@ describe('nodes', () => {
             ...defaultProps,
             values: [{ id: 'duration', value: 0.5, type: 2 }],
             flows: [
-                { id: 'out', node: '0' }
+                { id: 'out', node: 0 }
             ]
         });
         delay.addEventToWorkQueue = jest.fn<(flow: IFlow) => Promise<void>>();
         delay.processNode('in');
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        expect(delay.addEventToWorkQueue).toHaveBeenCalledWith({"id": "out", "node": "0"});
+        expect(delay.addEventToWorkQueue).toHaveBeenCalledWith({"id": "out", "node": 0});
     });
 
     it('flow/sequence', async () => {
@@ -176,18 +175,18 @@ describe('nodes', () => {
             ...defaultProps,
             configuration: [{ id: 'numberOutputFlows', value: 3 }],
             flows: [
-                { id: '0', node: '0' },
-                { id: '1', node: '1' },
-                { id: '2', node: '2' },
+                { id: '0', node: 0 },
+                { id: '1', node: 1 },
+                { id: '2', node: 2 },
             ],
         });
 
         sequence.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
         await sequence.processNode();
 
-        expect(sequence.processFlow).toHaveBeenCalledWith({ id: '0', node: '0' });
-        expect(sequence.processFlow).toHaveBeenCalledWith({ id: '1', node: '1' });
-        expect(sequence.processFlow).toHaveBeenCalledWith({ id: '2', node: '2' });
+        expect(sequence.processFlow).toHaveBeenCalledWith({ id: '0', node: 0 });
+        expect(sequence.processFlow).toHaveBeenCalledWith({ id: '1', node: 1 });
+        expect(sequence.processFlow).toHaveBeenCalledWith({ id: '2', node: 2 });
     });
 
     it('flow/forLoop', async () => {
@@ -199,16 +198,16 @@ describe('nodes', () => {
                 { id: 'endIndex', value: 5, type: 1 },
             ],
             flows: [
-                { id: 'loopBody', node: '0' },
-                { id: 'completed', node: '1' },
+                { id: 'loopBody', node: 0 },
+                { id: 'completed', node: 1 },
             ],
         });
 
         forLoop.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
         await forLoop.processNode();
 
-        expect(forLoop.processFlow).toHaveBeenCalledWith({ id: 'loopBody', node: '0' });
-        expect(forLoop.processFlow).toHaveBeenCalledWith({ id: 'completed', node: '1' });
+        expect(forLoop.processFlow).toHaveBeenCalledWith({ id: 'loopBody', node: 0 });
+        expect(forLoop.processFlow).toHaveBeenCalledWith({ id: 'completed', node: 1 });
         expect(forLoop.processFlow).toHaveBeenCalledTimes(6);
     });
 
@@ -222,7 +221,7 @@ describe('nodes', () => {
                 { id: 'n', value: 2, type: 1},
             ],
             flows: [
-                { id: 'out', node: '0' },
+                { id: 'out', node: 0 },
             ],
         });
 
@@ -264,33 +263,33 @@ describe('nodes', () => {
             configuration: [{ id: 'cases', value: 3 }],
             values: [{ id: 'selection', value: 1, type: 1 }],
             flows: [
-                { id: '0', node: '0' },
-                { id: '1', node: '1' },
-                { id: '2', node: '2' },
+                { id: '0', node: 0 },
+                { id: '1', node: 1 },
+                { id: '2', node: 2 },
             ],
         });
 
         switchNode.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
         await switchNode.processNode('in');
 
-        expect(switchNode.processFlow).toHaveBeenCalledWith({ id: '1', node: '1' });
+        expect(switchNode.processFlow).toHaveBeenCalledWith({ id: '1', node: 1 });
 
         const defaultSwitchNode: Switch = new Switch({
             ...defaultProps,
             configuration: [{ id: 'cases', value: 3 }],
             values: [{ id: 'selection', value: 4, type: 1 }],
             flows: [
-                { id: '0', node: '0' },
-                { id: '1', node: '1' },
-                { id: '2', node: '2' },
-                { id: 'default', node: '4' },
+                { id: '0', node: 0 },
+                { id: '1', node: 1 },
+                { id: '2', node: 2 },
+                { id: 'default', node: 4 },
             ],
         });
 
         defaultSwitchNode.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
         await defaultSwitchNode.processNode('in');
 
-        expect(defaultSwitchNode.processFlow).toHaveBeenCalledWith({ id: 'default', node: '4' });
+        expect(defaultSwitchNode.processFlow).toHaveBeenCalledWith({ id: 'default', node: 4 });
     });
 
     it('flow/throttle', async () => {
@@ -313,7 +312,7 @@ describe('nodes', () => {
         const waitAll: WaitAll = new WaitAll({
             ...defaultProps,
             configuration: [{ id: 'numberInputFlows', value: 2 }],
-            flows: [{ id: 'out', node: '1' }],
+            flows: [{ id: 'out', node: 1 }],
         });
 
         waitAll.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
@@ -324,7 +323,7 @@ describe('nodes', () => {
 
         await waitAll.processNode('0');
         expect(waitAll.processFlow).toHaveBeenCalledTimes(1);
-        expect(waitAll.processFlow).toHaveBeenCalledWith({ id: 'out', node: '1' });
+        expect(waitAll.processFlow).toHaveBeenCalledWith({ id: 'out', node: 1 });
     });
 
     it('flow/whileLoop', async () => {
@@ -333,15 +332,15 @@ describe('nodes', () => {
             configuration: [{ id: 'isDo', value: false }],
             values: [{ id: 'condition', value: false, type: 0 }],
             flows: [
-                { id: 'loopBody', node: '0' },
-                { id: 'completed', node: '1' },
+                { id: 'loopBody', node: 0 },
+                { id: 'completed', node: 1 },
             ],
         });
 
         whileLoop.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
         await whileLoop.processNode();
 
-        expect(whileLoop.processFlow).toHaveBeenCalledWith({ id: 'completed', node: '1' });
+        expect(whileLoop.processFlow).toHaveBeenCalledWith({ id: 'completed', node: 1 });
         expect(whileLoop.processFlow).toHaveBeenCalledTimes(1);
 
         const doWhileLoop: WhileLoop = new WhileLoop({
@@ -349,16 +348,16 @@ describe('nodes', () => {
             configuration: [{ id: 'isDo', value: true }],
             values: [{ id: 'condition', value: false, type: 0 }],
             flows: [
-                { id: 'loopBody', node: '0' },
-                { id: 'completed', node: '1' },
+                { id: 'loopBody', node: 0 },
+                { id: 'completed', node: 1 },
             ],
         });
 
         doWhileLoop.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
         await doWhileLoop.processNode();
 
-        expect(doWhileLoop.processFlow).toHaveBeenCalledWith({ id: 'loopBody', node: '0' });
-        expect(doWhileLoop.processFlow).toHaveBeenCalledWith({ id: 'completed', node: '1' });
+        expect(doWhileLoop.processFlow).toHaveBeenCalledWith({ id: 'loopBody', node: 0 });
+        expect(doWhileLoop.processFlow).toHaveBeenCalledWith({ id: 'completed', node: 1 });
         expect(doWhileLoop.processFlow).toHaveBeenCalledTimes(2);
     });
 
@@ -487,26 +486,26 @@ describe('nodes', () => {
         const onStart: OnStartNode = new OnStartNode({
             ...defaultProps,
             flows: [
-                { id: 'out', node: '0' }
+                { id: 'out', node: 0 }
             ],
         });
 
         onStart.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
         await onStart.processNode('in');
-        expect(onStart.processFlow).toHaveBeenCalledWith({ id: 'out', node: '0' });
+        expect(onStart.processFlow).toHaveBeenCalledWith({ id: 'out', node: 0 });
     });
 
     it('lifecycle/onTick', async () => {
         const onTick: OnTickNode = new OnTickNode({
             ...defaultProps,
             flows: [
-                { id: 'out', node: '0' }
+                { id: 'out', node: 0 }
             ],
         });
 
         onTick.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
         await onTick.processNode('in');
-        expect(onTick.processFlow).toHaveBeenCalledWith({ id: 'out', node: '0' });
+        expect(onTick.processFlow).toHaveBeenCalledWith({ id: 'out', node: 0 });
     });
 
     it("math/e", () => {

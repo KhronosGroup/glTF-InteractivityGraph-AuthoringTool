@@ -3,7 +3,7 @@ import {BasicBehaveEngine} from "./BasicBehaveEngine";
 export interface IFlow {
     id: string,
     value?: any
-    node?: string,
+    node?: number,
     socket?: string
 }
 
@@ -21,7 +21,7 @@ export interface IVariable {
 export interface IValue {
     id: string;
     value?: any
-    node?: string,
+    node?: number,
     socket?: string,
     type?: number
 }
@@ -32,9 +32,8 @@ export interface ICustomEvent {
 }
 
 export interface IBehaviourNodeProps {
-    id: string;
     graphEngine: BasicBehaveEngine,
-    idToBehaviourNodeMap: Map<string, BehaveEngineNode>
+    idToBehaviourNodeMap: Map<number, BehaveEngineNode>
     flows: IFlow[];
     values: IValue[];
     variables: IVariable[];
@@ -49,11 +48,10 @@ export class BehaveEngineNode {
     REQUIRED_FLOWS: IFlow[] = [];
     REQUIRED_CONFIGURATIONS: IConfiguration[] = [];
 
-    id: string;
     name: string | undefined;
     world: any;
     graphEngine: BasicBehaveEngine;
-    idToBehaviourNodeMap: Map<string, BehaveEngineNode>
+    idToBehaviourNodeMap: Map<number, BehaveEngineNode>
     flows: Record<string, IFlow>;
     values: Record<string, IValue>;
     outValues: Record<string, any>
@@ -64,8 +62,7 @@ export class BehaveEngineNode {
     addEventToWorkQueue: any;
 
     constructor(props: IBehaviourNodeProps) {
-        const {flows, values, idToBehaviourNodeMap, id, graphEngine, variables, customEvents, types, configuration, addEventToWorkQueue} = props;
-        this.id = id;
+        const {flows, values, idToBehaviourNodeMap, graphEngine, variables, customEvents, types, configuration, addEventToWorkQueue} = props;
         this.idToBehaviourNodeMap = idToBehaviourNodeMap;
         this.graphEngine = graphEngine;
         this.variables = variables;

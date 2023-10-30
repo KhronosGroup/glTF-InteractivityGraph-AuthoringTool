@@ -7,7 +7,22 @@ describe("authoring", () => {
         const exampleGraph = {
             "nodes": [
                 {
-                    "id": 1,
+                    "type": "lifecycle/onStart",
+                    "values": [],
+                    "configuration": [],
+                    "flows": [
+                        {
+                            "id": "out",
+                            "node": 1,
+                            "socket": "in"
+                        }
+                    ],
+                    "metadata": {
+                        "positionX": "301.59375",
+                        "positionY": "209.609375"
+                    }
+                },
+                {
                     "type": "world/set",
                     "values": [
                         {
@@ -31,23 +46,6 @@ describe("authoring", () => {
                     "metadata": {
                         "positionX": "837.59375",
                         "positionY": "126.609375"
-                    }
-                },
-                {
-                    "id": 0,
-                    "type": "lifecycle/onStart",
-                    "values": [],
-                    "configuration": [],
-                    "flows": [
-                        {
-                            "id": "out",
-                            "node": 1,
-                            "socket": "in"
-                        }
-                    ],
-                    "metadata": {
-                        "positionX": "301.59375",
-                        "positionY": "209.609375"
                     }
                 }
             ],

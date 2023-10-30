@@ -16,10 +16,11 @@ export const behaveToAuthor = (graph: string): [Node[], Edge[], ICustomEvent[], 
   const variables: IVariable[] = graphJson.variables;
 
   // loop through all the nodes in our behave graph to extract nodes and edges
+  let id = 0;
   graphJson.nodes.forEach((nodeJSON: any) => {
     // construct and add the node to the nodes list
     const node: Node = {
-      id: String(nodeJSON.id),
+      id: String(id),
       type: nodeJSON.type,
       position: {
         x: nodeJSON.metadata?.positionX
@@ -57,13 +58,12 @@ export const behaveToAuthor = (graph: string): [Node[], Edge[], ICustomEvent[], 
             id: uuidv4(),
             source: String(val.node),
             sourceHandle: val.socket,
-            target: String(nodeJSON.id),
+            target: String(id),
             targetHandle: val.id,
           });
           node.data.linked[val.id] = true;
         } else if (val.value !== undefined) {
           // if the value is a value, we can just get it from the node json
-          console.log(node.data)
           node.data.values[val.id] = {value: val.value, type: val.type};
         }
       }
@@ -74,13 +74,15 @@ export const behaveToAuthor = (graph: string): [Node[], Edge[], ICustomEvent[], 
       for (const flow of nodeJSON.flows) {
         edges.push({
           id: uuidv4(),
-          source: String(nodeJSON.id),
+          source: String(id),
           sourceHandle: flow.id,
           target: String(flow.node),
           targetHandle: flow.socket,
         });
       }
     }
+
+    id++;
   });
 
   return [nodes, edges, customEvents, variables];

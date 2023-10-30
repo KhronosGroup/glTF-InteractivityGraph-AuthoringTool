@@ -67,7 +67,7 @@ export interface IEventQueueItem {
 
 export class BasicBehaveEngine implements IBehaveEngine {
     protected registry: Map<string, any>;
-    protected idToBehaviourNodeMap: Map<string, BehaveEngineNode>;
+    protected idToBehaviourNodeMap: Map<number, BehaveEngineNode>;
     private eventQueue: IEventQueueItem[];
     protected onTickNodeIndex: number;
     private lastTickTime: number;
@@ -84,7 +84,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
 
     constructor(fps: number) {
         this.registry = new Map<string, any>();
-        this.idToBehaviourNodeMap = new Map<string, BehaveEngineNode>();
+        this.idToBehaviourNodeMap = new Map<number, BehaveEngineNode>();
         this.jsonPtrTrie = new JsonPtrTrie();
         this.fps = fps;
         this.valueEvaluationCache = new Map<string, IValue>();
@@ -166,10 +166,10 @@ export class BasicBehaveEngine implements IBehaveEngine {
             customEvents: this.customEvents,
         };
 
+        let index = 0;
         this.nodes.forEach(node => {
             const behaviourNodeProps: IBehaviourNodeProps = {
                 ...defaultProps,
-                id: node.id,
                 flows:node.flows,
                 values: node.values,
                 configuration: node.configuration,
@@ -182,17 +182,18 @@ export class BasicBehaveEngine implements IBehaveEngine {
                 throw Error(`Unrecognized node type ${node.type}`);
             }
             const behaviourNode: BehaveEngineNode = this.registry.get(node.type).init(behaviourNodeProps);
-            this.idToBehaviourNodeMap.set(node.id, behaviourNode);
+            this.idToBehaviourNodeMap.set(index, behaviourNode);
+            index++;
         });
 
         //find start node, and start graph
         const startNodeIndex = this.nodes.findIndex(node => node.type === "lifecycle/onStart");
         this.onTickNodeIndex = this.nodes.findIndex(node => node.type === "lifecycle/onTick");
         if (startNodeIndex !== -1) {
-            const startFlow: IFlow = {node: this.nodes[startNodeIndex].id, id: "start"}
+            const startFlow: IFlow = {node: startNodeIndex, id: "start"}
             this.addEventToWorkQueue(startFlow);
         } else if (this.onTickNodeIndex !== -1) {
-            const tickFlow: IFlow = {node: this.nodes[this.onTickNodeIndex].id, id: "tick"}
+            const tickFlow: IFlow = {node: this.onTickNodeIndex, id: "tick"}
             this.addEventToWorkQueue(tickFlow)
         }
     }
@@ -275,17 +276,20 @@ export class BasicBehaveEngine implements IBehaveEngine {
     protected validateGraph = (behaviorGraph: any) => {
         const nodes: BehaveEngineNode[] = behaviorGraph.nodes;
 
+        let index = 0;
         for (const node of nodes) {
             // for each node, ensure that it's values do not reference a later node
             if (node.values !== undefined) {
                 for (const key of Object.keys(node.values)) {
                     if (node.values[key].node !== undefined) {
-                        if (Number(node.values[key].node) >= Number(node.id)) {
-                            throw Error(`Invalid reference, node ${node.id} references ${node.values[key].node}`);
+                        if (Number(node.values[key].node) >= index) {
+                            throw Error(`Invalid reference, node ${index} references ${node.values[key].node}`);
                         }
                     }
                 }
             }
+
+            index++;
         }
     }
 
@@ -301,7 +305,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         const nextNode: BehaveEngineNode | undefined = this.idToBehaviourNodeMap.get(flow.node);
 
         if (nextNode === undefined) {return}
-        const nodeToPush = this.idToBehaviourNodeMap.get(nextNode.id)!;
+        const nodeToPush = this.idToBehaviourNodeMap.get(flow.node)!;
 
         this.processAddingNodeToQueue(flow);
         this.eventQueue.push({behaveNode: nodeToPush, inSocketId: flow.socket});
@@ -323,7 +327,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
             const timeNow = Date.now();
             const timeSinceLastTick = timeNow - this.lastTickTime;
             setTimeout(() => {
-                const tickFlow: IFlow = {node: this.nodes[this.onTickNodeIndex].id, id: "tick"}
+                const tickFlow: IFlow = {node: this.onTickNodeIndex, id: "tick"}
                 this.addEventToWorkQueue(tickFlow)
                 this.lastTickTime = timeNow;
             }, Math.max(1000 / this.fps - timeSinceLastTick,0))

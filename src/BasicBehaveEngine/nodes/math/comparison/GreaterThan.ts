@@ -1,11 +1,11 @@
-import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
+import {BehaveEngineNode, IBehaviourNodeProps} from "../../../BehaveEngineNode";
 
-export class LessThan extends BehaveEngineNode {
+export class GreaterThan extends BehaveEngineNode {
     REQUIRED_VALUES = [{id:"a"}, {id: "b"}]
 
     constructor(props: IBehaviourNodeProps) {
         super(props);
-        this.name = "LessThanNode";
+        this.name = "GreaterThanNode";
         this.validateValues(this.values);
     }
 
@@ -23,10 +23,7 @@ export class LessThan extends BehaveEngineNode {
 
         switch (typeA) {
             case "float":
-                val = a < b;
-                break;
-            case "float3":
-                val = a[0] < b[0] && a[1] < b[1] && a[2] < b[2];
+                val = a > b;
                 break;
             default:
                 throw Error("Invalid type")

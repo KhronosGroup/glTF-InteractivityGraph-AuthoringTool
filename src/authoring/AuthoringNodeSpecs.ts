@@ -2360,6 +2360,42 @@ export const vectorNodes: IAuthoringNode[] = [
         }
     },
     {
+        type: "math/rotate2D",
+        description: "Vector Rotation",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "Vector to rotate",
+                    types: [
+                        "float2"
+                    ]
+                },
+                {
+                    id: "b",
+                    description: "Angle in radians",
+                    types: [
+                        "float"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "Rotated vector",
+                    types: [
+                        "float2"
+                    ]
+                }
+            ]
+        }
+    },
+    {
         type: "math/rotate3D",
         description: "Vector Rotation",
         configuration: [],
@@ -2404,5 +2440,252 @@ export const vectorNodes: IAuthoringNode[] = [
     }
 ]
 
+export const specialFloatingPointNodeSpecs = [
+    {
+        type: "math/isnan",
+        description: "Not a Number check operation",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "argument",
+                    types: [
+                        "float"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "True if NaN else false",
+                    types: [
+                        "bool"
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        type: "math/isinf",
+        description: "infinity check",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "argument",
+                    types: [
+                        "float"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "True if a is +/- Inf, else false",
+                    types: [
+                        "bool"
+                    ]
+                }
+            ]
+        }
+    }
+]
+
+export const comparisonNodeSpecs = [
+    {
+        type: "math/eq",
+        description: "Equality operation",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "First Argument",
+                    types: [
+                        "float",
+                        "float3"
+                    ]
+                },
+                {
+                    id: "b",
+                    description: "Second Argument",
+                    types: [
+                        "float",
+                        "float3"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "True if equal else false",
+                    types: [
+                        "bool"
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        type: "math/lt",
+        description: "Less than operation",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "First Argument",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "b",
+                    description: "Second Argument",
+                    types: [
+                        "float"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "True if < else false",
+                    types: [
+                        "bool"
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        type: "math/le",
+        description: "Less than or equal to operation",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "First Argument",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "b",
+                    description: "Second Argument",
+                    types: [
+                        "float"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "True if <= else false",
+                    types: [
+                        "bool"
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        type: "math/gt",
+        description: "Greater than operation",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "First Argument",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "b",
+                    description: "Second Argument",
+                    types: [
+                        "float"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "True if > else false",
+                    types: [
+                        "bool"
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        type: "math/ge",
+        description: "Greater than or equal to operation",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "First Argument",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "b",
+                    description: "Second Argument",
+                    types: [
+                        "float"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "True if >= else false",
+                    types: [
+                        "bool"
+                    ]
+                }
+            ]
+        }
+    },
+]
+
 export const authoringNodeSpecs: IAuthoringNode[] = [...worldNodeSpecs, ...flowNodeSpecs, ...lifecycleNodeSpecs, ...customEventNodeSpecs, ...variableNodeSpecs,
-    ...constantsNodes, ...arithmeticNodes, ...trigNodes, ...hyperbolicNodes, ...exponentialFunctionNodes, ...experimentalNodeSpecs, ...vectorNodes]
+    ...constantsNodes, ...arithmeticNodes, ...trigNodes, ...hyperbolicNodes, ...exponentialFunctionNodes, ...experimentalNodeSpecs, ...vectorNodes,
+    ...specialFloatingPointNodeSpecs];

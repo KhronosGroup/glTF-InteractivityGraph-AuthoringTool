@@ -51,8 +51,16 @@ import {Power} from "./nodes/math/exponential/Power";
 import {SquareRoot} from "./nodes/math/exponential/SquareRoot";
 import {CubeRoot} from "./nodes/math/exponential/CubeRoot";
 import {Random} from "./nodes/experimental/Random";
-import {LessThan} from "./nodes/experimental/LessThan";
 import {Dot} from "./nodes/math/vector/Dot";
+import {Rotate2D} from "./nodes/math/vector/Rotate2D";
+import {Rotate3D} from "./nodes/math/vector/Rotate3D";
+import {IsInfNode} from "./nodes/math/specialFloatingPoint/IsInfNode";
+import {IsNaNNode} from "./nodes/math/specialFloatingPoint/IsNaNNode";
+import {LessThanOrEqualTo} from "./nodes/math/comparison/LessThanOrEqualTo";
+import {LessThan} from "./nodes/math/comparison/LessThan";
+import {Equality} from "./nodes/math/comparison/Equality";
+import {GreaterThanOrEqualTo} from "./nodes/math/comparison/GreaterThanOrEqualTo";
+import {GreaterThan} from "./nodes/math/comparison/GreaterThan";
 
 
 export interface ICustomEventListener {
@@ -269,8 +277,16 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/sqrt", SquareRoot);
         this.registerBehaveEngineNode("math/cbrt", CubeRoot);
         this.registerBehaveEngineNode("math/random", Random);
-        this.registerBehaveEngineNode("math/lessThan", LessThan);
+        this.registerBehaveEngineNode("math/lt", LessThan);
+        this.registerBehaveEngineNode("math/le", LessThanOrEqualTo);
+        this.registerBehaveEngineNode("math/eq", Equality);
+        this.registerBehaveEngineNode("math/ge", GreaterThanOrEqualTo);
+        this.registerBehaveEngineNode("math/gt", GreaterThan);
         this.registerBehaveEngineNode("math/dot", Dot);
+        this.registerBehaveEngineNode("math/rotate2d", Rotate2D);
+        this.registerBehaveEngineNode("math/rotate3d", Rotate3D);
+        this.registerBehaveEngineNode("math/isinf", IsInfNode);
+        this.registerBehaveEngineNode("math/isnan", IsNaNNode);
     }
 
     protected validateGraph = (behaviorGraph: any) => {

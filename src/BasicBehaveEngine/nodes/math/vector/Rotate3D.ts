@@ -30,14 +30,14 @@ export class Rotate3D extends BehaveEngineNode {
         switch (typeA) {
             case "float3":
                 // eslint-disable-next-line no-case-declarations
-                const cos_theta = Math.cos(Number(c));
+                const cosTheta = Math.cos(Number(c));
                 // eslint-disable-next-line no-case-declarations
-                const sin_theta = Math.sin(Number(c));
+                const sinTheta = Math.sin(Number(c));
 
                 // eslint-disable-next-line no-case-declarations
                 const dot = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
                 // eslint-disable-next-line no-case-declarations
-                const parallelCoeff = (dot * (1 - cos_theta));
+                const parallelCoeff = (dot * (1 - cosTheta));
                 // eslint-disable-next-line no-case-declarations
                 const parallel = [
                     b[0] * parallelCoeff,
@@ -46,14 +46,14 @@ export class Rotate3D extends BehaveEngineNode {
                 ]
                 // eslint-disable-next-line no-case-declarations
                 const perpendicular = [
-                    (a[0] -  dot*b[0]) * sin_theta,
-                    (a[1] -  dot*b[1]) * sin_theta,
-                    (a[2] -  dot*b[2]) * sin_theta
+                    (a[0] -  dot*b[0]) * sinTheta,
+                    (a[1] -  dot*b[1]) * sinTheta,
+                    (a[2] -  dot*b[2]) * sinTheta
                 ];
                 val = [
-                   a[0] * cos_theta + perpendicular[0] + parallel[0],
-                    a[1] * cos_theta + perpendicular[1] + parallel[1],
-                    a[2] * cos_theta + perpendicular[2] + parallel[2],
+                   a[0] * cosTheta + perpendicular[0] + parallel[0],
+                    a[1] * cosTheta + perpendicular[1] + parallel[1],
+                    a[2] * cosTheta + perpendicular[2] + parallel[2],
                 ];
                 break;
             default:

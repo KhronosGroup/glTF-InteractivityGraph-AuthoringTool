@@ -67,6 +67,14 @@ import {VectorLength} from "../src/BasicBehaveEngine/nodes/math/vector/VectorLen
 import {Dot} from "../src/BasicBehaveEngine/nodes/math/vector/Dot";
 import {Cross} from "../src/BasicBehaveEngine/nodes/math/vector/Cross";
 import {Rotate3D} from "../src/BasicBehaveEngine/nodes/math/vector/Rotate3D";
+import {Rotate2D} from "../src/BasicBehaveEngine/nodes/math/vector/Rotate2D";
+import {IsInfNode} from "../src/BasicBehaveEngine/nodes/math/specialFloatingPoint/IsInfNode";
+import {IsNaNNode} from "../src/BasicBehaveEngine/nodes/math/specialFloatingPoint/IsNaNNode";
+import {Equality} from "../src/BasicBehaveEngine/nodes/math/comparison/Equality";
+import {LessThan} from "../src/BasicBehaveEngine/nodes/math/comparison/LessThan";
+import {LessThanOrEqualTo} from "../src/BasicBehaveEngine/nodes/math/comparison/LessThanOrEqualTo";
+import {GreaterThan} from "../src/BasicBehaveEngine/nodes/math/comparison/GreaterThan";
+import {GreaterThanOrEqualTo} from "../src/BasicBehaveEngine/nodes/math/comparison/GreaterThanOrEqualTo";
 
 
 describe('nodes', () => {
@@ -1557,7 +1565,24 @@ describe('nodes', () => {
         expect(expected[2]).toEqual(val[2]);
     });
 
-    it("math/Rotated3D", () => {
+    it("math/rotated2D", () => {
+        const rotate2D: Rotate2D = new Rotate2D({
+            ...defaultProps,
+            values: [
+                { id: 'a', value: [1.0, 0.0], type: 3 },
+                { id: 'b', value: Math.PI / 2, type: 2 },
+            ]
+        });
+
+        const val = rotate2D.processNode().value;
+
+        const expected = [0.0, 1.0];
+
+        expect(isCloseToVal(expected[0], val[0])).toBe(true);
+        expect(isCloseToVal(expected[1], val[1])).toBe(true);
+    });
+
+    it("math/rotated3D", () => {
         const rotate3D: Rotate3D = new Rotate3D({
             ...defaultProps,
             values: [
@@ -1569,7 +1594,6 @@ describe('nodes', () => {
 
         const val = rotate3D.processNode().value;
 
-        // Calculate the expected result manually
         const cos_theta = Math.cos(Math.PI / 2);
         const sin_theta = Math.sin(Math.PI / 2);
 
@@ -1597,6 +1621,209 @@ describe('nodes', () => {
         expect(expected[0]).toEqual(val[0]);
         expect(expected[1]).toEqual(val[1]);
         expect(expected[2]).toEqual(val[2]);
+    });
+
+    it("math/isInfNode", () => {
+        let isInfNode: IsInfNode = new IsInfNode({
+            ...defaultProps,
+            values: [
+                { id: 'a', value: 1.0, type: 2 }
+            ]
+        });
+
+        let val = isInfNode.processNode().value;
+        expect(val).toBe(false);
+
+        isInfNode = new IsInfNode({
+            ...defaultProps,
+            values: [
+                { id: 'a', value: Infinity, type: 2 }
+            ]
+        });
+
+        val = isInfNode.processNode().value;
+        expect(val).toBe(true);
+    });
+
+    it("math/isNaNNode", () => {
+        let isNaNNode: IsNaNNode = new IsNaNNode({
+            ...defaultProps,
+            values: [
+                { id: 'a', value: 1.0, type: 2 }
+            ]
+        });
+
+        let val = isNaNNode.processNode().value;
+        expect(val).toBe(false);
+
+        isNaNNode = new IsNaNNode({
+            ...defaultProps,
+            values: [
+                { id: 'a', value: NaN, type: 2 }
+            ]
+        });
+
+        val = isNaNNode.processNode().value;
+        expect(val).toBe(true);
+    });
+
+    it("math/eq", () => {
+        let eq: Equality = new Equality({
+            ...defaultProps,
+            values: [
+                {id: 'a', value: -10.5, type: 2},
+                {id: 'b', value: 5.5, type: 2}
+            ]
+        });
+
+        let val = eq.processNode().value;
+        expect(val).toBe(false);
+
+        eq = new Equality({
+            ...defaultProps,
+            values: [
+                {id: 'a', value: 5.0, type: 2},
+                {id: 'b', value: 5.0, type: 2}
+            ]
+        });
+        val = eq.processNode().value;
+        expect(val).toBe(true);
+
+        eq = new Equality({
+            ...defaultProps,
+            values: [
+                {id: 'a', value: [-10.5, 0.5, 9] , type: 4},
+                {id: 'b', value: [4, -6, 10] , type: 4}
+            ]
+        });
+
+        val = eq.processNode().value;
+        expect(val).toBe(false);
+
+        eq = new Equality({
+            ...defaultProps,
+            values: [
+                {id: 'a', value: [-10.5, 0.5, 9] , type: 4},
+                {id: 'b', value: [-10.5, 0.5, 9] , type: 4}
+            ]
+        });
+
+        val = eq.processNode().value;
+        expect(val).toBe(true);
+    });
+
+    it("math/lt", () => {
+        let lt: LessThan = new LessThan({
+            ...defaultProps,
+            values: [
+                {id: 'a', value: -10.5, type: 2},
+                {id: 'b', value: 5.5, type: 2}
+            ]
+        });
+
+        let val = lt.processNode().value;
+        expect(val).toBe(true);
+
+        lt = new LessThan({
+            ...defaultProps,
+            values: [
+                {id: 'a', value: 5.0, type: 2},
+                {id: 'b', value: 5.0, type: 2}
+            ]
+        });
+        val = lt.processNode().value;
+        expect(val).toBe(false);
+    });
+
+    it("math/le", () => {
+        let le: LessThanOrEqualTo = new LessThanOrEqualTo({
+            ...defaultProps,
+            values: [
+                {id: 'a', value: 5.0, type: 2},
+                {id: 'b', value: 5.5, type: 2}
+            ]
+        });
+
+        let val = le.processNode().value;
+        expect(val).toBe(true);
+
+        le = new LessThanOrEqualTo({
+            ...defaultProps,
+            values: [
+                {id: 'a', value: 5.5, type: 2},
+                {id: 'b', value: 5.5, type: 2}
+            ]
+        });
+
+        val = le.processNode().value;
+        expect(val).toBe(true);
+
+        le = new LessThanOrEqualTo({
+            ...defaultProps,
+            values: [
+                {id: 'a', value: 10.0, type: 2},
+                {id: 'b', value: 5.0, type: 2}
+            ]
+        });
+        val = le.processNode().value;
+        expect(val).toBe(false);
+    });
+
+    it("math/gt", () => {
+        let gt: GreaterThan = new GreaterThan({
+            ...defaultProps,
+            values: [
+                {id: 'a', value: 10.5, type: 2},
+                {id: 'b', value: 5.5, type: 2}
+            ]
+        });
+
+        let val = gt.processNode().value;
+        expect(val).toBe(true);
+
+        gt = new GreaterThan({
+            ...defaultProps,
+            values: [
+                {id: 'a', value: 5.0, type: 2},
+                {id: 'b', value: 5.0, type: 2}
+            ]
+        });
+        val = gt.processNode().value;
+        expect(val).toBe(false);
+    });
+
+    it("math/ge", () => {
+        let ge: GreaterThanOrEqualTo = new GreaterThanOrEqualTo({
+            ...defaultProps,
+            values: [
+                {id: 'a', value: 10.0, type: 2},
+                {id: 'b', value: 5.5, type: 2}
+            ]
+        });
+
+        let val = ge.processNode().value;
+        expect(val).toBe(true);
+
+        ge = new GreaterThanOrEqualTo({
+            ...defaultProps,
+            values: [
+                {id: 'a', value: 5.5, type: 2},
+                {id: 'b', value: 5.5, type: 2}
+            ]
+        });
+
+        val = ge.processNode().value;
+        expect(val).toBe(true);
+
+        ge = new GreaterThanOrEqualTo({
+            ...defaultProps,
+            values: [
+                {id: 'a', value: -10.0, type: 2},
+                {id: 'b', value: 5.0, type: 2}
+            ]
+        });
+        val = ge.processNode().value;
+        expect(val).toBe(false);
     });
 });
 

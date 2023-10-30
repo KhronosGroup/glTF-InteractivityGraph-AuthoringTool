@@ -1321,7 +1321,7 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "type": "math/lessThan",
+                    "type": "math/lt",
                     "values": [
                         {
                             "id": "b",

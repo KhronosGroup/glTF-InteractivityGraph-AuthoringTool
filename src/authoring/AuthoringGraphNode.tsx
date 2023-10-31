@@ -188,7 +188,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
             case "customEvent":
                 return "#e1b739"
             case "node":
-                return "#f8a847"
+                return "#d97aff"
             case "variable":
                 return "#59ef73"
             default:

@@ -110,7 +110,7 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
         }
 
         const world = {glTFNodes: nodes};
-        babylonEngineRef.current = new BabylonDecorator(new BasicBehaveEngine(1), world, scene)
+        babylonEngineRef.current = new BabylonDecorator(new BasicBehaveEngine(10), world, scene)
 
         const extractedBehaveGraph = babylonEngineRef.current.extractBehaveGraphFromScene()
         if ((!behaveGraph.nodes || behaveGraph.nodes.length === 0) && extractedBehaveGraph) {

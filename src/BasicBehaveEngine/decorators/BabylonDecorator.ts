@@ -1,10 +1,11 @@
 import {ADecorator} from "./ADecorator";
 import {BehaveEngineNode, IFlow} from "../BehaveEngineNode";
 import {IBehaveEngine} from "../IBehaveEngine";
-import {AbstractMesh, Quaternion} from "@babylonjs/core";
+import {AbstractMesh, Matrix, PointerEventTypes, Quaternion} from "@babylonjs/core";
 import {Vector3} from "@babylonjs/core/Maths/math.vector";
 import {easeFloat, easeFloat3, easeFloat4} from "../easingUtils";
 import {Scene} from "@babylonjs/core/scene";
+import {OnSelect} from "../nodes/experimental/OnSelect";
 
 export class BabylonDecorator extends ADecorator {
     scene: Scene;
@@ -17,9 +18,16 @@ export class BabylonDecorator extends ADecorator {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         this.behaveEngine.extractBehaveGraphFromScene = this.extractBehaveGraphFromScene
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        this.behaveEngine.alertParentOnSelect = this.alertParentOnSelect
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        this.behaveEngine.addNodeClickedListener = this.addNodeClickedListener
 
         this.behaveEngine.animateProperty = this.animateProperty
         this.registerKnownPointers();
+        this.registerBehaveEngineNode("node/OnSelect", OnSelect);
     }
 
     processAddingNodeToQueue = (flow: IFlow) => {
@@ -36,7 +44,6 @@ export class BabylonDecorator extends ADecorator {
 
     animateProperty = (type: string, path: string, easingType: string, easingDuration: number, initialValue: any, targetValue: any, callback: () => void) => {
         const startTime = Date.now();
-
 
         const action = async () => {
             const elapsedDuration = (Date.now() - startTime) / 1000;
@@ -81,6 +88,7 @@ export class BabylonDecorator extends ADecorator {
                 (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).position.z];
         }, (path, value) => {
             const parts: string[] = path.split("/");
+            console.log(value);
             (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).position= new Vector3(value[0], value[1], value[2]);
         }, "float3")
 
@@ -105,4 +113,46 @@ export class BabylonDecorator extends ADecorator {
 
         return (this.scene as never)['extras']['behaveGraph'];
     };
+
+    public addNodeClickedListener = (nodeIndex: number, callback: (localHitLocation: number[], hitNodeIndex: number) => void): void => {
+        this.world.glTFNodes[nodeIndex].metadata = this.world.glTFNodes[nodeIndex].metadata || {};
+        this.world.glTFNodes[nodeIndex].metadata.onSelectCallback = callback;
+
+        this.scene.onPointerObservable.add(async (pointerInfo) => {
+            if (pointerInfo.type === PointerEventTypes.POINTERPICK) {
+                const ray = this.scene.createPickingRay(
+                    this.scene.pointerX,
+                    this.scene.pointerY,
+                    Matrix.Identity(),
+                    this.scene.activeCamera,
+                );
+
+                const hit = this.scene.pickWithRay(ray);
+                if (hit == null || hit.pickedMesh == null) {
+                    return;
+                }
+                const targetMesh: AbstractMesh = this.world.glTFNodes[nodeIndex];
+                if (targetMesh !== hit.pickedMesh && (!targetMesh.getChildMeshes(false).includes(hit.pickedMesh))) {
+                    return;
+                } else if (targetMesh.getChildMeshes(false).includes(hit.pickedMesh) && hit.pickedMesh.metadata.onSelectCallback != null) {
+                    return;
+                } else {
+                    const pos = [hit.pickedMesh.position.x, hit.pickedMesh.position.y, hit.pickedMesh.position.z];
+                    const hitNodeIndex = this.world.glTFNodes.findIndex((value: { uniqueId: number; }) => value.uniqueId === hit.pickedMesh!.uniqueId)
+                    callback(pos, hitNodeIndex);
+                }
+            }
+        });
+    }
+
+    public alertParentOnSelect = (localHitLocation: number[], hitNodeIndex: number, childNodeIndex: number): void => {
+        let curNode = this.world.glTFNodes[childNodeIndex].parent;
+        while (curNode !== null && (curNode.metadata == null || curNode.metadata.onSelectCallback == null)) {
+            curNode = curNode.parent;
+        }
+
+        if (curNode !== null) {
+            curNode.metadata.onSelectCallback(localHitLocation, hitNodeIndex);
+        }
+    }
 }

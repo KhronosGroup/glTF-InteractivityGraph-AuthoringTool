@@ -36,4 +36,25 @@ export class Receive extends BehaveEngineNode {
             this.addEventToWorkQueue(this.flows.out);
         })
     }
+
+    override parseType(type: string, val: any) {
+        switch (type) {
+            case "bool":
+                return val === "true";
+            case "int":
+                return Number(val);
+            case "float":
+                return Number(val);
+            case "float2":
+                return JSON.parse(val);
+            case "float3":
+                return JSON.parse(val);
+            case "float4":
+                return JSON.parse(val);
+            case "float4x4":
+                return JSON.parse(val);
+            default:
+                return val
+        }
+    }
 }

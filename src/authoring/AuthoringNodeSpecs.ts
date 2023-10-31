@@ -247,39 +247,41 @@ export const experimentalNodeSpecs: IAuthoringNode[] = [
         }
     },
     {
-        type: "math/lessThan",
-        description: "return true if a < b",
-        configuration: [],
-        input: {
-            flows: [],
-            values: [
+        type:"node/OnSelect",
+        description:"This node will fire when a node is selected.",
+        configuration:[
+            {
+                id:"nodeIndex",
+                type:"int",
+                description:"The node to add the listener on"
+            },
+            {
+                id:"stopPropagation",
+                type:"bool",
+                description:"Should the event be propagated up the node parent hierarchy"
+            },
+        ],
+        input:{
+            flows:[],
+            values:[]
+        },
+        output:{
+            flows:[
                 {
-                    id: "a",
-                    description: "First val",
-                    types: [
-                        "float",
-                        "float3"
-                    ]
+                    id:"out",
+                    description:"The flow to be followed when the custom event is fired."
+                }
+            ],
+            values:[
+                {
+                    id: "hitNodeIndex",
+                    description: "The index of the first hit node",
+                    types: ["int"]
                 },
                 {
-                    id: "b",
-                    description: "Second val",
-                    types: [
-                        "float",
-                        "float3"
-                    ]
-                }
-            ]
-        },
-        output: {
-            flows: [],
-            values: [
-                {
-                    id: "val",
-                    description: "a < b",
-                    types: [
-                        "bool"
-                    ]
+                    id: "localHitLocation",
+                    description: "The local hit offset from the hit node's origin",
+                    types: ["float3"]
                 }
             ]
         }

@@ -87,10 +87,19 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
     const buildGlTFNodeLayout = (rootNode: Node): Node[] => {
         const pattern = /^\/nodes\/\d+$/;
         const finalNodes: TransformNode[] = [];
+        const seenNodeIndices:Set<number> = new Set<number>();
 
         function traverse(node: TransformNode) {
             node.metadata.nodePointer = node._internalMetadata.gltf.pointers.find((pointer: string) => pattern.test(pointer));
-            finalNodes.push(node);
+            if (node.metadata.nodePointer != null) {
+                const nodeIndex = Number(node.metadata.nodePointer.split('/')[2]);
+                if (!seenNodeIndices.has(nodeIndex)) {
+                    seenNodeIndices.add(nodeIndex);
+                    node.metadata.nodeIndex = nodeIndex;
+                    finalNodes.push(node);
+                }
+            }
+
             if (node.getChildTransformNodes()) {
                 for (const childNode of node.getChildTransformNodes()) {
                     traverse(childNode);
@@ -100,7 +109,8 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
 
         rootNode.getChildren<TransformNode>().forEach((child: TransformNode) => traverse(child));
 
-        finalNodes.sort((a, b) => a.metadata.nodePointer.localeCompare(b.metadata.nodePointer))
+        finalNodes.sort((a, b) => a.metadata.nodeIndex - b.metadata.nodeIndex);
+        console.log(finalNodes);
         return finalNodes;
     }
 

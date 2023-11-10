@@ -10,6 +10,7 @@ class TrieNode {
     trieNodeType: TrieNodeType;
     setterCallback: ((path: string, value: any) => void) | undefined;
     getterCallback: ((path: string) => any) | undefined;
+    engineCallbacks: Map<string, (value: any, onComplete: ()=> void) => void> = new Map<string, (value: any, onComplete: ()=> void) => void>();
     typeName: string | undefined;
 
 
@@ -25,6 +26,11 @@ export class JsonPtrTrie {
 
     constructor() {
         this.root = new TrieNode(TrieNodeType.ROOT);
+    }
+
+    public addEngineCallback(path: string, callback: (value: any, onComplete: ()=> void) => void) {
+        console.log(`Adding engine callback for: ${path}`);
+        this.root.engineCallbacks.set(path, callback);
     }
 
     /**
@@ -68,6 +74,12 @@ export class JsonPtrTrie {
         currentNode.getterCallback = getterCallback;
         currentNode.setterCallback = setterCallback;
         currentNode.typeName = typeName;
+    }
+
+    public runEngineCallback(path: string, value: any, onComplete: ()=> void) { 
+        const callback = this.root.engineCallbacks.get(path);
+        if (callback)
+            callback(value, onComplete);
     }
 
     /**

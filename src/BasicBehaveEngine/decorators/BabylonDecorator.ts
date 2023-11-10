@@ -70,39 +70,72 @@ export class BabylonDecorator extends ADecorator {
         this.behaveEngine.registerJsonPointer(jsonPtr, getterCallback, setterCallback, typeName);
     };
 
+    registerEngineCallback = (path: string, callback: (value: any, onComplete: ()=> void) => void) => {
+        this.behaveEngine.registerEngineCallback(path, callback);
+    }
+
     registerKnownPointers = () => {
-        this.registerJsonPointer("nodes/99/scale", (path) => {
-            const parts: string[] = path.split("/");
-            return [(this.world.glTFNodes[Number(parts[1])] as AbstractMesh).scaling.x,
-                (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).scaling.y,
-                (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).scaling.z];
-        }, (path, value) => {
-            const parts: string[] = path.split("/");
-            (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).scaling = new Vector3(value[0], value[1], value[2]);
-        }, "float3")
+        const gltfNodesSize:number = this.world.glTFNodes.length;
 
-        this.registerJsonPointer("nodes/99/translation", (path) => {
-            const parts: string[] = path.split("/");
-            return [(this.world.glTFNodes[Number(parts[1])] as AbstractMesh).position.x,
-                (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).position.y,
-                (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).position.z];
-        }, (path, value) => {
-            const parts: string[] = path.split("/");
-            console.log(value);
-            (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).position= new Vector3(value[0], value[1], value[2]);
-        }, "float3")
+        this.registerEngineCallback(`playAnimation`, (value, onComplete) => {
+            // Note : targetTime not yet implemented to do something yet
+            const {animation, speed, loopCount, targetTime} = value;
+            const animationGroup = this.scene.animationGroups[animation];
 
-        this.registerJsonPointer("nodes/99/rotation", (path) => {
-            const parts: string[] = path.split("/");
-            return [
-                (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).rotationQuaternion?.w,
-                (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).rotationQuaternion?.x,
-                (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).rotationQuaternion?.y,
-                (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).rotationQuaternion?.z];
-        }, (path, value) => {
-            const parts: string[] = path.split("/");
-            (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).rotationQuaternion = new Quaternion(value[1], value[2], value[3], value[0]);
-        }, "float4")
+            animationGroup.speedRatio = speed;
+
+            // run infinitely
+            if (loopCount <= 0) {
+                animationGroup.start(true, speed);
+            }
+            else {
+                let count = loopCount;
+                animationGroup.start(false, speed);
+                animationGroup.onAnimationGroupEndObservable.add(function() {
+                    -- count;
+                    if (count > 0) {
+                        animationGroup.start(false, speed);
+                    } else {
+                        onComplete();
+                    }
+                });
+            }
+        });
+
+        for (let i = 0; i < gltfNodesSize; i++) {
+            this.registerJsonPointer(`nodes/${i}/scale`, (path) => {
+                const parts: string[] = path.split("/");
+                return [(this.world.glTFNodes[Number(parts[1])] as AbstractMesh).scaling.x,
+                    (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).scaling.y,
+                    (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).scaling.z];
+            }, (path, value) => {
+                const parts: string[] = path.split("/");
+                (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).scaling = new Vector3(value[0], value[1], value[2]);
+            }, "float3")
+    
+            this.registerJsonPointer(`nodes/${i}/translation`, (path) => {
+                const parts: string[] = path.split("/");
+                return [(this.world.glTFNodes[Number(parts[1])] as AbstractMesh).position.x,
+                    (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).position.y,
+                    (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).position.z];
+            }, (path, value) => {
+                const parts: string[] = path.split("/");
+                (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).position= new Vector3(value[0], value[1], value[2]);
+            }, "float3")
+    
+            this.registerJsonPointer(`nodes/${i}/rotation`, (path) => {
+                const parts: string[] = path.split("/");
+                return [
+                    (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).rotationQuaternion?.w,
+                    (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).rotationQuaternion?.x,
+                    (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).rotationQuaternion?.y,
+                    (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).rotationQuaternion?.z];
+            }, (path, value) => {
+                const parts: string[] = path.split("/");
+                (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).rotationQuaternion = new Quaternion(value[1], value[2], value[3], value[0]);
+            }, "float4")
+    
+        }
     }
 
     public extractBehaveGraphFromScene = (): any => {

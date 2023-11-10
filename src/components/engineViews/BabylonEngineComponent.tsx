@@ -38,28 +38,32 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
     const [fileUploaded, setFileUploaded] = useState(false);
     const [clickedHotSpot, setClickedHotSpot] = useState<string | null>(null);
 
+    function createScene() {
+            // Create a scene
+            sceneRef.current = new Scene(engineRef.current!);
+
+            // Create a camera
+            const camera = new ArcRotateCamera('camera', Math.PI / 3, Math.PI / 3, 10, Vector3.Zero(), sceneRef.current);
+            camera.attachControl(canvasRef.current, true);
+            camera.minZ = 0.001;
+            canvasRef.current!.addEventListener("wheel", (e: any) => {
+                e.preventDefault();
+                e.stopPropagation();
+    
+                return false;
+            })
+    
+            // Create lights
+            new HemisphericLight('light1', new Vector3(0, 1, 0), sceneRef.current);
+            new DirectionalLight('light2', new Vector3(1, -1, 0), sceneRef.current);
+    
+    
+    }
+    
     useEffect(() => {
         // Create the Babylon.js engines
         engineRef.current = new Engine(canvasRef.current, true);
-
-        // Create a scene
-        sceneRef.current = new Scene(engineRef.current!);
-
-        // Create a camera
-        const camera = new ArcRotateCamera('camera', Math.PI / 3, Math.PI / 3, 10, Vector3.Zero(), sceneRef.current);
-        camera.attachControl(canvasRef.current, true);
-        camera.minZ = 0.001;
-        canvasRef.current!.addEventListener("wheel", (e: any) => {
-            e.preventDefault();
-            e.stopPropagation();
-
-            return false;
-        })
-
-        // Create lights
-        new HemisphericLight('light1', new Vector3(0, 1, 0), sceneRef.current);
-        new DirectionalLight('light2', new Vector3(1, -1, 0), sceneRef.current);
-
+        createScene();
         // Run the render loop
         engineRef.current?.runRenderLoop(() => {
             sceneRef.current?.render();
@@ -74,13 +78,21 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
     }, []);
 
     const resetScene = async () => {
-        sceneRef.current?.meshes.forEach(mesh => mesh.dispose())
+        sceneRef.current?.dispose();
+        createScene();
+
         const file = fileInputRef.current!.files![0]
 
         const url = URL.createObjectURL(file);
 
         const container = await SceneLoader.LoadAssetContainerAsync("", url, sceneRef.current, undefined, ".glb");
         container.addAllToScene();
+
+        // Stop all animations by default (only apply based off of play animation node)
+        for (let i = 0; i < (sceneRef.current?.animationGroups?.length ?? 0); i ++) {
+            sceneRef.current?.animationGroups[i].stop();
+        }
+
         return buildGlTFNodeLayout(container.rootNodes[0]);
     };
 

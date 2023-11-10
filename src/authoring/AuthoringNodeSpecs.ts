@@ -124,6 +124,58 @@ export const worldNodeSpecs: IAuthoringNode[] = [
         }
     },
     {
+        type: "world/playAnimation",
+        description: "Plays animation on the world",
+        configuration: [],
+        input: {
+            flows: [
+                {
+                    id: "in",
+                    description: "The in flow"
+                }
+            ],
+            values: [
+                {
+                    id: "animation",
+                    types: [
+                        "int",
+                    ],
+                    description: "Target animation to run"
+                },
+                {
+                    id: "speed",
+                    types: [
+                        "float",
+                    ],
+                    description: "The speed to run the animation at"
+                },
+                {
+                    id: "loopCount",
+                    types: [
+                        "int",
+                    ],
+                    description: "Counts to loop animation"
+                },
+                {
+                    id: "targetTime",
+                    types: [
+                        "float",
+                    ],
+                    description: "Target time to run."
+                }
+            ]
+        },
+        output: {
+            flows: [
+                {
+                    id: "done",
+                    description: "The out flow"
+                }
+            ],
+            values:[]
+        }
+    },
+    {
         type: "world/animateTo",
         description: "Sets properties of the gltf using JSON pointer over a set time",
         configuration: [

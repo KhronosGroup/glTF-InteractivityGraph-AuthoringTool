@@ -15,6 +15,7 @@ import {WaitAll} from "./nodes/flow/WaitAll";
 import {WhileLoop} from "./nodes/flow/WhileLoop";
 import {WorldGet} from "./nodes/world/WorldGet";
 import {WorldSet} from "./nodes/world/WorldSet";
+import {PlayAnimation} from "./nodes/world/PlayAnimation";
 import {WorldAnimateTo} from "./nodes/world/WorldAnimateTo";
 import {Receive} from "./nodes/customEvent/Receive";
 import {Send} from "./nodes/customEvent/Send";
@@ -124,6 +125,11 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.jsonPtrTrie.addPath(jsonPtr, getterCallback, setterCallback, typeName);
     }
 
+    public registerEngineCallback = (path: string, callback: (value: any, onComplete: ()=> void) => void) => {
+        console.log(`registering engine callback ${path}`);
+        this.jsonPtrTrie.addEngineCallback(path, callback);
+    }
+
     public isValidJsonPtr = (jsonPtr: string): boolean => {
         return this.jsonPtrTrie.isPathValid(jsonPtr);
     }
@@ -134,6 +140,10 @@ export class BasicBehaveEngine implements IBehaveEngine {
 
     public getPathtypeName = (path: string) => {
         return this.jsonPtrTrie.getPathTypeName(path);
+    }
+
+    public runEngineCallback(path: string, value: any, onComplete: ()=> void) { 
+        this.jsonPtrTrie.runEngineCallback(path, value, onComplete);
     }
 
     public setPathValue = (path: string, value: any) => {
@@ -241,6 +251,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("flow/whileLoop", WhileLoop);
         this.registerBehaveEngineNode("world/get", WorldGet);
         this.registerBehaveEngineNode("world/set", WorldSet);
+        this.registerBehaveEngineNode("world/playAnimation", PlayAnimation);
         this.registerBehaveEngineNode("world/animateTo", WorldAnimateTo);
         this.registerBehaveEngineNode("math/abs", AbsoluteValue);
         this.registerBehaveEngineNode("customEvent/receive", Receive);

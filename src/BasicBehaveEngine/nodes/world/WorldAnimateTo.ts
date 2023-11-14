@@ -60,16 +60,20 @@ export class WorldAnimateTo extends BehaveEngineNode {
         const populatedPath = this.populatePath(this._path, configVals)
         const targetValue = requiredVals.a;
 
-        this.graphEngine.processNodeStarted(this)
+        this.graphEngine.processNodeStarted(this);
 
         if (this.graphEngine.isValidJsonPtr(populatedPath)) {
             const initialValue = this.graphEngine.getPathValue(populatedPath);
             const type = this.graphEngine.getPathtypeName(populatedPath)!;
             this.graphEngine.animateProperty(type, populatedPath, this._easingType, this._easingDuration, initialValue, targetValue, () => {
-                if (this.flows.out) {
-                    this.addEventToWorkQueue(this.flows.out)
+                if (this.flows.done) {
+                    this.addEventToWorkQueue(this.flows.done)
                 }
             })
+        }
+
+        if (this.flows.out) {
+            this.processFlow(this.flows.out);
         }
     }
 }

@@ -218,11 +218,108 @@ export const worldNodeSpecs: IAuthoringNode[] = [
         output: {
             flows: [
                 {
+                  id: "done",
+                  description: "The flow to follow once the animateTo is done"
+                },
+                {
                     id: "out",
-                    description: "The out flow"
+                    description: "The out flow to be followed immediately after execution"
                 }
             ],
             values:[]
+        }
+    },
+    {
+        type: "world/startAnimation",
+        description: "plays an animation",
+        configuration: [],
+        input: {
+            values: [
+                {
+                    id: "animation",
+                    types: ["int"],
+                    description: "The index for the animation to play"
+                },
+                {
+                    id: "speed",
+                    types: ["float"],
+                    description: "The speed multiplier of the animation, must be greater than zero/strictly positive, otherwise undefined (but you could in your implementation then default it to 1.0).  We specify backward playing using a negative targetTime."
+                },
+                {
+                    id: "startTime",
+                    types: ["float"],
+                    description: "Start animation frame must be between the range of 0 to max animation time"
+                },
+                {
+                    id: "endTime",
+                    types: ["float"],
+                    description: "End animation time, if it is before the start time the animation will be played backwards, if it is +/- Inf the animation will loop until manually stopped"
+                }
+            ],
+            flows: [
+                {
+                    id: "in",
+                    description: "in flow to trigger this node"
+                }
+            ]
+        },
+        output: {
+            values: [],
+            flows: [
+                {
+                    id: "out",
+                    description: "The synchronous flow to be followed"
+                },
+                {
+                    id: "done",
+                    description: "The flow to be followed when the animation target time is reached, async"
+                }
+            ]
+        }
+    },
+    {
+        type: "world/stopAnimation",
+        description: "stops an animation instance",
+        configuration: [
+            {
+                id: "stopMode",
+                description: "0 - immediate, 1 - exactFrameTime, 2 - nextLoop",
+                type: "int"
+            }
+        ],
+        input: {
+            values: [
+                {
+                    id: "animation",
+                    types: ["int"],
+                    description: "The animation to cancel"
+                }
+            ],
+            flows: [
+                {
+                    id: "in",
+                    description: "in flow to trigger this node"
+                }
+            ]
+        },
+        output: {
+            values: [
+                {
+                    id: "time",
+                    types:["float"],
+                    description: "The interpolation of the time the animation was stopped at"
+                }
+            ],
+            flows: [
+                {
+                    id: "out",
+                    description: "The synchronous flow to be followed"
+                },
+                {
+                    id: "done",
+                    description: "The flow to be followed when the animation is canceled"
+                }
+            ]
         }
     }
 ]
@@ -488,8 +585,12 @@ export const flowNodeSpecs: IAuthoringNode[] = [
         output: {
             flows: [
                 {
-                    id: "out",
+                    id: "done",
                     description: "The flow to be followed after the delay",
+                },
+                {
+                    id: "out",
+                    description: "The flow to be followed immediately after the node is executed"
                 }
             ],
             values: []
@@ -939,6 +1040,25 @@ export const constantsNodes = [
                 {
                     id: "val",
                     description: "Euler's Number",
+                    types: ["float"]
+                }
+            ]
+        }
+    },
+    {
+        type: "math/inf",
+        description: "Infinity",
+        configuration: [],
+        input: {
+            flows: [],
+            values: []
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "Infinity",
                     types: ["float"]
                 }
             ]

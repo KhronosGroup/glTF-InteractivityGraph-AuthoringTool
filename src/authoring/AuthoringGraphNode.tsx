@@ -171,6 +171,13 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
             } else if (props.node.type === "variable/get") {
                 setOutputValues([value]);
             }
+        } else if (props.data.configuration.stopMode !== undefined) {
+            if (props.data.configuration.stopMode === "1") {
+                setInputValues([{id: "animation", types:["int"], description: "animation top stop"}, {id: "stopTime", types: ["float"], description: "Target time to stop at"}]);
+            } else {
+                setInputValues([{id: "animation", types:["int"], description: "animation top stop"}]);
+            }
+
         }
     }
 

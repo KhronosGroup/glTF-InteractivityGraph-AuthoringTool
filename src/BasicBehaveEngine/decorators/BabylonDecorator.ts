@@ -1,11 +1,13 @@
 import {ADecorator} from "./ADecorator";
 import {BehaveEngineNode, IFlow} from "../BehaveEngineNode";
 import {IBehaveEngine} from "../IBehaveEngine";
-import {AbstractMesh, Matrix, PointerEventTypes, Quaternion} from "@babylonjs/core";
+import {AbstractMesh, AnimationGroup, float, Matrix, PointerEventTypes, Quaternion} from "@babylonjs/core";
 import {Vector3} from "@babylonjs/core/Maths/math.vector";
 import {easeFloat, easeFloat3, easeFloat4} from "../easingUtils";
 import {Scene} from "@babylonjs/core/scene";
 import {OnSelect} from "../nodes/experimental/OnSelect";
+import {WorldStopAnimation} from "../nodes/experimental/WorldStopAnimation";
+import {WorldStartAnimation} from "../nodes/experimental/WorldStartAnimation";
 
 export class BabylonDecorator extends ADecorator {
     scene: Scene;
@@ -24,10 +26,24 @@ export class BabylonDecorator extends ADecorator {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         this.behaveEngine.addNodeClickedListener = this.addNodeClickedListener
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        this.behaveEngine.playAnimation = this.playAnimation
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        this.behaveEngine.cancelAnimation = this.cancelAnimation
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        this.behaveEngine.stopAnimation = this.stopAnimation
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        this.behaveEngine.startAnimation = this.startAnimation
 
         this.behaveEngine.animateProperty = this.animateProperty
         this.registerKnownPointers();
         this.registerBehaveEngineNode("node/OnSelect", OnSelect);
+        this.registerBehaveEngineNode("world/stopAnimation", WorldStopAnimation);
+        this.registerBehaveEngineNode("world/startAnimation", WorldStartAnimation);
     }
 
     processAddingNodeToQueue = (flow: IFlow) => {
@@ -165,7 +181,7 @@ export class BabylonDecorator extends ADecorator {
                     return;
                 }
                 const targetMesh: AbstractMesh = this.world.glTFNodes[nodeIndex];
-                if (targetMesh !== hit.pickedMesh && (!targetMesh.getChildMeshes(false).includes(hit.pickedMesh))) {
+                if (targetMesh !== hit.pickedMesh && targetMesh.id !== hit.pickedMesh.id && (!targetMesh.getChildMeshes(false).includes(hit.pickedMesh))) {
                     return;
                 } else if (targetMesh.getChildMeshes(false).includes(hit.pickedMesh) && hit.pickedMesh.metadata.onSelectCallback != null) {
                     return;
@@ -186,6 +202,127 @@ export class BabylonDecorator extends ADecorator {
 
         if (curNode !== null) {
             curNode.metadata.onSelectCallback(localHitLocation, hitNodeIndex);
+        }
+    }
+
+    public startAnimation = (animation: number, startTime: number, endTime: number, speed: number,  callback: () => void): void => {
+        const fps = 60;
+        const startFrame: number = startTime * fps;
+        const endFrame: number = endTime * fps;
+
+        const anim: AnimationGroup = this.world.animations[animation]
+        anim.metadata = anim.metadata || {};
+
+        const loopingForever = !isFinite(endFrame);
+        const forward = startFrame < endFrame;
+
+        if (!loopingForever) {
+            const loops = Math.abs(endFrame - startFrame)/(anim.to - anim.from);
+            if (forward) {
+                if (loops > 1) {
+                    let count = 0;
+                    this._animateRange(speed, true, true, anim.from, anim.to, startFrame, anim, undefined, () => {
+                        count++;
+                        if (count > loops) {
+                            this._animateRange(speed, true, false, anim.from, endFrame % anim.to, anim.from, anim,
+                                callback, undefined);
+                        }
+                    })
+                } else if (endFrame <= anim.to) {
+                    this._animateRange(speed, true, false, startFrame, endFrame, startFrame, anim, callback, undefined);
+                } else {
+                    this._animateRange(speed, true, false, startFrame, anim.to, startFrame, anim, () => {
+                        this._animateRange(speed, true, false, anim.from, endFrame - anim.to, anim.to, anim, callback, undefined);
+                    }, undefined)
+                }
+            } else {
+                if (loops > 1) {
+                    let count = 0;
+                    this._animateRange(speed, false, true, anim.to, anim.from, startFrame, anim, undefined, () => {
+                        count++;
+                        if (count > loops) {
+                            this._animateRange(speed, false, false, anim.to, anim.from  - ((endFrame - startFrame) % (anim.to - anim.from)), anim.to, anim,
+                                callback, undefined);
+                        }
+                    })
+                } else if (endFrame >= 0) {
+                    this._animateRange(speed, false, false, startFrame, endFrame, startFrame, anim, callback, undefined);
+                } else {
+                    this._animateRange(speed, false, false, startFrame, anim.from, startFrame, anim, () => {
+                        this._animateRange(speed, false, false, anim.to, endFrame + anim.to, anim.to, anim, callback, undefined);
+                    }, undefined)
+                }
+            }
+        } else {
+            if (forward) {
+                //forward
+                this._animateRange(speed, true, true, anim.from, anim.to, startFrame, anim, undefined,undefined);
+            } else {
+                //backwards
+                this._animateRange(speed, false, true, anim.to, anim.from, startFrame, anim, undefined, undefined);
+            }
+        }
+    }
+
+    public stopAnimation = (animationIndex: number, stopMode: number, exactFrameTime: number | undefined, callback: (time: number) => void): void => {
+        const animation: AnimationGroup = this.world.animations[animationIndex]
+        const animationInstance: AnimationGroup = animation.metadata.instance;
+        if (animationInstance === undefined) return;
+        if (stopMode === 0) {
+            const frame = animationInstance.animatables[0].masterFrame;
+            const fps = 60;
+            const time: number = frame / fps;
+            animationInstance.stop();
+            animationInstance.dispose();
+            animation.metadata.instance = undefined;
+            callback(time);
+        } else if (stopMode === 1) {
+            const forward = animationInstance.metadata.isForward;
+            if (animationInstance.animatables[0] === undefined) {return}
+            const frame = animationInstance.animatables[0].masterFrame;
+            const fps = 60;
+            const stopFrame = exactFrameTime! * fps;
+            this._animateRange(animationInstance.speedRatio, forward, false, frame, stopFrame, frame, animation, () => callback(exactFrameTime!), undefined);
+        }  else if (stopMode === 2) {
+            animationInstance.onAnimationLoopObservable.add(() => {
+                animationInstance.stop();
+                animationInstance.dispose();
+                animation.metadata.instance = undefined;
+                callback(0);
+            })
+        } else {
+            throw Error(`Invalid stop Mode ${stopMode}`);
+        }
+    }
+
+    private _animateRange = (speed: float, isForward: boolean, isLoop: boolean, startFrame: float, endFrame: float, currentFrame: float,
+                             animation: AnimationGroup, endCallback: (() => void) | undefined, loopCallback: (() => void )| undefined) => {
+        if (animation.metadata.instance !== undefined) {
+            //clear any previous animation
+            if (animation.metadata.instance.isPlaying) {
+                animation.metadata.instance.stop();
+                animation.metadata.instance.dispose();
+            }
+            animation.metadata.instance = undefined;
+        }
+
+        const animationInstance: AnimationGroup = animation.clone(`${animation.name}-instance`);
+        animation.metadata.instance = animationInstance;
+        animation.metadata.instance.metadata = animation.metadata.instance.metadata || {};
+        animation.metadata.instance.metadata.isForward = isForward;
+
+        animationInstance.start(isLoop, speed, startFrame, endFrame, false);
+
+        if (isLoop) {
+            animationInstance.goToFrame(currentFrame);
+        }
+
+
+        if (endCallback !== undefined) {
+            animationInstance.onAnimationGroupEndObservable.add(endCallback);
+        }
+        if (loopCallback !== undefined) {
+            animationInstance.onAnimationGroupLoopObservable.add(loopCallback);
         }
     }
 }

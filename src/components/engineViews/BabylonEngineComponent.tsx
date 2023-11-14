@@ -1,6 +1,7 @@
 import React, {useEffect, useRef, useState} from "react";
 import {Button, Col, Container, Form, Modal, Row, Tab, Tabs} from "react-bootstrap";
 import {
+    AnimationGroup,
     ArcRotateCamera,
     DirectionalLight,
     Engine,
@@ -85,6 +86,11 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
 
         const url = URL.createObjectURL(file);
 
+        SceneLoader.OnPluginActivatedObservable.add( (loader) => {
+            if (loader.name === "gltf") {
+                ( loader as GLTFFileLoader ).animationStartMode = GLTFLoaderAnimationStartMode.NONE;
+            }
+        });
         const container = await SceneLoader.LoadAssetContainerAsync("", url, sceneRef.current, undefined, ".glb");
         container.addAllToScene();
 

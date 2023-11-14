@@ -86,8 +86,11 @@ export class BabylonDecorator extends ADecorator {
         this.behaveEngine.registerJsonPointer(jsonPtr, getterCallback, setterCallback, typeName);
     };
 
+    
     registerKnownPointers = () => {
-        this.registerJsonPointer("nodes/99/scale", (path) => {
+        const maxGltfNode:number = this.world.glTFNodes.length-1;
+
+        this.registerJsonPointer(`nodes/${maxGltfNode}/scale`, (path) => {
             const parts: string[] = path.split("/");
             return [(this.world.glTFNodes[Number(parts[1])] as AbstractMesh).scaling.x,
                 (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).scaling.y,
@@ -97,7 +100,7 @@ export class BabylonDecorator extends ADecorator {
             (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).scaling = new Vector3(value[0], value[1], value[2]);
         }, "float3")
 
-        this.registerJsonPointer("nodes/99/translation", (path) => {
+        this.registerJsonPointer(`nodes/${maxGltfNode}/translation`, (path) => {
             const parts: string[] = path.split("/");
             return [(this.world.glTFNodes[Number(parts[1])] as AbstractMesh).position.x,
                 (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).position.y,
@@ -108,7 +111,7 @@ export class BabylonDecorator extends ADecorator {
             (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).position= new Vector3(value[0], value[1], value[2]);
         }, "float3")
 
-        this.registerJsonPointer("nodes/99/rotation", (path) => {
+        this.registerJsonPointer(`nodes/${maxGltfNode}/rotation`, (path) => {
             const parts: string[] = path.split("/");
             return [
                 (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).rotationQuaternion?.w,

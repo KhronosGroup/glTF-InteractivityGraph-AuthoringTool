@@ -34,6 +34,10 @@ export class LoggingDecorator extends ADecorator {
         this.behaveEngine.registerJsonPointer(jsonPtr, getterCallback, setterCallback, typeName);
     };
 
+    registerEngineCallback = (path: string, callback: (value: any, onComplete: ()=> void) => void) => {
+        this.behaveEngine.registerEngineCallback(path, callback);
+    }
+
     animateProperty = (type: string, path: string, easingType: string, easingDuration: number, initialValue: any, targetValue: any, callback: () => void) => {
         setTimeout(() => {
             this.behaveEngine.setPathValue(path, targetValue);

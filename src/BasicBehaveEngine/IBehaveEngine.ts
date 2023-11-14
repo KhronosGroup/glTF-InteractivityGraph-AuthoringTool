@@ -42,6 +42,14 @@ export interface IBehaveEngine {
     ) => void;
 
     /**
+     * Register a JSON pointer along with callback functions for getting and setting its value.
+     * @param path - The JSON pointer string.
+     * @param value - The value to use for the engine callback
+     * @param onComplete - the function to run whenever this is finished
+     */
+   registerEngineCallback: (path: string, callback:(value: any, onComplete: ()=> void) => void) => void;
+
+    /**
      * Register a Behave Engine node type along with its corresponding class.
      * @param type - The type of the Behave Engine node.
      * @param behaveEngineNode - The class representing the Behave Engine node.

@@ -18,6 +18,7 @@ import {KHR_interactivity, KHR_INTERACTIVITY_EXTENSION_NAME} from "../../loaderE
 import {GLTFLoader} from "@babylonjs/loaders/glTF/2.0";
 import {BabylonDecorator} from "../../BasicBehaveEngine/decorators/BabylonDecorator";
 import {BasicBehaveEngine} from "../../BasicBehaveEngine/BasicBehaveEngine";
+import {GLTFFileLoader, GLTFLoaderAnimationStartMode} from "@babylonjs/loaders";
 
 enum BabylonEngineModal {
     CUSTOM_EVENT = "CUSTOM_EVENT",
@@ -100,6 +101,7 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
         }
 
         return buildGlTFNodeLayout(container.rootNodes[0]);
+        return {nodes:buildGlTFNodeLayout(container.rootNodes[0]), animations: container.animationGroups};
     };
 
     const buildGlTFNodeLayout = (rootNode: Node): Node[] => {
@@ -132,16 +134,16 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
         return finalNodes;
     }
 
-    const runGraph = (babylonEngineRef: any, behaveGraph: any, scene: any, nodes: Node[]) => {
+    const runGraph = (babylonEngineRef: any, behaveGraph: any, scene: any, nodes: Node[], animations: AnimationGroup[]) => {
         if (babylonEngineRef.current !== null) {
             babylonEngineRef.current.clearCustomEventListeners()
         }
 
-        const world = {glTFNodes: nodes};
+        const world = {glTFNodes: nodes, animations: animations};
         babylonEngineRef.current = new BabylonDecorator(new BasicBehaveEngine(10), world, scene)
 
         const extractedBehaveGraph = babylonEngineRef.current.extractBehaveGraphFromScene()
-        if ((!behaveGraph.nodes || behaveGraph.nodes.length === 0) && extractedBehaveGraph) {
+        if (extractedBehaveGraph) {
             props.setBehaveGraphFromGlTF(extractedBehaveGraph);
             babylonEngineRef.current.loadBehaveGraph(extractedBehaveGraph);
         } else {
@@ -184,7 +186,7 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
             const glbSizeOriginal = dataView.getUint32(8, true); // true for little-endian
             const byteIncreaseAmount = glTFLengthNew - glTFLengthOriginal;
 
-            const binaryData = new Uint32Array(glbSizeOriginal + byteIncreaseAmount); // Create a binary file with 1024 bytes
+            const binaryData = new Uint32Array((glbSizeOriginal + byteIncreaseAmount)/4);
             const glbView = new DataView(binaryData.buffer);
 
             glbView.setUint32(0, 0x46546C67, true);
@@ -224,8 +226,8 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
             <div style={{background: "#3d5987", padding: 16, borderTopLeftRadius: 16, borderTopRightRadius: 16}}>
                 <Button variant="outline-light" onClick={() => {
                     resetScene()
-                        .then((nodes: Node[]) => {
-                            runGraph(babylonEngineRef, props.behaveGraphRef.current, sceneRef.current, nodes);
+                        .then((res: {nodes: Node[], animations: AnimationGroup[]}) => {
+                            runGraph(babylonEngineRef, props.behaveGraphRef.current, sceneRef.current, res.nodes, res.animations);
                             setGraphRunning(true);
                         })
                 }} disabled={!fileUploaded}>

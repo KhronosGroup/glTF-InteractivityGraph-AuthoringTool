@@ -61,6 +61,7 @@ import {LessThan} from "./nodes/math/comparison/LessThan";
 import {Equality} from "./nodes/math/comparison/Equality";
 import {GreaterThanOrEqualTo} from "./nodes/math/comparison/GreaterThanOrEqualTo";
 import {GreaterThan} from "./nodes/math/comparison/GreaterThan";
+import {Inf} from "./nodes/math/constants/Inf";
 
 
 export interface ICustomEventListener {
@@ -248,6 +249,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("variable/get", VariableGet);
         this.registerBehaveEngineNode("variable/set", VariableSet);
         this.registerBehaveEngineNode("math/e", Euler);
+        this.registerBehaveEngineNode("math/inf", Inf);
         this.registerBehaveEngineNode("math/pi", Pi);
         this.registerBehaveEngineNode("math/sign", Sign);
         this.registerBehaveEngineNode("math/trunc", Truncate);

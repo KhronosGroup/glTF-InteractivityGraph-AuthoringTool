@@ -168,14 +168,17 @@ describe('nodes', () => {
             ...defaultProps,
             values: [{ id: 'duration', value: 0.5, type: 2 }],
             flows: [
-                { id: 'out', node: 0 }
+                { id: 'out', node: 1 },
+                {id: 'done', node: 2 }
             ]
         });
         delay.addEventToWorkQueue = jest.fn<(flow: IFlow) => Promise<void>>();
+        delay.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
         delay.processNode('in');
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        expect(delay.addEventToWorkQueue).toHaveBeenCalledWith({"id": "out", "node": 0});
+        expect(delay.addEventToWorkQueue).toHaveBeenCalledWith({"id": "done", "node": 2});
+        expect(delay.processFlow).toHaveBeenCalledWith({"id": "out", "node": 1});
     });
 
     it('flow/sequence', async () => {

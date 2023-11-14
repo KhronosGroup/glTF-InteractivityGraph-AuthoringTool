@@ -15,8 +15,9 @@ export class Delay extends BehaveEngineNode {
         const {duration} = this.evaluateAllValues(this.REQUIRED_VALUES.map(val => val.id));
         this.graphEngine.processNodeStarted(this);
         setTimeout(() => {
-            this.addEventToWorkQueue(this.flows.out)
+            this.addEventToWorkQueue(this.flows.done)
         }, duration * 1000)
 
+        this.processFlow(this.flows.out);
     }
 }

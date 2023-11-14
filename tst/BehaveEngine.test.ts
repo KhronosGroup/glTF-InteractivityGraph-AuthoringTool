@@ -734,7 +734,7 @@ describe('BehaveEngine', () => {
                     ],
                     "flows": [
                         {
-                            "id": "out",
+                            "id": "done",
                             "node": 3,
                             "socket": "in"
                         }
@@ -855,7 +855,7 @@ describe('BehaveEngine', () => {
         await new Promise((resolve) => setTimeout(resolve, 250));
         expect(loggingWorld.nodes[0].scale).toEqual([1,1,1]);
         expect(loggingWorld.nodes[0].translation).toEqual([0,3,0]);
-        expect(executionLog).toEqual("Adding {\"node\":0,\"id\":\"start\"} flow to queueRunning OnStart: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":1,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":1,\"socket\":\"in\"} flowRunning Sequence: input values: {}, output flows: {\"0\":{\"id\":\"0\",\"node\":2,\"socket\":\"in\"},\"1\":{\"id\":\"1\",\"node\":6,\"socket\":\"in\"}}Executing {\"id\":\"0\",\"node\":2,\"socket\":\"in\"} flowRunning WorldAnimateTo: input values: {\"a\":{\"id\":\"a\",\"value\":[5,5,5],\"type\":4}}, output flows: {\"out\":{\"id\":\"out\",\"node\":3,\"socket\":\"in\"}}Executing {\"id\":\"1\",\"node\":6,\"socket\":\"in\"} flowRunning WorldGet: input values: {\"nodeIndex\":{\"id\":\"nodeIndex\",\"value\":0,\"type\":1}}, output flows: {}Running AddNode: input values: {\"b\":{\"id\":\"b\",\"value\":[0,5,0],\"type\":4},\"a\":{\"id\":\"a\",\"node\":4,\"socket\":\"value\",\"type\":4}}, output flows: {}Running WorldAnimateTo: input values: {\"nodeIndex\":{\"id\":\"nodeIndex\",\"value\":0,\"type\":1},\"a\":{\"id\":\"a\",\"node\":5,\"socket\":\"val\",\"type\":4}}, output flows: {}Adding {\"id\":\"out\",\"node\":3,\"socket\":\"in\"} flow to queueRunning WorldSet: input values: {\"a\":{\"id\":\"a\",\"value\":[1,1,1],\"type\":4}}, output flows: {}");
+        expect(executionLog).toEqual("Adding {\"node\":0,\"id\":\"start\"} flow to queueRunning OnStart: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":1,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":1,\"socket\":\"in\"} flowRunning Sequence: input values: {}, output flows: {\"0\":{\"id\":\"0\",\"node\":2,\"socket\":\"in\"},\"1\":{\"id\":\"1\",\"node\":6,\"socket\":\"in\"}}Executing {\"id\":\"0\",\"node\":2,\"socket\":\"in\"} flowRunning WorldAnimateTo: input values: {\"a\":{\"id\":\"a\",\"value\":[5,5,5],\"type\":4}}, output flows: {\"done\":{\"id\":\"done\",\"node\":3,\"socket\":\"in\"}}Executing {\"id\":\"1\",\"node\":6,\"socket\":\"in\"} flowRunning WorldGet: input values: {\"nodeIndex\":{\"id\":\"nodeIndex\",\"value\":0,\"type\":1}}, output flows: {}Running AddNode: input values: {\"b\":{\"id\":\"b\",\"value\":[0,5,0],\"type\":4},\"a\":{\"id\":\"a\",\"node\":4,\"socket\":\"value\",\"type\":4}}, output flows: {}Running WorldAnimateTo: input values: {\"nodeIndex\":{\"id\":\"nodeIndex\",\"value\":0,\"type\":1},\"a\":{\"id\":\"a\",\"node\":5,\"socket\":\"val\",\"type\":4}}, output flows: {}Adding {\"id\":\"done\",\"node\":3,\"socket\":\"in\"} flow to queueRunning WorldSet: input values: {\"a\":{\"id\":\"a\",\"value\":[1,1,1],\"type\":4}}, output flows: {}");
     });
 
     it("should tick 5 times", async () => {
@@ -1104,7 +1104,7 @@ describe('BehaveEngine', () => {
         })
         loggingBehaveEngine.loadBehaveGraph(customEventGraph);
         await new Promise((resolve) => setTimeout(resolve, 250));
-        loggingBehaveEngine.emitCustomEvent("KHR_INTERACTIVITY:triggerScale", {scaleVector: [10,10,10]});
+        loggingBehaveEngine.emitCustomEvent("KHR_INTERACTIVITY:triggerScale", {scaleVector: "[10,10,10]"});
         await new Promise((resolve) => setTimeout(resolve, 250));
         expect(loggingWorld.nodes[0].scale).toEqual([10,10,10]);
         expect(executionLog).toEqual("Running CustomEventReceiveNode: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":1,\"socket\":\"in\"}}Adding {\"id\":\"out\",\"node\":1,\"socket\":\"in\"} flow to queueRunning WorldSet: input values: {\"a\":{\"id\":\"a\",\"node\":0,\"socket\":\"scaleVector\",\"type\":4}}, output flows: {\"out\":{\"id\":\"out\",\"node\":2,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":2,\"socket\":\"in\"} flowRunning Send: input values: {\"success\":{\"id\":\"success\",\"value\":true,\"type\":0}}, output flows: {}");

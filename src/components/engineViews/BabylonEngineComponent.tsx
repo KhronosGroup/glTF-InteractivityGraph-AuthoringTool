@@ -95,12 +95,6 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
         const container = await SceneLoader.LoadAssetContainerAsync("", url, sceneRef.current, undefined, ".glb");
         container.addAllToScene();
 
-        // Stop all animations by default (only apply based off of play animation node)
-        for (let i = 0; i < (sceneRef.current?.animationGroups?.length ?? 0); i ++) {
-            sceneRef.current?.animationGroups[i].stop();
-        }
-
-        return buildGlTFNodeLayout(container.rootNodes[0]);
         return {nodes:buildGlTFNodeLayout(container.rootNodes[0]), animations: container.animationGroups};
     };
 

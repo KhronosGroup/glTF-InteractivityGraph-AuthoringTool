@@ -9,8 +9,8 @@
  */
 import {Quaternion} from "@babylonjs/core";
 
-export const easeFloat = (t: number, initialVal: number, targetVal: number, type: string): number => {
-    if (type === "linear") {
+export const easeFloat = (t: number, initialVal: number, targetVal: number, type: number): number => {
+    if (type === 0) {
         return initialVal + (targetVal - initialVal) * t;
     } else {
         // default to immediate
@@ -27,7 +27,7 @@ export const easeFloat = (t: number, initialVal: number, targetVal: number, type
  * @param type - The type of easing to apply (e.g., "linear" for linear easing).
  * @returns An array of eased floating-point values at the current progress.
  */
-export const easeFloat3 = (t: number, initialVal: number[], targetVal: number[], type: string): number[] => {
+export const easeFloat3 = (t: number, initialVal: number[], targetVal: number[], type: number): number[] => {
     return [
         easeFloat(t, initialVal[0], targetVal[0], type),
         easeFloat(t, initialVal[1], targetVal[1], type),
@@ -44,8 +44,8 @@ export const easeFloat3 = (t: number, initialVal: number[], targetVal: number[],
  * @param type - The type of easing to apply (e.g., "linear" for linear easing).
  * @returns An array of eased floating-point values at the current progress.
  */
-export const easeFloat4 = (t: number, initialVal: number[], targetVal: number[], type: string): number[] => {
-    if (type === "slerp") {
+export const easeFloat4 = (t: number, initialVal: number[], targetVal: number[], type: number): number[] => {
+    if (type === 1) {
         const q1 = new Quaternion(initialVal[1], initialVal[2], initialVal[3], initialVal[0]);
         const q2 = new Quaternion(targetVal[1], targetVal[2], targetVal[3], targetVal[0]);
 

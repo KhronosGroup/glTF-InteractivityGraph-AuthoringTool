@@ -1,12 +1,11 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class WorldAnimateTo extends BehaveEngineNode {
-    REQUIRED_CONFIGURATIONS = [{id: "path"}, {id: "easingType"}, {id: "easingDuration"}]
-    REQUIRED_VALUES = [{id: "a"}]
+    REQUIRED_CONFIGURATIONS = [{id: "path"}, {id: "easingType"}]
+    REQUIRED_VALUES = [{id: "a"}, {id: "easingDuration"}]
 
     _path: string;
-    _easingType: string;
-    _easingDuration: number;
+    _easingType: number;
     _pathVals: { id: string }[];
 
     constructor(props: IBehaviourNodeProps) {
@@ -16,9 +15,8 @@ export class WorldAnimateTo extends BehaveEngineNode {
         this.validateFlows(this.flows);
         this.validateConfigurations(this.configuration);
 
-        const {path, easingType, easingDuration} = this.evaluateAllConfigurations(this.REQUIRED_CONFIGURATIONS.map(config => config.id));
+        const {path, easingType} = this.evaluateAllConfigurations(this.REQUIRED_CONFIGURATIONS.map(config => config.id));
         this._easingType = easingType;
-        this._easingDuration = easingDuration;
         this._path = path;
         const valIds = this.parsePath(path);
         const generatedVals = [];
@@ -59,13 +57,14 @@ export class WorldAnimateTo extends BehaveEngineNode {
         const requiredVals = this.evaluateAllValues([...this.REQUIRED_VALUES].map(val => val.id));
         const populatedPath = this.populatePath(this._path, configVals)
         const targetValue = requiredVals.a;
+        const easingDuration = requiredVals.easingDuration;
 
         this.graphEngine.processNodeStarted(this);
 
         if (this.graphEngine.isValidJsonPtr(populatedPath)) {
             const initialValue = this.graphEngine.getPathValue(populatedPath);
             const type = this.graphEngine.getPathtypeName(populatedPath)!;
-            this.graphEngine.animateProperty(type, populatedPath, this._easingType, this._easingDuration, initialValue, targetValue, () => {
+            this.graphEngine.animateProperty(type, populatedPath, this._easingType, easingDuration, initialValue, targetValue, () => {
                 if (this.flows.done) {
                     this.addEventToWorkQueue(this.flows.done)
                 }

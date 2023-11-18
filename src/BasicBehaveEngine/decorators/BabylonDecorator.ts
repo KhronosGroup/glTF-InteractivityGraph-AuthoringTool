@@ -58,7 +58,7 @@ export class BabylonDecorator extends ADecorator {
         //pass
     }
 
-    animateProperty = (type: string, path: string, easingType: string, easingDuration: number, initialValue: any, targetValue: any, callback: () => void) => {
+    animateProperty = (type: string, path: string, easingType: number, easingDuration: number, initialValue: any, targetValue: any, callback: () => void) => {
         const startTime = Date.now();
 
         const action = async () => {
@@ -250,13 +250,6 @@ export class BabylonDecorator extends ADecorator {
             const fps = 60;
             const stopFrame = exactFrameTime! * fps;
             this._animateRange(animationInstance.speedRatio, forward, false, frame, stopFrame, frame, animation, () => callback(exactFrameTime!), undefined);
-        }  else if (stopMode === 2) {
-            animationInstance.onAnimationLoopObservable.add(() => {
-                animationInstance.stop();
-                animationInstance.dispose();
-                animation.metadata.instance = undefined;
-                callback(0);
-            })
         } else {
             throw Error(`Invalid stop Mode ${stopMode}`);
         }

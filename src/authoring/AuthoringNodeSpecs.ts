@@ -134,13 +134,8 @@ export const worldNodeSpecs: IAuthoringNode[] = [
             },
             {
                 id: "easingType",
-                description: "The easing function to use",
-                type: "string"
-            },
-            {
-                id: "easingDuration",
-                description: "The duration of the interpolation",
-                type: "float"
+                description: "The easing function to use 0 - Linear, 1 - slerp",
+                type: "int"
             }
         ],
         input: {
@@ -151,6 +146,11 @@ export const worldNodeSpecs: IAuthoringNode[] = [
                 }
             ],
             values: [
+                {
+                    id: "easingDuration",
+                    description: "The duration of the interpolation",
+                    types: ["float"]
+                },
                 {
                     id: "a",
                     types: [
@@ -231,7 +231,7 @@ export const worldNodeSpecs: IAuthoringNode[] = [
         configuration: [
             {
                 id: "stopMode",
-                description: "0 - immediate, 1 - exactFrameTime, 2 - nextLoop",
+                description: "0 - immediate, 1 - exactFrameTime",
                 type: "int"
             }
         ],

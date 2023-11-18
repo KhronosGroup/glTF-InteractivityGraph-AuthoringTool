@@ -85,5 +85,40 @@ export const behaveToAuthor = (graph: string): [Node[], Edge[], ICustomEvent[], 
     id++;
   });
 
+  // set up structure for nodes if one does not exist
+  if (!nodes.some(node => node.position.y !== 0 || node.position.x !== 0)) {
+    const nodeNumbers: number[] = Array(nodes.length).fill(null).map((_, i) => i);
+
+    let lastLayer: number[] = nodeNumbers.filter(num => !edges.some(edge => Number(edge.target) === num));
+    for (let i = 0; i < lastLayer.length; i++) {
+      nodes[lastLayer[i]].position.x = -500;
+      nodes[lastLayer[i]].position.y = 500 * i;
+    }
+
+    let nextLayer: number[] = [];
+    for (const nodeIndex of lastLayer) {
+      const nodeOutEdges: Edge[] = edges.filter(edge => Number(edge.source) === nodeIndex);
+      nextLayer.push(...nodeOutEdges.map(edge => Number(edge.target)));
+    }
+    nextLayer = [...new Set(nextLayer)]
+
+    let xOffset = 0;
+    while (nextLayer.length > 0) {
+      lastLayer = nextLayer;
+      for (let i = 0; i < lastLayer.length; i++) {
+        nodes[lastLayer[i]].position.x = xOffset;
+        nodes[lastLayer[i]].position.y = 500 * i;
+      }
+
+      nextLayer = [];
+      for (const nodeIndex of lastLayer) {
+        const nodeOutEdges: Edge[] = edges.filter(edge => Number(edge.source) === nodeIndex);
+        nextLayer.push(...nodeOutEdges.map(edge => Number(edge.target)));
+      }
+      nextLayer = [...new Set(nextLayer)];
+      xOffset += 500;
+    }
+  }
+
   return [nodes, edges, customEvents, variables];
 };

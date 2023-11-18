@@ -61,7 +61,7 @@ export interface IBehaveEngine {
     animateProperty: (
         type: string,
         path: string,
-        easingType: string,
+        easingType: number,
         easingDuration: number,
         initialValue: any,
         targetValue: any,

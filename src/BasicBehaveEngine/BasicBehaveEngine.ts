@@ -223,7 +223,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         //pass
     }
 
-    public animateProperty = (type: string, path: string, easingType: string, easingDuration: number, initialValue: any, targetValue: any, callback: () => void) => {
+    public animateProperty = (type: string, path: string, easingType: number, easingDuration: number, initialValue: any, targetValue: any, callback: () => void) => {
         //pass
     }
 

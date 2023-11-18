@@ -475,11 +475,11 @@ describe('nodes', () => {
             ...defaultProps,
             configuration: [
                 { id: 'path', value: 'nodes/{index}/value' },
-                { id: "easingDuration", value: 0.5},
-                { id: "easingType", value: "linear"}
+                { id: "easingType", value: 0}
             ],
             values: [
                 { id: 'index', value: 0, type: 1 },
+                { id: "easingDuration", value: 0.5, type: 2},
                 { id: 'a', value: 42, type: 2 },
             ],
         });

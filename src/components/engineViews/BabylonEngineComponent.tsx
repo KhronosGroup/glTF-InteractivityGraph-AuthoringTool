@@ -44,6 +44,22 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
         // Create the Babylon.js engines
         engineRef.current = new Engine(canvasRef.current, true);
 
+        createScene();
+
+        // Run the render loop
+        engineRef.current?.runRenderLoop(() => {
+            sceneRef.current?.render();
+        });
+
+        return () => {
+            // Clean up resources when the component unmounts
+            sceneRef.current?.dispose();
+            engineRef.current?.dispose();
+            babylonEngineRef.current?.clearCustomEventListeners();
+        };
+    }, []);
+
+    const createScene = () => {
         // Create a scene
         sceneRef.current = new Scene(engineRef.current!);
 
@@ -61,22 +77,12 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
         // Create lights
         new HemisphericLight('light1', new Vector3(0, 1, 0), sceneRef.current);
         new DirectionalLight('light2', new Vector3(1, -1, 0), sceneRef.current);
-
-        // Run the render loop
-        engineRef.current?.runRenderLoop(() => {
-            sceneRef.current?.render();
-        });
-
-        return () => {
-            // Clean up resources when the component unmounts
-            sceneRef.current?.dispose();
-            engineRef.current?.dispose();
-            babylonEngineRef.current?.clearCustomEventListeners();
-        };
-    }, []);
+    };
 
     const resetScene = async () => {
-        sceneRef.current?.meshes.forEach(mesh => mesh.dispose())
+        sceneRef.current?.dispose();
+        createScene();
+
         const file = fileInputRef.current!.files![0]
 
         const url = URL.createObjectURL(file);

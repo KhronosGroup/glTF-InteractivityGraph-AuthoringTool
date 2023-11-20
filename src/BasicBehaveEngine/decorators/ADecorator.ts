@@ -1,4 +1,4 @@
-import {IBehaveEngine} from "../IBehaveEngine";
+import {IBehaveEngine, ICancelable} from "../IBehaveEngine";
 import {BehaveEngineNode, IFlow, IValue} from "../BehaveEngineNode";
 
 export abstract class ADecorator implements IBehaveEngine {
@@ -57,5 +57,12 @@ export abstract class ADecorator implements IBehaveEngine {
 
     getValueEvaluationCacheValue = (key: string): IValue | undefined => {
         return this.behaveEngine.getValueEvaluationCacheValue(key);
+    }
+
+    setWorldAnimationPathCallback = (path: string, cancelable: ICancelable | undefined): void => {
+        this.behaveEngine.setWorldAnimationPathCallback(path, cancelable);
+    };
+    getWorldAnimationPathCallback = (path: string): ICancelable | undefined => {
+        return this.behaveEngine.getWorldAnimationPathCallback(path);
     }
 }

@@ -59,6 +59,7 @@ export class BabylonDecorator extends ADecorator {
     }
 
     animateProperty = (type: string, path: string, easingType: number, easingDuration: number, initialValue: any, targetValue: any, callback: () => void) => {
+        this.behaveEngine.getWorldAnimationPathCallback(path)?.cancel();
         const startTime = Date.now();
 
         const action = async () => {
@@ -80,13 +81,17 @@ export class BabylonDecorator extends ADecorator {
         }
 
         this.scene.registerBeforeRender(action);
+        const cancel = () => {
+            this.scene.unregisterBeforeRender(action);
+            this.behaveEngine.setWorldAnimationPathCallback(path, undefined);
+        }
+        this.setWorldAnimationPathCallback(path, {cancel: cancel} );
     }
 
     registerJsonPointer = (jsonPtr: string, getterCallback: (path: string) => any, setterCallback: (path: string, value: any) => void, typeName: string) => {
         this.behaveEngine.registerJsonPointer(jsonPtr, getterCallback, setterCallback, typeName);
     };
 
-    
     registerKnownPointers = () => {
         const maxGltfNode:number = this.world.glTFNodes.length-1;
 

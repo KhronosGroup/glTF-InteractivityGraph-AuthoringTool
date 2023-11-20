@@ -1,4 +1,4 @@
-import {IBehaveEngine} from "./IBehaveEngine";
+import {IBehaveEngine, ICancelable} from "./IBehaveEngine";
 import {JsonPtrTrie} from "./JsonPtrTrie";
 import {BehaveEngineNode, IBehaviourNodeProps, ICustomEvent, IFlow, IValue, IVariable} from "./BehaveEngineNode";
 import {OnStartNode} from "./nodes/lifecycle/onStart";
@@ -90,6 +90,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
     private customEventListeners: ICustomEventListener[]
     private fps: number;
     private valueEvaluationCache: Map<string, IValue>;
+    private pathToWorldAnimationCallback: Map<string, ICancelable>;
 
     constructor(fps: number) {
         this.registry = new Map<string, any>();
@@ -97,6 +98,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.jsonPtrTrie = new JsonPtrTrie();
         this.fps = fps;
         this.valueEvaluationCache = new Map<string, IValue>();
+        this.pathToWorldAnimationCallback = new Map<string, ICancelable>();
         this.onTickNodeIndex = -1;
         this.lastTickTime = 0;
         this.eventQueue = [];
@@ -349,6 +351,18 @@ export class BasicBehaveEngine implements IBehaveEngine {
                 this.addEventToWorkQueue(tickFlow)
                 this.lastTickTime = timeNow;
             }, Math.max(1000 / this.fps - timeSinceLastTick,0))
+        }
+    }
+
+    getWorldAnimationPathCallback(path: string): ICancelable | undefined {
+       return this.pathToWorldAnimationCallback.get(path);
+    }
+
+    setWorldAnimationPathCallback(path: string, cancelable: ICancelable | undefined): void {
+        if (cancelable === undefined) {
+            this.pathToWorldAnimationCallback.delete(path);
+        } else {
+            this.pathToWorldAnimationCallback.set(path, cancelable)
         }
     }
 }

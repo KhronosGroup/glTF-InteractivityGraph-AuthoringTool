@@ -136,4 +136,12 @@ export interface IBehaveEngine {
      * @returns {IValue | undefined} The cached value or undefined if not found.
      */
     getValueEvaluationCacheValue: (key: string) => IValue | undefined;
+
+    setWorldAnimationPathCallback: (path: string, cancelable: ICancelable | undefined) => void;
+
+    getWorldAnimationPathCallback: (path: string) => ICancelable | undefined;
+}
+
+export interface ICancelable {
+    cancel: () => void;
 }

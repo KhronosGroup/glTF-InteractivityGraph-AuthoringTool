@@ -538,7 +538,7 @@ describe('BehaveEngine', () => {
         mockScene.registerBeforeRender = jest.fn((cb: any) => {
             callback = cb;
         })
-        babylonBehaveEngine = new BabylonDecorator(new BasicBehaveEngine(1), {}, mockScene);
+        babylonBehaveEngine = new BabylonDecorator(new BasicBehaveEngine(1), {glTFNodes: []}, mockScene);
         babylonBehaveEngine.animateProperty("float3", "/", 0, 1, [0,0,0], JSON.stringify([1,2,3]), () => {return})
         await new Promise((resolve) => setTimeout(resolve, 2000));
 

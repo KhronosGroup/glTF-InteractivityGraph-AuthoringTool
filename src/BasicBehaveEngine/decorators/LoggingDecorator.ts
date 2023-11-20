@@ -35,10 +35,19 @@ export class LoggingDecorator extends ADecorator {
     };
 
     animateProperty = (type: string, path: string, easingType: number, easingDuration: number, initialValue: any, targetValue: any, callback: () => void) => {
-        setTimeout(() => {
+        this.behaveEngine.getWorldAnimationPathCallback(path)?.cancel();
+
+        const animatePropertyCallback = setTimeout(() => {
             this.behaveEngine.setPathValue(path, targetValue);
-            callback()
-        }, easingDuration * 1000)
+            callback();
+            this.behaveEngine.setWorldAnimationPathCallback(path, undefined);
+        }, easingDuration * 1000);
+
+        const cancel = () => {
+            clearTimeout(animatePropertyCallback);
+            this.behaveEngine.setWorldAnimationPathCallback(path, undefined);
+        }
+        this.setWorldAnimationPathCallback(path, {cancel: cancel} );
     }
 
     registerKnownPointers = () => {

@@ -140,6 +140,8 @@ export interface IBehaveEngine {
     setWorldAnimationPathCallback: (path: string, cancelable: ICancelable | undefined) => void;
 
     getWorldAnimationPathCallback: (path: string) => ICancelable | undefined;
+
+    getWorld: () => any;
 }
 
 export interface ICancelable {

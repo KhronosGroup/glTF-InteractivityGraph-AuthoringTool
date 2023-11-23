@@ -40,6 +40,7 @@ export class BabylonDecorator extends ADecorator {
         this.behaveEngine.startAnimation = this.startAnimation
 
         this.behaveEngine.animateProperty = this.animateProperty
+        this.behaveEngine.getWorld = this.getWorld;
         this.registerKnownPointers();
         this.registerBehaveEngineNode("node/OnSelect", OnSelect);
         this.registerBehaveEngineNode("world/stopAnimation", WorldStopAnimation);
@@ -56,6 +57,10 @@ export class BabylonDecorator extends ADecorator {
 
     processNodeStarted = (node: BehaveEngineNode) => {
         //pass
+    }
+
+    getWorld = (): any => {
+        return this.world;
     }
 
     animateProperty = (type: string, path: string, easingType: number, easingDuration: number, initialValue: any, targetValue: any, callback: () => void) => {

@@ -68,11 +68,16 @@ export class WorldAnimateTo extends BehaveEngineNode {
                 if (this.flows.done) {
                     this.addEventToWorkQueue(this.flows.done)
                 }
-            })
+            });
+            if (this.flows.out) {
+                this.processFlow(this.flows.out);
+            }
+        } else {
+            if (this.flows.failed) {
+                this.processFlow(this.flows.failed);
+            }
         }
 
-        if (this.flows.out) {
-            this.processFlow(this.flows.out);
-        }
+
     }
 }

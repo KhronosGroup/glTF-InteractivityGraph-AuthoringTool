@@ -11,25 +11,25 @@ export class WorldStartAnimation extends BehaveEngineNode {
 
     override processNode(flowSocket?: string): void {
         const {animation, startTime, endTime, speed} = this.evaluateAllValues(this.REQUIRED_VALUES.map(val => val.id));
-        if (speed <= 0) {
-            throw Error(`Animation speed must be strictly positive, received ${speed}`);
-        }
-        //TODO: add clause to enforce startTime is before animation end time
-        if (startTime < 0) {
-            throw Error(`Animation startTime must be between 0 and animation end time, received ${speed}`);
-        }
+
         this.graphEngine.processNodeStarted(this);
 
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        this.graphEngine.startAnimation(animation, startTime, endTime, speed, () => {
-            if (this.flows.done) {
-                this.addEventToWorkQueue(this.flows.done);
+        if (speed <= 0 || this.graphEngine.getWorld().animations.length <= animation || animation < 0) {
+            if (this.flows.failed) {
+                this.processFlow(this.flows.failed);
             }
-        });
+        } else {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            this.graphEngine.startAnimation(animation, startTime, endTime, speed, () => {
+                if (this.flows.done) {
+                    this.addEventToWorkQueue(this.flows.done);
+                }
+            });
 
-        if (this.flows.out) {
-            this.processFlow(this.flows.out);
+            if (this.flows.out) {
+                this.processFlow(this.flows.out);
+            }
         }
     }
 }

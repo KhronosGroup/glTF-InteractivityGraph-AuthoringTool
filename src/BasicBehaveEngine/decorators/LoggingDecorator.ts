@@ -13,7 +13,8 @@ export class LoggingDecorator extends ADecorator {
         this.behaveEngine.processAddingNodeToQueue = this.processAddingNodeToQueue;
         this.behaveEngine.processExecutingNextNode = this.processExecutingNextNode;
         this.behaveEngine.processNodeStarted = this.processNodeStarted;
-        this.behaveEngine.animateProperty = this.animateProperty
+        this.behaveEngine.animateProperty = this.animateProperty;
+        this.behaveEngine.getWorld = this.getWorld;
 
         this.registerKnownPointers();
     }
@@ -28,6 +29,11 @@ export class LoggingDecorator extends ADecorator {
 
     processNodeStarted = (node: BehaveEngineNode) => {
         this.addToLog(`Running ${node.name}: input values: ${JSON.stringify(node.values)}, output flows: ${JSON.stringify(node.flows)}`)
+    }
+
+    getWorld = (): any => {
+        console.log(this.world)
+        return this.world;
     }
 
     registerJsonPointer = (jsonPtr: string, getterCallback: (path: string) => any, setterCallback: (path: string, value: any) => void, typeName: string) => {

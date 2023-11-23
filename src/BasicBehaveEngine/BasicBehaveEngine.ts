@@ -225,6 +225,10 @@ export class BasicBehaveEngine implements IBehaveEngine {
         //pass
     }
 
+    public getWorld = (): any => {
+        //pass
+    }
+
     public animateProperty = (type: string, path: string, easingType: number, easingDuration: number, initialValue: any, targetValue: any, callback: () => void) => {
         //pass
     }

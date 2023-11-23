@@ -30,23 +30,29 @@ export class WorldStopAnimation extends BehaveEngineNode {
         }
         this.graphEngine.processNodeStarted(this);
 
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        this.graphEngine.stopAnimation(animation, this._stopMode, stopTimeOrUndefined, (time: number) => {
-            this.outValues["time"] = {
-                id: "time",
-                value: time,
-                type: this.getTypeIndex('float')
+        if (this.world.animations.length <= animation || animation < 0) {
+            if (this.flows.failed) {
+                this.processFlow(this.flows.failed);
             }
+        } else {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            this.graphEngine.stopAnimation(animation, this._stopMode, stopTimeOrUndefined, (time: number) => {
+                this.outValues["time"] = {
+                    id: "time",
+                    value: time,
+                    type: this.getTypeIndex('float')
+                }
 
-            if (this.flows.done) {
-                this.addEventToWorkQueue(this.flows.done);
+                if (this.flows.done) {
+                    this.addEventToWorkQueue(this.flows.done);
+                }
+            });
+
+
+            if (this.flows.out) {
+                this.processFlow(this.flows.out);
             }
-        });
-
-
-        if (this.flows.out) {
-            this.processFlow(this.flows.out);
         }
     }
 }

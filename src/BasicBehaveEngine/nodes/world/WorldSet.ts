@@ -62,8 +62,8 @@ export class WorldSet extends BehaveEngineNode {
             this.graphEngine.setPathValue(populatedPath, targetValue);
             super.processNode(flowSocket);
         } else {
-            if (this.flows.failed) {
-                this.processFlow(this.flows.failed);
+            if (this.flows.err) {
+                this.processFlow(this.flows.err);
             }
         }
     }

@@ -120,7 +120,7 @@ export const worldNodeSpecs: IAuthoringNode[] = [
                     description: "The out flow"
                 },
                 {
-                    id: "failed",
+                    id: "err",
                     description: "The flow to be followed if the input validation fails"
                 }
             ],
@@ -178,7 +178,7 @@ export const worldNodeSpecs: IAuthoringNode[] = [
                     description: "The out flow to be followed immediately after execution"
                 },
                 {
-                    id: "failed",
+                    id: "err",
                     description: "The flow to be followed if the input validation fails"
                 }
             ],
@@ -231,7 +231,7 @@ export const worldNodeSpecs: IAuthoringNode[] = [
                     description: "The flow to be followed when the animation target time is reached, async"
                 },
                 {
-                    id: "failed",
+                    id: "err",
                     description: "The flow to be followed if the input validation fails"
                 }
             ]
@@ -280,7 +280,7 @@ export const worldNodeSpecs: IAuthoringNode[] = [
                     description: "The flow to be followed when the animation is canceled"
                 },
                 {
-                    id: "failed",
+                    id: "err",
                     description: "The flow to be followed if the input validation fails"
                 }
             ]

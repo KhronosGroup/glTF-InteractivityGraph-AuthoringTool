@@ -15,8 +15,8 @@ export class WorldStartAnimation extends BehaveEngineNode {
         this.graphEngine.processNodeStarted(this);
 
         if (speed <= 0 || this.graphEngine.getWorld().animations.length <= animation || animation < 0) {
-            if (this.flows.failed) {
-                this.processFlow(this.flows.failed);
+            if (this.flows.err) {
+                this.processFlow(this.flows.err);
             }
         } else {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment

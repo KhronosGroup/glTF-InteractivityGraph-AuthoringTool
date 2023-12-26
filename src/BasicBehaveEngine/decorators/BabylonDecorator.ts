@@ -63,23 +63,25 @@ export class BabylonDecorator extends ADecorator {
         return this.world;
     }
 
-    animateProperty = (type: string, path: string, easingType: number, easingDuration: number, initialValue: any, targetValue: any, callback: () => void) => {
+    animateProperty = (path: string, easingParameters: any, callback: () => void) => {
         this.behaveEngine.getWorldAnimationPathCallback(path)?.cancel();
         const startTime = Date.now();
 
         const action = async () => {
             const elapsedDuration = (Date.now() - startTime) / 1000;
-            const t = Math.min(elapsedDuration / easingDuration, 1);
-            if (type === "float3") {
-                this.behaveEngine.setPathValue(path, easeFloat3(t, initialValue, targetValue, easingType));
-            } else if (type === "float4") {
-                this.behaveEngine.setPathValue(path, easeFloat4(t, initialValue, targetValue, easingType));
-            } else if (type === "float") {
-                this.behaveEngine.setPathValue(path, easeFloat(t, initialValue, targetValue, easingType));
+            const t = Math.min(elapsedDuration / easingParameters.easingDuration, 1);
+            if (easingParameters.valueType === "float3") {
+                const v = easeFloat3(t, easingParameters);
+                console.log(v);
+                this.behaveEngine.setPathValue(path, v);
+            } else if (easingParameters.valueType === "float4") {
+                this.behaveEngine.setPathValue(path, easeFloat4(t, easingParameters));
+            } else if (easingParameters.valueType === "float") {
+                this.behaveEngine.setPathValue(path, easeFloat(t, easingParameters));
             }
 
-            if (elapsedDuration >= easingDuration) {
-                this.behaveEngine.setPathValue(path, targetValue);
+            if (elapsedDuration >= easingParameters.easingDuration) {
+                this.behaveEngine.setPathValue(path, easingParameters.targetValue);
                 this.scene.unregisterBeforeRender(action);
                 callback()
             }

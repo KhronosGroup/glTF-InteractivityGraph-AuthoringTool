@@ -53,6 +53,7 @@ export const authorToBehave = (nodes: Node[], edges: Edge[], customEvents: ICust
 
         // for all the inlined values (i.e. does not reference the outValue of another node) embed the value into the graph
         if (node.data.values !== undefined) {
+            console.log(node.data.values)
             Object.entries(node.data.values).forEach(([key, val]) => {
                 let typeIndex;
                 if (node.type === "customEvent/send") {
@@ -62,14 +63,21 @@ export const authorToBehave = (nodes: Node[], edges: Edge[], customEvents: ICust
                 } else {
                     //TODO: refactor this logic it is gross
                     const nodeSpecParam = nodeSpec.input.values.find(val => key.includes(val.id));
-                    if (nodeSpecParam === undefined) {
-                        // configuration based vals which are from paths so can only be ints
-                        typeIndex = node.data.types.findIndex((typeItem: any) => typeItem.signature === 'int');
+                    if (nodeSpecParam === undefined && isNaN((val as any).type)) {
+                        if (key === "cp1" || key === "cp2") {
+                            const signature = (val as any).type || 'float';
+                            typeIndex = node.data.types.findIndex((typeItem: any) => typeItem.signature === signature);
+                        } else if (key === "stopTime") {
+                            typeIndex = node.data.types.findIndex((typeItem: any) => typeItem.signature === 'float');
+                        } else {
+                            // unknown names are for path templates which must be ints
+                            typeIndex = node.data.types.findIndex((typeItem: any) => typeItem.signature === 'int');
+                        }
                     } else {
-                        const allowedTypes = nodeSpecParam!.types
                         if (!isNaN((val as any).type)) {
                             typeIndex = (val as any).type
                         } else {
+                            const allowedTypes = nodeSpecParam!.types
                             const valType = (val as any).type ?? allowedTypes[0];
                             typeIndex = graph.types.findIndex((typeItem: any) => {
                                 if (typeItem.signature === valType) {return true}

@@ -539,7 +539,7 @@ describe('BehaveEngine', () => {
             callback = cb;
         })
         babylonBehaveEngine = new BabylonDecorator(new BasicBehaveEngine(1), {glTFNodes: []}, mockScene);
-        babylonBehaveEngine.animateProperty("float3", "/", 0, 1, [0,0,0], JSON.stringify([1,2,3]), () => {return})
+        babylonBehaveEngine.animateProperty("/",  {initialValue: 0, targetValue: 10, easingType: 2}, () => {return})
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
         expect(callback).not.toBeUndefined()
@@ -730,7 +730,7 @@ describe('BehaveEngine', () => {
                         },
                         {
                             "id": "easingType",
-                            "value": 0
+                            "value": 2
                         }
                     ],
                     "flows": [
@@ -818,7 +818,7 @@ describe('BehaveEngine', () => {
                         },
                         {
                             "id": "easingType",
-                            "value": 0
+                            "value": 2
                         }
                     ],
                     "flows": []

@@ -83,43 +83,42 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         const nodeSpec: IAuthoringNode | undefined = authoringNodeSpecs.find(nodeSpec => nodeSpec.type === props.node.type);
         if (nodeSpec === undefined) {return}
 
+        const inputValuesToSet: IValueSocketDescriptor[] = nodeSpec.input.values.slice();
+        const outputValuesToSet: IValueSocketDescriptor[] = nodeSpec.output.values.slice();
+        const inputFlowsToSet: IFlowSocketDescriptor[] = nodeSpec.input.flows.slice();
+        const outputFlowsToSet: IFlowSocketDescriptor[] = nodeSpec.output.flows.slice();
+
         if (props.data.configuration.numberOutputFlows !== undefined) {
             const numberOutputFlows = Number(props.data.configuration.numberOutputFlows);
-            const outputFlows = [];
             for (let i = 0; i < numberOutputFlows; i++) {
                 const outputFlow: IFlowSocketDescriptor = {
                     id: `${i}`,
                     description: `The ${i} outflow of this node`
                 }
-                outputFlows.push(outputFlow);
+                outputFlowsToSet.push(outputFlow);
             }
-            outputFlows.push(...nodeSpec.output.flows);
-            setOutputFlows(outputFlows);
-        } else if (props.data.configuration.numberInputFlows !== undefined) {
+        }
+        if (props.data.configuration.numberInputFlows !== undefined) {
             const numberInputFlows = Number(props.data.configuration.numberInputFlows);
-            const inputFlows = [];
             for (let i = 0; i < numberInputFlows; i++) {
                 const inputFlow: IFlowSocketDescriptor = {
                     id: `${i}`,
                     description: `The ${i} inflow of this node`
                 }
-                inputFlows.push(inputFlow);
+                inputFlowsToSet.push(inputFlow);
             }
-            inputFlows.push(...nodeSpec.input.flows);
-            setInputFlows(inputFlows);
-        } else if (props.data.configuration.cases !== undefined) {
+        }
+        if (props.data.configuration.cases !== undefined) {
             const cases: number[] = JSON.parse(props.data.configuration.cases);
-            const outputFlows = [];
             for (let i = 0; i < cases.length; i++) {
                 const outputFlow: IFlowSocketDescriptor = {
                     id: `${cases[i]}`,
                     description: `The outflow of this node for case ${cases[i]}`
                 }
-                outputFlows.push(outputFlow);
+                outputFlowsToSet.push(outputFlow);
             }
-            outputFlows.push(...nodeSpec.output.flows);
-            setOutputFlows(outputFlows);
-        } else if (props.data.configuration.customEvent !== undefined) {
+        }
+        if (props.data.configuration.customEvent !== undefined) {
             const customEventId: number = JSON.parse(props.data.configuration.customEvent);
             const ce: ICustomEvent = props.data.customEvents[customEventId];
 
@@ -143,44 +142,46 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
             }
 
             if (props.node.type === "customEvent/send") {
-                setInputValues(values);
+                inputValuesToSet.push(...values)
             } else if (props.node.type === "customEvent/receive") {
-                setOutputValues(values);
+                outputValuesToSet.push(...values);
             }
-        } else if (props.data.configuration.path !== undefined) {
+        }
+        if (props.data.configuration.path !== undefined) {
             const vals = parsePath(props.data.configuration.path)
-            const inputValues: IValueSocketDescriptor[] = [];
             for (let i = 0; i < vals.length; i++) {
                 const value: IValueSocketDescriptor = {id: vals[i], types: ["int"], description: `Value for ${vals[i]}`}
-                inputValues.push(value);
+                inputValuesToSet.push(value);
             }
-
-            if (props.node.type === "world/set") {
-                setInputValues([...inputValues, {id: "a", types: ["bool", "int", "float", "float3", "float4"], description: "Target value to set"}]);
-            } else if (props.node.type === "world/animateTo") {
-                setInputValues([...inputValues, {id: "a", types: ["bool", "int", "float", "float3", "float4"], description: "Target value to set"}, {id: "easingDuration", types: ["float"], description: "time to set over"}]);
-            } else if (props.node.type === "world/get") {
-                setInputValues(inputValues);
-                setOutputValues([...outputValues, {id: "value", types: ["bool", "int", "float", "float3", "float4"], description: "Output value of getting"}])
+        }
+        if (props.data.configuration.easingType !== undefined) {
+            if (props.data.configuration.easingType === "0") {
+                // CUBIC BEZIER
+                inputValuesToSet.push({id: "cp1", types: ["float", "float3", "float4"], description: "First control point"}, {id: "cp2", types: ["float","float3", "float4"], description: "Second control point"});
             }
-        } else if (props.data.configuration.variable !== undefined) {
+        }
+        if (props.data.configuration.variable !== undefined) {
             const variableId: number = JSON.parse(props.data.configuration.variable);
             const v: IVariable = props.data.variables[variableId];
             const value: IValueSocketDescriptor = {id: v.id, types: [props.data.types[v.type].signature], value: v.value, description: 'Value Socket for this variable'}
 
             if (props.node.type === "variable/set") {
-                setInputValues([value]);
+                inputValuesToSet.push(value);
             } else if (props.node.type === "variable/get") {
-                setOutputValues([value]);
+                outputValuesToSet.push(value);
             }
-        } else if (props.data.configuration.stopMode !== undefined) {
-            if (props.data.configuration.stopMode === "1") {
-                setInputValues([{id: "animation", types:["int"], description: "animation top stop"}, {id: "stopTime", types: ["float"], description: "Target time to stop at"}]);
-            } else {
-                setInputValues([{id: "animation", types:["int"], description: "animation top stop"}]);
-            }
-
         }
+        if (props.data.configuration.stopMode !== undefined) {
+            if (props.data.configuration.stopMode === "1") {
+                // EXACT FRAME TIME
+                inputValuesToSet.push({id: "stopTime", types: ["float"], description: "Target time to stop at"});
+            }
+        }
+
+        setOutputFlows(outputFlowsToSet);
+        setInputFlows(inputFlowsToSet);
+        setInputValues(inputValuesToSet);
+        setOutputValues(outputValuesToSet);
     }
 
     const getHeaderColor = (name:string) => {

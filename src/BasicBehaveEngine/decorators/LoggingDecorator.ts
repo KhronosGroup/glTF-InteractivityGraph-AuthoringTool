@@ -40,14 +40,14 @@ export class LoggingDecorator extends ADecorator {
         this.behaveEngine.registerJsonPointer(jsonPtr, getterCallback, setterCallback, typeName);
     };
 
-    animateProperty = (type: string, path: string, easingType: number, easingDuration: number, initialValue: any, targetValue: any, callback: () => void) => {
+    animateProperty = (path: string, easingParameters: any, callback: () => void) => {
         this.behaveEngine.getWorldAnimationPathCallback(path)?.cancel();
 
         const animatePropertyCallback = setTimeout(() => {
-            this.behaveEngine.setPathValue(path, targetValue);
+            this.behaveEngine.setPathValue(path, easingParameters.targetValue);
             callback();
             this.behaveEngine.setWorldAnimationPathCallback(path, undefined);
-        }, easingDuration * 1000);
+        }, easingParameters.easingDuration * 1000);
 
         const cancel = () => {
             clearTimeout(animatePropertyCallback);

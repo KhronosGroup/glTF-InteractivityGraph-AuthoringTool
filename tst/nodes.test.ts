@@ -481,6 +481,8 @@ describe('nodes', () => {
                 { id: 'index', value: 0, type: 1 },
                 { id: "easingDuration", value: 0.5, type: 2},
                 { id: 'a', value: 42, type: 2 },
+                { id: 'cp1', value: 0, type: 2 },
+                { id: 'cp2', value: 42, type: 2}
             ],
         });
 

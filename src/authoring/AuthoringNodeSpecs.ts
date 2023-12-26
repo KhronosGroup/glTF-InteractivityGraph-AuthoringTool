@@ -85,7 +85,13 @@ export const worldNodeSpecs: IAuthoringNode[] = [
         },
         output: {
             flows: [],
-            values: []
+            values: [
+                {
+                    id: "val",
+                    description: "The value to set",
+                    types: ["bool", "int", "float", "float3", "float4"]
+                }
+            ]
         }
     },
     {
@@ -138,7 +144,7 @@ export const worldNodeSpecs: IAuthoringNode[] = [
             },
             {
                 id: "easingType",
-                description: "The easing function to use 0 - Linear, 1 - slerp",
+                description: "The easing function to use 0 - Cubic Bezier, 1 - slerp",
                 type: "int"
             }
         ],

@@ -59,12 +59,25 @@ export class WorldAnimateTo extends BehaveEngineNode {
         const targetValue = requiredVals.a;
         const easingDuration = requiredVals.easingDuration;
 
+        const easingParameters: any = {
+            easingType: this._easingType,
+            easingDuration: easingDuration,
+            targetValue: targetValue
+        };
+        if (this._easingType === 0) {
+            //CUBIC BEZIER
+            const {cp1, cp2} = this.evaluateAllValues(["cp1", "cp2"]);
+            easingParameters["cp1"] = cp1;
+            easingParameters["cp2"] = cp2;
+        }
+
         this.graphEngine.processNodeStarted(this);
 
         if (this.graphEngine.isValidJsonPtr(populatedPath)) {
-            const initialValue = this.graphEngine.getPathValue(populatedPath);
-            const type = this.graphEngine.getPathtypeName(populatedPath)!;
-            this.graphEngine.animateProperty(type, populatedPath, this._easingType, easingDuration, initialValue, targetValue, () => {
+            easingParameters.valueType = this.graphEngine.getPathtypeName(populatedPath)!;
+            easingParameters.initialValue = this.graphEngine.getPathValue(populatedPath);
+
+            this.graphEngine.animateProperty(populatedPath, easingParameters, () => {
                 if (this.flows.done) {
                     this.addEventToWorkQueue(this.flows.done)
                 }

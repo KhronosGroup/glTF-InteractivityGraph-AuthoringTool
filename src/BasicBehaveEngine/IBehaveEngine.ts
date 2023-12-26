@@ -1,4 +1,5 @@
 import {BehaveEngineNode, IFlow, IValue} from "./BehaveEngineNode";
+import {IEasingParameters} from "./easingUtils";
 
 /**
  * Interface representing the Behave Engine, which provides methods for interacting with a behavioral graph engine.
@@ -50,21 +51,13 @@ export interface IBehaveEngine {
 
     /**
      * Animate a property over time using specified values.
-     * @param type - The type of animation.
      * @param path - The property path to be animated.
-     * @param easingType - The easing type for the animation.
-     * @param easingDuration - The duration of the animation.
-     * @param initialValue - The initial value of the property.
-     * @param targetValue - The target value of the property after the animation.
+     * @param easingParameters - Easing type and the easing type specific parameters to preform the easing function
      * @param callback - A callback function to be executed after the animation is complete.
      */
     animateProperty: (
-        type: string,
         path: string,
-        easingType: number,
-        easingDuration: number,
-        initialValue: any,
-        targetValue: any,
+        easingParameters: IEasingParameters<any>,
         callback: () => void
     ) => void;
 

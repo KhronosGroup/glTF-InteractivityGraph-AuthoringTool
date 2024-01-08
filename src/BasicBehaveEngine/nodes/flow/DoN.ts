@@ -2,7 +2,6 @@ import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class DoN extends BehaveEngineNode {
     REQUIRED_VALUES = [{id:"n"}];
-    REQUIRED_CONFIGURATIONS = [{id: "startCount"}];
 
     _currentCount: number;
 
@@ -13,8 +12,7 @@ export class DoN extends BehaveEngineNode {
         this.validateFlows(this.flows);
         this.validateConfigurations(this.configuration);
 
-        const {startCount} = this.evaluateAllConfigurations(this.REQUIRED_CONFIGURATIONS.map(config => config.id));
-        this._currentCount = startCount
+        this._currentCount = 0;
     }
 
     override processNode(flowSocket?: string) {

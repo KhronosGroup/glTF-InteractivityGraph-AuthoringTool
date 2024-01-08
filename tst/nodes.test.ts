@@ -75,6 +75,7 @@ import {LessThan} from "../src/BasicBehaveEngine/nodes/math/comparison/LessThan"
 import {LessThanOrEqualTo} from "../src/BasicBehaveEngine/nodes/math/comparison/LessThanOrEqualTo";
 import {GreaterThan} from "../src/BasicBehaveEngine/nodes/math/comparison/GreaterThan";
 import {GreaterThanOrEqualTo} from "../src/BasicBehaveEngine/nodes/math/comparison/GreaterThanOrEqualTo";
+import {Inf} from "../src/BasicBehaveEngine/nodes/math/constants/Inf";
 
 
 describe('nodes', () => {
@@ -203,9 +204,11 @@ describe('nodes', () => {
     it('flow/forLoop', async () => {
         const forLoop: ForLoop = new ForLoop({
             ...defaultProps,
+            configuration: [
+                {id: 'defaultCurrentIndex', value: 0}
+            ],
             values: [
                 { id: 'startIndex', value: 0, type: 1 },
-                { id: 'increment', value: 1, type: 1 },
                 { id: 'endIndex', value: 5, type: 1 },
             ],
             flows: [
@@ -528,6 +531,15 @@ describe('nodes', () => {
 
         const val = euler.processNode();
         expect(val.value).toBe(Math.E);
+    });
+
+    it("math/Inf", () => {
+        const inf: Inf = new Inf({
+            ...defaultProps
+        });
+
+        const val = inf.processNode();
+        expect(val.value).toBe(Infinity);
     });
 
     it("math/pi", () => {

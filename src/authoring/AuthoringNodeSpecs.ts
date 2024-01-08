@@ -569,13 +569,7 @@ export const flowNodeSpecs: IAuthoringNode[] = [
     {
         type: "flow/doN",
         description: "It will trigger its output the first N time(s) it is triggered, but subsequent triggers will do nothing until it is reset",
-        configuration: [
-            {
-                id: "startCount",
-                type: "int",
-                description: "Indicates what the currentCount should be set to on node instantiation"
-            }
-        ],
+        configuration: [],
         input: {
             flows: [
                 {
@@ -723,8 +717,14 @@ export const flowNodeSpecs: IAuthoringNode[] = [
     },
     {
         type: "flow/forLoop",
-        description: "Execute the subgraph for flow loopBody from startIndex to endIndex (inclusive), then execute the subgraph completed",
-        configuration: [],
+        description: "Execute the subgraph for flow loopBody from startIndex to endIndex (exclusive), then execute the subgraph completed",
+        configuration: [
+            {
+                id: "defaultCurrentIndex",
+                type: "int",
+                description: "The current index to be used if the for loop has not executed"
+            }
+        ],
         input: {
             flows: [
                 {
@@ -742,11 +742,6 @@ export const flowNodeSpecs: IAuthoringNode[] = [
                     id: "endIndex",
                     types: ["int"],
                     description: "The end index of the for loop."
-                },
-                {
-                    id: "increment",
-                    types: ["int"],
-                    description: "The amount to increment index each iteration."
                 }
             ]
         },

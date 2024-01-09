@@ -1,11 +1,11 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../../BehaveEngineNode";
 
-export class GreaterThanOrEqualTo extends BehaveEngineNode {
-    REQUIRED_VALUES = [{id:"a"}, {id: "b"}]
+export class RightShift extends BehaveEngineNode {
+    REQUIRED_VALUES = [{id:"a"}, {id:"b"}]
 
     constructor(props: IBehaviourNodeProps) {
         super(props);
-        this.name = "GreaterThanOrEqualToNode";
+        this.name = "RightShiftNode";
         this.validateValues(this.values);
     }
 
@@ -16,19 +16,10 @@ export class GreaterThanOrEqualTo extends BehaveEngineNode {
         const typeA: string = this.getType(typeIndexA);
         const typeIndexB = this.values['b'].type!
         const typeB: string = this.getType(typeIndexB);
-        if (typeA !== typeB) {
-            throw Error("input types not equivalent")
+        if (typeA !== "int" || typeB !== "int") {
+            throw Error("invalid input type")
         }
-        let val: any;
-
-        switch (typeA) {
-            case "int":
-            case "float":
-                val = a >= b;
-                break;
-            default:
-                throw Error("Invalid type")
-        }
-        return {id: "val", value: val, type: this.getTypeIndex('bool')}
+        let val = a >> b;
+        return {id: "val", value: val, type: this.getTypeIndex('int')}
     }
 }

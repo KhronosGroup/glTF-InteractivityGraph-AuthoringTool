@@ -76,6 +76,19 @@ import {LessThanOrEqualTo} from "../src/BasicBehaveEngine/nodes/math/comparison/
 import {GreaterThan} from "../src/BasicBehaveEngine/nodes/math/comparison/GreaterThan";
 import {GreaterThanOrEqualTo} from "../src/BasicBehaveEngine/nodes/math/comparison/GreaterThanOrEqualTo";
 import {Inf} from "../src/BasicBehaveEngine/nodes/math/constants/Inf";
+import {Transform} from "../src/BasicBehaveEngine/nodes/math/vector/Transform";
+import {Transpose} from "../src/BasicBehaveEngine/nodes/math/matrix/Transpose";
+import {Determinant} from "../src/BasicBehaveEngine/nodes/math/matrix/Determinant";
+import {MatMul} from "../src/BasicBehaveEngine/nodes/math/matrix/MatMul";
+import {Not} from "../src/BasicBehaveEngine/nodes/math/bitwise/Not";
+import {And} from "../src/BasicBehaveEngine/nodes/math/bitwise/And";
+import {Or} from "../src/BasicBehaveEngine/nodes/math/bitwise/Or";
+import {Xor} from "../src/BasicBehaveEngine/nodes/math/bitwise/Xor";
+import {RightShift} from "../src/BasicBehaveEngine/nodes/math/bitwise/RightShift";
+import {LeftShift} from "../src/BasicBehaveEngine/nodes/math/bitwise/LeftShift";
+import {CountLeadingZeros} from "../src/BasicBehaveEngine/nodes/math/bitwise/CountLeadingZeros";
+import {CountTrailingZeros} from "../src/BasicBehaveEngine/nodes/math/bitwise/CountTrailingZeros";
+import {CountOneBits} from "../src/BasicBehaveEngine/nodes/math/bitwise/CountOneBits";
 
 
 describe('nodes', () => {
@@ -555,11 +568,21 @@ describe('nodes', () => {
         let abs: AbsoluteValue = new AbsoluteValue({
             ...defaultProps,
             values: [
-                {id: 'a', value: -10, type: 2}
+                {id: 'a', value: -10, type: 1}
             ]
         });
 
         let val = abs.processNode();
+        expect(val.value).toBe(10);
+
+        abs = new AbsoluteValue({
+            ...defaultProps,
+            values: [
+                {id: 'a', value: -10, type: 2}
+            ]
+        });
+
+        val = abs.processNode();
         expect(val.value).toBe(10);
 
         abs = new AbsoluteValue({
@@ -1546,6 +1569,32 @@ describe('nodes', () => {
         expect(isCloseToVal(val.value, expectedVecLen)).toBe(true);
     });
 
+    it("math/transform", () => {
+        const transform: Transform = new Transform({
+            ...defaultProps,
+            values: [
+                { id: 'a', value: [1,2,3,4], type: 5 },
+                {
+                    id: 'b',
+                    value: [
+                        [1, 2, 3, 4],
+                        [5, 6, 7, 8],
+                        [9, 10, 11, 12],
+                        [13, 14, 15, 16],
+                    ],
+                    type: 6
+                }
+            ]
+        });
+
+        const val = transform.processNode();
+
+        expect(val.value[0]).toBe(90);
+        expect(val.value[1]).toBe(100);
+        expect(val.value[2]).toBe(110);
+        expect(val.value[3]).toBe(120);
+    });
+
     it("math/dot", () => {
         const dot = new Dot({
             ...defaultProps,
@@ -1638,6 +1687,88 @@ describe('nodes', () => {
         expect(expected[0]).toEqual(val[0]);
         expect(expected[1]).toEqual(val[1]);
         expect(expected[2]).toEqual(val[2]);
+    });
+
+    it("math/transpose", () => {
+        const transpose: Transpose = new Transpose({
+            ...defaultProps,
+            values: [
+                {
+                    id: 'a',
+                    value: [
+                        [1, 2, 3, 4],
+                        [5, 6, 7, 8],
+                        [9, 10, 11, 12],
+                        [13, 14, 15, 16],
+                    ],
+                    type: 6
+                }
+            ]
+        });
+
+        const val = transpose.processNode();
+
+        expect(val.value[0][0]).toBe(1);
+        expect(val.value[0][1]).toBe(5);
+        expect(val.value[3][2]).toBe(12);
+        expect(val.value[3][0]).toBe(4);
+    });
+
+    it("math/determinant", () => {
+        const determinant: Determinant = new Determinant({
+            ...defaultProps,
+            values: [
+                {
+                    id: 'a',
+                    value: [
+                        [1, 3, 1, 4],
+                        [3, 9, 5, 15],
+                        [0, 2, 1, 1],
+                        [0, 4, 2, 3],
+                    ],
+                    type: 6
+                }
+            ]
+        });
+
+        const val = determinant.processNode();
+
+        expect(val.value).toBe(-4);
+    });
+
+    it("math/matmul", () => {
+        const matmul: MatMul = new MatMul({
+            ...defaultProps,
+            values: [
+                {
+                    id: 'a',
+                    value: [
+                        [1, 2, 3, 4],
+                        [5, 6, 7, 8],
+                        [9, 10, 11, 12],
+                        [13, 14, 15, 16],
+                    ],
+                    type: 6
+                },
+                {
+                    id: 'b',
+                    value: [
+                        [1, 2, 3, 4],
+                        [5, 6, 7, 8],
+                        [9, 10, 11, 12],
+                        [13, 14, 15, 16],
+                    ],
+                    type: 6
+                }
+            ]
+        });
+
+        const val = matmul.processNode();
+
+        expect(val.value[0][0]).toBe(90);
+        expect(val.value[1][2]).toBe(254);
+        expect(val.value[3][3]).toBe(600);
+        expect(val.value[2][0]).toBe(314);
     });
 
     it("math/isInfNode", () => {
@@ -1841,6 +1972,184 @@ describe('nodes', () => {
         });
         val = ge.processNode().value;
         expect(val).toBe(false);
+    });
+
+    it("math/not", () => {
+        const not: Not = new Not({
+            ...defaultProps,
+            values: [
+                {
+                    id: 'a',
+                    value: 10,
+                    type: 1
+                }
+            ]
+        });
+
+        const val = not.processNode();
+
+        expect(val.value).toBe(-11);
+    });
+
+    it("math/and", () => {
+        const and: And = new And({
+            ...defaultProps,
+            values: [
+                {
+                    id: 'a',
+                    value: 11,
+                    type: 1
+                },
+                {
+                    id: 'b',
+                    value: 7,
+                    type: 1
+                }
+            ]
+        });
+
+        const val = and.processNode();
+
+        expect(val.value).toBe(3);
+    });
+
+    it("math/or", () => {
+        const or: Or = new Or({
+            ...defaultProps,
+            values: [
+                {
+                    id: 'a',
+                    value: 11,
+                    type: 1
+                },
+                {
+                    id: 'b',
+                    value: 7,
+                    type: 1
+                }
+            ]
+        });
+
+        const val = or.processNode();
+
+        expect(val.value).toBe(15);
+    });
+
+    it("math/xor", () => {
+        const xor: Xor = new Xor({
+            ...defaultProps,
+            values: [
+                {
+                    id: 'a',
+                    value: 11,
+                    type: 1
+                },
+                {
+                    id: 'b',
+                    value: 7,
+                    type: 1
+                }
+            ]
+        });
+
+        const val = xor.processNode();
+
+        expect(val.value).toBe(12);
+    });
+
+    it("math/asr", () => {
+        const rightShift: RightShift = new RightShift({
+            ...defaultProps,
+            values: [
+                {
+                    id: 'a',
+                    value: 4,
+                    type: 1
+                },
+                {
+                    id: 'b',
+                    value: 2,
+                    type: 1
+                }
+            ]
+        });
+
+        const val = rightShift.processNode();
+
+        expect(val.value).toBe(1);
+    });
+
+    it("math/lsl", () => {
+        const leftShift: LeftShift = new LeftShift({
+            ...defaultProps,
+            values: [
+                {
+                    id: 'a',
+                    value: 4,
+                    type: 1
+                },
+                {
+                    id: 'b',
+                    value: 2,
+                    type: 1
+                }
+            ]
+        });
+
+        const val = leftShift.processNode();
+
+        expect(val.value).toBe(16);
+    });
+
+    it("math/clz", () => {
+        const countLeadingZeros: CountLeadingZeros = new CountLeadingZeros({
+            ...defaultProps,
+            values: [
+                {
+                    id: 'a',
+                    value: 4,
+                    type: 1
+                }
+            ]
+        });
+
+        const val = countLeadingZeros.processNode();
+
+        expect(val.value).toBe(29);
+    });
+
+    it("math/ctz", () => {
+        const countTrailingZeros: CountTrailingZeros = new CountTrailingZeros({
+            ...defaultProps,
+            values: [
+                {
+                    id: 'a',
+                    value: 4,
+                    type: 1
+                }
+            ]
+        });
+
+        const val = countTrailingZeros.processNode();
+
+        expect(val.value).toBe(2);
+    });
+
+    it("math/popcnt", () => {
+        const countOneBits: CountOneBits = new CountOneBits({
+            ...defaultProps,
+            values: [
+                {
+                    id: 'a',
+                    value: 11,
+                    type: 1
+                }
+            ]
+        });
+
+        const val = countOneBits.processNode();
+
+        expect(val.value).toBe(3);
     });
 });
 

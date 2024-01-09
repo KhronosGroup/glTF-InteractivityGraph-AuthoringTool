@@ -1062,6 +1062,7 @@ export const arithmeticNodes = [
                     id: "a",
                     description: "Argument",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -1075,6 +1076,7 @@ export const arithmeticNodes = [
                     id: "val",
                     description: "if a > 0 then -a, else a",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -1093,6 +1095,7 @@ export const arithmeticNodes = [
                     id: "a",
                     description: "Argument",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -1106,6 +1109,7 @@ export const arithmeticNodes = [
                     id: "val",
                     description: "if a > 0 then -1, else 1",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -1248,6 +1252,7 @@ export const arithmeticNodes = [
                     id: "a",
                     description: "Argument",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -1261,6 +1266,7 @@ export const arithmeticNodes = [
                     id: "val",
                     description: "-a",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -1279,6 +1285,7 @@ export const arithmeticNodes = [
                     id: "a",
                     description: "First Addend",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -1287,6 +1294,7 @@ export const arithmeticNodes = [
                     id: "b",
                     description: "Second Addend",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -1300,6 +1308,7 @@ export const arithmeticNodes = [
                     id: "val",
                     description: "a + b",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -1318,6 +1327,7 @@ export const arithmeticNodes = [
                     id: "a",
                     description: "Minuend",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -1326,6 +1336,7 @@ export const arithmeticNodes = [
                     id: "b",
                     description: "Subtrahend",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -1339,6 +1350,7 @@ export const arithmeticNodes = [
                     id: "val",
                     description: "a - b",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -1357,6 +1369,7 @@ export const arithmeticNodes = [
                     id: "a",
                     description: "First factor",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -1365,6 +1378,7 @@ export const arithmeticNodes = [
                     id: "b",
                     description: "Second factor",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -1378,6 +1392,7 @@ export const arithmeticNodes = [
                     id: "val",
                     description: "a * b",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -1396,6 +1411,7 @@ export const arithmeticNodes = [
                     id: "a",
                     description: "Dividend",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -1404,6 +1420,7 @@ export const arithmeticNodes = [
                     id: "b",
                     description: "Divisor",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -1417,6 +1434,7 @@ export const arithmeticNodes = [
                     id: "val",
                     description: "a / b",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -1435,6 +1453,7 @@ export const arithmeticNodes = [
                     id: "a",
                     description: "Dividend",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -1443,6 +1462,7 @@ export const arithmeticNodes = [
                     id: "b",
                     description: "Divisor",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -1456,6 +1476,7 @@ export const arithmeticNodes = [
                     id: "val",
                     description: "remainder of a / b",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -1474,6 +1495,7 @@ export const arithmeticNodes = [
                     id: "a",
                     description: "First Arg",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -1482,6 +1504,7 @@ export const arithmeticNodes = [
                     id: "b",
                     description: "Second Arg",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -1495,6 +1518,7 @@ export const arithmeticNodes = [
                     id: "val",
                     description: "smallest of a and b",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -1513,6 +1537,7 @@ export const arithmeticNodes = [
                     id: "a",
                     description: "First Arg",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -1521,6 +1546,7 @@ export const arithmeticNodes = [
                     id: "b",
                     description: "Second Arg",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -1534,6 +1560,7 @@ export const arithmeticNodes = [
                     id: "val",
                     description: "largest of a and b",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -1552,6 +1579,7 @@ export const arithmeticNodes = [
                     id: "a",
                     description: "Value to clamp",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -1560,6 +1588,7 @@ export const arithmeticNodes = [
                     id: "b",
                     description: "Lower Boundary",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -1568,6 +1597,7 @@ export const arithmeticNodes = [
                     id: "c",
                     description: "Upper Boundary",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -1581,6 +1611,7 @@ export const arithmeticNodes = [
                     id: "val",
                     description: "min(max(a,b),c)",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -2398,6 +2429,42 @@ export const vectorNodes: IAuthoringNode[] = [
         }
     },
     {
+        type: "math/transform",
+        description: "Vector transformation",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "Vector to transform",
+                    types: [
+                        "float4"
+                    ]
+                },
+                {
+                    id: "b",
+                    description: "Transformation matrix",
+                    types: [
+                        "float4x4"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "Transformed vector",
+                    types: [
+                        "float4"
+                    ]
+                }
+            ]
+        }
+    },
+    {
         type: "math/normalize",
         description: "Vector normalization",
         configuration: [],
@@ -2579,6 +2646,97 @@ export const vectorNodes: IAuthoringNode[] = [
     }
 ]
 
+export const matrixNodeSpecs = [
+    {
+        type: "math/transpose",
+        description: "Transpose operation",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "Matrix to transpose",
+                    types: [
+                        "float4x4"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "Matrix that is the transpose of a",
+                    types: [
+                        "float4x4"
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        type: "math/determinant",
+        description: "Determinant operation",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "Matrix",
+                    types: [
+                        "float4x4"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "Determinant of a",
+                    types: [
+                        "float"
+                    ]
+                }
+            ]
+        }
+    },
+    //TODO: find numerically stable way to compute without library
+    // {
+    //     type: "math/inverse",
+    //     description: "Inverse operation",
+    //     configuration: [],
+    //     input: {
+    //         flows: [],
+    //         values: [
+    //             {
+    //                 id: "a",
+    //                 description: "Matrix",
+    //                 types: [
+    //                     "float4x4"
+    //                 ]
+    //             }
+    //         ]
+    //     },
+    //     output: {
+    //         flows: [],
+    //         values: [
+    //             {
+    //                 id: "val",
+    //                 description: "Inverse of a",
+    //                 types: [
+    //                     "float4x4"
+    //                 ]
+    //             }
+    //         ]
+    //     }
+    // },
+]
+
 export const specialFloatingPointNodeSpecs = [
     {
         type: "math/isnan",
@@ -2652,6 +2810,7 @@ export const comparisonNodeSpecs = [
                     id: "a",
                     description: "First Argument",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -2660,6 +2819,7 @@ export const comparisonNodeSpecs = [
                     id: "b",
                     description: "Second Argument",
                     types: [
+                        "int",
                         "float",
                         "float3"
                     ]
@@ -2690,6 +2850,7 @@ export const comparisonNodeSpecs = [
                     id: "a",
                     description: "First Argument",
                     types: [
+                        "int",
                         "float"
                     ]
                 },
@@ -2697,6 +2858,7 @@ export const comparisonNodeSpecs = [
                     id: "b",
                     description: "Second Argument",
                     types: [
+                        "int",
                         "float"
                     ]
                 }
@@ -2726,6 +2888,7 @@ export const comparisonNodeSpecs = [
                     id: "a",
                     description: "First Argument",
                     types: [
+                        "int",
                         "float"
                     ]
                 },
@@ -2733,6 +2896,7 @@ export const comparisonNodeSpecs = [
                     id: "b",
                     description: "Second Argument",
                     types: [
+                        "int",
                         "float"
                     ]
                 }
@@ -2762,6 +2926,7 @@ export const comparisonNodeSpecs = [
                     id: "a",
                     description: "First Argument",
                     types: [
+                        "int",
                         "float"
                     ]
                 },
@@ -2769,6 +2934,7 @@ export const comparisonNodeSpecs = [
                     id: "b",
                     description: "Second Argument",
                     types: [
+                        "int",
                         "float"
                     ]
                 }
@@ -2798,6 +2964,7 @@ export const comparisonNodeSpecs = [
                     id: "a",
                     description: "First Argument",
                     types: [
+                        "int",
                         "float"
                     ]
                 },
@@ -2805,6 +2972,7 @@ export const comparisonNodeSpecs = [
                     id: "b",
                     description: "Second Argument",
                     types: [
+                        "int",
                         "float"
                     ]
                 }
@@ -2825,6 +2993,305 @@ export const comparisonNodeSpecs = [
     },
 ]
 
+export const bitwiseNodeSpecs = [
+    {
+        type: "math/not",
+        description: "Bitwise NOT operation",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "First Argument",
+                    types: [
+                        "int"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "~a",
+                    types: [
+                        "int"
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        type: "math/and",
+        description: "Bitwise AND operation",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "First Argument",
+                    types: [
+                        "int"
+                    ]
+                },
+                {
+                    id: "b",
+                    description: "Second Argument",
+                    types: [
+                        "int"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "a & b",
+                    types: [
+                        "int"
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        type: "math/or",
+        description: "Bitwise OR operation",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "First Argument",
+                    types: [
+                        "int"
+                    ]
+                },
+                {
+                    id: "b",
+                    description: "Second Argument",
+                    types: [
+                        "int"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "a | b",
+                    types: [
+                        "int"
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        type: "math/xor",
+        description: "Bitwise XOR operation",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "First Argument",
+                    types: [
+                        "int"
+                    ]
+                },
+                {
+                    id: "b",
+                    description: "Second Argument",
+                    types: [
+                        "int"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "a ^ b",
+                    types: [
+                        "int"
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        type: "math/asr",
+        description: "Right Shift",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "Value to be shifted",
+                    types: [
+                        "int"
+                    ]
+                },
+                {
+                    id: "b",
+                    description: "Num bits to shift",
+                    types: [
+                        "int"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "a >> b",
+                    types: [
+                        "int"
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        type: "math/lsl",
+        description: "Left Shift",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "Value to be shifted",
+                    types: [
+                        "int"
+                    ]
+                },
+                {
+                    id: "b",
+                    description: "Num bits to shift",
+                    types: [
+                        "int"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "a << b",
+                    types: [
+                        "int"
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        type: "math/clz",
+        description: "Count leading zeros",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "Argument",
+                    types: [
+                        "int"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "number of leading zero bits",
+                    types: [
+                        "int"
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        type: "math/ctz",
+        description: "Count trailing zeros",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "Argument",
+                    types: [
+                        "int"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "Number of trailing zero bits",
+                    types: [
+                        "int"
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        type: "math/popcnt",
+        description: "Count set bits operation",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "Argument",
+                    types: [
+                        "int"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "number of set bits",
+                    types: [
+                        "int"
+                    ]
+                }
+            ]
+        }
+    }
+]
+
 export const authoringNodeSpecs: IAuthoringNode[] = [...worldNodeSpecs, ...flowNodeSpecs, ...lifecycleNodeSpecs, ...customEventNodeSpecs, ...variableNodeSpecs,
     ...constantsNodes, ...arithmeticNodes, ...trigNodes, ...hyperbolicNodes, ...exponentialFunctionNodes, ...experimentalNodeSpecs, ...vectorNodes,
-    ...specialFloatingPointNodeSpecs];
+    ...specialFloatingPointNodeSpecs, ...matrixNodeSpecs, ...comparisonNodeSpecs, ...bitwiseNodeSpecs];

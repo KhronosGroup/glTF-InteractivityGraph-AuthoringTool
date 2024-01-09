@@ -24,14 +24,15 @@ export class Clamp extends BehaveEngineNode {
         let val: any;
 
         switch (typeA) {
+            case "int":
             case "float":
-                val = Math.min(Math.max(a,b),c);
+                val = Math.min(Math.max(a,Math.min(b,c)), Math.max(b,c));
                 break;
             case "float3":
                 val = [
-                    Math.min(Math.max(a[0], b[0]), c[0]),
-                    Math.min(Math.max(a[1], b[1]), c[1]),
-                    Math.min(Math.max(a[2], b[2]), c[2])
+                    Math.min(Math.max(a[0],Math.min(b[0],c[0])), Math.max(b[0],c[0])),
+                    Math.min(Math.max(a[1],Math.min(b[1],c[1])), Math.max(b[1],c[1])),
+                    Math.min(Math.max(a[2],Math.min(b[2],c[2])), Math.max(b[2],c[2]))
                 ]
                 break;
             default:

@@ -17,6 +17,9 @@ export class Negate extends BehaveEngineNode {
         let val: any;
 
         switch (type) {
+            case "int":
+                val = (-a) | 0;
+                break;
             case "float":
                 val = a * -1;
                 break;

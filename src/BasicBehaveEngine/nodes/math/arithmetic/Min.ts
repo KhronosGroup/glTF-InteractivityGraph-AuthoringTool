@@ -22,6 +22,7 @@ export class Min extends BehaveEngineNode {
         let val: any;
 
         switch (typeA) {
+            case "int":
             case "float":
                 val = Math.min(a,b);
                 break;

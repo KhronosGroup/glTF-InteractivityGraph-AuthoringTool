@@ -22,6 +22,7 @@ export class LessThanOrEqualTo extends BehaveEngineNode {
         let val: any;
 
         switch (typeA) {
+            case "int":
             case "float":
                 val = a <= b;
                 break;

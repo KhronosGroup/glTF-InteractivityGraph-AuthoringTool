@@ -22,6 +22,7 @@ export class Max extends BehaveEngineNode {
         let val: any;
 
         switch (typeA) {
+            case "int":
             case "float":
                 val = Math.max(a,b);
                 break;

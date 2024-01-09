@@ -1,11 +1,11 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../../BehaveEngineNode";
 
-export class GreaterThanOrEqualTo extends BehaveEngineNode {
+export class MatMul extends BehaveEngineNode {
     REQUIRED_VALUES = [{id:"a"}, {id: "b"}]
 
     constructor(props: IBehaviourNodeProps) {
         super(props);
-        this.name = "GreaterThanOrEqualToNode";
+        this.name = "MatMul";
         this.validateValues(this.values);
     }
 
@@ -16,19 +16,20 @@ export class GreaterThanOrEqualTo extends BehaveEngineNode {
         const typeA: string = this.getType(typeIndexA);
         const typeIndexB = this.values['b'].type!
         const typeB: string = this.getType(typeIndexB);
-        if (typeA !== typeB) {
+
+        if (typeA !== "float4x4") {
             throw Error("input types not equivalent")
         }
-        let val: any;
-
-        switch (typeA) {
-            case "int":
-            case "float":
-                val = a >= b;
-                break;
-            default:
-                throw Error("Invalid type")
+        if (typeB !== "float4x4") {
+            throw Error("Invalid type")
         }
-        return {id: "val", value: val, type: this.getTypeIndex('bool')}
+
+        const val: number[][] = a.map((rowA: any[], i: string | number) =>
+            rowA.map((_, j) =>
+                rowA.reduce((sum, _, k) => sum + a[i][k] * b[k][j], 0)
+            )
+        );
+
+        return {id: "val", value: val, type: typeIndexA}
     }
 }

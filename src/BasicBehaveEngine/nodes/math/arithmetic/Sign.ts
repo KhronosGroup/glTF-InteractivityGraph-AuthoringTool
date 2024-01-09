@@ -18,6 +18,7 @@ export class Sign extends BehaveEngineNode {
         let val: any;
 
         switch (type) {
+            case "int":
             case "float":
                 val = Math.sign(a);
                 break;

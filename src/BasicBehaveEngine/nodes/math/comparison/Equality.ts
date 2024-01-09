@@ -23,6 +23,7 @@ export class Equality extends BehaveEngineNode {
 
 
         switch (typeA) {
+            case "int":
             case "float":
                 val = a === b;
                 break;

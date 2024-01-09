@@ -22,6 +22,9 @@ export class Subtract extends BehaveEngineNode {
         let val: any;
 
         switch (typeA) {
+            case "int":
+                val = (a - b) | 0;
+                break;
             case "float":
                 val = a - b;
                 break;

@@ -14,10 +14,16 @@ export class Delay extends BehaveEngineNode {
         this.graphEngine.clearValueEvaluationCache();
         const {duration} = this.evaluateAllValues(this.REQUIRED_VALUES.map(val => val.id));
         this.graphEngine.processNodeStarted(this);
-        setTimeout(() => {
-            this.addEventToWorkQueue(this.flows.done)
-        }, duration * 1000)
+        if (isNaN(duration) || !isFinite(duration) || duration < 0) {
+            if (this.flows.err) {
+                this.processFlow(this.flows.err);
+            }
+        } else {
+            setTimeout(() => {
+                this.addEventToWorkQueue(this.flows.done)
+            }, duration * 1000)
 
-        this.processFlow(this.flows.out);
+            this.processFlow(this.flows.out);
+        }
     }
 }

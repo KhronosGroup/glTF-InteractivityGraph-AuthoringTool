@@ -21,18 +21,24 @@ export class Throttle extends BehaveEngineNode {
         this.graphEngine.clearValueEvaluationCache();
         const {delay} = this.evaluateAllValues(this.REQUIRED_VALUES.map(val => val.id));
         this.graphEngine.processNodeStarted(this);
-        const now = Date.now();
-        if (now - this._lastSuccessfulCall <= delay * 1000) {
-            // throttle
-            this._isThrottling = true;
-            this.outValues['isThrottling'].value = true;
-            return;
+        if (isNaN(delay) || !isFinite(delay) || delay < 0) {
+            if (this.flows.err) {
+                this.processFlow(this.flows.err);
+            }
         } else {
-            this._isThrottling = false;
-            this.outValues['isThrottling'].value = false;
-        }
+            const now = Date.now();
+            if (now - this._lastSuccessfulCall <= delay * 1000) {
+                // throttle
+                this._isThrottling = true;
+                this.outValues['isThrottling'].value = true;
+                return;
+            } else {
+                this._isThrottling = false;
+                this.outValues['isThrottling'].value = false;
+            }
 
-        this._lastSuccessfulCall = now;
-        super.processNode(flowSocket);
+            this._lastSuccessfulCall = now;
+            super.processNode(flowSocket);
+        }
     }
 }

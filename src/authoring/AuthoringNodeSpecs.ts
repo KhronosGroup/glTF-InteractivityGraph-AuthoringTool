@@ -561,6 +561,10 @@ export const flowNodeSpecs: IAuthoringNode[] = [
                 {
                     id: "out",
                     description: "The flow to be followed immediately after the node is executed"
+                },
+                {
+                    id: "err",
+                    description: "The flow to be followed if delay is an invalid value (negative, Nan, or +/-Inf)"
                 }
             ],
             values: []
@@ -670,6 +674,10 @@ export const flowNodeSpecs: IAuthoringNode[] = [
                 {
                     id: "out",
                     description: "The flow to be followed"
+                },
+                {
+                    id: "err",
+                    description: "The flow to be followed if delay is an invalid value (negative, Nan, or +/-Inf)"
                 }
             ],
             values: [

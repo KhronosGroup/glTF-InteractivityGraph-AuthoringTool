@@ -31,6 +31,6 @@ export class Saturate extends BehaveEngineNode {
                 throw Error("Invalid type")
         }
 
-        return {id: "val", value: val, type: typeIndex}
+        return {'val': {id: "val", value: val, type: typeIndex}}
     }
 }

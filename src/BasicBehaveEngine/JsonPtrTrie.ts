@@ -123,7 +123,7 @@ export class JsonPtrTrie {
                 // if it is a number, first the path is valid if the path piece is < the key
                 const numericalKey = [...currentNode.children.keys()].find(key => currentNode.children.get(key)!.trieNodeType === TrieNodeType.INDEX);
                 if (numericalKey === undefined) {return undefined}
-                if (Number(pathPiece) >= Number(numericalKey)) {return undefined}
+                if (Number(pathPiece) >= Number(numericalKey) || Number(pathPiece) < 0) {return undefined}
                 currentNode = currentNode.children.get(numericalKey)!
             } else {
                 currentNode = currentNode.children.get(pathPiece)!;

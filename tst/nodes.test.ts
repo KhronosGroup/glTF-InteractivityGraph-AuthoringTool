@@ -395,7 +395,7 @@ describe('nodes', () => {
             variables: [{ id: 'testVariable', value: 42, initialValue: 42 }],
         });
 
-        const res = await variableGet.processNode();
+        const res = await variableGet.processNode()['testVariable'];
         expect(res.value).toBe(42);
     });
 
@@ -432,7 +432,7 @@ describe('nodes', () => {
         );
 
         const res  = worldGet.processNode();
-        expect(res.value).toBe(2);
+        expect(res['val']!.value).toBe(2);
 
         const worldGetCustomPtr: WorldGet = new WorldGet({
             ...defaultProps,
@@ -440,7 +440,7 @@ describe('nodes', () => {
         });
 
         const resCustom = await worldGetCustomPtr.processNode();
-        expect(resCustom.value).toBe(1);
+        expect(resCustom['val']!.value).toBe(1);
     });
 
     it('world/set', async () => {
@@ -543,7 +543,7 @@ describe('nodes', () => {
         });
 
         const val = euler.processNode();
-        expect(val.value).toBe(Math.E);
+        expect(val['val'].value).toBe(Math.E);
     });
 
     it("math/Inf", () => {
@@ -552,7 +552,7 @@ describe('nodes', () => {
         });
 
         const val = inf.processNode();
-        expect(val.value).toBe(Infinity);
+        expect(val['val'].value).toBe(Infinity);
     });
 
     it("math/pi", () => {
@@ -561,7 +561,7 @@ describe('nodes', () => {
         });
 
         const val = pi.processNode();
-        expect(val.value).toBe(Math.PI);
+        expect(val['val'].value).toBe(Math.PI);
     });
 
     it("math/abs", () => {
@@ -573,7 +573,7 @@ describe('nodes', () => {
         });
 
         let val = abs.processNode();
-        expect(val.value).toBe(10);
+        expect(val['val'].value).toBe(10);
 
         abs = new AbsoluteValue({
             ...defaultProps,
@@ -583,7 +583,7 @@ describe('nodes', () => {
         });
 
         val = abs.processNode();
-        expect(val.value).toBe(10);
+        expect(val['val'].value).toBe(10);
 
         abs = new AbsoluteValue({
             ...defaultProps,
@@ -593,9 +593,9 @@ describe('nodes', () => {
         });
 
         val = abs.processNode();
-        expect(val.value[0]).toBe(10);
-        expect(val.value[1]).toBe(12);
-        expect(val.value[2]).toBe(20);
+        expect(val['val'].value[0]).toBe(10);
+        expect(val['val'].value[1]).toBe(12);
+        expect(val['val'].value[2]).toBe(20);
     });
 
     it("math/sign", () => {
@@ -607,7 +607,7 @@ describe('nodes', () => {
         });
 
         let val = sign.processNode();
-        expect(val.value).toBe(-1);
+        expect(val['val'].value).toBe(-1);
 
         sign = new Sign({
             ...defaultProps,
@@ -617,9 +617,9 @@ describe('nodes', () => {
         });
 
         val = sign.processNode();
-        expect(val.value[0]).toBe(-1);
-        expect(val.value[1]).toBe(0);
-        expect(val.value[2]).toBe(1);
+        expect(val['val'].value[0]).toBe(-1);
+        expect(val['val'].value[1]).toBe(0);
+        expect(val['val'].value[2]).toBe(1);
     });
 
     it("math/trunc", () => {
@@ -631,7 +631,7 @@ describe('nodes', () => {
         });
 
         let val = trunc.processNode();
-        expect(val.value).toBe(-10);
+        expect(val['val'].value).toBe(-10);
 
         trunc = new Truncate({
             ...defaultProps,
@@ -641,9 +641,9 @@ describe('nodes', () => {
         });
 
         val = trunc.processNode();
-        expect(val.value[0]).toBe(-10);
-        expect(val.value[1]).toBe(0);
-        expect(val.value[2]).toBe(10);
+        expect(val['val'].value[0]).toBe(-10);
+        expect(val['val'].value[1]).toBe(0);
+        expect(val['val'].value[2]).toBe(10);
     });
 
     it("math/floor", () => {
@@ -655,7 +655,7 @@ describe('nodes', () => {
         });
 
         let val = floor.processNode();
-        expect(val.value).toBe(-11);
+        expect(val['val'].value).toBe(-11);
 
         floor = new Floor({
             ...defaultProps,
@@ -665,9 +665,9 @@ describe('nodes', () => {
         });
 
         val = floor.processNode();
-        expect(val.value[0]).toBe(-11);
-        expect(val.value[1]).toBe(0);
-        expect(val.value[2]).toBe(10);
+        expect(val['val'].value[0]).toBe(-11);
+        expect(val['val'].value[1]).toBe(0);
+        expect(val['val'].value[2]).toBe(10);
     });
 
     it("math/ceil", () => {
@@ -679,7 +679,7 @@ describe('nodes', () => {
         });
 
         let val = ceil.processNode();
-        expect(val.value).toBe(-10);
+        expect(val['val'].value).toBe(-10);
 
         ceil = new Ceil({
             ...defaultProps,
@@ -689,9 +689,9 @@ describe('nodes', () => {
         });
 
         val = ceil.processNode();
-        expect(val.value[0]).toBe(-10);
-        expect(val.value[1]).toBe(1);
-        expect(val.value[2]).toBe(11);
+        expect(val['val'].value[0]).toBe(-10);
+        expect(val['val'].value[1]).toBe(1);
+        expect(val['val'].value[2]).toBe(11);
     });
 
     it("math/add", () => {
@@ -704,7 +704,7 @@ describe('nodes', () => {
         });
 
         let val = add.processNode();
-        expect(val.value).toBe(-5);
+        expect(val['val'].value).toBe(-5);
 
         add = new Add({
             ...defaultProps,
@@ -715,9 +715,9 @@ describe('nodes', () => {
         });
 
         val = add.processNode();
-        expect(val.value[0]).toBe(-6.5);
-        expect(val.value[1]).toBe(-5.5);
-        expect(val.value[2]).toBe(19);
+        expect(val['val'].value[0]).toBe(-6.5);
+        expect(val['val'].value[1]).toBe(-5.5);
+        expect(val['val'].value[2]).toBe(19);
     });
 
     it("math/sub", () => {
@@ -730,7 +730,7 @@ describe('nodes', () => {
         });
 
         let val = sub.processNode();
-        expect(val.value).toBe(-16);
+        expect(val['val'].value).toBe(-16);
 
         sub = new Subtract({
             ...defaultProps,
@@ -741,9 +741,9 @@ describe('nodes', () => {
         });
 
         val = sub.processNode();
-        expect(val.value[0]).toBe(-14.5);
-        expect(val.value[1]).toBe(6.5);
-        expect(val.value[2]).toBe(-1);
+        expect(val['val'].value[0]).toBe(-14.5);
+        expect(val['val'].value[1]).toBe(6.5);
+        expect(val['val'].value[2]).toBe(-1);
     });
 
     it("math/mul", () => {
@@ -756,7 +756,7 @@ describe('nodes', () => {
         });
 
         let val = mul.processNode();
-        expect(val.value).toBe(-55);
+        expect(val['val'].value).toBe(-55);
 
         mul = new Multiply({
             ...defaultProps,
@@ -767,9 +767,9 @@ describe('nodes', () => {
         });
 
         val = mul.processNode();
-        expect(val.value[0]).toBe(-50);
-        expect(val.value[1]).toBe(3);
-        expect(val.value[2]).toBe(90);
+        expect(val['val'].value[0]).toBe(-50);
+        expect(val['val'].value[1]).toBe(3);
+        expect(val['val'].value[2]).toBe(90);
     });
 
     it("math/div", () => {
@@ -782,7 +782,7 @@ describe('nodes', () => {
         });
 
         let val = div.processNode();
-        expect(val.value).toBe(-2);
+        expect(val['val'].value).toBe(-2);
 
         div = new Divide({
             ...defaultProps,
@@ -793,9 +793,9 @@ describe('nodes', () => {
         });
 
         val = div.processNode();
-        expect(val.value[0]).toBe(-0);
-        expect(val.value[1]).toBe(12);
-        expect(val.value[2]).toBe(Infinity);
+        expect(val['val'].value[0]).toBe(-0);
+        expect(val['val'].value[1]).toBe(12);
+        expect(val['val'].value[2]).toBe(Infinity);
     });
 
     it("math/rem", () => {
@@ -808,7 +808,7 @@ describe('nodes', () => {
         });
 
         let val = rem.processNode();
-        expect(val.value).toBe(-0);
+        expect(val['val'].value).toBe(-0);
 
         rem = new Remainder({
             ...defaultProps,
@@ -819,9 +819,9 @@ describe('nodes', () => {
         });
 
         val = rem.processNode();
-        expect(val.value[0]).toBe(-0);
-        expect(val.value[1]).toBe(4);
-        expect(val.value[2]).toBe(9);
+        expect(val['val'].value[0]).toBe(-0);
+        expect(val['val'].value[1]).toBe(4);
+        expect(val['val'].value[2]).toBe(9);
     });
 
     it("math/max", () => {
@@ -834,7 +834,7 @@ describe('nodes', () => {
         });
 
         let val = max.processNode();
-        expect(val.value).toBe(5);
+        expect(val['val'].value).toBe(5);
 
         max = new Max({
             ...defaultProps,
@@ -845,9 +845,9 @@ describe('nodes', () => {
         });
 
         val = max.processNode();
-        expect(val.value[0]).toBe(5);
-        expect(val.value[1]).toBe(10);
-        expect(val.value[2]).toBe(-9);
+        expect(val['val'].value[0]).toBe(5);
+        expect(val['val'].value[1]).toBe(10);
+        expect(val['val'].value[2]).toBe(-9);
     });
 
     it("math/min", () => {
@@ -860,7 +860,7 @@ describe('nodes', () => {
         });
 
         let val = min.processNode();
-        expect(val.value).toBe(-10);
+        expect(val['val'].value).toBe(-10);
 
         min = new Min({
             ...defaultProps,
@@ -871,9 +871,9 @@ describe('nodes', () => {
         });
 
         val = min.processNode();
-        expect(val.value[0]).toBe(-10);
-        expect(val.value[1]).toBe(6);
-        expect(val.value[2]).toBe(-10);
+        expect(val['val'].value[0]).toBe(-10);
+        expect(val['val'].value[1]).toBe(6);
+        expect(val['val'].value[2]).toBe(-10);
     });
 
     it("math/rad", () => {
@@ -885,7 +885,7 @@ describe('nodes', () => {
         });
 
         let val = rad.processNode();
-        expect(val.value).toBe(Math.PI);
+        expect(val['val'].value).toBe(Math.PI);
 
         rad = new DegreeToRadians({
             ...defaultProps,
@@ -895,9 +895,9 @@ describe('nodes', () => {
         });
 
         val = rad.processNode();
-        expect(val.value[0]).toBe(-Math.PI);
-        expect(val.value[1]).toBe(Math.PI/4);
-        expect(val.value[2]).toBe(Math.PI * (3/2));
+        expect(val['val'].value[0]).toBe(-Math.PI);
+        expect(val['val'].value[1]).toBe(Math.PI/4);
+        expect(val['val'].value[2]).toBe(Math.PI * (3/2));
     });
 
     it("math/deg", () => {
@@ -909,7 +909,7 @@ describe('nodes', () => {
         });
 
         let val = deg.processNode();
-        expect(val.value).toBe(180);
+        expect(val['val'].value).toBe(180);
 
         deg = new RadiansToDegrees({
             ...defaultProps,
@@ -919,9 +919,9 @@ describe('nodes', () => {
         });
 
         val = deg.processNode();
-        expect(val.value[0]).toBe(360);
-        expect(val.value[1]).toBe(-180);
-        expect(val.value[2]).toBe(720);
+        expect(val['val'].value[0]).toBe(360);
+        expect(val['val'].value[1]).toBe(-180);
+        expect(val['val'].value[2]).toBe(720);
     });
 
     it("math/sin", () => {
@@ -933,7 +933,7 @@ describe('nodes', () => {
         });
 
         let val = sin.processNode();
-        expect(isCloseToVal(val.value, 0)).toBe(true);
+        expect(isCloseToVal(val['val'].value, 0)).toBe(true);
 
         sin = new Sine({
             ...defaultProps,
@@ -943,9 +943,9 @@ describe('nodes', () => {
         });
 
         val = sin.processNode();
-        expect(isCloseToVal(val.value[0], 0)).toBe(true);
-        expect(isCloseToVal(val.value[1], -1)).toBe(true);
-        expect(isCloseToVal(val.value[2], 1)).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], 0)).toBe(true);
+        expect(isCloseToVal(val['val'].value[1], -1)).toBe(true);
+        expect(isCloseToVal(val['val'].value[2], 1)).toBe(true);
     });
 
     it("math/cos", () => {
@@ -957,7 +957,7 @@ describe('nodes', () => {
         });
 
         let val = cos.processNode();
-        expect(isCloseToVal(val.value, -1)).toBe(true);
+        expect(isCloseToVal(val['val'].value, -1)).toBe(true);
 
         cos = new Cosine({
             ...defaultProps,
@@ -967,9 +967,9 @@ describe('nodes', () => {
         });
 
         val = cos.processNode();
-        expect(isCloseToVal(val.value[0], 1)).toBe(true);
-        expect(isCloseToVal(val.value[1], 0)).toBe(true);
-        expect(isCloseToVal(val.value[2], 0)).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], 1)).toBe(true);
+        expect(isCloseToVal(val['val'].value[1], 0)).toBe(true);
+        expect(isCloseToVal(val['val'].value[2], 0)).toBe(true);
     });
 
     it("math/tan", () => {
@@ -981,7 +981,7 @@ describe('nodes', () => {
         });
 
         let val = tan.processNode();
-        expect(isCloseToVal(val.value, 1)).toBe(true);
+        expect(isCloseToVal(val['val'].value, 1)).toBe(true);
 
         tan = new Tangent({
             ...defaultProps,
@@ -991,10 +991,10 @@ describe('nodes', () => {
         });
 
         val = tan.processNode();
-        expect(isCloseToVal(val.value[0], 0)).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], 0)).toBe(true);
         //TODO: this is weird it should be inf
-        expect(val.value[1] ).toBe(16331239353195370);
-        expect(isCloseToVal(val.value[2], -1)).toBe(true);
+        expect(val['val'].value[1] ).toBe(16331239353195370);
+        expect(isCloseToVal(val['val'].value[2], -1)).toBe(true);
     });
 
     it("math/asin", () => {
@@ -1006,7 +1006,7 @@ describe('nodes', () => {
         });
 
         let val = asin.processNode();
-        expect(isCloseToVal(val.value, Math.asin(0.5))).toBe(true);
+        expect(isCloseToVal(val['val'].value, Math.asin(0.5))).toBe(true);
 
         asin = new Arcsine({
             ...defaultProps,
@@ -1016,9 +1016,9 @@ describe('nodes', () => {
         });
 
         val = asin.processNode();
-        expect(isCloseToVal(val.value[0], Math.asin(0.86602540378))).toBe(true);
-        expect(isCloseToVal(val.value[1], Math.asin(0))).toBe(true);
-        expect(isCloseToVal(val.value[2], Math.asin(-0.86602540378))).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], Math.asin(0.86602540378))).toBe(true);
+        expect(isCloseToVal(val['val'].value[1], Math.asin(0))).toBe(true);
+        expect(isCloseToVal(val['val'].value[2], Math.asin(-0.86602540378))).toBe(true);
     });
 
     it("math/acos", () => {
@@ -1030,7 +1030,7 @@ describe('nodes', () => {
         });
 
         let val = acos.processNode();
-        expect(isCloseToVal(val.value, Math.acos(0.5))).toBe(true);
+        expect(isCloseToVal(val['val'].value, Math.acos(0.5))).toBe(true);
 
         acos = new Arccosine({
             ...defaultProps,
@@ -1040,9 +1040,9 @@ describe('nodes', () => {
         });
 
         val = acos.processNode();
-        expect(isCloseToVal(val.value[0], Math.acos(0.86602540378))).toBe(true);
-        expect(isCloseToVal(val.value[1], Math.acos(1))).toBe(true);
-        expect(isCloseToVal(val.value[2], Math.acos(-0.86602540378))).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], Math.acos(0.86602540378))).toBe(true);
+        expect(isCloseToVal(val['val'].value[1], Math.acos(1))).toBe(true);
+        expect(isCloseToVal(val['val'].value[2], Math.acos(-0.86602540378))).toBe(true);
     });
 
     it("math/atan", () => {
@@ -1054,7 +1054,7 @@ describe('nodes', () => {
         });
 
         let val = atan.processNode();
-        expect(isCloseToVal(val.value, Math.atan(0.5))).toBe(true);
+        expect(isCloseToVal(val['val'].value, Math.atan(0.5))).toBe(true);
 
         atan = new Arctangent({
             ...defaultProps,
@@ -1064,9 +1064,9 @@ describe('nodes', () => {
         });
 
         val = atan.processNode();
-        expect(isCloseToVal(val.value[0], Math.atan(0.57735026919))).toBe(true);
-        expect(isCloseToVal(val.value[1], Math.atan(0))).toBe(true);
-        expect(isCloseToVal(val.value[2], Math.atan(-0.57735026919))).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], Math.atan(0.57735026919))).toBe(true);
+        expect(isCloseToVal(val['val'].value[1], Math.atan(0))).toBe(true);
+        expect(isCloseToVal(val['val'].value[2], Math.atan(-0.57735026919))).toBe(true);
     });
 
     it("math/atan2", () => {
@@ -1079,7 +1079,7 @@ describe('nodes', () => {
         });
 
         let val = atan2.processNode();
-        expect(val.value).toBe(Math.atan2(1.0, 1.0));
+        expect(val['val'].value).toBe(Math.atan2(1.0, 1.0));
 
         atan2 = new Arctangent2({
             ...defaultProps,
@@ -1090,9 +1090,9 @@ describe('nodes', () => {
         });
 
         val = atan2.processNode();
-        expect(isCloseToVal(val.value[0], Math.atan2(0.5, 0.86602540378))).toBe(true);
-        expect(isCloseToVal(val.value[1], Math.atan2(0, 1))).toBe(true);
-        expect(isCloseToVal(val.value[2], Math.atan2(-0.5, -0.86602540378))).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], Math.atan2(0.5, 0.86602540378))).toBe(true);
+        expect(isCloseToVal(val['val'].value[1], Math.atan2(0, 1))).toBe(true);
+        expect(isCloseToVal(val['val'].value[2], Math.atan2(-0.5, -0.86602540378))).toBe(true);
     });
 
     it("math/log", () => {
@@ -1104,7 +1104,7 @@ describe('nodes', () => {
         });
 
         let val = log.processNode();
-        expect(isCloseToVal(val.value, Math.log(2.0))).toBe(true);
+        expect(isCloseToVal(val['val'].value, Math.log(2.0))).toBe(true);
 
         log = new Log({
             ...defaultProps,
@@ -1114,9 +1114,9 @@ describe('nodes', () => {
         });
 
         val = log.processNode();
-        expect(isCloseToVal(val.value[0], Math.log(1))).toBe(true);
-        expect(isCloseToVal(val.value[1], Math.log(Math.E))).toBe(true);
-        expect(isCloseToVal(val.value[2], Math.log(10))).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], Math.log(1))).toBe(true);
+        expect(isCloseToVal(val['val'].value[1], Math.log(Math.E))).toBe(true);
+        expect(isCloseToVal(val['val'].value[2], Math.log(10))).toBe(true);
     });
 
     it("math/log2", () => {
@@ -1128,7 +1128,7 @@ describe('nodes', () => {
         });
 
         let val = log2.processNode();
-        expect(isCloseToVal(val.value, Math.log2(8.0))).toBe(true);
+        expect(isCloseToVal(val['val'].value, Math.log2(8.0))).toBe(true);
 
         log2 = new Log2({
             ...defaultProps,
@@ -1138,9 +1138,9 @@ describe('nodes', () => {
         });
 
         val = log2.processNode();
-        expect(isCloseToVal(val.value[0], Math.log2(1))).toBe(true);
-        expect(isCloseToVal(val.value[1], Math.log2(2))).toBe(true);
-        expect(isCloseToVal(val.value[2], Math.log2(16))).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], Math.log2(1))).toBe(true);
+        expect(isCloseToVal(val['val'].value[1], Math.log2(2))).toBe(true);
+        expect(isCloseToVal(val['val'].value[2], Math.log2(16))).toBe(true);
     });
 
     it("math/log10", () => {
@@ -1152,7 +1152,7 @@ describe('nodes', () => {
         });
 
         let val = log10.processNode();
-        expect(isCloseToVal(val.value, Math.log10(100.0))).toBe(true);
+        expect(isCloseToVal(val['val'].value, Math.log10(100.0))).toBe(true);
 
         log10 = new Log10({
             ...defaultProps,
@@ -1162,9 +1162,9 @@ describe('nodes', () => {
         });
 
         val = log10.processNode();
-        expect(isCloseToVal(val.value[0], Math.log10(1))).toBe(true);
-        expect(isCloseToVal(val.value[1], Math.log10(10))).toBe(true);
-        expect(isCloseToVal(val.value[2], Math.log10(1000))).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], Math.log10(1))).toBe(true);
+        expect(isCloseToVal(val['val'].value[1], Math.log10(10))).toBe(true);
+        expect(isCloseToVal(val['val'].value[2], Math.log10(1000))).toBe(true);
     });
 
     it("math/cbrt", () => {
@@ -1176,7 +1176,7 @@ describe('nodes', () => {
         });
 
         let val = cubeRoot.processNode();
-        expect(isCloseToVal(val.value, Math.cbrt(8.0))).toBe(true);
+        expect(isCloseToVal(val['val'].value, Math.cbrt(8.0))).toBe(true);
 
         cubeRoot = new CubeRoot({
             ...defaultProps,
@@ -1186,9 +1186,9 @@ describe('nodes', () => {
         });
 
         val = cubeRoot.processNode();
-        expect(isCloseToVal(val.value[0], Math.cbrt(1))).toBe(true);
-        expect(isCloseToVal(val.value[1], Math.cbrt(27))).toBe(true);
-        expect(isCloseToVal(val.value[2], Math.cbrt(125))).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], Math.cbrt(1))).toBe(true);
+        expect(isCloseToVal(val['val'].value[1], Math.cbrt(27))).toBe(true);
+        expect(isCloseToVal(val['val'].value[2], Math.cbrt(125))).toBe(true);
     });
 
     it("math/sqrt", () => {
@@ -1200,7 +1200,7 @@ describe('nodes', () => {
         });
 
         let val = sqrt.processNode();
-        expect(isCloseToVal(val.value, Math.sqrt(16.0))).toBe(true);
+        expect(isCloseToVal(val['val'].value, Math.sqrt(16.0))).toBe(true);
 
         sqrt = new SquareRoot({
             ...defaultProps,
@@ -1210,9 +1210,9 @@ describe('nodes', () => {
         });
 
         val = sqrt.processNode();
-        expect(isCloseToVal(val.value[0], Math.sqrt(1))).toBe(true);
-        expect(isCloseToVal(val.value[1], Math.sqrt(4))).toBe(true);
-        expect(isCloseToVal(val.value[2], Math.sqrt(9))).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], Math.sqrt(1))).toBe(true);
+        expect(isCloseToVal(val['val'].value[1], Math.sqrt(4))).toBe(true);
+        expect(isCloseToVal(val['val'].value[2], Math.sqrt(9))).toBe(true);
     });
 
     it("math/pow", () => {
@@ -1225,7 +1225,7 @@ describe('nodes', () => {
         });
 
         let val = pow.processNode();
-        expect(val.value).toBe(8);
+        expect(val['val'].value).toBe(8);
 
         pow = new Power({
             ...defaultProps,
@@ -1236,9 +1236,9 @@ describe('nodes', () => {
         });
 
         val = pow.processNode();
-        expect(val.value[0]).toBe(0.25);
-        expect(val.value[1]).toBe(0.125);
-        expect(val.value[2]).toBe(1000);
+        expect(val['val'].value[0]).toBe(0.25);
+        expect(val['val'].value[1]).toBe(0.125);
+        expect(val['val'].value[2]).toBe(1000);
     });
 
     it("math/exp", () => {
@@ -1250,7 +1250,7 @@ describe('nodes', () => {
         });
 
         let val = exp.processNode();
-        expect(val.value).toBe(Math.exp(2));
+        expect(val['val'].value).toBe(Math.exp(2));
 
         exp = new Exponential({
             ...defaultProps,
@@ -1260,9 +1260,9 @@ describe('nodes', () => {
         });
 
         val = exp.processNode();
-        expect(val.value[0]).toBe(Math.exp(2));
-        expect(val.value[1]).toBe(Math.exp(0.5));
-        expect(val.value[2]).toBe(Math.exp(-1));
+        expect(val['val'].value[0]).toBe(Math.exp(2));
+        expect(val['val'].value[1]).toBe(Math.exp(0.5));
+        expect(val['val'].value[2]).toBe(Math.exp(-1));
     });
 
     it("math/clamp", () => {
@@ -1276,7 +1276,7 @@ describe('nodes', () => {
         });
 
         let val = clamp.processNode();
-        expect(val.value).toBe(1);
+        expect(val['val'].value).toBe(1);
 
         clamp = new Clamp({
             ...defaultProps,
@@ -1288,9 +1288,9 @@ describe('nodes', () => {
         });
 
         val = clamp.processNode();
-        expect(val.value[0]).toBe(0);
-        expect(val.value[1]).toBe(0.5);
-        expect(val.value[2]).toBe(9);
+        expect(val['val'].value[0]).toBe(0);
+        expect(val['val'].value[1]).toBe(0.5);
+        expect(val['val'].value[2]).toBe(9);
     });
 
     it("math/saturate", () => {
@@ -1302,7 +1302,7 @@ describe('nodes', () => {
         });
 
         let val = saturate.processNode();
-        expect(val.value).toBe(1);
+        expect(val['val'].value).toBe(1);
 
         saturate = new Saturate({
             ...defaultProps,
@@ -1312,9 +1312,9 @@ describe('nodes', () => {
         });
 
         val = saturate.processNode();
-        expect(val.value[0]).toBe(0);
-        expect(val.value[1]).toBe(0.5);
-        expect(val.value[2]).toBe(1);
+        expect(val['val'].value[0]).toBe(0);
+        expect(val['val'].value[1]).toBe(0.5);
+        expect(val['val'].value[2]).toBe(1);
     });
 
     it("math/mix", () => {
@@ -1328,7 +1328,7 @@ describe('nodes', () => {
         });
 
         let val = mix.processNode();
-        expect(val.value).toBe(2);
+        expect(val['val'].value).toBe(2);
 
         mix = new Interpolate({
             ...defaultProps,
@@ -1340,9 +1340,9 @@ describe('nodes', () => {
         });
 
         val = mix.processNode();
-        expect(val.value[0]).toBe(-0.25);
-        expect(val.value[1]).toBe(0.5);
-        expect(val.value[2]).toBe(-10);
+        expect(val['val'].value[0]).toBe(-0.25);
+        expect(val['val'].value[1]).toBe(0.5);
+        expect(val['val'].value[2]).toBe(-10);
     });
 
     it("math/negate", () => {
@@ -1354,7 +1354,7 @@ describe('nodes', () => {
         });
 
         let val = neg.processNode();
-        expect(val.value).toBe(-2.5);
+        expect(val['val'].value).toBe(-2.5);
 
         neg = new Negate({
             ...defaultProps,
@@ -1364,9 +1364,9 @@ describe('nodes', () => {
         });
 
         val = neg.processNode();
-        expect(val.value[0]).toBe(1);
-        expect(val.value[1]).toBe(-0.5);
-        expect(val.value[2]).toBe(-10);
+        expect(val['val'].value[0]).toBe(1);
+        expect(val['val'].value[1]).toBe(-0.5);
+        expect(val['val'].value[2]).toBe(-10);
     });
 
     it("math/fract", () => {
@@ -1378,7 +1378,7 @@ describe('nodes', () => {
         });
 
         let val = fract.processNode();
-        expect(val.value).toBe(0.5);
+        expect(val['val'].value).toBe(0.5);
 
         fract = new Fraction({
             ...defaultProps,
@@ -1388,9 +1388,9 @@ describe('nodes', () => {
         });
 
         val = fract.processNode();
-        expect(isCloseToVal(val.value[0], 0)).toBe(true);
-        expect(isCloseToVal(val.value[1], 0.5)).toBe(true);
-        expect(isCloseToVal(val.value[2], 0.11)).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], 0)).toBe(true);
+        expect(isCloseToVal(val['val'].value[1], 0.5)).toBe(true);
+        expect(isCloseToVal(val['val'].value[2], 0.11)).toBe(true);
     });
 
     it("math/cosh", () => {
@@ -1402,7 +1402,7 @@ describe('nodes', () => {
         });
 
         let val = cosh.processNode();
-        expect(isCloseToVal(val.value, Math.cosh(2.0))).toBe(true);
+        expect(isCloseToVal(val['val'].value, Math.cosh(2.0))).toBe(true);
 
         cosh = new HyperbolicCosine({
             ...defaultProps,
@@ -1412,9 +1412,9 @@ describe('nodes', () => {
         });
 
         val = cosh.processNode();
-        expect(isCloseToVal(val.value[0], Math.cosh(1))).toBe(true);
-        expect(isCloseToVal(val.value[1], Math.cosh(0))).toBe(true);
-        expect(isCloseToVal(val.value[2], Math.cosh(0.5))).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], Math.cosh(1))).toBe(true);
+        expect(isCloseToVal(val['val'].value[1], Math.cosh(0))).toBe(true);
+        expect(isCloseToVal(val['val'].value[2], Math.cosh(0.5))).toBe(true);
     });
 
     it("math/sinh", () => {
@@ -1426,7 +1426,7 @@ describe('nodes', () => {
         });
 
         let val = sinh.processNode();
-        expect(isCloseToVal(val.value, Math.sinh(2.0))).toBe(true);
+        expect(isCloseToVal(val['val'].value, Math.sinh(2.0))).toBe(true);
 
         sinh = new HyperbolicSine({
             ...defaultProps,
@@ -1436,9 +1436,9 @@ describe('nodes', () => {
         });
 
         val = sinh.processNode();
-        expect(isCloseToVal(val.value[0], Math.sinh(1))).toBe(true);
-        expect(isCloseToVal(val.value[1], Math.sinh(0))).toBe(true);
-        expect(isCloseToVal(val.value[2], Math.sinh(0.5))).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], Math.sinh(1))).toBe(true);
+        expect(isCloseToVal(val['val'].value[1], Math.sinh(0))).toBe(true);
+        expect(isCloseToVal(val['val'].value[2], Math.sinh(0.5))).toBe(true);
     });
 
     it("math/tanh", () => {
@@ -1450,7 +1450,7 @@ describe('nodes', () => {
         });
 
         let val = tanh.processNode();
-        expect(isCloseToVal(val.value, Math.tanh(2.0))).toBe(true);
+        expect(isCloseToVal(val['val'].value, Math.tanh(2.0))).toBe(true);
 
         tanh = new HyperbolicTangent({
             ...defaultProps,
@@ -1460,9 +1460,9 @@ describe('nodes', () => {
         });
 
         val = tanh.processNode();
-        expect(isCloseToVal(val.value[0], Math.tanh(1))).toBe(true);
-        expect(isCloseToVal(val.value[1], Math.tanh(0))).toBe(true);
-        expect(isCloseToVal(val.value[2], Math.tanh(0.5))).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], Math.tanh(1))).toBe(true);
+        expect(isCloseToVal(val['val'].value[1], Math.tanh(0))).toBe(true);
+        expect(isCloseToVal(val['val'].value[2], Math.tanh(0.5))).toBe(true);
     });
 
     it("math/acosh", () => {
@@ -1474,7 +1474,7 @@ describe('nodes', () => {
         });
 
         let val = acosh.processNode();
-        expect(isCloseToVal(val.value, Math.acosh(2.0))).toBe(true);
+        expect(isCloseToVal(val['val'].value, Math.acosh(2.0))).toBe(true);
 
         acosh = new InverseHyperbolicCosine({
             ...defaultProps,
@@ -1484,9 +1484,9 @@ describe('nodes', () => {
         });
 
         val = acosh.processNode();
-        expect(isCloseToVal(val.value[0], Math.acosh(1))).toBe(true);
-        expect(isCloseToVal(val.value[1], Math.acosh(2))).toBe(true);
-        expect(isCloseToVal(val.value[2], Math.acosh(3))).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], Math.acosh(1))).toBe(true);
+        expect(isCloseToVal(val['val'].value[1], Math.acosh(2))).toBe(true);
+        expect(isCloseToVal(val['val'].value[2], Math.acosh(3))).toBe(true);
     });
 
     it("math/asinh", () => {
@@ -1498,7 +1498,7 @@ describe('nodes', () => {
         });
 
         let val = asinh.processNode();
-        expect(isCloseToVal(val.value, Math.asinh(2.0))).toBe(true);
+        expect(isCloseToVal(val['val'].value, Math.asinh(2.0))).toBe(true);
 
         asinh = new InverseHyperbolicSine({
             ...defaultProps,
@@ -1508,9 +1508,9 @@ describe('nodes', () => {
         });
 
         val = asinh.processNode();
-        expect(isCloseToVal(val.value[0], Math.asinh(1))).toBe(true);
-        expect(isCloseToVal(val.value[1], Math.asinh(2))).toBe(true);
-        expect(isCloseToVal(val.value[2], Math.asinh(3))).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], Math.asinh(1))).toBe(true);
+        expect(isCloseToVal(val['val'].value[1], Math.asinh(2))).toBe(true);
+        expect(isCloseToVal(val['val'].value[2], Math.asinh(3))).toBe(true);
     });
 
     it("math/atanh", () => {
@@ -1522,7 +1522,7 @@ describe('nodes', () => {
         });
 
         let val = atanh.processNode();
-        expect(isCloseToVal(val.value, Math.atanh(0.5))).toBe(true);
+        expect(isCloseToVal(val['val'].value, Math.atanh(0.5))).toBe(true);
 
         atanh = new InverseHyperbolicTangent({
             ...defaultProps,
@@ -1532,9 +1532,9 @@ describe('nodes', () => {
         });
 
         val = atanh.processNode();
-        expect(isCloseToVal(val.value[0], Math.atanh(0.8))).toBe(true);
-        expect(isCloseToVal(val.value[1], Math.atanh(0.2))).toBe(true);
-        expect(isCloseToVal(val.value[2], Math.atanh(0.4))).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], Math.atanh(0.8))).toBe(true);
+        expect(isCloseToVal(val['val'].value[1], Math.atanh(0.2))).toBe(true);
+        expect(isCloseToVal(val['val'].value[2], Math.atanh(0.4))).toBe(true);
     });
 
     it("math/normalize", () => {
@@ -1549,9 +1549,9 @@ describe('nodes', () => {
 
         const vecLen = Math.sqrt(3**2 + 4**2 + 5**2);
 
-        expect(isCloseToVal(normalizedVector.value[0], 3/vecLen)).toBe(true);
-        expect(isCloseToVal(normalizedVector.value[1], 4/vecLen)).toBe(true);
-        expect(isCloseToVal(normalizedVector.value[2], 5/vecLen)).toBe(true);
+        expect(isCloseToVal(normalizedVector['val'].value[0], 3/vecLen)).toBe(true);
+        expect(isCloseToVal(normalizedVector['val'].value[1], 4/vecLen)).toBe(true);
+        expect(isCloseToVal(normalizedVector['val'].value[2], 5/vecLen)).toBe(true);
     });
 
     it("math/length", () => {
@@ -1566,7 +1566,7 @@ describe('nodes', () => {
 
         const expectedVecLen = Math.sqrt(3**2 + 4**2 + 5**2);
 
-        expect(isCloseToVal(val.value, expectedVecLen)).toBe(true);
+        expect(isCloseToVal(val['val'].value, expectedVecLen)).toBe(true);
     });
 
     it("math/transform", () => {
@@ -1589,10 +1589,10 @@ describe('nodes', () => {
 
         const val = transform.processNode();
 
-        expect(val.value[0]).toBe(90);
-        expect(val.value[1]).toBe(100);
-        expect(val.value[2]).toBe(110);
-        expect(val.value[3]).toBe(120);
+        expect(val['val'].value[0]).toBe(90);
+        expect(val['val'].value[1]).toBe(100);
+        expect(val['val'].value[2]).toBe(110);
+        expect(val['val'].value[3]).toBe(120);
     });
 
     it("math/dot", () => {
@@ -1606,7 +1606,7 @@ describe('nodes', () => {
 
         const val = dot.processNode();
         const expected = -10.5 * 4 + 0.5 * -6 + 9 * 10
-        expect(val.value).toBe(expected);
+        expect(val['val'].value).toBe(expected);
     });
 
     it("math/cross", () => {
@@ -1618,7 +1618,7 @@ describe('nodes', () => {
             ]
         });
 
-        const val = cross.processNode().value;
+        const val = cross.processNode()['val'].value;
 
         const expected = [
             1.0 * 1.0 - 3.0 * -2.0,
@@ -1640,7 +1640,7 @@ describe('nodes', () => {
             ]
         });
 
-        const val = rotate2D.processNode().value;
+        const val = rotate2D.processNode()['val'].value;
 
         const expected = [0.0, 1.0];
 
@@ -1658,7 +1658,7 @@ describe('nodes', () => {
             ]
         });
 
-        const val = rotate3D.processNode().value;
+        const val = rotate3D.processNode()['val'].value;
 
         const cos_theta = Math.cos(Math.PI / 2);
         const sin_theta = Math.sin(Math.PI / 2);
@@ -1708,10 +1708,10 @@ describe('nodes', () => {
 
         const val = transpose.processNode();
 
-        expect(val.value[0][0]).toBe(1);
-        expect(val.value[0][1]).toBe(5);
-        expect(val.value[3][2]).toBe(12);
-        expect(val.value[3][0]).toBe(4);
+        expect(val['val'].value[0][0]).toBe(1);
+        expect(val['val'].value[0][1]).toBe(5);
+        expect(val['val'].value[3][2]).toBe(12);
+        expect(val['val'].value[3][0]).toBe(4);
     });
 
     it("math/determinant", () => {
@@ -1733,7 +1733,7 @@ describe('nodes', () => {
 
         const val = determinant.processNode();
 
-        expect(val.value).toBe(-4);
+        expect(val['val'].value).toBe(-4);
     });
 
     it("math/matmul", () => {
@@ -1765,10 +1765,10 @@ describe('nodes', () => {
 
         const val = matmul.processNode();
 
-        expect(val.value[0][0]).toBe(90);
-        expect(val.value[1][2]).toBe(254);
-        expect(val.value[3][3]).toBe(600);
-        expect(val.value[2][0]).toBe(314);
+        expect(val['val'].value[0][0]).toBe(90);
+        expect(val['val'].value[1][2]).toBe(254);
+        expect(val['val'].value[3][3]).toBe(600);
+        expect(val['val'].value[2][0]).toBe(314);
     });
 
     it("math/isInfNode", () => {
@@ -1779,7 +1779,7 @@ describe('nodes', () => {
             ]
         });
 
-        let val = isInfNode.processNode().value;
+        let val = isInfNode.processNode()['val'].value;
         expect(val).toBe(false);
 
         isInfNode = new IsInfNode({
@@ -1789,7 +1789,7 @@ describe('nodes', () => {
             ]
         });
 
-        val = isInfNode.processNode().value;
+        val = isInfNode.processNode()['val'].value;
         expect(val).toBe(true);
     });
 
@@ -1801,7 +1801,7 @@ describe('nodes', () => {
             ]
         });
 
-        let val = isNaNNode.processNode().value;
+        let val = isNaNNode.processNode()['val'].value;
         expect(val).toBe(false);
 
         isNaNNode = new IsNaNNode({
@@ -1811,7 +1811,7 @@ describe('nodes', () => {
             ]
         });
 
-        val = isNaNNode.processNode().value;
+        val = isNaNNode.processNode()['val'].value;
         expect(val).toBe(true);
     });
 
@@ -1824,7 +1824,7 @@ describe('nodes', () => {
             ]
         });
 
-        let val = eq.processNode().value;
+        let val = eq.processNode()['val'].value;
         expect(val).toBe(false);
 
         eq = new Equality({
@@ -1834,7 +1834,7 @@ describe('nodes', () => {
                 {id: 'b', value: 5.0, type: 2}
             ]
         });
-        val = eq.processNode().value;
+        val = eq.processNode()['val'].value;
         expect(val).toBe(true);
 
         eq = new Equality({
@@ -1845,7 +1845,7 @@ describe('nodes', () => {
             ]
         });
 
-        val = eq.processNode().value;
+        val = eq.processNode()['val'].value;
         expect(val).toBe(false);
 
         eq = new Equality({
@@ -1856,7 +1856,7 @@ describe('nodes', () => {
             ]
         });
 
-        val = eq.processNode().value;
+        val = eq.processNode()['val'].value;
         expect(val).toBe(true);
     });
 
@@ -1869,7 +1869,7 @@ describe('nodes', () => {
             ]
         });
 
-        let val = lt.processNode().value;
+        let val = lt.processNode()['val'].value;
         expect(val).toBe(true);
 
         lt = new LessThan({
@@ -1879,7 +1879,7 @@ describe('nodes', () => {
                 {id: 'b', value: 5.0, type: 2}
             ]
         });
-        val = lt.processNode().value;
+        val = lt.processNode()['val'].value;
         expect(val).toBe(false);
     });
 
@@ -1892,7 +1892,7 @@ describe('nodes', () => {
             ]
         });
 
-        let val = le.processNode().value;
+        let val = le.processNode()['val'].value;
         expect(val).toBe(true);
 
         le = new LessThanOrEqualTo({
@@ -1903,7 +1903,7 @@ describe('nodes', () => {
             ]
         });
 
-        val = le.processNode().value;
+        val = le.processNode()['val'].value;
         expect(val).toBe(true);
 
         le = new LessThanOrEqualTo({
@@ -1913,7 +1913,7 @@ describe('nodes', () => {
                 {id: 'b', value: 5.0, type: 2}
             ]
         });
-        val = le.processNode().value;
+        val = le.processNode()['val'].value;
         expect(val).toBe(false);
     });
 
@@ -1926,7 +1926,7 @@ describe('nodes', () => {
             ]
         });
 
-        let val = gt.processNode().value;
+        let val = gt.processNode()['val'].value;
         expect(val).toBe(true);
 
         gt = new GreaterThan({
@@ -1936,7 +1936,7 @@ describe('nodes', () => {
                 {id: 'b', value: 5.0, type: 2}
             ]
         });
-        val = gt.processNode().value;
+        val = gt.processNode()['val'].value;
         expect(val).toBe(false);
     });
 
@@ -1949,7 +1949,7 @@ describe('nodes', () => {
             ]
         });
 
-        let val = ge.processNode().value;
+        let val = ge.processNode()['val'].value;
         expect(val).toBe(true);
 
         ge = new GreaterThanOrEqualTo({
@@ -1960,7 +1960,7 @@ describe('nodes', () => {
             ]
         });
 
-        val = ge.processNode().value;
+        val = ge.processNode()['val'].value;
         expect(val).toBe(true);
 
         ge = new GreaterThanOrEqualTo({
@@ -1970,7 +1970,7 @@ describe('nodes', () => {
                 {id: 'b', value: 5.0, type: 2}
             ]
         });
-        val = ge.processNode().value;
+        val = ge.processNode()['val'].value;
         expect(val).toBe(false);
     });
 
@@ -1988,7 +1988,7 @@ describe('nodes', () => {
 
         const val = not.processNode();
 
-        expect(val.value).toBe(-11);
+        expect(val['val'].value).toBe(-11);
     });
 
     it("math/and", () => {
@@ -2010,7 +2010,7 @@ describe('nodes', () => {
 
         const val = and.processNode();
 
-        expect(val.value).toBe(3);
+        expect(val['val'].value).toBe(3);
     });
 
     it("math/or", () => {
@@ -2032,7 +2032,7 @@ describe('nodes', () => {
 
         const val = or.processNode();
 
-        expect(val.value).toBe(15);
+        expect(val['val'].value).toBe(15);
     });
 
     it("math/xor", () => {
@@ -2054,7 +2054,7 @@ describe('nodes', () => {
 
         const val = xor.processNode();
 
-        expect(val.value).toBe(12);
+        expect(val['val'].value).toBe(12);
     });
 
     it("math/asr", () => {
@@ -2076,7 +2076,7 @@ describe('nodes', () => {
 
         const val = rightShift.processNode();
 
-        expect(val.value).toBe(1);
+        expect(val['val'].value).toBe(1);
     });
 
     it("math/lsl", () => {
@@ -2098,7 +2098,7 @@ describe('nodes', () => {
 
         const val = leftShift.processNode();
 
-        expect(val.value).toBe(16);
+        expect(val['val'].value).toBe(16);
     });
 
     it("math/clz", () => {
@@ -2115,7 +2115,7 @@ describe('nodes', () => {
 
         const val = countLeadingZeros.processNode();
 
-        expect(val.value).toBe(29);
+        expect(val['val'].value).toBe(29);
     });
 
     it("math/ctz", () => {
@@ -2132,7 +2132,7 @@ describe('nodes', () => {
 
         const val = countTrailingZeros.processNode();
 
-        expect(val.value).toBe(2);
+        expect(val['val'].value).toBe(2);
     });
 
     it("math/popcnt", () => {
@@ -2149,7 +2149,7 @@ describe('nodes', () => {
 
         const val = countOneBits.processNode();
 
-        expect(val.value).toBe(3);
+        expect(val['val'].value).toBe(3);
     });
 });
 

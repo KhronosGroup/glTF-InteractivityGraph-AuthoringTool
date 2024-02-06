@@ -54,18 +54,20 @@ export class WorldGet extends BehaveEngineNode {
         const populatedPath = this.populatePath(this._path, vals)
         this.graphEngine.processNodeStarted(this);
 
-        let outVal: any;
         if (this.graphEngine.isValidJsonPtr(populatedPath)) {
-            outVal = this.graphEngine.getPathValue(populatedPath);
+            const typeName = this.graphEngine.getPathtypeName(populatedPath);
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            const typeIndex = this.getTypeIndex(typeName!);
+
+            return {
+                'val':{id: "val", value: this.graphEngine.getPathValue(populatedPath), type: typeIndex},
+                'isValid':{id: "isValid", value: true, type: this.getTypeIndex('bool')}
+            };
         } else {
-            outVal = undefined
+            return {
+                'isValid':{id: "isValid", value: false, type: this.getTypeIndex('bool')}
+            };
         }
-
-        const typeName = this.graphEngine.getPathtypeName(populatedPath);
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const typeIndex = this.getTypeIndex(typeName!);
-
-        return {id: "val", value: outVal, type: typeIndex}
     }
 }
 

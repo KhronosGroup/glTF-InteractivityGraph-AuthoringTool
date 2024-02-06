@@ -1,4 +1,4 @@
-import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
+import {BehaveEngineNode, IBehaviourNodeProps, IValue} from "../../BehaveEngineNode";
 
 export class VariableGet extends BehaveEngineNode {
     REQUIRED_CONFIGURATIONS = [{id: "variable"}]
@@ -19,6 +19,8 @@ export class VariableGet extends BehaveEngineNode {
     override processNode(flowSocket?: string) {
         this.graphEngine.processNodeStarted(this);
 
-        return this.variables[this._variable];
+        const result: Record<string, IValue> = {};
+        result[this.variables[this._variable].id] = this.variables[this._variable];
+        return result;
     }
 }

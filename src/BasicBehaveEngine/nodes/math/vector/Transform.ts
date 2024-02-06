@@ -33,6 +33,6 @@ export class Transform extends BehaveEngineNode {
             val.push(sum);
         }
 
-        return {id: "val", value: val, type: typeIndexA}
+        return {'val': {id: "val", value: val, type: typeIndexA}}
     }
 }

@@ -90,6 +90,11 @@ export const worldNodeSpecs: IAuthoringNode[] = [
                     id: "val",
                     description: "The value to set",
                     types: ["bool", "int", "float", "float3", "float4"]
+                },
+                {
+                    id: "isValid",
+                    description: "a boolean flag which is true if the path requested is valid during runtime",
+                    types: ["bool"]
                 }
             ]
         }

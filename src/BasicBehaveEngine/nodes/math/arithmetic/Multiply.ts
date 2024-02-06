@@ -39,6 +39,6 @@ export class Multiply extends BehaveEngineNode {
                 throw Error("Invalid type")
         }
 
-        return {id: "val", value: val, type: typeIndexA}
+        return {'val': {id: "val", value: val, type: typeIndexA}}
     }
 }

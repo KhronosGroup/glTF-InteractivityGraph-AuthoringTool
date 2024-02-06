@@ -18,6 +18,6 @@ export class Not extends BehaveEngineNode {
             throw Error("invalid input type")
         }
         let val = ~a;
-        return {id: "val", value: val, type: this.getTypeIndex('int')}
+        return {'val': {id: "val", value: val, type: this.getTypeIndex('int')}}
     }
 }

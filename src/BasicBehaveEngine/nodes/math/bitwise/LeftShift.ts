@@ -20,6 +20,6 @@ export class LeftShift extends BehaveEngineNode {
             throw Error("invalid input type")
         }
         let val = a << b;
-        return {id: "val", value: val, type: this.getTypeIndex('int')}
+        return {'val': {id: "val", value: val, type: this.getTypeIndex('int')}};
     }
 }

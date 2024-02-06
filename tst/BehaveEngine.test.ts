@@ -298,7 +298,7 @@ describe('BehaveEngine', () => {
                         {
                             "id": "float3ToLog",
                             "node": 5,
-                            "socket": "value"
+                            "socket": "val"
                         }
                     ],
                     "configuration": [
@@ -334,7 +334,7 @@ describe('BehaveEngine', () => {
                         {
                             "id": "float3ToLog",
                             "node": 7,
-                            "socket": "value"
+                            "socket": "val"
                         }
                     ],
                     "configuration": [
@@ -370,7 +370,7 @@ describe('BehaveEngine', () => {
                         {
                             "id": "float3ToLog",
                             "node": 9,
-                            "socket": "value"
+                            "socket": "val"
                         }
                     ],
                     "configuration": [
@@ -436,7 +436,7 @@ describe('BehaveEngine', () => {
         expect(loggingWorld.nodes[0].scale).toEqual([4,5,6]);
         expect(loggingWorld.nodes[0].translation).toEqual([10,20,30]);
         expect(loggingWorld.nodes[0].rotation).toEqual([1.57,0,0,1]);
-        expect(executionLog).toEqual("Adding {\"node\":0,\"id\":\"start\"} flow to queueRunning OnStart: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":1,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":1,\"socket\":\"in\"} flowRunning Sequence: input values: {}, output flows: {\"0\":{\"id\":\"0\",\"node\":2,\"socket\":\"in\"},\"1\":{\"id\":\"1\",\"node\":3,\"socket\":\"in\"},\"2\":{\"id\":\"2\",\"node\":4,\"socket\":\"in\"}}Executing {\"id\":\"0\",\"node\":2,\"socket\":\"in\"} flowRunning WorldSet: input values: {\"a\":{\"id\":\"a\",\"value\":[1.57,0,0,1],\"type\":5}}, output flows: {\"out\":{\"id\":\"out\",\"node\":8,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":8,\"socket\":\"in\"} flowRunning WorldGet: input values: {}, output flows: {}Running Send: input values: {\"float3ToLog\":{\"id\":\"float3ToLog\",\"node\":7,\"socket\":\"value\",\"type\":5}}, output flows: {}Executing {\"id\":\"1\",\"node\":3,\"socket\":\"in\"} flowRunning WorldSet: input values: {\"a\":{\"id\":\"a\",\"value\":[10,20,30],\"type\":4}}, output flows: {\"out\":{\"id\":\"out\",\"node\":10,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":10,\"socket\":\"in\"} flowRunning WorldGet: input values: {}, output flows: {}Running Send: input values: {\"float3ToLog\":{\"id\":\"float3ToLog\",\"node\":9,\"socket\":\"value\",\"type\":4}}, output flows: {}Executing {\"id\":\"2\",\"node\":4,\"socket\":\"in\"} flowRunning WorldSet: input values: {\"a\":{\"id\":\"a\",\"value\":[4,5,6],\"type\":4}}, output flows: {\"out\":{\"id\":\"out\",\"node\":6,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":6,\"socket\":\"in\"} flowRunning WorldGet: input values: {}, output flows: {}Running Send: input values: {\"float3ToLog\":{\"id\":\"float3ToLog\",\"node\":5,\"socket\":\"value\",\"type\":4}}, output flows: {}");
+        expect(executionLog).toEqual("Adding {\"node\":0,\"id\":\"start\"} flow to queueRunning OnStart: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":1,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":1,\"socket\":\"in\"} flowRunning Sequence: input values: {}, output flows: {\"0\":{\"id\":\"0\",\"node\":2,\"socket\":\"in\"},\"1\":{\"id\":\"1\",\"node\":3,\"socket\":\"in\"},\"2\":{\"id\":\"2\",\"node\":4,\"socket\":\"in\"}}Executing {\"id\":\"0\",\"node\":2,\"socket\":\"in\"} flowRunning WorldSet: input values: {\"a\":{\"id\":\"a\",\"value\":[1.57,0,0,1],\"type\":5}}, output flows: {\"out\":{\"id\":\"out\",\"node\":8,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":8,\"socket\":\"in\"} flowRunning WorldGet: input values: {}, output flows: {}Running Send: input values: {\"float3ToLog\":{\"id\":\"float3ToLog\",\"node\":7,\"socket\":\"val\",\"type\":5}}, output flows: {}Executing {\"id\":\"1\",\"node\":3,\"socket\":\"in\"} flowRunning WorldSet: input values: {\"a\":{\"id\":\"a\",\"value\":[10,20,30],\"type\":4}}, output flows: {\"out\":{\"id\":\"out\",\"node\":10,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":10,\"socket\":\"in\"} flowRunning WorldGet: input values: {}, output flows: {}Running Send: input values: {\"float3ToLog\":{\"id\":\"float3ToLog\",\"node\":9,\"socket\":\"val\",\"type\":4}}, output flows: {}Executing {\"id\":\"2\",\"node\":4,\"socket\":\"in\"} flowRunning WorldSet: input values: {\"a\":{\"id\":\"a\",\"value\":[4,5,6],\"type\":4}}, output flows: {\"out\":{\"id\":\"out\",\"node\":6,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":6,\"socket\":\"in\"} flowRunning WorldGet: input values: {}, output flows: {}Running Send: input values: {\"float3ToLog\":{\"id\":\"float3ToLog\",\"node\":5,\"socket\":\"val\",\"type\":4}}, output flows: {}");
         const babylonWorld = {
             "glTFNodes":[
                 {"scaling":new Vector3(1,2,3), "position": new Vector3(0,0,0), "rotationQuaternion": new Quaternion(0, 0, 0, 0)}
@@ -786,7 +786,7 @@ describe('BehaveEngine', () => {
                         {
                             "id": "a",
                             "node": 4,
-                            "socket": "value"
+                            "socket": "val"
                         }
                     ],
                     "configuration": [],
@@ -857,7 +857,7 @@ describe('BehaveEngine', () => {
         await new Promise((resolve) => setTimeout(resolve, 250));
         expect(loggingWorld.nodes[0].scale).toEqual([1,1,1]);
         expect(loggingWorld.nodes[0].translation).toEqual([0,3,0]);
-        expect(executionLog).toEqual("Adding {\"node\":0,\"id\":\"start\"} flow to queueRunning OnStart: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":1,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":1,\"socket\":\"in\"} flowRunning Sequence: input values: {}, output flows: {\"0\":{\"id\":\"0\",\"node\":2,\"socket\":\"in\"},\"1\":{\"id\":\"1\",\"node\":6,\"socket\":\"in\"}}Executing {\"id\":\"0\",\"node\":2,\"socket\":\"in\"} flowRunning WorldAnimateTo: input values: {\"a\":{\"id\":\"a\",\"value\":[5,5,5],\"type\":4},\"easingDuration\":{\"id\":\"easingDuration\",\"value\":0.1,\"type\":2}}, output flows: {\"done\":{\"id\":\"done\",\"node\":3,\"socket\":\"in\"}}Executing {\"id\":\"1\",\"node\":6,\"socket\":\"in\"} flowRunning WorldGet: input values: {\"nodeIndex\":{\"id\":\"nodeIndex\",\"value\":0,\"type\":1}}, output flows: {}Running AddNode: input values: {\"b\":{\"id\":\"b\",\"value\":[0,5,0],\"type\":4},\"a\":{\"id\":\"a\",\"node\":4,\"socket\":\"value\",\"type\":4}}, output flows: {}Running WorldAnimateTo: input values: {\"nodeIndex\":{\"id\":\"nodeIndex\",\"value\":0,\"type\":1},\"a\":{\"id\":\"a\",\"node\":5,\"socket\":\"val\",\"type\":4},\"easingDuration\":{\"id\":\"easingDuration\",\"value\":0.1,\"type\":2}}, output flows: {}Adding {\"id\":\"done\",\"node\":3,\"socket\":\"in\"} flow to queueRunning WorldSet: input values: {\"a\":{\"id\":\"a\",\"value\":[1,1,1],\"type\":4}}, output flows: {}");
+        expect(executionLog).toEqual("Adding {\"node\":0,\"id\":\"start\"} flow to queueRunning OnStart: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":1,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":1,\"socket\":\"in\"} flowRunning Sequence: input values: {}, output flows: {\"0\":{\"id\":\"0\",\"node\":2,\"socket\":\"in\"},\"1\":{\"id\":\"1\",\"node\":6,\"socket\":\"in\"}}Executing {\"id\":\"0\",\"node\":2,\"socket\":\"in\"} flowRunning WorldAnimateTo: input values: {\"a\":{\"id\":\"a\",\"value\":[5,5,5],\"type\":4},\"easingDuration\":{\"id\":\"easingDuration\",\"value\":0.1,\"type\":2}}, output flows: {\"done\":{\"id\":\"done\",\"node\":3,\"socket\":\"in\"}}Executing {\"id\":\"1\",\"node\":6,\"socket\":\"in\"} flowRunning WorldGet: input values: {\"nodeIndex\":{\"id\":\"nodeIndex\",\"value\":0,\"type\":1}}, output flows: {}Running AddNode: input values: {\"b\":{\"id\":\"b\",\"value\":[0,5,0],\"type\":4},\"a\":{\"id\":\"a\",\"node\":4,\"socket\":\"val\",\"type\":4}}, output flows: {}Running WorldAnimateTo: input values: {\"nodeIndex\":{\"id\":\"nodeIndex\",\"value\":0,\"type\":1},\"a\":{\"id\":\"a\",\"node\":5,\"socket\":\"val\",\"type\":4},\"easingDuration\":{\"id\":\"easingDuration\",\"value\":0.1,\"type\":2}}, output flows: {}Adding {\"id\":\"done\",\"node\":3,\"socket\":\"in\"} flow to queueRunning WorldSet: input values: {\"a\":{\"id\":\"a\",\"value\":[1,1,1],\"type\":4}}, output flows: {}");
     });
 
     it("should tick 5 times", async () => {
@@ -920,7 +920,7 @@ describe('BehaveEngine', () => {
                         {
                             "id": "a",
                             "node": 2,
-                            "socket": "value"
+                            "socket": "val"
                         }
                     ],
                     "configuration": [],
@@ -1446,7 +1446,7 @@ describe('BehaveEngine', () => {
                         {
                             "id": "a",
                             "node": 5,
-                            "socket": "value"
+                            "socket": "val"
                         }
                     ],
                     "configuration": [],

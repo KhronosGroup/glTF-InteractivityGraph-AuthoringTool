@@ -31,6 +31,6 @@ export class Transpose extends BehaveEngineNode {
             }
         }
 
-        return {id: "val", value: val, type: typeIndexA}
+        return {'val': {id: "val", value: val, type: typeIndexA}}
     }
 }

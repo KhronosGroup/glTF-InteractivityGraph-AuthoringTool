@@ -21,8 +21,6 @@ export class Receive extends BehaveEngineNode {
             this.graphEngine.processNodeStarted(this);
             const ce = e as CustomEvent;
             Object.keys(ce.detail).forEach((key) => {
-                console.log(`Setting ${key} to be ${ce.detail[key]}`);
-                console.log(customEventDesc);
                 const typeIndex = customEventDesc.values.find(val => val.id === key)!.type!
                 const typeName: string = this.getType(typeIndex);
                 const rawVal = ce.detail[key];

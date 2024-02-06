@@ -9,7 +9,7 @@ export class IsNaNNode extends BehaveEngineNode {
         this.validateValues(this.values);
     }
 
-    override processNode(flowSocket?: string): IValue {
+    override processNode(flowSocket?: string): Record<string, IValue> {
         const {a} = this.evaluateAllValues(this.REQUIRED_VALUES.map(val => val.id));
         this.graphEngine.processNodeStarted(this);
 
@@ -25,6 +25,6 @@ export class IsNaNNode extends BehaveEngineNode {
                 throw Error("Invalid type")
         }
 
-        return {id: "val", value: val, type: this.getTypeIndex('bool')}
+        return {'val': {id: "val", value: val, type: this.getTypeIndex('bool')}}
     }
 }

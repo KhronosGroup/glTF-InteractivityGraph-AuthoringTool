@@ -9,12 +9,17 @@ import {ICustomEvent, IVariable} from "./AuthoringNodeSpecs";
  * @returns An array containing ReactFlow nodes, edges, custom events, and variables.
  */
 export const behaveToAuthor = (graph: string): [Node[], Edge[], ICustomEvent[], IVariable[]] => {
-  const graphJson = JSON.parse(graph);
-  const nodes: Node[] = [];
+  // Handle infinite and nan cases.
+  const graphJson = JSON.parse(graph.replace(/":[ \t](Infinity|-IsNaN)/g, '":"{{$1}}"'), function(k, v) {
+    if (v === '{{Infinity}}') return Infinity;
+    else if (v === '{{-Infinity}}') return -Infinity;
+    else if (v === '{{NaN}}') return NaN;
+    return v;
+  });  const nodes: Node[] = [];
   const edges: Edge[] = [];
-  const customEvents: ICustomEvent[] = graphJson.customEvents;
-  const variables: IVariable[] = graphJson.variables;
-
+  const customEvents: ICustomEvent[] = graphJson.customEvents || [];
+  const variables: IVariable[] = graphJson.variables || [];
+  
   // loop through all the nodes in our behave graph to extract nodes and edges
   let id = 0;
   graphJson.nodes.forEach((nodeJSON: any) => {

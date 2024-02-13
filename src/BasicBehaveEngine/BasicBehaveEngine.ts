@@ -62,7 +62,7 @@ import {Equality} from "./nodes/math/comparison/Equality";
 import {GreaterThanOrEqualTo} from "./nodes/math/comparison/GreaterThanOrEqualTo";
 import {GreaterThan} from "./nodes/math/comparison/GreaterThan";
 import {Inf} from "./nodes/math/constants/Inf";
-
+import {OutputConsole} from "./nodes/experimental/OutputConsole";
 
 export interface ICustomEventListener {
     type: string,
@@ -88,7 +88,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
     protected types: any[];
     private jsonPtrTrie: JsonPtrTrie;
     private customEventListeners: ICustomEventListener[]
-    private fps: number;
+    private _fps: number;
     private valueEvaluationCache: Map<string, IValue>;
     private pathToWorldAnimationCallback: Map<string, ICancelable>;
 
@@ -96,7 +96,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registry = new Map<string, any>();
         this.idToBehaviourNodeMap = new Map<number, BehaveEngineNode>();
         this.jsonPtrTrie = new JsonPtrTrie();
-        this.fps = fps;
+        this._fps = fps;
         this.valueEvaluationCache = new Map<string, IValue>();
         this.pathToWorldAnimationCallback = new Map<string, ICancelable>();
         this.onTickNodeIndex = -1;
@@ -110,6 +110,11 @@ export class BasicBehaveEngine implements IBehaveEngine {
 
         this.registerKnownBehaviorNodes();
     }
+
+    public get fps() {
+        return this._fps;
+    }
+
 
     public clearValueEvaluationCache = (): void => {
         this.valueEvaluationCache.clear();
@@ -249,6 +254,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("world/get", WorldGet);
         this.registerBehaveEngineNode("world/set", WorldSet);
         this.registerBehaveEngineNode("world/animateTo", WorldAnimateTo);
+        this.registerBehaveEngineNode("ADBE/output_console_node", OutputConsole);
         this.registerBehaveEngineNode("math/abs", AbsoluteValue);
         this.registerBehaveEngineNode("customEvent/receive", Receive);
         this.registerBehaveEngineNode("customEvent/send", Send);

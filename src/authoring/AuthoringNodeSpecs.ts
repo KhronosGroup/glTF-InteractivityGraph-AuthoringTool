@@ -296,8 +296,48 @@ export const worldNodeSpecs: IAuthoringNode[] = [
                 }
             ]
         }
+    },
+    {
+        type: "ADBE/output_console_node",
+        description: "Print out",
+        configuration: [],
+        input: {
+            flows: [
+                {
+                    id: "in",
+                    description: "The entry flow into this node.",
+                }
+            ],
+            values: [
+                {
+                    id: "message",
+                    description: "First Argument",
+                    types: [
+                        "AMZN_interactivity_string"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [
+                {
+                    id: "out",
+                    description: "The flow to be followed after the delay",
+                }
+            ],
+            values: [
+                {
+                    id: "val",
+                    description: "True if >= else false",
+                    types: [
+                        "bool"
+                    ]
+                }
+            ]
+        }
     }
 ]
+
 
 export const variableNodeSpecs: IAuthoringNode[] = [
     {
@@ -1064,6 +1104,48 @@ export const constantsNodes = [
 ]
 
 export const arithmeticNodes = [
+    {
+        type: "math/cast",
+        description: "Cast operation",
+        configuration: [
+            {
+                id: "castType",
+                description: "The string type name of what to cast to",
+                type: "string"
+            },
+        ],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "First Addend",
+                    types: [
+                        "float",
+                        "int",
+                        "bool",
+                        "float3",
+                        "float4",
+                        "float4x4"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "cast",
+                    types: [
+                        "float",
+                        "int",
+                        "bool"
+                    ]
+                }
+            ]
+        }
+    },
     {
         type: "math/abs",
         description: "Absolute value operation",
@@ -2682,6 +2764,35 @@ export const matrixNodeSpecs = [
                 {
                     id: "val",
                     description: "Matrix that is the transpose of a",
+                    types: [
+                        "float4x4"
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        type: "math/inverse",
+        description: "The matrix inverse",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "Input Matrix",
+                    types: [
+                        "float4x4"
+                    ]
+                },
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "Output Matrix",
                     types: [
                         "float4x4"
                     ]

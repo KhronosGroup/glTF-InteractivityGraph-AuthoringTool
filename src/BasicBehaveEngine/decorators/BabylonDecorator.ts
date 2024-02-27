@@ -188,7 +188,7 @@ export class BabylonDecorator extends ADecorator {
     }
 
     public startAnimation = (animation: number, startTime: number, endTime: number, speed: number,  callback: () => void): void => {
-        const fps = 60;
+        const fps = this.behaveEngine.fps;
         const startFrame: number = startTime * fps;
         const endFrame: number = endTime * fps;
 
@@ -252,7 +252,7 @@ export class BabylonDecorator extends ADecorator {
         if (animationInstance === undefined) return;
         if (stopMode === 0) {
             const frame = animationInstance.animatables[0].masterFrame;
-            const fps = 60;
+            const fps = this.behaveEngine.fps;
             const time: number = frame / fps;
             animationInstance.stop();
             animationInstance.dispose();
@@ -262,7 +262,7 @@ export class BabylonDecorator extends ADecorator {
             const forward = animationInstance.metadata.isForward;
             if (animationInstance.animatables[0] === undefined) {return}
             const frame = animationInstance.animatables[0].masterFrame;
-            const fps = 60;
+            const fps = this.behaveEngine.fps;
             const stopFrame = exactFrameTime! * fps;
             this._animateRange(animationInstance.speedRatio, forward, false, frame, stopFrame, frame, animation, () => callback(exactFrameTime!), undefined);
         } else {

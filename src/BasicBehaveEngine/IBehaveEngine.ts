@@ -5,6 +5,8 @@ import {IEasingParameters} from "./easingUtils";
  * Interface representing the Behave Engine, which provides methods for interacting with a behavioral graph engine.
  */
 export interface IBehaveEngine {
+    get fps():number;
+
     /**
      * Callback function to process the start of a Behave Engine node.
      * @param node - The Behave Engine node that has started.

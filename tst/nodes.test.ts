@@ -198,7 +198,6 @@ describe('nodes', () => {
     it('flow/sequence', async () => {
         const sequence: Sequence = new Sequence({
             ...defaultProps,
-            configuration: [{ id: 'numberOutputFlows', value: 3 }],
             flows: [
                 { id: '0', node: 0 },
                 { id: '1', node: 1 },
@@ -214,11 +213,11 @@ describe('nodes', () => {
         expect(sequence.processFlow).toHaveBeenCalledWith({ id: '2', node: 2 });
     });
 
-    it('flow/forLoop', async () => {
+    it('flow/for', async () => {
         const forLoop: ForLoop = new ForLoop({
             ...defaultProps,
             configuration: [
-                {id: 'defaultCurrentIndex', value: 0}
+                {id: 'initialIndex', value: 0}
             ],
             values: [
                 { id: 'startIndex', value: 0, type: 1 },
@@ -241,9 +240,7 @@ describe('nodes', () => {
     it('flow/doN', async () => {
         const doN: DoN = new DoN({
             ...defaultProps,
-            configuration: [
-                {id:"startCount", value:0}
-            ],
+            configuration: [],
             values: [
                 { id: 'n', value: 2, type: 1},
             ],
@@ -253,13 +250,18 @@ describe('nodes', () => {
         });
 
         doN.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
+        expect(doN.outValues.currentCount).toBe(0);
         doN.processNode("in");
+        expect(doN.outValues.currentCount).toBe(1);
         doN.processNode("in");
+        expect(doN.outValues.currentCount).toBe(2);
         doN.processNode("in");
+        expect(doN.outValues.currentCount).toBe(2);
 
         expect(doN.processFlow).toHaveBeenCalledTimes(2);
 
         doN.processNode("reset");
+        expect(doN.outValues.currentCount).toBe(0);
         doN.processNode("in");
         expect(doN.processFlow).toHaveBeenCalledTimes(3);
     });
@@ -268,11 +270,14 @@ describe('nodes', () => {
         const multiGate: MultiGate = new MultiGate({
             ...defaultProps,
             configuration: [
-                { id: 'numberOutputFlows', value: 3 },
                 { id: 'isRandom', value: false },
                 { id: 'loop', value: false },
-                { id: 'startIndex', value: 0 },
             ],
+            flows: [
+                { id: '0', node: 0 },
+                { id: '1', node: 1 },
+                { id: '2', node: 2 },
+            ]
         });
 
         multiGate.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
@@ -287,7 +292,7 @@ describe('nodes', () => {
     it('flow/switch', async () => {
         const switchNode: Switch = new Switch({
             ...defaultProps,
-            configuration: [{ id: 'cases', value: 3 }],
+            configuration: [{ id: 'cases', value: [0, 1, 2] }],
             values: [{ id: 'selection', value: 1, type: 1 }],
             flows: [
                 { id: '0', node: 0 },
@@ -303,7 +308,7 @@ describe('nodes', () => {
 
         const defaultSwitchNode: Switch = new Switch({
             ...defaultProps,
-            configuration: [{ id: 'cases', value: 3 }],
+            configuration: [{ id: 'cases', value: [0, 1, 2] }],
             values: [{ id: 'selection', value: 4, type: 1 }],
             flows: [
                 { id: '0', node: 0 },
@@ -338,25 +343,28 @@ describe('nodes', () => {
     it('flow/waitAll', async () => {
         const waitAll: WaitAll = new WaitAll({
             ...defaultProps,
-            configuration: [{ id: 'numberInputFlows', value: 2 }],
-            flows: [{ id: 'out', node: 1 }],
+            configuration: [{ id: 'inputFlows', value: 2 }],
+            flows: [{ id: 'out', node: 1 }, {id: 'completed', node: 2}],
         });
 
         waitAll.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
-        await waitAll.processNode('0');
-        await waitAll.processNode('reset');
-        await waitAll.processNode('1');
-        expect(waitAll.processFlow).toHaveBeenCalledTimes(0);
-
-        await waitAll.processNode('0');
-        expect(waitAll.processFlow).toHaveBeenCalledTimes(1);
+        waitAll.processNode('0');
+        expect(waitAll.outValues.remainingInputs).toBe(1)
+        waitAll.processNode('reset');
+        expect(waitAll.outValues.remainingInputs).toBe(2);
+        waitAll.processNode('1');
+        expect(waitAll.processFlow).toHaveBeenCalledTimes(2);
         expect(waitAll.processFlow).toHaveBeenCalledWith({ id: 'out', node: 1 });
+
+        waitAll.processNode('0');
+        expect(waitAll.outValues.remainingInputs).toBe(0);
+        expect(waitAll.processFlow).toHaveBeenCalledTimes(3);
+        expect(waitAll.processFlow).toHaveBeenCalledWith({ id: 'completed', node: 2 });
     });
 
-    it('flow/whileLoop', async () => {
+    it('flow/while', async () => {
         const whileLoop: WhileLoop = new WhileLoop({
             ...defaultProps,
-            configuration: [{ id: 'isDo', value: false }],
             values: [{ id: 'condition', value: false, type: 0 }],
             flows: [
                 { id: 'loopBody', node: 0 },
@@ -369,23 +377,6 @@ describe('nodes', () => {
 
         expect(whileLoop.processFlow).toHaveBeenCalledWith({ id: 'completed', node: 1 });
         expect(whileLoop.processFlow).toHaveBeenCalledTimes(1);
-
-        const doWhileLoop: WhileLoop = new WhileLoop({
-            ...defaultProps,
-            configuration: [{ id: 'isDo', value: true }],
-            values: [{ id: 'condition', value: false, type: 0 }],
-            flows: [
-                { id: 'loopBody', node: 0 },
-                { id: 'completed', node: 1 },
-            ],
-        });
-
-        doWhileLoop.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
-        await doWhileLoop.processNode();
-
-        expect(doWhileLoop.processFlow).toHaveBeenCalledWith({ id: 'loopBody', node: 0 });
-        expect(doWhileLoop.processFlow).toHaveBeenCalledWith({ id: 'completed', node: 1 });
-        expect(doWhileLoop.processFlow).toHaveBeenCalledTimes(2);
     });
 
     it('variable/get', async () => {

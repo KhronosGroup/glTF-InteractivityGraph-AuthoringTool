@@ -1,7 +1,6 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class Sequence extends BehaveEngineNode {
-    REQUIRED_CONFIGURATIONS = [{id: "numberOutputFlows"}]
     _numberOutputFlows: number;
 
     constructor(props: IBehaviourNodeProps) {
@@ -11,8 +10,7 @@ export class Sequence extends BehaveEngineNode {
         this.validateFlows(this.flows);
         this.validateConfigurations(this.configuration);
 
-        const {numberOutputFlows} = this.evaluateAllConfigurations(this.REQUIRED_CONFIGURATIONS.map(config => config.id));
-        this._numberOutputFlows = numberOutputFlows;
+        this._numberOutputFlows = Object.keys(this.flows).length;
     }
 
     override processNode(flowSocket?: string) {

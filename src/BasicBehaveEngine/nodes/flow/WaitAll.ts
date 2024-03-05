@@ -1,7 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class WaitAll extends BehaveEngineNode {
-    REQUIRED_CONFIGURATIONS = [{id: "numberInputFlows"}]
+    REQUIRED_CONFIGURATIONS = [{id: "inputFlows"}]
 
     _lockedFlows: number[];
     _numberInputFlows: number;
@@ -13,15 +13,17 @@ export class WaitAll extends BehaveEngineNode {
         this.validateFlows(this.flows);
         this.validateConfigurations(this.configuration);
 
-        const {numberInputFlows} = this.evaluateAllConfigurations(this.REQUIRED_CONFIGURATIONS.map(config => config.id));
-        this._numberInputFlows = Number(numberInputFlows);
+        const {inputFlows} = this.evaluateAllConfigurations(this.REQUIRED_CONFIGURATIONS.map(config => config.id));
+        this._numberInputFlows = Number(inputFlows);
         this._lockedFlows = [...Array(this._numberInputFlows).keys()];
+        this.outValues.remainingInputs = this._lockedFlows.length;
     }
 
     override processNode(flowSocket?: string) {
         this.graphEngine.processNodeStarted(this)
         if (flowSocket === "reset") {
             this._lockedFlows = [...Array(this._numberInputFlows).keys()];
+            this.outValues.remainingInputs = this._lockedFlows.length;
             return;
         }
 
@@ -29,9 +31,16 @@ export class WaitAll extends BehaveEngineNode {
         if (flowIndexToRemove !== -1) {
             this._lockedFlows.splice(flowIndexToRemove, 1);
         }
+        this.outValues.remainingInputs = this._lockedFlows.length;
 
         if (this._lockedFlows.length === 0) {
-            super.processNode(flowSocket);
+            if (this.flows.completed != null) {
+                this.processFlow(this.flows.completed);
+            }
+        } else {
+            if (this.flows.out != null) {
+                this.processFlow(this.flows.out);
+            }
         }
     }
 }

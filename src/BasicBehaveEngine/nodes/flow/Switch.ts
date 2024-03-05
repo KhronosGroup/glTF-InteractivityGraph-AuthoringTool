@@ -14,7 +14,7 @@ export class Switch extends BehaveEngineNode {
         this.validateConfigurations(this.configuration);
 
         const {cases} = this.evaluateAllConfigurations(this.REQUIRED_CONFIGURATIONS.map(config => config.id));
-        this._cases = JSON.parse(cases);
+        this._cases = cases;
     }
 
     override processNode(flowSocket?: string) {

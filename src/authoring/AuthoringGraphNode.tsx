@@ -88,18 +88,8 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         const inputFlowsToSet: IFlowSocketDescriptor[] = nodeSpec.input.flows.slice();
         const outputFlowsToSet: IFlowSocketDescriptor[] = nodeSpec.output.flows.slice();
 
-        if (props.data.configuration.numberOutputFlows !== undefined) {
-            const numberOutputFlows = Number(props.data.configuration.numberOutputFlows);
-            for (let i = 0; i < numberOutputFlows; i++) {
-                const outputFlow: IFlowSocketDescriptor = {
-                    id: `${i}`,
-                    description: `The ${i} outflow of this node`
-                }
-                outputFlowsToSet.push(outputFlow);
-            }
-        }
-        if (props.data.configuration.numberInputFlows !== undefined) {
-            const numberInputFlows = Number(props.data.configuration.numberInputFlows);
+        if (props.data.configuration.inputFlows !== undefined) {
+            const numberInputFlows = Number(props.data.configuration.inputFlows);
             for (let i = 0; i < numberInputFlows; i++) {
                 const inputFlow: IFlowSocketDescriptor = {
                     id: `${i}`,
@@ -176,6 +166,17 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                 // EXACT FRAME TIME
                 inputValuesToSet.push({id: "stopTime", types: ["float"], description: "Target time to stop at"});
             }
+        }
+
+        if (props.data.flowIds) {
+            props.data.flowIds.forEach((flowId: string) => {
+                const existingFlowId = outputFlowsToSet.findIndex(outFlow => outFlow.id === flowId);
+                if (existingFlowId !== -1) {
+                    outputFlowsToSet[existingFlowId] = {id: flowId, description: ""};
+                } else {
+                    outputFlowsToSet.push({id: flowId, description: ""});
+                }
+            })
         }
 
         setOutputFlows(outputFlowsToSet);
@@ -257,6 +258,15 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                     </div>
                                 )
                             })}
+                            <RenderIf shouldShow={props.node.type === "flow/sequence" || props.node.type === "flow/multiGate"}>
+                                <p onClick={() => {
+                                    const outputFlow: IFlowSocketDescriptor = {
+                                        id: `${outputFlows.length}`,
+                                        description: `The ${outputFlows.length} outflow of this node`
+                                    }
+                                    setOutputFlows([...outputFlows, outputFlow]);
+                                }}>+</p>
+                            </RenderIf>
                         </div>
                     </div>
                 </RenderIf>

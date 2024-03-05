@@ -138,6 +138,7 @@ export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromG
 
     const setBehaveGraph = (behaveGraph: string) => {
         const result = behaveToAuthor(behaveGraph);
+        console.log(result);
         setNodes(result[0]);
         setEdges(result[1]);
         setCustomEvents(result[2]);

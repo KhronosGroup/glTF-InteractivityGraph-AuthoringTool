@@ -53,7 +53,6 @@ export const authorToBehave = (nodes: Node[], edges: Edge[], customEvents: ICust
 
         // for all the inlined values (i.e. does not reference the outValue of another node) embed the value into the graph
         if (node.data.values !== undefined) {
-            console.log(node.data.values)
             Object.entries(node.data.values).forEach(([key, val]) => {
                 let typeIndex;
                 if (node.type === "customEvent/send") {

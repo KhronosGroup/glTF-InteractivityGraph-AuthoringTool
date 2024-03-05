@@ -769,11 +769,11 @@ export const flowNodeSpecs: IAuthoringNode[] = [
         }
     },
     {
-        type: "flow/forLoop",
+        type: "flow/for",
         description: "Execute the subgraph for flow loopBody from startIndex to endIndex (exclusive), then execute the subgraph completed",
         configuration: [
             {
-                id: "defaultCurrentIndex",
+                id: "initialIndex",
                 type: "int",
                 description: "The current index to be used if the for loop has not executed"
             }
@@ -870,11 +870,6 @@ export const flowNodeSpecs: IAuthoringNode[] = [
         description: "Takes in a single in flow and routes it to any number of potential outputs. Sequentially or at random. It may or may not loop.",
         configuration: [
             {
-                id: "numberOutputFlows",
-                type: "int",
-                description: "Sets the number of outputs of this node."
-            },
-            {
                 id: "isRandom",
                 type: "bool",
                 description: "If set to true, out flows are executed in random order, picks random unused output flows each time until all are done"
@@ -883,11 +878,6 @@ export const flowNodeSpecs: IAuthoringNode[] = [
                 id: "loop",
                 type: "bool",
                 description: "If set to true, the outputs will repeat in a loop continuously and reset random seed and list of unused nodes to be all output flows, if false once all gates have been triggered then the node becomes unresponsive."
-            },
-            {
-                id: "startIndex",
-                type: "int",
-                description: "The output flow to start at, (setting to -1 is equivalent to not setting)."
             }
         ],
         input: {
@@ -907,9 +897,9 @@ export const flowNodeSpecs: IAuthoringNode[] = [
             flows: [],
             values: [
                 {
-                    id: "currentIndex",
+                    id: "lastIndex",
                     types: ["int"],
-                    description: "The index of the current open gate (-1 if no open gate)"
+                    description: "The index of the last used output; -1 if the node has not been activated"
                 }
             ]
         }
@@ -917,13 +907,7 @@ export const flowNodeSpecs: IAuthoringNode[] = [
     {
         type: "flow/sequence",
         description: "Takes in a single in flow and executes the out flows in order",
-        configuration: [
-            {
-                id: "numberOutputFlows",
-                type: "int",
-                description: "Sets the number of outputs of this node."
-            }
-        ],
+        configuration: [],
         input: {
             flows: [
                 {
@@ -978,7 +962,7 @@ export const flowNodeSpecs: IAuthoringNode[] = [
         description: "Execute the flow graph when all input flows are fired at least once.",
         configuration: [
             {
-                id: "numberInputFlows",
+                id: "inputFlows",
                 type: "int",
                 description: "Sets the number of inputs to wait on."
             }
@@ -996,22 +980,26 @@ export const flowNodeSpecs: IAuthoringNode[] = [
             flows: [
                 {
                     id: "out",
+                    description: "The flow to follow after a non completed firing"
+                },
+                {
+                    id: "completed",
                     description: "The flow to be followed when all input flows are fired."
                 }
             ],
-            values: []
+            values: [
+                {
+                    id: "remainingInputs",
+                    types: ["int"],
+                    description: "The number of remaining inputs"
+                }
+            ]
         }
     },
     {
-        type: "flow/whileLoop",
+        type: "flow/while",
         description: "Execute the subgraph for flow loopBody while the condition is true, then execute the subgraph completed",
-        configuration: [
-            {
-                id: "isDo",
-                type: "bool",
-                description: "Indicates if the node should be executed before checking the condition each iteration (making this a do-while loop)"
-            }
-        ],
+        configuration: [],
         input: {
             flows: [
                 {

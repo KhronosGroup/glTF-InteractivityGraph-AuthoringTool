@@ -244,13 +244,13 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("flow/branch", Branch);
         this.registerBehaveEngineNode("flow/delay", Delay);
         this.registerBehaveEngineNode("flow/doN", DoN);
-        this.registerBehaveEngineNode("flow/forLoop", ForLoop);
+        this.registerBehaveEngineNode("flow/for", ForLoop);
         this.registerBehaveEngineNode("flow/multiGate", MultiGate);
         this.registerBehaveEngineNode("flow/sequence", Sequence);
         this.registerBehaveEngineNode("flow/switch", Switch);
         this.registerBehaveEngineNode("flow/throttle", Throttle);
         this.registerBehaveEngineNode("flow/waitAll", WaitAll);
-        this.registerBehaveEngineNode("flow/whileLoop", WhileLoop);
+        this.registerBehaveEngineNode("flow/while", WhileLoop);
         this.registerBehaveEngineNode("world/get", WorldGet);
         this.registerBehaveEngineNode("world/set", WorldSet);
         this.registerBehaveEngineNode("world/animateTo", WorldAnimateTo);

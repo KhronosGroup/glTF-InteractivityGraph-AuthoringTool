@@ -34,12 +34,7 @@ describe('BehaveEngine', () => {
                 {
                     "type": "flow/sequence",
                     "values": [],
-                    "configuration": [
-                        {
-                            "id": "numberOutputFlows",
-                            "value": 2
-                        }
-                    ],
+                    "configuration": [],
                     "flows": [
                         {
                             "id": "0",
@@ -168,12 +163,7 @@ describe('BehaveEngine', () => {
                 {
                     "type": "flow/sequence",
                     "values": [],
-                    "configuration": [
-                        {
-                            "id": "numberOutputFlows",
-                            "value": 3
-                        }
-                    ],
+                    "configuration": [],
                     "flows": [
                         {
                             "id": "2",
@@ -690,12 +680,7 @@ describe('BehaveEngine', () => {
                 {
                     "type": "flow/sequence",
                     "values": [],
-                    "configuration": [
-                        {
-                            "id": "numberOutputFlows",
-                            "value": 2
-                        }
-                    ],
+                    "configuration": [],
                     "flows": [
                         {
                             "id": "0",
@@ -1360,7 +1345,7 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "type": "flow/whileLoop",
+                    "type": "flow/while",
                     "values": [
                         {
                             "id": "condition",
@@ -1368,12 +1353,7 @@ describe('BehaveEngine', () => {
                             "socket": "val"
                         }
                     ],
-                    "configuration": [
-                        {
-                            "id": "isDo",
-                            "value": false
-                        }
-                    ],
+                    "configuration": [],
                     "flows": [
                         {
                             "id": "loopBody",

@@ -19,10 +19,11 @@ export const behaveToAuthor = (graph: string): [Node[], Edge[], ICustomEvent[], 
   const edges: Edge[] = [];
   const customEvents: ICustomEvent[] = graphJson.customEvents || [];
   const variables: IVariable[] = graphJson.variables || [];
-  
+
   // loop through all the nodes in our behave graph to extract nodes and edges
   let id = 0;
   graphJson.nodes.forEach((nodeJSON: any) => {
+    console.log(nodeJSON)
     // construct and add the node to the nodes list
     const node: Node = {
       id: String(id),
@@ -75,6 +76,7 @@ export const behaveToAuthor = (graph: string): [Node[], Edge[], ICustomEvent[], 
     }
 
     // flows will always be references to other nodes output flows, so for each flow create a backreference edge
+    node.data.flowIds = [];
     if (nodeJSON.flows) {
       for (const flow of nodeJSON.flows) {
         edges.push({
@@ -84,6 +86,8 @@ export const behaveToAuthor = (graph: string): [Node[], Edge[], ICustomEvent[], 
           target: String(flow.node),
           targetHandle: flow.socket,
         });
+
+        node.data.flowIds.push(flow.id);
       }
     }
 
@@ -106,11 +110,11 @@ export const behaveToAuthor = (graph: string): [Node[], Edge[], ICustomEvent[], 
       adjacencyList[source].push(target);
       adjacencyList[target].push(source);
     });
-    
+
     const visited: Record<string, boolean> = {};
     const disjointGraphs: string[][] = [];
     const queue: string[] = [];
-  
+
     // Traverse graph and assign disjointGraphs
     nodes.forEach((node) => {
       const { id } = node;
@@ -118,25 +122,25 @@ export const behaveToAuthor = (graph: string): [Node[], Edge[], ICustomEvent[], 
         visited[id] = true;
         const disjointGraph: string[] = [];
         queue.push(id);
-  
+
         while (queue.length > 0) {
           const currentNode = queue.shift() as string;
           disjointGraph.push(currentNode);
-  
+
           if (adjacencyList[currentNode]) {
             adjacencyList[currentNode].forEach((neighbor) => {
               if (!visited[neighbor]) {
                 visited[neighbor] = true;
                 queue.push(neighbor);
               }
-            });  
+            });
           }
         }
-  
+
         disjointGraphs.push(disjointGraph);
       }
     });
-  
+
       // Y layer additive reflects the Y to start each new graph at. Should start with 0, and then on a subsequent disjoint graph, add some padding + the last max y.
       let layerYAdditive = 0;
       let lastMaxY = 0;
@@ -159,14 +163,14 @@ export const behaveToAuthor = (graph: string): [Node[], Edge[], ICustomEvent[], 
             lastMaxY = y;
           }
         }
-    
+
         let nextLayer: number[] = [];
         for (const nodeIndex of lastLayer) {
           const nodeOutEdges: Edge[] = edges.filter(edge => Number(edge.source) === nodeIndex);
           nextLayer.push(...nodeOutEdges.map(edge => Number(edge.target)));
         }
         nextLayer = [...new Set(nextLayer)]
-    
+
         let xOffset = 0;
         while (nextLayer.length > 0) {
           lastLayer = nextLayer;
@@ -178,7 +182,7 @@ export const behaveToAuthor = (graph: string): [Node[], Edge[], ICustomEvent[], 
               lastMaxY = y;
             }
           }
-    
+
           nextLayer = [];
           for (const nodeIndex of lastLayer) {
             const nodeOutEdges: Edge[] = edges.filter(edge => Number(edge.source) === nodeIndex);
@@ -190,7 +194,7 @@ export const behaveToAuthor = (graph: string): [Node[], Edge[], ICustomEvent[], 
         layerYAdditive = 800 + lastMaxY;
     });
 
-      
+
   }
 
   return [nodes, edges, customEvents, variables];

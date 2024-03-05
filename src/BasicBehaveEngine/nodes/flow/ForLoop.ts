@@ -1,10 +1,10 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class ForLoop extends BehaveEngineNode {
-    REQUIRED_CONFIGURATIONS = [{id: "defaultCurrentIndex"}];
+    REQUIRED_CONFIGURATIONS = [{id: "initialIndex"}];
     REQUIRED_VALUES = [{id:"startIndex"}, {id:"endIndex"}];
 
-    _defaultCurrentIndex: number;
+    _initialIndex: number;
 
     constructor(props: IBehaviourNodeProps) {
         super(props);
@@ -13,9 +13,9 @@ export class ForLoop extends BehaveEngineNode {
         this.validateFlows(this.flows);
         this.validateConfigurations(this.configuration);
 
-        const {defaultCurrentIndex} = this.evaluateAllConfigurations(this.REQUIRED_CONFIGURATIONS.map(config => config.id));
-        this._defaultCurrentIndex = defaultCurrentIndex;
-        this.outValues.index = {id: "index", value: this._defaultCurrentIndex};
+        const {initialIndex} = this.evaluateAllConfigurations(this.REQUIRED_CONFIGURATIONS.map(config => config.id));
+        this._initialIndex = initialIndex;
+        this.outValues.index = {id: "index", value: this._initialIndex};
     }
 
     override processNode(flowSocket?: string) {

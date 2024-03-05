@@ -13,6 +13,7 @@ export class DoN extends BehaveEngineNode {
         this.validateConfigurations(this.configuration);
 
         this._currentCount = 0;
+        this.outValues.currentCount = 0;
     }
 
     override processNode(flowSocket?: string) {
@@ -21,6 +22,7 @@ export class DoN extends BehaveEngineNode {
 
         if (flowSocket === "reset") {
             this._currentCount = 0;
+            this.outValues.currentCount = 0;
             return;
         }
         if (this._currentCount >= Number(n)) {
@@ -28,6 +30,7 @@ export class DoN extends BehaveEngineNode {
         }
 
         this._currentCount++;
+        this.outValues.currentCount = this._currentCount;
         super.processNode(flowSocket);
     }
 }

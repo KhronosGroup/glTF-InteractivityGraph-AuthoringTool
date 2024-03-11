@@ -20,7 +20,7 @@ export class Delay extends BehaveEngineNode {
             }
         } else {
             setTimeout(() => {
-                this.addEventToWorkQueue(this.flows.done)
+                this.addEventToWorkQueue(this.flows.completed)
             }, duration * 1000)
 
             this.processFlow(this.flows.out);

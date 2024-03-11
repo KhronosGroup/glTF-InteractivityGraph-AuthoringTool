@@ -600,7 +600,7 @@ export const flowNodeSpecs: IAuthoringNode[] = [
         output: {
             flows: [
                 {
-                    id: "done",
+                    id: "completed",
                     description: "The flow to be followed after the delay",
                 },
                 {
@@ -727,9 +727,9 @@ export const flowNodeSpecs: IAuthoringNode[] = [
             ],
             values: [
                 {
-                    id: "timeRemaining",
+                    id: "lastRemainingTime",
                     types: ["float"],
-                    description: "Indicates whether the node is throttling"
+                    description: "The remaining throttling time, in seconds, at the moment of the last valid activation of the input flow or NaN if the input flow has never been activated with a valid duration input value"
                 }
             ]
         }

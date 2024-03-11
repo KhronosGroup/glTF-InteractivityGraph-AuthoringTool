@@ -183,7 +183,7 @@ describe('nodes', () => {
             values: [{ id: 'duration', value: 0.5, type: 2 }],
             flows: [
                 { id: 'out', node: 1 },
-                {id: 'done', node: 2 }
+                {id: 'completed', node: 2 }
             ]
         });
         delay.addEventToWorkQueue = jest.fn<(flow: IFlow) => Promise<void>>();
@@ -191,7 +191,7 @@ describe('nodes', () => {
         delay.processNode('in');
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        expect(delay.addEventToWorkQueue).toHaveBeenCalledWith({"id": "done", "node": 2});
+        expect(delay.addEventToWorkQueue).toHaveBeenCalledWith({"id": "completed", "node": 2});
         expect(delay.processFlow).toHaveBeenCalledWith({"id": "out", "node": 1});
     });
 
@@ -250,18 +250,18 @@ describe('nodes', () => {
         });
 
         doN.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
-        expect(doN.outValues.currentCount).toBe(0);
+        expect(doN.outValues.currentCount.value).toBe(0);
         doN.processNode("in");
-        expect(doN.outValues.currentCount).toBe(1);
+        expect(doN.outValues.currentCount.value).toBe(1);
         doN.processNode("in");
-        expect(doN.outValues.currentCount).toBe(2);
+        expect(doN.outValues.currentCount.value).toBe(2);
         doN.processNode("in");
-        expect(doN.outValues.currentCount).toBe(2);
+        expect(doN.outValues.currentCount.value).toBe(2);
 
         expect(doN.processFlow).toHaveBeenCalledTimes(2);
 
         doN.processNode("reset");
-        expect(doN.outValues.currentCount).toBe(0);
+        expect(doN.outValues.currentCount.value).toBe(0);
         doN.processNode("in");
         expect(doN.processFlow).toHaveBeenCalledTimes(3);
     });
@@ -327,17 +327,25 @@ describe('nodes', () => {
     it('flow/throttle', async () => {
         const throttleNode: Throttle = new Throttle({
             ...defaultProps,
-            values: [{ id: 'delay', value: 1, type: 2 }],
+            values: [{ id: 'duration', value: 1, type: 2 }],
+            flows: [
+                { id: 'out', node: 0 },
+            ],
         });
 
-        await throttleNode.processNode('in');
-        await throttleNode.processNode('in');
-        expect(throttleNode.outValues.isThrottling.value).toBe(true);
+        throttleNode.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
+        expect(throttleNode.outValues.lastRemainingTime.value).toBe(NaN);
+        throttleNode.processNode('in');
+        expect(throttleNode.processFlow).toHaveBeenCalledWith({ id: 'out', node: 0 });
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        throttleNode.processNode('in');
+        expect(throttleNode.outValues.lastRemainingTime.value).not.toBe(NaN);
+        expect(throttleNode.outValues.lastRemainingTime.value).toBeGreaterThan(0);
 
         //clear throttle limit
         await new Promise((resolve) => setTimeout(resolve, 1500));
         await throttleNode.processNode('in');
-        expect(throttleNode.outValues.isThrottling.value).toBe(false);
+        expect(throttleNode.outValues.lastRemainingTime.value).toBe(0);
     });
 
     it('flow/waitAll', async () => {
@@ -349,15 +357,15 @@ describe('nodes', () => {
 
         waitAll.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
         waitAll.processNode('0');
-        expect(waitAll.outValues.remainingInputs).toBe(1)
+        expect(waitAll.outValues.remainingInputs.value).toBe(1)
         waitAll.processNode('reset');
-        expect(waitAll.outValues.remainingInputs).toBe(2);
+        expect(waitAll.outValues.remainingInputs.value).toBe(2);
         waitAll.processNode('1');
         expect(waitAll.processFlow).toHaveBeenCalledTimes(2);
         expect(waitAll.processFlow).toHaveBeenCalledWith({ id: 'out', node: 1 });
 
         waitAll.processNode('0');
-        expect(waitAll.outValues.remainingInputs).toBe(0);
+        expect(waitAll.outValues.remainingInputs.value).toBe(0);
         expect(waitAll.processFlow).toHaveBeenCalledTimes(3);
         expect(waitAll.processFlow).toHaveBeenCalledWith({ id: 'completed', node: 2 });
     });

@@ -102,37 +102,37 @@ export class BabylonDecorator extends ADecorator {
     registerKnownPointers = () => {
         const maxGltfNode:number = this.world.glTFNodes.length-1;
 
-        this.registerJsonPointer(`nodes/${maxGltfNode}/scale`, (path) => {
+        this.registerJsonPointer(`/nodes/${maxGltfNode}/scale`, (path) => {
             const parts: string[] = path.split("/");
-            return [(this.world.glTFNodes[Number(parts[1])] as AbstractMesh).scaling.x,
-                (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).scaling.y,
-                (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).scaling.z];
+            return [(this.world.glTFNodes[Number(parts[2])] as AbstractMesh).scaling.x,
+                (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).scaling.y,
+                (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).scaling.z];
         }, (path, value) => {
             const parts: string[] = path.split("/");
-            (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).scaling = new Vector3(value[0], value[1], value[2]);
+            (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).scaling = new Vector3(value[0], value[1], value[2]);
         }, "float3")
 
-        this.registerJsonPointer(`nodes/${maxGltfNode}/translation`, (path) => {
+        this.registerJsonPointer(`/nodes/${maxGltfNode}/translation`, (path) => {
             const parts: string[] = path.split("/");
-            return [(this.world.glTFNodes[Number(parts[1])] as AbstractMesh).position.x,
-                (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).position.y,
-                (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).position.z];
+            return [(this.world.glTFNodes[Number(parts[2])] as AbstractMesh).position.x,
+                (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).position.y,
+                (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).position.z];
         }, (path, value) => {
             const parts: string[] = path.split("/");
             console.log(value);
-            (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).position= new Vector3(value[0], value[1], value[2]);
+            (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).position= new Vector3(value[0], value[1], value[2]);
         }, "float3")
 
-        this.registerJsonPointer(`nodes/${maxGltfNode}/rotation`, (path) => {
+        this.registerJsonPointer(`/nodes/${maxGltfNode}/rotation`, (path) => {
             const parts: string[] = path.split("/");
             return [
-                (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).rotationQuaternion?.w,
-                (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).rotationQuaternion?.x,
-                (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).rotationQuaternion?.y,
-                (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).rotationQuaternion?.z];
+                (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).rotationQuaternion?.w,
+                (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).rotationQuaternion?.x,
+                (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).rotationQuaternion?.y,
+                (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).rotationQuaternion?.z];
         }, (path, value) => {
             const parts: string[] = path.split("/");
-            (this.world.glTFNodes[Number(parts[1])] as AbstractMesh).rotationQuaternion = new Quaternion(value[1], value[2], value[3], value[0]);
+            (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).rotationQuaternion = new Quaternion(value[1], value[2], value[3], value[0]);
         }, "float4")
     }
 

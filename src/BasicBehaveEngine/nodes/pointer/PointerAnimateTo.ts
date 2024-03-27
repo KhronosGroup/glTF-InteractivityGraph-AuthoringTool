@@ -1,29 +1,29 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
-export class WorldAnimateTo extends BehaveEngineNode {
-    REQUIRED_CONFIGURATIONS = [{id: "path"}, {id: "easingType"}]
-    REQUIRED_VALUES = [{id: "a"}, {id: "easingDuration"}]
+export class PointerAnimateTo extends BehaveEngineNode {
+    REQUIRED_CONFIGURATIONS = [{id: "pointer"}, {id: "easingType"}]
+    REQUIRED_VALUES = [{id: "val"}, {id: "easingDuration"}]
 
-    _path: string;
+    _pointer: string;
     _easingType: number;
-    _pathVals: { id: string }[];
+    _pointerVals: { id: string }[];
 
     constructor(props: IBehaviourNodeProps) {
         super(props);
-        this.name = "WorldAnimateTo";
+        this.name = "PointerAnimateTo";
         this.validateValues(this.values);
         this.validateFlows(this.flows);
         this.validateConfigurations(this.configuration);
 
-        const {path, easingType} = this.evaluateAllConfigurations(this.REQUIRED_CONFIGURATIONS.map(config => config.id));
+        const {pointer, easingType} = this.evaluateAllConfigurations(this.REQUIRED_CONFIGURATIONS.map(config => config.id));
         this._easingType = easingType;
-        this._path = path;
-        const valIds = this.parsePath(path);
+        this._pointer = pointer;
+        const valIds = this.parsePath(pointer);
         const generatedVals = [];
         for (let i = 0; i < valIds.length; i++) {
             generatedVals.push({id: valIds[i]});
         }
-        this._pathVals = generatedVals;
+        this._pointerVals = generatedVals;
     }
 
     parsePath(path: string): string[] {
@@ -53,10 +53,10 @@ export class WorldAnimateTo extends BehaveEngineNode {
 
     override processNode(flowSocket: string) {
         this.graphEngine.clearValueEvaluationCache();
-        const configVals = this.evaluateAllValues([...this._pathVals].map(val => val.id));
+        const configVals = this.evaluateAllValues([...this._pointerVals].map(val => val.id));
         const requiredVals = this.evaluateAllValues([...this.REQUIRED_VALUES].map(val => val.id));
-        const populatedPath = this.populatePath(this._path, configVals)
-        const targetValue = requiredVals.a;
+        const populatedPath = this.populatePath(this._pointer, configVals)
+        const targetValue = requiredVals.val;
         const easingDuration = requiredVals.easingDuration;
 
         const easingParameters: any = {

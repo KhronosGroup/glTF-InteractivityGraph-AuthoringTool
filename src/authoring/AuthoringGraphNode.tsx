@@ -194,7 +194,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                 return "#f8a848"
             case "math":
                 return "#baf691"
-            case "world":
+            case "pointer":
                 return "#7ddede"
             case "customEvent":
                 return "#e1b739"

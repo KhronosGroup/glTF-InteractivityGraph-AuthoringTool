@@ -57,45 +57,45 @@ export class LoggingDecorator extends ADecorator {
     }
 
     registerKnownPointers = () => {
-        this.behaveEngine.registerJsonPointer("nodes/99/scale", (path) => {
+        this.behaveEngine.registerJsonPointer("/nodes/99/scale", (path) => {
             const parts: string[] = path.split("/");
-            if (this.world.nodes && this.world.nodes[Number(parts[1])] && this.world.nodes[Number(parts[1])].scale !== undefined) {
-                return this.world.nodes[Number(parts[1])].scale
+            if (this.world.nodes && this.world.nodes[Number(parts[2])] && this.world.nodes[Number(parts[2])].scale !== undefined) {
+                return this.world.nodes[Number(parts[2])].scale
             } else {
                 return undefined
             }
         }, (path, value) => {
             const parts: string[] = path.split("/");
-            if (this.world.nodes && this.world.nodes[Number(parts[1])] && this.world.nodes[Number(parts[1])].scale !== undefined) {
-                this.world.nodes[Number(parts[1])].scale = value
+            if (this.world.nodes && this.world.nodes[Number(parts[2])] && this.world.nodes[Number(parts[2])].scale !== undefined) {
+                this.world.nodes[Number(parts[2])].scale = value
             }
         }, "float3")
 
-        this.registerJsonPointer("nodes/99/rotation", (path) => {
+        this.registerJsonPointer("/nodes/99/rotation", (path) => {
             const parts: string[] = path.split("/");
-            if (this.world.nodes && this.world.nodes[Number(parts[1])] && this.world.nodes[Number(parts[1])].rotation !== undefined) {
-                return this.world.nodes[Number(parts[1])].rotation
+            if (this.world.nodes && this.world.nodes[Number(parts[2])] && this.world.nodes[Number(parts[2])].rotation !== undefined) {
+                return this.world.nodes[Number(parts[2])].rotation
             } else {
                 return undefined
             }
         }, (path, value) => {
             const parts: string[] = path.split("/");
-            if (this.world.nodes && this.world.nodes[Number(parts[1])] && this.world.nodes[Number(parts[1])].rotation !== undefined) {
-                this.world.nodes[Number(parts[1])].rotation = value
+            if (this.world.nodes && this.world.nodes[Number(parts[2])] && this.world.nodes[Number(parts[2])].rotation !== undefined) {
+                this.world.nodes[Number(parts[2])].rotation = value
             }
         }, 'float4')
 
-        this.registerJsonPointer("nodes/99/translation", (path) => {
+        this.registerJsonPointer("/nodes/99/translation", (path) => {
             const parts: string[] = path.split("/");
-            if (this.world.nodes && this.world.nodes[Number(parts[1])] && this.world.nodes[Number(parts[1])].translation !== undefined) {
-                return this.world.nodes[Number(parts[1])].translation
+            if (this.world.nodes && this.world.nodes[Number(parts[2])] && this.world.nodes[Number(parts[2])].translation !== undefined) {
+                return this.world.nodes[Number(parts[2])].translation
             } else {
                 return undefined
             }
         }, (path, value) => {
             const parts: string[] = path.split("/");
-            if (this.world.nodes && this.world.nodes[Number(parts[1])] && this.world.nodes[Number(parts[1])].translation !== undefined) {
-                this.world.nodes[Number(parts[1])].translation = value
+            if (this.world.nodes && this.world.nodes[Number(parts[2])] && this.world.nodes[Number(parts[2])].translation !== undefined) {
+                this.world.nodes[Number(parts[2])].translation = value
             }
         }, 'float3')
     }

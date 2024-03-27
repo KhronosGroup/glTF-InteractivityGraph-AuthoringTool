@@ -23,7 +23,7 @@ describe("authoring", () => {
                     }
                 },
                 {
-                    "type": "world/set",
+                    "type": "pointer/set",
                     "values": [
                         {
                             "id": "nodeIndex",
@@ -31,15 +31,15 @@ describe("authoring", () => {
                             "type": 1
                         },
                         {
-                            "id": "a",
+                            "id": "val",
                             "value": [1,2,3],
                             "type": 3
                         }
                     ],
                     "configuration": [
                         {
-                            "id": "path",
-                            "value": "nodes/{nodeIndex}/translation"
+                            "id": "pointer",
+                            "value": "/nodes/{nodeIndex}/translation"
                         }
                     ],
                     "flows": [],

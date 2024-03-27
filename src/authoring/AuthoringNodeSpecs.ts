@@ -67,13 +67,13 @@ export const standardTypes = [
     }
 ]
 
-export const worldNodeSpecs: IAuthoringNode[] = [
+export const pointerNodeSpecs: IAuthoringNode[] = [
     {
-        type: "world/get",
+        type: "pointer/get",
         description: "Accesses properties of the gltf using JSON pointer",
         configuration: [
             {
-                id: "path",
+                id: "pointer",
                 description: "The template path to use in order to construct the json pointer",
                 type: "string"
             }
@@ -100,11 +100,11 @@ export const worldNodeSpecs: IAuthoringNode[] = [
         }
     },
     {
-        type: "world/set",
+        type: "pointer/set",
         description: "Sets properties of the gltf using JSON pointer immediately",
         configuration: [
             {
-                id: "path",
+                id: "pointer",
                 description: "The template path to use in order to construct the json pointer",
                 type: "string"
             }
@@ -118,7 +118,7 @@ export const worldNodeSpecs: IAuthoringNode[] = [
             ],
             values: [
                 {
-                    id: "a",
+                    id: "val",
                     description: "The value to set",
                     types: ["bool", "int", "float", "float3", "float4"]
                 }
@@ -139,11 +139,11 @@ export const worldNodeSpecs: IAuthoringNode[] = [
         }
     },
     {
-        type: "world/animateTo",
+        type: "pointer/animateTo",
         description: "Sets properties of the gltf using JSON pointer over a set time",
         configuration: [
             {
-                id: "path",
+                id: "pointer",
                 description: "The template path to use in order to construct the json pointer",
                 type: "string"
             },
@@ -167,7 +167,7 @@ export const worldNodeSpecs: IAuthoringNode[] = [
                     types: ["float"]
                 },
                 {
-                    id: "a",
+                    id: "val",
                     types: [
                         "int",
                         "float",
@@ -3404,6 +3404,6 @@ export const bitwiseNodeSpecs = [
     }
 ]
 
-export const authoringNodeSpecs: IAuthoringNode[] = [...worldNodeSpecs, ...flowNodeSpecs, ...lifecycleNodeSpecs, ...customEventNodeSpecs, ...variableNodeSpecs,
+export const authoringNodeSpecs: IAuthoringNode[] = [...pointerNodeSpecs, ...flowNodeSpecs, ...lifecycleNodeSpecs, ...customEventNodeSpecs, ...variableNodeSpecs,
     ...constantsNodes, ...arithmeticNodes, ...trigNodes, ...hyperbolicNodes, ...exponentialFunctionNodes, ...experimentalNodeSpecs, ...vectorNodes,
     ...specialFloatingPointNodeSpecs, ...matrixNodeSpecs, ...comparisonNodeSpecs, ...bitwiseNodeSpecs];

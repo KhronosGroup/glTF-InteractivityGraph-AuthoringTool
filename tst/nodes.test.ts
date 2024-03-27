@@ -10,11 +10,11 @@ import {ForLoop} from "../src/BasicBehaveEngine/nodes/flow/ForLoop";
 import {OnTickNode} from "../src/BasicBehaveEngine/nodes/lifecycle/onTick";
 import {DoN} from "../src/BasicBehaveEngine/nodes/flow/DoN";
 import {VariableSet} from "../src/BasicBehaveEngine/nodes/variable/VariableSet";
-import {WorldSet} from "../src/BasicBehaveEngine/nodes/world/WorldSet";
+import {PointerSet} from "../src/BasicBehaveEngine/nodes/pointer/PointerSet";
 import {OnStartNode} from "../src/BasicBehaveEngine/nodes/lifecycle/onStart";
 import {Switch} from "../src/BasicBehaveEngine/nodes/flow/Switch";
-import {WorldGet} from "../src/BasicBehaveEngine/nodes/world/WorldGet";
-import {WorldAnimateTo} from "../src/BasicBehaveEngine/nodes/world/WorldAnimateTo";
+import {PointerGet} from "../src/BasicBehaveEngine/nodes/pointer/PointerGet";
+import {PointerAnimateTo} from "../src/BasicBehaveEngine/nodes/pointer/PointerAnimateTo";
 import {WhileLoop} from "../src/BasicBehaveEngine/nodes/flow/WhileLoop";
 import {WaitAll} from "../src/BasicBehaveEngine/nodes/flow/WaitAll";
 import {MultiGate} from "../src/BasicBehaveEngine/nodes/flow/MultiGate";
@@ -410,92 +410,92 @@ describe('nodes', () => {
         expect(variableSet.variables[0].value).toBe(10);
     });
 
-    it('world/get', async () => {
+    it('pointer/get', async () => {
         const world = {nodes:[{ value: 1 }, { value: 2 }]};
-        const worldGet: WorldGet = new WorldGet({
+        const pointerGet: PointerGet = new PointerGet({
             ...defaultProps,
-            configuration: [{ id: 'path', value: 'nodes/{index}/value' }],
+            configuration: [{ id: 'pointer', value: '/nodes/{index}/value' }],
             values: [{ id: 'index', value: 1, type: 1 }],
         });
         graphEngine.registerJsonPointer(
-            'nodes/99/value',
+            '/nodes/99/value',
             (path) => {
                 const parts: string[] = path.split('/');
-                return world.nodes[Number(parts[1])].value;
+                return world.nodes[Number(parts[2])].value;
             },
             (path, value) => {
                 const parts: string[] = path.split('/');
-                world.nodes[Number(parts[1])].value = value;
+                world.nodes[Number(parts[2])].value = value;
             },
             "float"
         );
 
-        const res  = worldGet.processNode();
+        const res  = pointerGet.processNode();
         expect(res['val']!.value).toBe(2);
 
-        const worldGetCustomPtr: WorldGet = new WorldGet({
+        const pointerGetCustomPtr: PointerGet = new PointerGet({
             ...defaultProps,
-            configuration: [{ id: 'path', value: 'nodes/0/value' }],
+            configuration: [{ id: 'pointer', value: '/nodes/0/value' }],
         });
 
-        const resCustom = await worldGetCustomPtr.processNode();
+        const resCustom = await pointerGetCustomPtr.processNode();
         expect(resCustom['val']!.value).toBe(1);
     });
 
-    it('world/set', async () => {
+    it('pointer/set', async () => {
         const world = {nodes:[{ value: 1 }, { value: 2 }]};
         graphEngine.registerJsonPointer(
-            'nodes/99/value',
+            '/nodes/99/value',
             (path) => {
                 const parts: string[] = path.split('/');
-                return world.nodes[Number(parts[1])].value;
+                return world.nodes[Number(parts[2])].value;
             },
             (path, value) => {
                 const parts: string[] = path.split('/');
-               world.nodes[Number(parts[1])].value = value;
+               world.nodes[Number(parts[2])].value = value;
             },
             "float"
         );
-        const worldSet: WorldSet = new WorldSet({
+        const pointerSet: PointerSet = new PointerSet({
             ...defaultProps,
             configuration: [
-                { id: 'path', value: 'nodes/{index}/value' },
+                { id: 'pointer', value: '/nodes/{index}/value' },
             ],
             values: [
                 { id: 'index', value: 0, type: 1 },
-                { id: 'a', value: 42, type: 1 },
+                { id: 'val', value: 42, type: 1 },
             ],
         });
 
-        await worldSet.processNode('in');
+        await pointerSet.processNode('in');
         const res = world.nodes[0].value;
         expect(res).toBe(42);
     });
 
-    it('world/animateTo', async () => {
+    it('pointer/animateTo', async () => {
         const world = {nodes:[{ value: 1 }, { value: 2 }]};
         graphEngine.registerJsonPointer(
-            'nodes/99/value',
+            '/nodes/99/value',
             (path) => {
                 const parts: string[] = path.split('/');
-                return world.nodes[Number(parts[1])].value;
+                return world.nodes[Number(parts[2])].value;
             },
             (path, value) => {
                 const parts: string[] = path.split('/');
-                world.nodes[Number(parts[1])].value = value;
+                world.nodes[Number(parts[2])].value = value;
             },
             "float"
         );
-        const worldAnimateTo: WorldAnimateTo = new WorldAnimateTo({
+        const pointerAnimateTo: PointerAnimateTo = new PointerAnimateTo({
             ...defaultProps,
             configuration: [
-                { id: 'path', value: 'nodes/{index}/value' },
+                { id: 'pointer', value: '/nodes/{index}/value' },
                 { id: "easingType", value: 0}
             ],
             values: [
                 { id: 'index', value: 0, type: 1 },
                 { id: "easingDuration", value: 0.5, type: 2},
-                { id: 'a', value: 42, type: 2 },
+                { id: 'val', value: 42, type: 2 },
                 { id: 'cp1', value: 0, type: 2 },
                 { id: 'cp2', value: 42, type: 2}
             ],
@@ -504,7 +504,7 @@ describe('nodes', () => {
         graphEngine.animateProperty = jest.fn(() => {
             world.nodes[0].value = 42;
         })
-        worldAnimateTo.processNode('in');
+        pointerAnimateTo.processNode('in');
         await new Promise((resolve) => setTimeout(resolve, 1000));
         expect(graphEngine.animateProperty).toHaveBeenCalledTimes(1);
         expect(world.nodes[0].value).toBe(42);

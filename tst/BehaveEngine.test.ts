@@ -141,7 +141,7 @@ describe('BehaveEngine', () => {
         expect(executionLog).toEqual( "Adding {\"node\":0,\"id\":\"start\"} flow to queueRunning OnStart: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":1,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":1,\"socket\":\"in\"} flowRunning Sequence: input values: {}, output flows: {\"0\":{\"id\":\"0\",\"node\":2,\"socket\":\"in\"},\"1\":{\"id\":\"1\",\"node\":3,\"socket\":\"in\"}}Executing {\"id\":\"0\",\"node\":2,\"socket\":\"in\"} flowRunning Send: input values: {\"number\":{\"id\":\"number\",\"value\":1,\"type\":1}}, output flows: {}Executing {\"id\":\"1\",\"node\":3,\"socket\":\"in\"} flowRunning Send: input values: {\"float3ToSend\":{\"id\":\"float3ToSend\",\"type\":3,\"value\":[1,2,3]}}, output flows: {}");
     });
 
-    it('should execute behavior graph queue', async () => {
+    it('should execute behavior graph queue two', async () => {
         const behaviorGraph = {
             "nodes": [
                 {
@@ -187,18 +187,18 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "type": "world/set",
+                    "type": "pointer/set",
                     "values": [
                         {
-                            "id": "a",
+                            "id": "val",
                             "value": [1.57,0,0,1],
                             "type": 5
                         }
                     ],
                     "configuration": [
                         {
-                            "id": "path",
-                            "value": "nodes/0/rotation"
+                            "id": "pointer",
+                            "value": "/nodes/0/rotation"
                         }
                     ],
                     "flows": [
@@ -214,18 +214,18 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "type": "world/set",
+                    "type": "pointer/set",
                     "values": [
                         {
-                            "id": "a",
+                            "id": "val",
                             "value": [10,20,30],
                             "type": 4
                         }
                     ],
                     "configuration": [
                         {
-                            "id": "path",
-                            "value": "nodes/0/translation"
+                            "id": "pointer",
+                            "value": "/nodes/0/translation"
                         }
                     ],
                     "flows": [
@@ -241,18 +241,18 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "type": "world/set",
+                    "type": "pointer/set",
                     "values": [
                         {
-                            "id": "a",
+                            "id": "val",
                             "value": [4,5,6],
                             "type": 4
                         }
                     ],
                     "configuration": [
                         {
-                            "id": "path",
-                            "value": "nodes/0/scale"
+                            "id": "pointer",
+                            "value": "/nodes/0/scale"
                         }
                     ],
                     "flows": [
@@ -268,12 +268,12 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "type": "world/get",
+                    "type": "pointer/get",
                     "values": [],
                     "configuration": [
                         {
-                            "id": "path",
-                            "value": "nodes/0/scale"
+                            "id": "pointer",
+                            "value": "/nodes/0/scale"
                         }
                     ],
                     "flows": [],
@@ -304,12 +304,12 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "type": "world/get",
+                    "type": "pointer/get",
                     "values": [],
                     "configuration": [
                         {
-                            "id": "path",
-                            "value": "nodes/0/rotation"
+                            "id": "pointer",
+                            "value": "/nodes/0/rotation"
                         }
                     ],
                     "flows": [],
@@ -340,12 +340,12 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "type": "world/get",
+                    "type": "pointer/get",
                     "values": [],
                     "configuration": [
                         {
-                            "id": "path",
-                            "value": "nodes/0/translation"
+                            "id": "pointer",
+                            "value": "/nodes/0/translation"
                         }
                     ],
                     "flows": [],
@@ -423,10 +423,11 @@ describe('BehaveEngine', () => {
         loggingBehaveEngine = new LoggingDecorator(new BasicBehaveEngine( 1), (line:string) => executionLog += line, loggingWorld);
         loggingBehaveEngine.loadBehaveGraph(behaviorGraph);
         await new Promise((resolve) => setTimeout(resolve, 250));
+        console.log(executionLog);
         expect(loggingWorld.nodes[0].scale).toEqual([4,5,6]);
         expect(loggingWorld.nodes[0].translation).toEqual([10,20,30]);
         expect(loggingWorld.nodes[0].rotation).toEqual([1.57,0,0,1]);
-        expect(executionLog).toEqual("Adding {\"node\":0,\"id\":\"start\"} flow to queueRunning OnStart: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":1,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":1,\"socket\":\"in\"} flowRunning Sequence: input values: {}, output flows: {\"0\":{\"id\":\"0\",\"node\":2,\"socket\":\"in\"},\"1\":{\"id\":\"1\",\"node\":3,\"socket\":\"in\"},\"2\":{\"id\":\"2\",\"node\":4,\"socket\":\"in\"}}Executing {\"id\":\"0\",\"node\":2,\"socket\":\"in\"} flowRunning WorldSet: input values: {\"a\":{\"id\":\"a\",\"value\":[1.57,0,0,1],\"type\":5}}, output flows: {\"out\":{\"id\":\"out\",\"node\":8,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":8,\"socket\":\"in\"} flowRunning WorldGet: input values: {}, output flows: {}Running Send: input values: {\"float3ToLog\":{\"id\":\"float3ToLog\",\"node\":7,\"socket\":\"val\",\"type\":5}}, output flows: {}Executing {\"id\":\"1\",\"node\":3,\"socket\":\"in\"} flowRunning WorldSet: input values: {\"a\":{\"id\":\"a\",\"value\":[10,20,30],\"type\":4}}, output flows: {\"out\":{\"id\":\"out\",\"node\":10,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":10,\"socket\":\"in\"} flowRunning WorldGet: input values: {}, output flows: {}Running Send: input values: {\"float3ToLog\":{\"id\":\"float3ToLog\",\"node\":9,\"socket\":\"val\",\"type\":4}}, output flows: {}Executing {\"id\":\"2\",\"node\":4,\"socket\":\"in\"} flowRunning WorldSet: input values: {\"a\":{\"id\":\"a\",\"value\":[4,5,6],\"type\":4}}, output flows: {\"out\":{\"id\":\"out\",\"node\":6,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":6,\"socket\":\"in\"} flowRunning WorldGet: input values: {}, output flows: {}Running Send: input values: {\"float3ToLog\":{\"id\":\"float3ToLog\",\"node\":5,\"socket\":\"val\",\"type\":4}}, output flows: {}");
+        expect(executionLog).toEqual("Adding {\"node\":0,\"id\":\"start\"} flow to queueRunning OnStart: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":1,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":1,\"socket\":\"in\"} flowRunning Sequence: input values: {}, output flows: {\"0\":{\"id\":\"0\",\"node\":2,\"socket\":\"in\"},\"1\":{\"id\":\"1\",\"node\":3,\"socket\":\"in\"},\"2\":{\"id\":\"2\",\"node\":4,\"socket\":\"in\"}}Executing {\"id\":\"0\",\"node\":2,\"socket\":\"in\"} flowRunning PointerSet: input values: {\"val\":{\"id\":\"val\",\"value\":[1.57,0,0,1],\"type\":5}}, output flows: {\"out\":{\"id\":\"out\",\"node\":8,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":8,\"socket\":\"in\"} flowRunning PointerGet: input values: {}, output flows: {}Running Send: input values: {\"float3ToLog\":{\"id\":\"float3ToLog\",\"node\":7,\"socket\":\"val\",\"type\":5}}, output flows: {}Executing {\"id\":\"1\",\"node\":3,\"socket\":\"in\"} flowRunning PointerSet: input values: {\"val\":{\"id\":\"val\",\"value\":[10,20,30],\"type\":4}}, output flows: {\"out\":{\"id\":\"out\",\"node\":10,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":10,\"socket\":\"in\"} flowRunning PointerGet: input values: {}, output flows: {}Running Send: input values: {\"float3ToLog\":{\"id\":\"float3ToLog\",\"node\":9,\"socket\":\"val\",\"type\":4}}, output flows: {}Executing {\"id\":\"2\",\"node\":4,\"socket\":\"in\"} flowRunning PointerSet: input values: {\"val\":{\"id\":\"val\",\"value\":[4,5,6],\"type\":4}}, output flows: {\"out\":{\"id\":\"out\",\"node\":6,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":6,\"socket\":\"in\"} flowRunning PointerGet: input values: {}, output flows: {}Running Send: input values: {\"float3ToLog\":{\"id\":\"float3ToLog\",\"node\":5,\"socket\":\"val\",\"type\":4}}, output flows: {}");
         const babylonWorld = {
             "glTFNodes":[
                 {"scaling":new Vector3(1,2,3), "position": new Vector3(0,0,0), "rotationQuaternion": new Quaternion(0, 0, 0, 0)}
@@ -695,10 +696,10 @@ describe('BehaveEngine', () => {
                     ]
                 },
                 {
-                    "type": "world/animateTo",
+                    "type": "pointer/animateTo",
                     "values": [
                         {
-                            "id": "a",
+                            "id": "val",
                             "value": [5,5,5],
                             "type": 4
                         },
@@ -710,8 +711,8 @@ describe('BehaveEngine', () => {
                     ],
                     "configuration": [
                         {
-                            "id": "path",
-                            "value": "nodes/0/scale"
+                            "id": "pointer",
+                            "value": "/nodes/0/scale"
                         },
                         {
                             "id": "easingType",
@@ -727,24 +728,24 @@ describe('BehaveEngine', () => {
                     ]
                 },
                 {
-                    "type": "world/set",
+                    "type": "pointer/set",
                     "values": [
                         {
-                            "id": "a",
+                            "id": "val",
                             "value": [1,1,1],
                             "type": 4
                         }
                     ],
                     "configuration": [
                         {
-                            "id": "path",
-                            "value": "nodes/0/scale"
+                            "id": "pointer",
+                            "value": "/nodes/0/scale"
                         }
                     ],
                     "flows": []
                 },
                 {
-                    "type": "world/get",
+                    "type": "pointer/get",
                     "values": [
                         {
                             "id": "nodeIndex",
@@ -754,8 +755,8 @@ describe('BehaveEngine', () => {
                     ],
                     "configuration": [
                         {
-                            "id": "path",
-                            "value": "nodes/{nodeIndex}/translation"
+                            "id": "pointer",
+                            "value": "/nodes/{nodeIndex}/translation"
                         }
                     ],
                     "flows": []
@@ -778,7 +779,7 @@ describe('BehaveEngine', () => {
                     "flows": []
                 },
                 {
-                    "type": "world/animateTo",
+                    "type": "pointer/animateTo",
                     "values": [
                         {
                             "id": "nodeIndex",
@@ -786,7 +787,7 @@ describe('BehaveEngine', () => {
                             "type": 1
                         },
                         {
-                            "id": "a",
+                            "id": "val",
                             "node": 5,
                             "socket": "val"
                         },
@@ -798,8 +799,8 @@ describe('BehaveEngine', () => {
                     ],
                     "configuration": [
                         {
-                            "id": "path",
-                            "value": "nodes/{nodeIndex}/translation"
+                            "id": "pointer",
+                            "value": "/nodes/{nodeIndex}/translation"
                         },
                         {
                             "id": "easingType",
@@ -842,7 +843,7 @@ describe('BehaveEngine', () => {
         await new Promise((resolve) => setTimeout(resolve, 250));
         expect(loggingWorld.nodes[0].scale).toEqual([1,1,1]);
         expect(loggingWorld.nodes[0].translation).toEqual([0,3,0]);
-        expect(executionLog).toEqual("Adding {\"node\":0,\"id\":\"start\"} flow to queueRunning OnStart: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":1,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":1,\"socket\":\"in\"} flowRunning Sequence: input values: {}, output flows: {\"0\":{\"id\":\"0\",\"node\":2,\"socket\":\"in\"},\"1\":{\"id\":\"1\",\"node\":6,\"socket\":\"in\"}}Executing {\"id\":\"0\",\"node\":2,\"socket\":\"in\"} flowRunning WorldAnimateTo: input values: {\"a\":{\"id\":\"a\",\"value\":[5,5,5],\"type\":4},\"easingDuration\":{\"id\":\"easingDuration\",\"value\":0.1,\"type\":2}}, output flows: {\"done\":{\"id\":\"done\",\"node\":3,\"socket\":\"in\"}}Executing {\"id\":\"1\",\"node\":6,\"socket\":\"in\"} flowRunning WorldGet: input values: {\"nodeIndex\":{\"id\":\"nodeIndex\",\"value\":0,\"type\":1}}, output flows: {}Running AddNode: input values: {\"b\":{\"id\":\"b\",\"value\":[0,5,0],\"type\":4},\"a\":{\"id\":\"a\",\"node\":4,\"socket\":\"val\",\"type\":4}}, output flows: {}Running WorldAnimateTo: input values: {\"nodeIndex\":{\"id\":\"nodeIndex\",\"value\":0,\"type\":1},\"a\":{\"id\":\"a\",\"node\":5,\"socket\":\"val\",\"type\":4},\"easingDuration\":{\"id\":\"easingDuration\",\"value\":0.1,\"type\":2}}, output flows: {}Adding {\"id\":\"done\",\"node\":3,\"socket\":\"in\"} flow to queueRunning WorldSet: input values: {\"a\":{\"id\":\"a\",\"value\":[1,1,1],\"type\":4}}, output flows: {}");
+        expect(executionLog).toEqual("Adding {\"node\":0,\"id\":\"start\"} flow to queueRunning OnStart: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":1,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":1,\"socket\":\"in\"} flowRunning Sequence: input values: {}, output flows: {\"0\":{\"id\":\"0\",\"node\":2,\"socket\":\"in\"},\"1\":{\"id\":\"1\",\"node\":6,\"socket\":\"in\"}}Executing {\"id\":\"0\",\"node\":2,\"socket\":\"in\"} flowRunning PointerAnimateTo: input values: {\"val\":{\"id\":\"val\",\"value\":[5,5,5],\"type\":4},\"easingDuration\":{\"id\":\"easingDuration\",\"value\":0.1,\"type\":2}}, output flows: {\"done\":{\"id\":\"done\",\"node\":3,\"socket\":\"in\"}}Executing {\"id\":\"1\",\"node\":6,\"socket\":\"in\"} flowRunning PointerGet: input values: {\"nodeIndex\":{\"id\":\"nodeIndex\",\"value\":0,\"type\":1}}, output flows: {}Running AddNode: input values: {\"b\":{\"id\":\"b\",\"value\":[0,5,0],\"type\":4},\"a\":{\"id\":\"a\",\"node\":4,\"socket\":\"val\",\"type\":4}}, output flows: {}Running PointerAnimateTo: input values: {\"nodeIndex\":{\"id\":\"nodeIndex\",\"value\":0,\"type\":1},\"val\":{\"id\":\"val\",\"node\":5,\"socket\":\"val\",\"type\":4},\"easingDuration\":{\"id\":\"easingDuration\",\"value\":0.1,\"type\":2}}, output flows: {}Adding {\"id\":\"done\",\"node\":3,\"socket\":\"in\"} flow to queueRunning PointerSet: input values: {\"val\":{\"id\":\"val\",\"value\":[1,1,1],\"type\":4}}, output flows: {}");
     });
 
     it("should tick 5 times", async () => {
@@ -884,12 +885,12 @@ describe('BehaveEngine', () => {
                     ]
                 },
                 {
-                    "type": "world/get",
+                    "type": "pointer/get",
                     "values": [],
                     "configuration": [
                         {
-                            "id": "path",
-                            "value": "nodes/0/translation"
+                            "id": "pointer",
+                            "value": "/nodes/0/translation"
                         }
                     ],
                     "flows": []
@@ -912,18 +913,18 @@ describe('BehaveEngine', () => {
                     "flows": []
                 },
                 {
-                    "type": "world/set",
+                    "type": "pointer/set",
                     "values": [
                         {
-                            "id": "a",
+                            "id": "val",
                             "node": 3,
                             "socket": "val"
                         }
                     ],
                     "configuration": [
                         {
-                            "id": "path",
-                            "value": "nodes/0/translation"
+                            "id": "pointer",
+                            "value": "/nodes/0/translation"
                         }
                     ],
                     "flows": []
@@ -988,18 +989,18 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "type": "world/set",
+                    "type": "pointer/set",
                     "values": [
                         {
-                            "id": "a",
+                            "id": "val",
                             "node": 0,
                             "socket": "scaleVector"
                         }
                     ],
                     "configuration": [
                         {
-                            "id": "path",
-                            "value": "nodes/0/scale"
+                            "id": "pointer",
+                            "value": "/nodes/0/scale"
                         }
                     ],
                     "flows": [
@@ -1094,7 +1095,7 @@ describe('BehaveEngine', () => {
         loggingBehaveEngine.emitCustomEvent("KHR_INTERACTIVITY:triggerScale", {scaleVector: "[10,10,10]"});
         await new Promise((resolve) => setTimeout(resolve, 250));
         expect(loggingWorld.nodes[0].scale).toEqual([10,10,10]);
-        expect(executionLog).toEqual("Running CustomEventReceiveNode: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":1,\"socket\":\"in\"}}Adding {\"id\":\"out\",\"node\":1,\"socket\":\"in\"} flow to queueRunning WorldSet: input values: {\"a\":{\"id\":\"a\",\"node\":0,\"socket\":\"scaleVector\",\"type\":4}}, output flows: {\"out\":{\"id\":\"out\",\"node\":2,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":2,\"socket\":\"in\"} flowRunning Send: input values: {\"success\":{\"id\":\"success\",\"value\":true,\"type\":0}}, output flows: {}");
+        expect(executionLog).toEqual("Running CustomEventReceiveNode: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":1,\"socket\":\"in\"}}Adding {\"id\":\"out\",\"node\":1,\"socket\":\"in\"} flow to queueRunning PointerSet: input values: {\"val\":{\"id\":\"val\",\"node\":0,\"socket\":\"scaleVector\",\"type\":4}}, output flows: {\"out\":{\"id\":\"out\",\"node\":2,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":2,\"socket\":\"in\"} flowRunning Send: input values: {\"success\":{\"id\":\"success\",\"value\":true,\"type\":0}}, output flows: {}");
     });
 
     it("should get and set variables", async () => {
@@ -1372,10 +1373,10 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "type": "world/set",
+                    "type": "pointer/set",
                     "values": [
                         {
-                            "id": "a",
+                            "id": "val",
                             "value": [
                                 5,
                                 6,
@@ -1386,8 +1387,8 @@ describe('BehaveEngine', () => {
                     ],
                     "configuration": [
                         {
-                            "id": "path",
-                            "value": "nodes/0/translation"
+                            "id": "pointer",
+                            "value": "/nodes/0/translation"
                         }
                     ],
                     "flows": [],
@@ -1397,12 +1398,12 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "type": "world/get",
+                    "type": "pointer/get",
                     "values": [],
                     "configuration": [
                         {
-                            "id": "path",
-                            "value": "nodes/0/scale"
+                            "id": "pointer",
+                            "value": "/nodes/0/scale"
                         }
                     ],
                     "flows": [],
@@ -1437,18 +1438,18 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "type": "world/set",
+                    "type": "pointer/set",
                     "values": [
                         {
-                            "id": "a",
+                            "id": "val",
                             "node": 6,
                             "socket": "val"
                         }
                     ],
                     "configuration": [
                         {
-                            "id": "path",
-                            "value": "nodes/0/scale"
+                            "id": "pointer",
+                            "value": "/nodes/0/scale"
                         }
                     ],
                     "flows": [],

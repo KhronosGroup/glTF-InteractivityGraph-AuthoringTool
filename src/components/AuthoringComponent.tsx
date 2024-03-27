@@ -83,7 +83,7 @@ export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromG
 
         if (sourceNodeId === targetNodeId) {return}
 
-        const isConfigurableSocket = nodesWithConfigurations.includes(sourceNodeSpec.type) || nodesWithConfigurations.includes(targetNodeSpec.type);
+        const isConfigurableSocket = nodesWithConfigurations.includes(sourceNodeSpec.type) || nodesWithConfigurations.includes(targetNodeSpec.type) || sourceNodeType === "flow/sequence";
 
         // if one is flow and one isn't then do not connect
         const sourceIsFlow = sourceNodeSpec.output.flows.find(flow => flow.id === vals.sourceHandle) !== undefined;

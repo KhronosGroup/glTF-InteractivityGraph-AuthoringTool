@@ -137,8 +137,8 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                 outputValuesToSet.push(...values);
             }
         }
-        if (props.data.configuration.path !== undefined) {
-            const vals = parsePath(props.data.configuration.path)
+        if (props.data.configuration.pointer !== undefined) {
+            const vals = parsePath(props.data.configuration.pointer)
             for (let i = 0; i < vals.length; i++) {
                 const value: IValueSocketDescriptor = {id: vals[i], types: ["int"], description: `Value for ${vals[i]}`}
                 inputValuesToSet.push(value);

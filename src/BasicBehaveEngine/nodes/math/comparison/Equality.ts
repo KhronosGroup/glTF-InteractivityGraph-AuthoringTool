@@ -21,8 +21,10 @@ export class Equality extends BehaveEngineNode {
         }
         let val: any;
 
-
         switch (typeA) {
+            case "bool":
+                val = JSON.parse(a) === JSON.parse(b);
+                break;
             case "int":
             case "float":
                 val = a === b;

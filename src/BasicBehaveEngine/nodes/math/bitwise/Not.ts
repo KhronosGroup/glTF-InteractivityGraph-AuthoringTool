@@ -14,10 +14,17 @@ export class Not extends BehaveEngineNode {
         this.graphEngine.processNodeStarted(this);
         const typeIndexA = this.values['a'].type!
         const typeA: string = this.getType(typeIndexA);
-        if (typeA !== "int") {
-            throw Error("invalid input type")
+        let val: any;
+        switch (typeA) {
+            case "bool":
+                val = !JSON.parse(a);
+                break;
+            case "int":
+                val = ~a;
+                break;
+            default:
+                throw Error("Invalid type")
         }
-        let val = ~a;
-        return {'val': {id: "val", value: val, type: this.getTypeIndex('int')}}
+        return {'val': {id: "val", value: val, type: typeIndexA}}
     }
 }

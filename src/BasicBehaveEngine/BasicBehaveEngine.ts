@@ -53,8 +53,8 @@ import {Random} from "./nodes/experimental/Random";
 import {Dot} from "./nodes/math/vector/Dot";
 import {Rotate2D} from "./nodes/math/vector/Rotate2D";
 import {Rotate3D} from "./nodes/math/vector/Rotate3D";
-import {IsInfNode} from "./nodes/math/specialFloatingPoint/IsInfNode";
-import {IsNaNNode} from "./nodes/math/specialFloatingPoint/IsNaNNode";
+import {IsInfNode} from "./nodes/math/special/IsInfNode";
+import {IsNaNNode} from "./nodes/math/special/IsNaNNode";
 import {LessThanOrEqualTo} from "./nodes/math/comparison/LessThanOrEqualTo";
 import {LessThan} from "./nodes/math/comparison/LessThan";
 import {Equality} from "./nodes/math/comparison/Equality";
@@ -64,6 +64,14 @@ import {Inf} from "./nodes/math/constants/Inf";
 import {OutputConsole} from "./nodes/experimental/OutputConsole";
 import {SetDelay} from "./nodes/flow/SetDelay";
 import {CancelDelay} from "./nodes/flow/CancelDelay";
+import {NotANumber} from "./nodes/math/constants/NotANumber";
+import {Select} from "./nodes/math/special/Select";
+import {BoolToInt} from "./nodes/math/typeConversion/BoolToInt";
+import {BoolToFloat} from "./nodes/math/typeConversion/BoolToFloat";
+import {FloatToBool} from "./nodes/math/typeConversion/FloatToBool";
+import {FloatToInt} from "./nodes/math/typeConversion/FloatToInt";
+import {IntToBool} from "./nodes/math/typeConversion/IntToBool";
+import {IntToFloat} from "./nodes/math/typeConversion/IntToFloat";
 
 export interface ICustomEventListener {
     type: string,
@@ -285,6 +293,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("variable/set", VariableSet);
         this.registerBehaveEngineNode("math/e", Euler);
         this.registerBehaveEngineNode("math/inf", Inf);
+        this.registerBehaveEngineNode("math/nan", NotANumber);
         this.registerBehaveEngineNode("math/pi", Pi);
         this.registerBehaveEngineNode("math/sign", Sign);
         this.registerBehaveEngineNode("math/trunc", Truncate);
@@ -324,6 +333,13 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/rotate3d", Rotate3D);
         this.registerBehaveEngineNode("math/isinf", IsInfNode);
         this.registerBehaveEngineNode("math/isnan", IsNaNNode);
+        this.registerBehaveEngineNode("math/select", Select);
+        this.registerBehaveEngineNode("type/boolToInt", BoolToInt);
+        this.registerBehaveEngineNode("type/boolToFloat", BoolToFloat);
+        this.registerBehaveEngineNode("type/floatToBool", FloatToBool);
+        this.registerBehaveEngineNode("type/floatToInt", FloatToInt);
+        this.registerBehaveEngineNode("type/intToBool", IntToBool);
+        this.registerBehaveEngineNode("type/intToFloat", IntToFloat);
     }
 
     protected validateGraph = (behaviorGraph: any) => {

@@ -67,8 +67,8 @@ import {Dot} from "../src/BasicBehaveEngine/nodes/math/vector/Dot";
 import {Cross} from "../src/BasicBehaveEngine/nodes/math/vector/Cross";
 import {Rotate3D} from "../src/BasicBehaveEngine/nodes/math/vector/Rotate3D";
 import {Rotate2D} from "../src/BasicBehaveEngine/nodes/math/vector/Rotate2D";
-import {IsInfNode} from "../src/BasicBehaveEngine/nodes/math/specialFloatingPoint/IsInfNode";
-import {IsNaNNode} from "../src/BasicBehaveEngine/nodes/math/specialFloatingPoint/IsNaNNode";
+import {IsInfNode} from "../src/BasicBehaveEngine/nodes/math/special/IsInfNode";
+import {IsNaNNode} from "../src/BasicBehaveEngine/nodes/math/special/IsNaNNode";
 import {Equality} from "../src/BasicBehaveEngine/nodes/math/comparison/Equality";
 import {LessThan} from "../src/BasicBehaveEngine/nodes/math/comparison/LessThan";
 import {LessThanOrEqualTo} from "../src/BasicBehaveEngine/nodes/math/comparison/LessThanOrEqualTo";
@@ -90,6 +90,14 @@ import {CountTrailingZeros} from "../src/BasicBehaveEngine/nodes/math/bitwise/Co
 import {CountOneBits} from "../src/BasicBehaveEngine/nodes/math/bitwise/CountOneBits";
 import {SetDelay} from "../src/BasicBehaveEngine/nodes/flow/SetDelay";
 import {CancelDelay} from "../src/BasicBehaveEngine/nodes/flow/CancelDelay";
+import {NotANumber} from "../src/BasicBehaveEngine/nodes/math/constants/NotANumber";
+import {Select} from "../src/BasicBehaveEngine/nodes/math/special/Select";
+import {BoolToInt} from "../src/BasicBehaveEngine/nodes/math/typeConversion/BoolToInt";
+import {BoolToFloat} from "../src/BasicBehaveEngine/nodes/math/typeConversion/BoolToFloat";
+import {FloatToBool} from "../src/BasicBehaveEngine/nodes/math/typeConversion/FloatToBool";
+import {FloatToInt} from "../src/BasicBehaveEngine/nodes/math/typeConversion/FloatToInt";
+import {IntToBool} from "../src/BasicBehaveEngine/nodes/math/typeConversion/IntToBool";
+import {IntToFloat} from "../src/BasicBehaveEngine/nodes/math/typeConversion/IntToFloat";
 
 
 describe('nodes', () => {
@@ -607,6 +615,15 @@ describe('nodes', () => {
         expect(val['val'].value).toBe(Math.PI);
     });
 
+    it("math/nan", () => {
+        const nan: NotANumber = new NotANumber({
+            ...defaultProps
+        });
+
+        const val = nan.processNode();
+        expect(val['val'].value).toBe(NaN);
+    });
+
     it("math/abs", () => {
         let abs: AbsoluteValue = new AbsoluteValue({
             ...defaultProps,
@@ -761,6 +778,34 @@ describe('nodes', () => {
         expect(val['val'].value[0]).toBe(-6.5);
         expect(val['val'].value[1]).toBe(-5.5);
         expect(val['val'].value[2]).toBe(19);
+    });
+
+    it("math/select", () => {
+        let select: Select = new Select({
+            ...defaultProps,
+            values: [
+                {id: 'a', value: -10.5, type: 2},
+                {id: 'b', value: 5.5, type: 2},
+                {id: 'condition', value: true, type: 0}
+            ]
+        });
+
+        let val = select.processNode();
+        expect(val['val'].value).toBe(-10.5);
+
+        select = new Select({
+            ...defaultProps,
+            values: [
+                {id: 'a', value: [-10.5, 0.5, 9] , type: 4},
+                {id: 'b', value: [4, -6, 10] , type: 4},
+                {id: 'condition', value: false, type: 0}
+            ]
+        });
+
+        val = select.processNode();
+        expect(val['val'].value[0]).toBe(4);
+        expect(val['val'].value[1]).toBe(-6);
+        expect(val['val'].value[2]).toBe(10);
     });
 
     it("math/sub", () => {
@@ -2017,8 +2062,87 @@ describe('nodes', () => {
         expect(val).toBe(false);
     });
 
-    it("math/not", () => {
-        const not: Not = new Not({
+    it("type/boolToInt", () => {
+        let boolToInt: BoolToInt = new BoolToInt({
+            ...defaultProps,
+            values: [
+                {
+                    id: 'a',
+                    value: true,
+                    type: 0
+                }
+            ]
+        });
+
+        let val = boolToInt.processNode();
+
+        expect(val['val'].value).toBe(1);
+
+        boolToInt = new BoolToInt({
+            ...defaultProps,
+            values: [
+                {
+                    id: 'a',
+                    value: false,
+                    type: 0
+                }
+            ]
+        });
+
+        val = boolToInt.processNode();
+
+        expect(val['val'].value).toBe(0);
+    });
+
+    it("type/boolToFloat", () => {
+        let boolToFloat: BoolToFloat = new BoolToFloat({
+            ...defaultProps,
+            values: [
+                {
+                    id: 'a',
+                    value: true,
+                    type: 0
+                }
+            ]
+        });
+
+        let val = boolToFloat.processNode();
+
+        expect(val['val'].value).toBe(1);
+
+        boolToFloat = new BoolToFloat({
+            ...defaultProps,
+            values: [
+                {
+                    id: 'a',
+                    value: false,
+                    type: 0
+                }
+            ]
+        });
+
+        val = boolToFloat.processNode();
+
+        expect(val['val'].value).toBe(0);
+    });
+
+    it("type/intToBool", () => {
+        let intToBool: IntToBool = new IntToBool({
+            ...defaultProps,
+            values: [
+                {
+                    id: 'a',
+                    value: 0,
+                    type: 1
+                }
+            ]
+        });
+
+        let val = intToBool.processNode();
+
+        expect(val['val'].value).toBe(false);
+
+        intToBool = new IntToBool({
             ...defaultProps,
             values: [
                 {
@@ -2029,13 +2153,126 @@ describe('nodes', () => {
             ]
         });
 
-        const val = not.processNode();
+        val = intToBool.processNode();
+
+        expect(val['val'].value).toBe(true);
+    });
+
+    it("type/intToFloat", () => {
+        let intToFloat = new IntToFloat({
+            ...defaultProps,
+            values: [
+                {
+                    id: 'a',
+                    value: 10,
+                    type: 1
+                }
+            ]
+        });
+
+        let val = intToFloat.processNode();
+
+        expect(val['val'].value).toBe(10);
+    });
+
+    it("type/floatToBool", () => {
+        let floatToBool: FloatToBool = new FloatToBool({
+            ...defaultProps,
+            values: [
+                {
+                    id: 'a',
+                    value: NaN,
+                    type: 2
+                }
+            ]
+        });
+
+        let val = floatToBool.processNode();
+
+        expect(val['val'].value).toBe(false);
+
+        floatToBool = new FloatToBool({
+            ...defaultProps,
+            values: [
+                {
+                    id: 'a',
+                    value: 10.0,
+                    type: 2
+                }
+            ]
+        });
+
+        val = floatToBool.processNode();
+
+        expect(val['val'].value).toBe(true);
+    });
+
+    it("type/floatToInt", () => {
+        let floatToInt: FloatToInt = new FloatToInt({
+            ...defaultProps,
+            values: [
+                {
+                    id: 'a',
+                    value: NaN,
+                    type: 2
+                }
+            ]
+        });
+
+        let val = floatToInt.processNode();
+
+        expect(val['val'].value).toBe(0);
+
+        floatToInt = new FloatToInt({
+            ...defaultProps,
+            values: [
+                {
+                    id: 'a',
+                    value: 10.7,
+                    type: 2
+                }
+            ]
+        });
+
+        val = floatToInt.processNode();
+
+        expect(val['val'].value).toBe(10);
+    });
+
+    it("math/not", () => {
+        let not: Not = new Not({
+            ...defaultProps,
+            values: [
+                {
+                    id: 'a',
+                    value: 10,
+                    type: 1
+                }
+            ]
+        });
+
+        let val = not.processNode();
 
         expect(val['val'].value).toBe(-11);
+
+        not = new Not({
+            ...defaultProps,
+            values: [
+                {
+                    id: 'a',
+                    value: true,
+                    type: 0
+                }
+            ]
+        });
+
+        val = not.processNode();
+
+        expect(val['val'].value).toBe(false);
     });
 
     it("math/and", () => {
-        const and: And = new And({
+        let and: And = new And({
             ...defaultProps,
             values: [
                 {
@@ -2051,13 +2288,33 @@ describe('nodes', () => {
             ]
         });
 
-        const val = and.processNode();
+        let val = and.processNode();
 
         expect(val['val'].value).toBe(3);
+
+        and = new And({
+            ...defaultProps,
+            values: [
+                {
+                    id: 'a',
+                    value: false,
+                    type: 0
+                },
+                {
+                    id: 'b',
+                    value: true,
+                    type: 0
+                }
+            ]
+        });
+
+        val = and.processNode();
+
+        expect(val['val'].value).toBe(false);
     });
 
     it("math/or", () => {
-        const or: Or = new Or({
+        let or: Or = new Or({
             ...defaultProps,
             values: [
                 {
@@ -2073,13 +2330,33 @@ describe('nodes', () => {
             ]
         });
 
-        const val = or.processNode();
+        let val = or.processNode();
 
         expect(val['val'].value).toBe(15);
+
+        or = new Or({
+            ...defaultProps,
+            values: [
+                {
+                    id: 'a',
+                    value: true,
+                    type: 0
+                },
+                {
+                    id: 'b',
+                    value: false,
+                    type: 0
+                }
+            ]
+        });
+
+        val = or.processNode();
+
+        expect(val['val'].value).toBe(true);
     });
 
     it("math/xor", () => {
-        const xor: Xor = new Xor({
+        let xor: Xor = new Xor({
             ...defaultProps,
             values: [
                 {
@@ -2095,9 +2372,29 @@ describe('nodes', () => {
             ]
         });
 
-        const val = xor.processNode();
+        let val = xor.processNode();
 
         expect(val['val'].value).toBe(12);
+
+        xor = new Xor({
+            ...defaultProps,
+            values: [
+                {
+                    id: 'a',
+                    value: true,
+                    type: 0
+                },
+                {
+                    id: 'b',
+                    value: true,
+                    type: 0
+                }
+            ]
+        });
+
+        val = xor.processNode();
+
+        expect(val['val'].value).toBe(false);
     });
 
     it("math/asr", () => {

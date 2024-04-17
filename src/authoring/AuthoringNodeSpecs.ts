@@ -338,6 +338,183 @@ export const pointerNodeSpecs: IAuthoringNode[] = [
     }
 ]
 
+export const typeConversionNodeSpecs: IAuthoringNode[] = [
+    {
+        type: "type/boolToInt",
+        description: "Boolean to integer conversion",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "Argument",
+                    types: [
+                        "bool",
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "1 if a; else 0",
+                    types: [
+                        "int"
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        type: "type/boolToFloat",
+        description: "Boolean to float conversion",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "Argument",
+                    types: [
+                        "bool",
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "1 if a; else 0",
+                    types: [
+                        "float"
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        type: "type/intToBool",
+        description: "Integer to boolean conversion",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "Argument",
+                    types: [
+                        "int",
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "True if a is not 0; else false",
+                    types: [
+                        "bool"
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        type: "type/intToFloat",
+        description: "Integer to float conversion",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "Argument",
+                    types: [
+                        "int",
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "Floating point value equal to a",
+                    types: [
+                        "float"
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        type: "type/floatToBool",
+        description: "Float to boolean conversion",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "Argument",
+                    types: [
+                        "float",
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "False if a is NaN or zero, else true",
+                    types: [
+                        "bool"
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        type: "type/floatToInt",
+        description: "Float to int conversion",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "Argument",
+                    types: [
+                        "float",
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "Integer point value equal to a",
+                    types: [
+                        "int"
+                    ]
+                }
+            ]
+        }
+    },
+]
+
 
 export const variableNodeSpecs: IAuthoringNode[] = [
     {
@@ -1127,6 +1304,25 @@ export const constantsNodes = [
                 {
                     id: "val",
                     description: "Ratio of a circle’s circumference to its diameter",
+                    types: ["float"]
+                }
+            ]
+        }
+    },
+    {
+        type: "math/nan",
+        description: "Not a number",
+        configuration: [],
+        input: {
+            flows: [],
+            values: []
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "Not a number",
                     types: ["float"]
                 }
             ]
@@ -2950,6 +3146,70 @@ export const specialFloatingPointNodeSpecs = [
                 }
             ]
         }
+    },
+    {
+        type: "math/select",
+        description: "Conditional selection operation",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "condition",
+                    description: "Value selecting the value returned",
+                    types: [
+                        "bool"
+                    ]
+                },
+                {
+                    id: "a",
+                    description: "positive selection option",
+                    types: [
+                        "bool",
+                        "int",
+                        "float",
+                        "float2",
+                        "float3",
+                        "float4",
+                        "float4x4",
+                        "AMZN_interactivity_string"
+                    ]
+                },
+                {
+                    id: "b",
+                    description: "negative selection option",
+                    types: [
+                        "bool",
+                        "int",
+                        "float",
+                        "float2",
+                        "float3",
+                        "float4",
+                        "float4x4",
+                        "AMZN_interactivity_string"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "a if true, b if false",
+                    types: [
+                        "bool",
+                        "int",
+                        "float",
+                        "float2",
+                        "float3",
+                        "float4",
+                        "float4x4",
+                        "AMZN_interactivity_string"
+                    ]
+                }
+            ]
+        }
     }
 ]
 
@@ -2965,6 +3225,7 @@ export const comparisonNodeSpecs = [
                     id: "a",
                     description: "First Argument",
                     types: [
+                        "bool",
                         "int",
                         "float",
                         "float3"
@@ -2974,6 +3235,7 @@ export const comparisonNodeSpecs = [
                     id: "b",
                     description: "Second Argument",
                     types: [
+                        "bool",
                         "int",
                         "float",
                         "float3"
@@ -3151,7 +3413,7 @@ export const comparisonNodeSpecs = [
 export const bitwiseNodeSpecs = [
     {
         type: "math/not",
-        description: "Bitwise NOT operation",
+        description: "NOT operation",
         configuration: [],
         input: {
             flows: [],
@@ -3160,6 +3422,7 @@ export const bitwiseNodeSpecs = [
                     id: "a",
                     description: "First Argument",
                     types: [
+                        "bool",
                         "int"
                     ]
                 }
@@ -3170,8 +3433,9 @@ export const bitwiseNodeSpecs = [
             values: [
                 {
                     id: "val",
-                    description: "~a",
+                    description: "NOT a",
                     types: [
+                        "bool",
                         "int"
                     ]
                 }
@@ -3180,7 +3444,7 @@ export const bitwiseNodeSpecs = [
     },
     {
         type: "math/and",
-        description: "Bitwise AND operation",
+        description: "AND operation",
         configuration: [],
         input: {
             flows: [],
@@ -3189,6 +3453,7 @@ export const bitwiseNodeSpecs = [
                     id: "a",
                     description: "First Argument",
                     types: [
+                        "bool",
                         "int"
                     ]
                 },
@@ -3196,6 +3461,7 @@ export const bitwiseNodeSpecs = [
                     id: "b",
                     description: "Second Argument",
                     types: [
+                        "bool",
                         "int"
                     ]
                 }
@@ -3206,8 +3472,9 @@ export const bitwiseNodeSpecs = [
             values: [
                 {
                     id: "val",
-                    description: "a & b",
+                    description: "a AND b",
                     types: [
+                        "bool",
                         "int"
                     ]
                 }
@@ -3216,7 +3483,7 @@ export const bitwiseNodeSpecs = [
     },
     {
         type: "math/or",
-        description: "Bitwise OR operation",
+        description: "OR operation",
         configuration: [],
         input: {
             flows: [],
@@ -3225,6 +3492,7 @@ export const bitwiseNodeSpecs = [
                     id: "a",
                     description: "First Argument",
                     types: [
+                        "bool",
                         "int"
                     ]
                 },
@@ -3232,6 +3500,7 @@ export const bitwiseNodeSpecs = [
                     id: "b",
                     description: "Second Argument",
                     types: [
+                        "bool",
                         "int"
                     ]
                 }
@@ -3242,8 +3511,9 @@ export const bitwiseNodeSpecs = [
             values: [
                 {
                     id: "val",
-                    description: "a | b",
+                    description: "a OR b",
                     types: [
+                        "bool",
                         "int"
                     ]
                 }
@@ -3252,7 +3522,7 @@ export const bitwiseNodeSpecs = [
     },
     {
         type: "math/xor",
-        description: "Bitwise XOR operation",
+        description: "XOR operation",
         configuration: [],
         input: {
             flows: [],
@@ -3261,6 +3531,7 @@ export const bitwiseNodeSpecs = [
                     id: "a",
                     description: "First Argument",
                     types: [
+                        "bool",
                         "int"
                     ]
                 },
@@ -3268,6 +3539,7 @@ export const bitwiseNodeSpecs = [
                     id: "b",
                     description: "Second Argument",
                     types: [
+                        "bool",
                         "int"
                     ]
                 }
@@ -3278,8 +3550,9 @@ export const bitwiseNodeSpecs = [
             values: [
                 {
                     id: "val",
-                    description: "a ^ b",
+                    description: "a XOR b",
                     types: [
+                        "bool",
                         "int"
                     ]
                 }
@@ -3449,4 +3722,4 @@ export const bitwiseNodeSpecs = [
 
 export const authoringNodeSpecs: IAuthoringNode[] = [...pointerNodeSpecs, ...flowNodeSpecs, ...lifecycleNodeSpecs, ...customEventNodeSpecs, ...variableNodeSpecs,
     ...constantsNodes, ...arithmeticNodes, ...trigNodes, ...hyperbolicNodes, ...exponentialFunctionNodes, ...experimentalNodeSpecs, ...vectorNodes,
-    ...specialFloatingPointNodeSpecs, ...matrixNodeSpecs, ...comparisonNodeSpecs, ...bitwiseNodeSpecs];
+    ...specialFloatingPointNodeSpecs, ...matrixNodeSpecs, ...comparisonNodeSpecs, ...bitwiseNodeSpecs, ...typeConversionNodeSpecs];

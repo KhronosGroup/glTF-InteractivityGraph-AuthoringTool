@@ -16,10 +16,21 @@ export class And extends BehaveEngineNode {
         const typeA: string = this.getType(typeIndexA);
         const typeIndexB = this.values['b'].type!
         const typeB: string = this.getType(typeIndexB);
-        if (typeA !== "int" || typeB !== "int") {
-            throw Error("invalid input type")
+        if (typeA !== typeB) {
+            throw Error("input types not equivalent")
         }
-        let val = a & b;
-        return {'val': {id: "val", value: val, type: this.getTypeIndex('int')}}
+
+        let val: any;
+        switch (typeA) {
+            case "bool":
+                val = JSON.parse(a) && JSON.parse(b);
+                break;
+            case "int":
+                val = a & b;
+                break;
+            default:
+                throw Error("Invalid type")
+        }
+        return {'val': {id: "val", value: val, type: typeIndexA}}
     }
 }

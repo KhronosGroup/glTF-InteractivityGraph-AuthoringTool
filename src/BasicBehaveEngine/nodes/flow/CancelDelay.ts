@@ -1,27 +1,28 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
-export class Delay extends BehaveEngineNode {
-    REQUIRED_VALUES = [{id:"duration"}]
+export class CancelDelay extends BehaveEngineNode {
+    REQUIRED_VALUES = [{id:"delayIndex"}]
 
     constructor(props: IBehaviourNodeProps) {
         super(props);
-        this.name = "Delay";
+        this.name = "CancelDelay";
         this.validateValues(this.values);
         this.validateFlows(this.flows);
     }
 
     override processNode(flowSocket?: string) {
         this.graphEngine.clearValueEvaluationCache();
-        const {duration} = this.evaluateAllValues(this.REQUIRED_VALUES.map(val => val.id));
+        const {delayIndex} = this.evaluateAllValues(this.REQUIRED_VALUES.map(val => val.id));
         this.graphEngine.processNodeStarted(this);
-        if (isNaN(duration) || !isFinite(duration) || duration < 0) {
+        console.log("LOOKO HERE")
+        console.log(this.graphEngine.scheduledDelays.length)
+        if (delayIndex < 0 || delayIndex >= this.graphEngine.scheduledDelays.length) {
             if (this.flows.err) {
                 this.processFlow(this.flows.err);
             }
         } else {
-            setTimeout(() => {
-                this.addEventToWorkQueue(this.flows.completed)
-            }, duration * 1000)
+            const delayId = this.graphEngine.getScheduledDelay(delayIndex);
+            clearTimeout(delayId);
 
             this.processFlow(this.flows.out);
         }

@@ -4,7 +4,6 @@ import {BehaveEngineNode, IBehaviourNodeProps, ICustomEvent, IFlow, IValue, IVar
 import {OnStartNode} from "./nodes/lifecycle/onStart";
 import {OnTickNode} from "./nodes/lifecycle/onTick";
 import {Branch} from "./nodes/flow/Branch";
-import {Delay} from "./nodes/flow/Delay";
 import {DoN} from "./nodes/flow/DoN";
 import {ForLoop} from "./nodes/flow/ForLoop";
 import {MultiGate} from "./nodes/flow/MultiGate";
@@ -63,6 +62,8 @@ import {GreaterThanOrEqualTo} from "./nodes/math/comparison/GreaterThanOrEqualTo
 import {GreaterThan} from "./nodes/math/comparison/GreaterThan";
 import {Inf} from "./nodes/math/constants/Inf";
 import {OutputConsole} from "./nodes/experimental/OutputConsole";
+import {SetDelay} from "./nodes/flow/SetDelay";
+import {CancelDelay} from "./nodes/flow/CancelDelay";
 
 export interface ICustomEventListener {
     type: string,
@@ -80,6 +81,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
     private eventQueue: IEventQueueItem[];
     protected onTickNodeIndex: number;
     private lastTickTime: number;
+    private _scheduledDelays: NodeJS.Timeout[];
     protected nodes: any[];
     protected variables: IVariable[];
     protected customEvents: ICustomEvent[];
@@ -104,6 +106,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.eventQueue = [];
         this.variables = [];
         this.customEvents = [];
+        this._scheduledDelays = [];
         this.nodes = [];
         this.types = [];
         this.customEventListeners = []
@@ -115,6 +118,25 @@ export class BasicBehaveEngine implements IBehaveEngine {
         return this._fps;
     }
 
+    public clearScheduledDelays() {
+        this._scheduledDelays = [];
+    }
+
+    public get scheduledDelays() {
+        return this._scheduledDelays;
+    }
+
+    public pushScheduledDelay = (delay: NodeJS.Timeout): void => {
+        this._scheduledDelays.push(delay);
+    }
+
+    public getScheduledDelay = (index: number): NodeJS.Timeout | undefined => {
+        if (index >= this._scheduledDelays.length || index < 0) {
+            return undefined;
+        }
+
+        return this._scheduledDelays[index];
+    }
 
     public clearValueEvaluationCache = (): void => {
         this.valueEvaluationCache.clear();
@@ -242,7 +264,8 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("lifecycle/onStart", OnStartNode);
         this.registerBehaveEngineNode("lifecycle/onTick", OnTickNode);
         this.registerBehaveEngineNode("flow/branch", Branch);
-        this.registerBehaveEngineNode("flow/delay", Delay);
+        this.registerBehaveEngineNode("flow/setDelay", SetDelay);
+        this.registerBehaveEngineNode("flow/cancelDelay", CancelDelay);
         this.registerBehaveEngineNode("flow/doN", DoN);
         this.registerBehaveEngineNode("flow/for", ForLoop);
         this.registerBehaveEngineNode("flow/multiGate", MultiGate);

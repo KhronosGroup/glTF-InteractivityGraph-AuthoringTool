@@ -4,7 +4,6 @@ import {BehaveEngineNode, IBehaviourNodeProps, IFlow} from '../src/BasicBehaveEn
 import {Receive} from "../src/BasicBehaveEngine/nodes/customEvent/Receive";
 import {Send} from "../src/BasicBehaveEngine/nodes/customEvent/Send";
 import {Branch} from "../src/BasicBehaveEngine/nodes/flow/Branch";
-import {Delay} from "../src/BasicBehaveEngine/nodes/flow/Delay";
 import {Sequence} from "../src/BasicBehaveEngine/nodes/flow/Sequence";
 import {ForLoop} from "../src/BasicBehaveEngine/nodes/flow/ForLoop";
 import {OnTickNode} from "../src/BasicBehaveEngine/nodes/lifecycle/onTick";
@@ -89,6 +88,8 @@ import {LeftShift} from "../src/BasicBehaveEngine/nodes/math/bitwise/LeftShift";
 import {CountLeadingZeros} from "../src/BasicBehaveEngine/nodes/math/bitwise/CountLeadingZeros";
 import {CountTrailingZeros} from "../src/BasicBehaveEngine/nodes/math/bitwise/CountTrailingZeros";
 import {CountOneBits} from "../src/BasicBehaveEngine/nodes/math/bitwise/CountOneBits";
+import {SetDelay} from "../src/BasicBehaveEngine/nodes/flow/SetDelay";
+import {CancelDelay} from "../src/BasicBehaveEngine/nodes/flow/CancelDelay";
 
 
 describe('nodes', () => {
@@ -177,8 +178,9 @@ describe('nodes', () => {
         expect(falseBranch.processFlow).toHaveBeenCalledWith({ id: 'false', node: 1 });
     });
 
-    it('flow/delay', async () => {
-        const delay: Delay = new Delay({
+    it('flow/setDelay', async () => {
+        graphEngine.clearScheduledDelays();
+        const setDelay: SetDelay = new SetDelay({
             ...defaultProps,
             values: [{ id: 'duration', value: 0.5, type: 2 }],
             flows: [
@@ -186,13 +188,55 @@ describe('nodes', () => {
                 {id: 'completed', node: 2 }
             ]
         });
-        delay.addEventToWorkQueue = jest.fn<(flow: IFlow) => Promise<void>>();
-        delay.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
-        delay.processNode('in');
+        setDelay.addEventToWorkQueue = jest.fn<(flow: IFlow) => Promise<void>>();
+        setDelay.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
+        setDelay.processNode('in');
+        setDelay.processNode('cancel');
+        expect(setDelay.outValues.lastDelayIndex.value).toBe(-1);
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        expect(delay.addEventToWorkQueue).toHaveBeenCalledWith({"id": "completed", "node": 2});
-        expect(delay.processFlow).toHaveBeenCalledWith({"id": "out", "node": 1});
+        expect(setDelay.addEventToWorkQueue).not.toHaveBeenCalled()
+        expect(setDelay.processFlow).toHaveBeenCalledWith({"id": "out", "node": 1});
+
+        setDelay.processNode('in');
+        expect(setDelay.outValues.lastDelayIndex.value).toBe(1);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        expect(setDelay.addEventToWorkQueue).toHaveBeenCalledWith({"id": "completed", "node": 2});
+        expect(setDelay.processFlow).toHaveBeenCalledWith({"id": "out", "node": 1});
+    });
+
+    it('flow/cancelDelay', async () => {
+        graphEngine.clearScheduledDelays();
+        const cancelDelay: CancelDelay = new CancelDelay({
+            ...defaultProps,
+            values: [{ id: 'delayIndex', value: 0, type: 1 }],
+            flows: [
+                { id: 'out', node: 1 },
+                {id: 'err', node: 2 }
+            ]
+        });
+        cancelDelay.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
+        cancelDelay.processNode("in");
+        expect(cancelDelay.processFlow).toHaveBeenCalledWith({"id": "err", "node": 2});
+
+        const setDelay: SetDelay = new SetDelay({
+            ...defaultProps,
+            values: [{ id: 'duration', value: 0.5, type: 2 }],
+            flows: [
+                { id: 'out', node: 1 },
+                {id: 'completed', node: 2 }
+            ]
+        });
+        setDelay.addEventToWorkQueue = jest.fn<(flow: IFlow) => Promise<void>>();
+        setDelay.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
+        setDelay.processNode('in');
+        cancelDelay.processNode("in");
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        expect(cancelDelay.processFlow).toHaveBeenCalledWith({"id": "out", "node": 1});
+        expect(setDelay.addEventToWorkQueue).not.toHaveBeenCalled();
+        expect(setDelay.processFlow).toHaveBeenCalledWith({"id": "out", "node": 1});
     });
 
     it('flow/sequence', async () => {

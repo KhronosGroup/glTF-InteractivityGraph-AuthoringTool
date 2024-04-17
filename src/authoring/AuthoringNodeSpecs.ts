@@ -579,14 +579,18 @@ export const flowNodeSpecs: IAuthoringNode[] = [
         }
     },
     {
-        type: "flow/delay",
-        description: "Continue graph execution after a delay (in seconds). It will not respond to any other triggers during that delay",
+        type: "flow/setDelay",
+        description: "Schedule the output flow activation after a certain delay",
         configuration: [],
         input: {
             flows: [
                 {
                     id: "in",
                     description: "The entry flow into this node.",
+                },
+                {
+                    id: "cancel",
+                    description: "When this flow is activated, all delayed activations scheduled by this node are cancelled",
                 }
             ],
             values: [
@@ -610,6 +614,45 @@ export const flowNodeSpecs: IAuthoringNode[] = [
                 {
                     id: "err",
                     description: "The flow to be followed if delay is an invalid value (negative, Nan, or +/-Inf)"
+                }
+            ],
+            values: [
+                {
+                    id: "lastDelayIndex",
+                    description: "The delay index assigned during the last successful node execution",
+                    types: ["int"]
+                }
+            ]
+        }
+    },
+    {
+        type: "flow/cancelDelay",
+        description: "Cancel a previously scheduled output flow activation",
+        configuration: [],
+        input: {
+            flows: [
+                {
+                    id: "in",
+                    description: "The entry flow into this node.",
+                }
+            ],
+            values: [
+                {
+                    id: "delayIndex",
+                    types: ["int"],
+                    description: "The index value of the scheduled activation to be cancelled"
+                }
+            ]
+        },
+        output: {
+            flows: [
+                {
+                    id: "out",
+                    description: "The flow to be followed immediately after the node is executed"
+                },
+                {
+                    id: "err",
+                    description: "The flow to be followed if delayIndex is invalid"
                 }
             ],
             values: []

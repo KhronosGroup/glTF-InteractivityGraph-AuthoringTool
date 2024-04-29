@@ -220,13 +220,11 @@ describe('nodes', () => {
             ...defaultProps,
             values: [{ id: 'delayIndex', value: 0, type: 1 }],
             flows: [
-                { id: 'out', node: 1 },
-                {id: 'err', node: 2 }
+                { id: 'out', node: 1 }
             ]
         });
         cancelDelay.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
         cancelDelay.processNode("in");
-        expect(cancelDelay.processFlow).toHaveBeenCalledWith({"id": "err", "node": 2});
 
         const setDelay: SetDelay = new SetDelay({
             ...defaultProps,

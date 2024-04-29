@@ -23,7 +23,7 @@ export class Xor extends BehaveEngineNode {
         let val: any;
         switch (typeA) {
             case "bool":
-                val = (JSON.parse(a) && !JSON.parse(b)) || (!JSON.parse(a) && JSON.parse(b));
+                val = JSON.parse(a) !== JSON.parse(b);
                 break;
             case "int":
                 val = a ^ b;

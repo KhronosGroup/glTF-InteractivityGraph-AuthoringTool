@@ -2299,6 +2299,538 @@ export const trigNodes = [
     },
 ]
 
+export const combine = [
+    {
+        type: "math/combine2",
+        description: "Combine two floats into a two-component vector",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "First component",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "b",
+                    description: "Second component",
+                    types: [
+                        "float"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "vector 2",
+                    types: [
+                        "float2"
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        type: "math/combine3",
+        description: "Combine three floats into a three-component vector",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "First component",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "b",
+                    description: "Second component",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "c",
+                    description: "Third component",
+                    types: [
+                        "float"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "vector 3",
+                    types: [
+                        "float3"
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        type: "math/combine4",
+        description: "Combine four floats into a three-component vector",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "First component",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "b",
+                    description: "Second component",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "c",
+                    description: "Third component",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "d",
+                    description: "Fourth component",
+                    types: [
+                        "float"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "vector 4",
+                    types: [
+                        "float4"
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        type: "math/combine4x4",
+        description: "Combine 16 floats into a 4x4 matrix",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "First row, first column element",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "b",
+                    description: "Second row, first column element",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "c",
+                    description: "Third row, first column element",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "d",
+                    description: "Fourth row, first column element",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "e",
+                    description: "First row, second column element",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "f",
+                    description: "Second row, second column element",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "g",
+                    description: "Third row, second column element",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "h",
+                    description: "Fourth row, second column element",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "i",
+                    description: "First row, third column element",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "j",
+                    description: "Second row, third column element",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "k",
+                    description: "Third row, third column element",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "l",
+                    description: "Fourth row, third column element",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "m",
+                    description: "First row, fourth column element",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "n",
+                    description: "Second row, fourth column element",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "o",
+                    description: "Third row, fourth column element",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "p",
+                    description: "Fourth row, fourth column element",
+                    types: [
+                        "float"
+                    ]
+                },
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "matrix",
+                    types: [
+                        "float4x4"
+                    ]
+                }
+            ]
+        }
+    }
+];
+
+export const extract = [
+    {
+        type: "math/extract2",
+        description: "Extract two floats from a two-component vector",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "First component",
+                    types: [
+                        "float2"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "0",
+                    description: "First component",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "1",
+                    description: "Second component",
+                    types: [
+                        "float"
+                    ]
+                },
+            ]
+        }
+    },
+    {
+        type: "math/extract3",
+        description: "Extract three floats from a three-component vector",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "First component",
+                    types: [
+                        "float3"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "0",
+                    description: "First component",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "1",
+                    description: "Second component",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "2",
+                    description: "Third component",
+                    types: [
+                        "float"
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        type: "math/extract4",
+        description: "Extract three floats from a three-component vector",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "First component",
+                    types: [
+                        "float4"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "0",
+                    description: "First component",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "1",
+                    description: "Second component",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "2",
+                    description: "Third component",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "3",
+                    description: "Fourth component",
+                    types: [
+                        "float"
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        type: "math/extract4x4",
+        description: "Extract 16 floats from a 4x4 matrix",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "Matrix",
+                    types: [
+                        "float4x4"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "0",
+                    description: "First row, first column",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "1",
+                    description: "Second row, first column",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "2",
+                    description: "Third row, first column",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "3",
+                    description: "Fourth row, first column",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "4",
+                    description: "First row, second column",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "5",
+                    description: "Second row, second column",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "6",
+                    description: "Third row, second column",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "7",
+                    description: "Fourth row, second column",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "8",
+                    description: "First row, third column",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "9",
+                    description: "Second row, third column",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "10",
+                    description: "Third row, third column",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "11",
+                    description: "Fourth row, third column",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "12",
+                    description: "First row, fourth column",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "13",
+                    description: "Second row, fourth column",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "14",
+                    description: "Third row, fourth column",
+                    types: [
+                        "float"
+                    ]
+                },
+                {
+                    id: "15",
+                    description: "Fourth row, fourth column",
+                    types: [
+                        "float"
+                    ]
+                }
+            ]
+        }
+    }
+];
+
 export const hyperbolicNodes = [
     {
         type: "math/sinh",
@@ -3718,4 +4250,4 @@ export const bitwiseNodeSpecs = [
 
 export const authoringNodeSpecs: IAuthoringNode[] = [...pointerNodeSpecs, ...flowNodeSpecs, ...lifecycleNodeSpecs, ...customEventNodeSpecs, ...variableNodeSpecs,
     ...constantsNodes, ...arithmeticNodes, ...trigNodes, ...hyperbolicNodes, ...exponentialFunctionNodes, ...experimentalNodeSpecs, ...vectorNodes,
-    ...specialFloatingPointNodeSpecs, ...matrixNodeSpecs, ...comparisonNodeSpecs, ...bitwiseNodeSpecs, ...typeConversionNodeSpecs];
+    ...specialFloatingPointNodeSpecs, ...matrixNodeSpecs, ...comparisonNodeSpecs, ...bitwiseNodeSpecs, ...typeConversionNodeSpecs, ...combine, ];

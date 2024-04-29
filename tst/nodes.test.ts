@@ -98,6 +98,14 @@ import {FloatToBool} from "../src/BasicBehaveEngine/nodes/math/typeConversion/Fl
 import {FloatToInt} from "../src/BasicBehaveEngine/nodes/math/typeConversion/FloatToInt";
 import {IntToBool} from "../src/BasicBehaveEngine/nodes/math/typeConversion/IntToBool";
 import {IntToFloat} from "../src/BasicBehaveEngine/nodes/math/typeConversion/IntToFloat";
+import {Combine2} from "../src/BasicBehaveEngine/nodes/math/combine/Combine2";
+import {Combine3} from "../src/BasicBehaveEngine/nodes/math/combine/Combine3";
+import {Combine4} from "../src/BasicBehaveEngine/nodes/math/combine/Combine4";
+import {Combine4x4} from "../src/BasicBehaveEngine/nodes/math/combine/Combine4x4";
+import {Extract2} from "../src/BasicBehaveEngine/nodes/math/extract/Extract2";
+import {Extract3} from "../src/BasicBehaveEngine/nodes/math/extract/Extract3";
+import {Extract4} from "../src/BasicBehaveEngine/nodes/math/extract/Extract4";
+import {Extract4x4} from "../src/BasicBehaveEngine/nodes/math/extract/Extract4x4";
 
 
 describe('nodes', () => {
@@ -776,6 +784,165 @@ describe('nodes', () => {
         expect(val['val'].value[0]).toBe(-6.5);
         expect(val['val'].value[1]).toBe(-5.5);
         expect(val['val'].value[2]).toBe(19);
+    });
+
+    it("math/extract2", () => {
+        let extract2: Extract2 = new Extract2({
+            ...defaultProps,
+            values: [
+                {id: 'a', value: [-10.5, 5.5], type: 3},
+            ]
+        });
+
+        let val = extract2.processNode();
+        expect(val['0'].value).toBe(-10.5);
+        expect(val['1'].value).toBe(5.5);
+    });
+
+    it("math/extract3", () => {
+        let extract3: Extract3 = new Extract3({
+            ...defaultProps,
+            values: [
+                {id: 'a', value: [-10.5, 5.5, 4], type: 4},
+            ]
+        });
+
+        let val = extract3.processNode();
+        expect(val['0'].value).toBe(-10.5);
+        expect(val['1'].value).toBe(5.5);
+        expect(val['2'].value).toBe(4);
+    });
+
+    it("math/extract4", () => {
+        let extract4: Extract4 = new Extract4({
+            ...defaultProps,
+            values: [
+                {id: 'a', value: [-10.5, 5.5, 4, 6], type: 5},
+            ]
+        });
+
+        let val = extract4.processNode();
+        expect(val['0'].value).toBe(-10.5);
+        expect(val['1'].value).toBe(5.5);
+        expect(val['2'].value).toBe(4);
+        expect(val['3'].value).toBe(6);
+    });
+
+    it("math/extract4x4", () => {
+        let extract4x4: Extract4x4 = new Extract4x4({
+            ...defaultProps,
+            values: [
+                {id: 'a', value: [[-10.5, 5.5, 4, 6], [1,2,3,4], [5,6,7,8], [9, 10, 11, 12]], type: 6},
+            ]
+        });
+
+        let val = extract4x4.processNode();
+        expect(val['0'].value).toBe(-10.5);
+        expect(val['1'].value).toBe(5.5);
+        expect(val['2'].value).toBe(4);
+        expect(val['3'].value).toBe(6);
+        expect(val['4'].value).toBe(1);
+        expect(val['5'].value).toBe(2);
+        expect(val['6'].value).toBe(3);
+        expect(val['7'].value).toBe(4);
+        expect(val['8'].value).toBe(5);
+        expect(val['9'].value).toBe(6);
+        expect(val['10'].value).toBe(7);
+        expect(val['11'].value).toBe(8);
+        expect(val['12'].value).toBe(9);
+        expect(val['13'].value).toBe(10);
+        expect(val['14'].value).toBe(11);
+        expect(val['15'].value).toBe(12);
+    });
+
+    it("math/combine2", () => {
+        let combine2: Combine2 = new Combine2({
+            ...defaultProps,
+            values: [
+                {id: 'a', value: -10.5, type: 2},
+                {id: 'b', value: 5.5, type: 2}
+            ]
+        });
+
+        let val = combine2.processNode();
+        expect(val['val'].value[0]).toBe(-10.5);
+        expect(val['val'].value[1]).toBe(5.5);
+    });
+
+    it("math/combine3", () => {
+        let combine3: Combine3 = new Combine3({
+            ...defaultProps,
+            values: [
+                {id: 'a', value: -10.5, type: 2},
+                {id: 'b', value: 5.5, type: 2},
+                {id: 'c', value: 0.5, type: 2}
+            ]
+        });
+
+        let val = combine3.processNode();
+        expect(val['val'].value[0]).toBe(-10.5);
+        expect(val['val'].value[1]).toBe(5.5);
+        expect(val['val'].value[2]).toBe(0.5);
+    });
+
+    it("math/combine4", () => {
+        let combine4: Combine4 = new Combine4({
+            ...defaultProps,
+            values: [
+                {id: 'a', value: -10.5, type: 2},
+                {id: 'b', value: 5.5, type: 2},
+                {id: 'c', value: 0.5, type: 2},
+                {id: 'd', value: 7.5, type: 2},
+            ]
+        });
+
+        let val = combine4.processNode();
+        expect(val['val'].value[0]).toBe(-10.5);
+        expect(val['val'].value[1]).toBe(5.5);
+        expect(val['val'].value[2]).toBe(0.5);
+        expect(val['val'].value[3]).toBe(7.5);
+    });
+
+    it("math/combine4x4", () => {
+        let combine4x4: Combine4x4 = new Combine4x4({
+            ...defaultProps,
+            values: [
+                {id: 'a', value: -10.5, type: 2},
+                {id: 'b', value: 5.5, type: 2},
+                {id: 'c', value: 0.5, type: 2},
+                {id: 'd', value: 7.5, type: 2},
+                {id: 'e', value: -10, type: 2},
+                {id: 'f', value: 5, type: 2},
+                {id: 'g', value: 0, type: 2},
+                {id: 'h', value: 7, type: 2},
+                {id: 'i', value: 10.5, type: 2},
+                {id: 'j', value: 5.8, type: 2},
+                {id: 'k', value: 9.5, type: 2},
+                {id: 'l', value: 2.5, type: 2},
+                {id: 'm', value: -1.5, type: 2},
+                {id: 'n', value: 5.7, type: 2},
+                {id: 'o', value: 6.5, type: 2},
+                {id: 'p', value: 7.7, type: 2},
+            ]
+        });
+
+        let val = combine4x4.processNode();
+        expect(val['val'].value[0][0]).toBe(-10.5);
+        expect(val['val'].value[0][1]).toBe(5.5);
+        expect(val['val'].value[0][2]).toBe(0.5);
+        expect(val['val'].value[0][3]).toBe(7.5);
+        expect(val['val'].value[1][0]).toBe(-10);
+        expect(val['val'].value[1][1]).toBe(5);
+        expect(val['val'].value[1][2]).toBe(0);
+        expect(val['val'].value[1][3]).toBe(7);
+        expect(val['val'].value[2][0]).toBe(10.5);
+        expect(val['val'].value[2][1]).toBe(5.8);
+        expect(val['val'].value[2][2]).toBe(9.5);
+        expect(val['val'].value[2][3]).toBe(2.5);
+        expect(val['val'].value[3][0]).toBe(-1.5);
+        expect(val['val'].value[3][1]).toBe(5.7);
+        expect(val['val'].value[3][2]).toBe(6.5);
+        expect(val['val'].value[3][3]).toBe(7.7);
     });
 
     it("math/select", () => {

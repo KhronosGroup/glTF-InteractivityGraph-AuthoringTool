@@ -72,6 +72,14 @@ import {FloatToBool} from "./nodes/math/typeConversion/FloatToBool";
 import {FloatToInt} from "./nodes/math/typeConversion/FloatToInt";
 import {IntToBool} from "./nodes/math/typeConversion/IntToBool";
 import {IntToFloat} from "./nodes/math/typeConversion/IntToFloat";
+import {Extract2} from "./nodes/math/extract/Extract2";
+import {Extract3} from "./nodes/math/extract/Extract3";
+import {Extract4} from "./nodes/math/extract/Extract4";
+import {Extract4x4} from "./nodes/math/extract/Extract4x4";
+import {Combine2} from "./nodes/math/combine/Combine2";
+import {Combine3} from "./nodes/math/combine/Combine3";
+import {Combine4} from "./nodes/math/combine/Combine4";
+import {Combine4x4} from "./nodes/math/combine/Combine4x4";
 
 export interface ICustomEventListener {
     type: string,
@@ -334,6 +342,14 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/isinf", IsInfNode);
         this.registerBehaveEngineNode("math/isnan", IsNaNNode);
         this.registerBehaveEngineNode("math/select", Select);
+        this.registerBehaveEngineNode("math/extract2", Extract2);
+        this.registerBehaveEngineNode("math/extract3", Extract3);
+        this.registerBehaveEngineNode("math/extract4", Extract4);
+        this.registerBehaveEngineNode("math/extract4x4", Extract4x4);
+        this.registerBehaveEngineNode("math/combine2", Combine2);
+        this.registerBehaveEngineNode("math/combine3", Combine3);
+        this.registerBehaveEngineNode("math/combine4", Combine4);
+        this.registerBehaveEngineNode("math/combine4x4", Combine4x4);
         this.registerBehaveEngineNode("type/boolToInt", BoolToInt);
         this.registerBehaveEngineNode("type/boolToFloat", BoolToFloat);
         this.registerBehaveEngineNode("type/floatToBool", FloatToBool);

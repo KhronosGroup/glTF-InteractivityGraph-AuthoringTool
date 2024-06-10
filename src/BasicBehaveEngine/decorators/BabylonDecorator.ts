@@ -3,7 +3,7 @@ import {BehaveEngineNode, IFlow} from "../BehaveEngineNode";
 import {IBehaveEngine} from "../IBehaveEngine";
 import {AbstractMesh, AnimationGroup, float, Matrix, PointerEventTypes, Quaternion} from "@babylonjs/core";
 import {Vector3} from "@babylonjs/core/Maths/math.vector";
-import {easeFloat, easeFloat3, easeFloat4} from "../easingUtils";
+import {cubicBezier, easeFloat, easeFloat3, easeFloat4, linearFloat, slerpFloat4} from "../easingUtils";
 import {Scene} from "@babylonjs/core/scene";
 import {OnSelect} from "../nodes/experimental/OnSelect";
 import {WorldStopAnimation} from "../nodes/experimental/WorldStopAnimation";
@@ -40,6 +40,7 @@ export class BabylonDecorator extends ADecorator {
         this.behaveEngine.startAnimation = this.startAnimation
 
         this.behaveEngine.animateProperty = this.animateProperty
+        this.behaveEngine.animateCubicBezier = this.animateCubicBezier;
         this.behaveEngine.getWorld = this.getWorld;
         this.registerKnownPointers();
         this.registerBehaveEngineNode("node/OnSelect", OnSelect);
@@ -82,6 +83,51 @@ export class BabylonDecorator extends ADecorator {
 
             if (elapsedDuration >= easingParameters.easingDuration) {
                 this.behaveEngine.setPathValue(path, easingParameters.targetValue);
+                this.scene.unregisterBeforeRender(action);
+                callback()
+            }
+        }
+
+        this.scene.registerBeforeRender(action);
+        const cancel = () => {
+            this.scene.unregisterBeforeRender(action);
+            this.behaveEngine.setWorldAnimationPathCallback(path, undefined);
+        }
+        this.setWorldAnimationPathCallback(path, {cancel: cancel} );
+    }
+
+    animateCubicBezier = (
+        path: string,
+        p1: number[],
+        p2: number[],
+        initialValue: any,
+        targetValue: any,
+        duration: number,
+        valueType: string,
+        callback: () => void
+    ) => {
+        this.behaveEngine.getWorldAnimationPathCallback(path)?.cancel();
+        const startTime = Date.now();
+        console.log("ANIMATING")
+
+        const action = async () => {
+            const elapsedDuration = (Date.now() - startTime) / 1000;
+            const t = Math.min(elapsedDuration / duration, 1);
+            const p = cubicBezier(t, {x: 0, y:0}, {x: p1[0], y:p1[1]}, {x: p2[0], y:p2[1]}, {x: 1, y:1});
+            if (valueType === "float3") {
+                const value = [linearFloat(p.y, initialValue[0], targetValue[0]), linearFloat(p.y, initialValue[1], targetValue[1]), linearFloat(p.y, initialValue[2], targetValue[2])]
+                this.behaveEngine.setPathValue(path, value);
+            } else if (valueType === "float4") {
+                //TODO: pass in if this should be slerped or not
+                const value = slerpFloat4(t, initialValue, targetValue);
+                this.behaveEngine.setPathValue(path, value);
+            } else if (valueType === "float") {
+                const value = [linearFloat(p.y, initialValue[0], targetValue[0])]
+                this.behaveEngine.setPathValue(path, value);
+            }
+
+            if (elapsedDuration >= duration) {
+                this.behaveEngine.setPathValue(path, targetValue);
                 this.scene.unregisterBeforeRender(action);
                 callback()
             }

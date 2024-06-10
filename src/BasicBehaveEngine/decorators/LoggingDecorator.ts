@@ -40,6 +40,23 @@ export class LoggingDecorator extends ADecorator {
         this.behaveEngine.registerJsonPointer(jsonPtr, getterCallback, setterCallback, typeName);
     };
 
+    animateCubicBezier = (path: string, p1: number[], p2: number[], initialValue: any, targetValue: any, duration: number, valueType: string, callback: () => void): void => {
+        this.behaveEngine.getWorldAnimationPathCallback(path)?.cancel();
+
+        const animatePropertyCallback = setTimeout(() => {
+            this.behaveEngine.setPathValue(path, targetValue);
+            callback();
+            this.behaveEngine.setWorldAnimationPathCallback(path, undefined);
+        }, duration * 1000);
+
+        const cancel = () => {
+            clearTimeout(animatePropertyCallback);
+            this.behaveEngine.setWorldAnimationPathCallback(path, undefined);
+        }
+        this.setWorldAnimationPathCallback(path, {cancel: cancel} );
+    }
+
+
     animateProperty = (path: string, easingParameters: any, callback: () => void) => {
         this.behaveEngine.getWorldAnimationPathCallback(path)?.cancel();
 
@@ -99,5 +116,4 @@ export class LoggingDecorator extends ADecorator {
             }
         }, 'float3')
     }
-
 }

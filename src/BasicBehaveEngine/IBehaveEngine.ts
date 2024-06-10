@@ -64,6 +64,23 @@ export interface IBehaveEngine {
     ) => void;
 
     /**
+     * Animate a property over time using specified values.
+     * @param path - The property path to be animated.
+     * @param easingParameters - Easing type and the easing type specific parameters to preform the easing function
+     * @param callback - A callback function to be executed after the animation is complete.
+     */
+    animateCubicBezier: (
+        path: string,
+        p1: number[],
+        p2: number[],
+        initialValue: any,
+        targetValue: any,
+        duration: number,
+        valueType: string,
+        callback: () => void
+    ) => void;
+
+    /**
      * Clear all custom event listeners.
      */
     clearCustomEventListeners: () => void;

@@ -139,6 +139,73 @@ export const pointerNodeSpecs: IAuthoringNode[] = [
         }
     },
     {
+        type: "pointer/interpolate",
+        description: "Sets properties of the gltf using JSON pointer over a set time",
+        configuration: [
+            {
+                id: "pointer",
+                description: "The template path to use in order to construct the json pointer",
+                type: "string"
+            }
+        ],
+        input: {
+            flows: [
+                {
+                    id: "in",
+                    description: "The in flow"
+                }
+            ],
+            values: [
+                {
+                    id: "duration",
+                    description: "The duration of the interpolation",
+                    types: ["float"]
+                },
+                {
+                    id: "val",
+                    types: [
+                        "int",
+                        "float",
+                        "float3",
+                        "float4"
+                    ],
+                    description: "Target value to set"
+                },
+                {
+                    id: "p1",
+                    types: [
+                        "float2"
+                    ],
+                    description: "Control point 1"
+                },
+                {
+                    id: "p2",
+                    types: [
+                        "float2"
+                    ],
+                    description: "Control point 2"
+                }
+            ]
+        },
+        output: {
+            flows: [
+                {
+                    id: "done",
+                    description: "The flow to follow once the animateTo is done"
+                },
+                {
+                    id: "out",
+                    description: "The out flow to be followed immediately after execution"
+                },
+                {
+                    id: "err",
+                    description: "The flow to be followed if the input validation fails"
+                }
+            ],
+            values:[]
+        }
+    },
+    {
         type: "pointer/animateTo",
         description: "Sets properties of the gltf using JSON pointer over a set time",
         configuration: [

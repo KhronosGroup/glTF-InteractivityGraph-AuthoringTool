@@ -17,8 +17,6 @@ export class Combine4x4 extends BehaveEngineNode {
         this.graphEngine.processNodeStarted(this);
         const characters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p'];
         for (let i = 0; i < characters.length; i++) {
-            console.log("CHECK HERE FOR CHARACTERS")
-            console.log(characters[i])
             const typeIndex = this.values[characters[i]].type!
             const typ: string = this.getType(typeIndex);
             if (typ !== "float") {

@@ -13,7 +13,7 @@ import {PointerSet} from "../src/BasicBehaveEngine/nodes/pointer/PointerSet";
 import {OnStartNode} from "../src/BasicBehaveEngine/nodes/lifecycle/onStart";
 import {Switch} from "../src/BasicBehaveEngine/nodes/flow/Switch";
 import {PointerGet} from "../src/BasicBehaveEngine/nodes/pointer/PointerGet";
-import {PointerAnimateTo} from "../src/BasicBehaveEngine/nodes/pointer/PointerAnimateTo";
+import {PointerAnimateTo} from "../src/BasicBehaveEngine/nodes/experimental/PointerAnimateTo";
 import {WhileLoop} from "../src/BasicBehaveEngine/nodes/flow/WhileLoop";
 import {WaitAll} from "../src/BasicBehaveEngine/nodes/flow/WaitAll";
 import {MultiGate} from "../src/BasicBehaveEngine/nodes/flow/MultiGate";
@@ -106,6 +106,7 @@ import {Extract2} from "../src/BasicBehaveEngine/nodes/math/extract/Extract2";
 import {Extract3} from "../src/BasicBehaveEngine/nodes/math/extract/Extract3";
 import {Extract4} from "../src/BasicBehaveEngine/nodes/math/extract/Extract4";
 import {Extract4x4} from "../src/BasicBehaveEngine/nodes/math/extract/Extract4x4";
+import {PointerInterpolate} from "../src/BasicBehaveEngine/nodes/pointer/PointerInterpolate";
 
 
 describe('nodes', () => {
@@ -565,6 +566,43 @@ describe('nodes', () => {
         pointerAnimateTo.processNode('in');
         await new Promise((resolve) => setTimeout(resolve, 1000));
         expect(graphEngine.animateProperty).toHaveBeenCalledTimes(1);
+        expect(world.nodes[0].value).toBe(42);
+    });
+
+    it('pointer/interpolate', async () => {
+        const world = {nodes:[{ value: 1 }, { value: 2 }]};
+        graphEngine.registerJsonPointer(
+            '/nodes/99/value',
+            (path) => {
+                const parts: string[] = path.split('/');
+                return world.nodes[Number(parts[2])].value;
+            },
+            (path, value) => {
+                const parts: string[] = path.split('/');
+                world.nodes[Number(parts[2])].value = value;
+            },
+            "float"
+        );
+        const pointerInterpolate: PointerInterpolate = new PointerInterpolate({
+            ...defaultProps,
+            configuration: [
+                { id: 'pointer', value: '/nodes/{index}/value' },
+            ],
+            values: [
+                { id: 'index', value: 0, type: 1 },
+                { id: "duration", value: 0.5, type: 2},
+                { id: 'val', value: 42, type: 2 },
+                { id: 'p1', value: [0,0], type: 3 },
+                { id: 'p2', value: [1,1], type: 3}
+            ],
+        });
+
+        graphEngine.animateCubicBezier = jest.fn(() => {
+            world.nodes[0].value = 42;
+        })
+        pointerInterpolate.processNode('in');
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        expect(graphEngine.animateCubicBezier).toHaveBeenCalledTimes(1);
         expect(world.nodes[0].value).toBe(42);
     });
 

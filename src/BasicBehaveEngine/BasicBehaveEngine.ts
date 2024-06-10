@@ -14,7 +14,7 @@ import {WaitAll} from "./nodes/flow/WaitAll";
 import {WhileLoop} from "./nodes/flow/WhileLoop";
 import {PointerGet} from "./nodes/pointer/PointerGet";
 import {PointerSet} from "./nodes/pointer/PointerSet";
-import {PointerAnimateTo} from "./nodes/pointer/PointerAnimateTo";
+import {PointerAnimateTo} from "./nodes/experimental/PointerAnimateTo";
 import {Receive} from "./nodes/customEvent/Receive";
 import {Send} from "./nodes/customEvent/Send";
 import {VariableGet} from "./nodes/variable/VariableGet";
@@ -80,6 +80,7 @@ import {Combine2} from "./nodes/math/combine/Combine2";
 import {Combine3} from "./nodes/math/combine/Combine3";
 import {Combine4} from "./nodes/math/combine/Combine4";
 import {Combine4x4} from "./nodes/math/combine/Combine4x4";
+import {PointerInterpolate} from "./nodes/pointer/PointerInterpolate";
 
 export interface ICustomEventListener {
     type: string,
@@ -276,6 +277,19 @@ export class BasicBehaveEngine implements IBehaveEngine {
         //pass
     }
 
+    public animateCubicBezier = (
+        path: string,
+        p1: number[],
+        p2: number[],
+        initialValue: any,
+        targetValue: any,
+        duration: number,
+        valueType: string,
+        callback: () => void
+    ) => {
+        //pass
+    }
+
     private registerKnownBehaviorNodes = () => {
         this.registerBehaveEngineNode("lifecycle/onStart", OnStartNode);
         this.registerBehaveEngineNode("lifecycle/onTick", OnTickNode);
@@ -293,6 +307,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("pointer/get", PointerGet);
         this.registerBehaveEngineNode("pointer/set", PointerSet);
         this.registerBehaveEngineNode("pointer/animateTo", PointerAnimateTo);
+        this.registerBehaveEngineNode("pointer/interpolate", PointerInterpolate)
         this.registerBehaveEngineNode("ADBE/output_console_node", OutputConsole);
         this.registerBehaveEngineNode("math/abs", AbsoluteValue);
         this.registerBehaveEngineNode("customEvent/receive", Receive);

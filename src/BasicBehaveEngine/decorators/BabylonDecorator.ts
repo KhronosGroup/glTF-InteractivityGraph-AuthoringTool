@@ -8,6 +8,7 @@ import {Scene} from "@babylonjs/core/scene";
 import {OnSelect} from "../nodes/experimental/OnSelect";
 import {WorldStopAnimation} from "../nodes/experimental/WorldStopAnimation";
 import {WorldStartAnimation} from "../nodes/experimental/WorldStartAnimation";
+import {KHR_materials_variants} from "@babylonjs/loaders/glTF/2.0";
 
 export class BabylonDecorator extends ADecorator {
     scene: Scene;
@@ -179,7 +180,25 @@ export class BabylonDecorator extends ADecorator {
         }, (path, value) => {
             const parts: string[] = path.split("/");
             (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).rotationQuaternion = new Quaternion(value[1], value[2], value[3], value[0]);
-        }, "float4")
+        }, "float4");
+
+        //TODO: update to match what object model has once that is published
+        this.registerJsonPointer(`/KHR_materials_variants/variant`, (path) => {
+            let root = this.world.glTFNodes[0];
+            while (root.parent) {
+                root = root.parent;
+            }
+            const variants = KHR_materials_variants.GetAvailableVariants(root);
+            const selectedVariant = KHR_materials_variants.GetLastSelectedVariant(root);
+            return variants.indexOf(selectedVariant as string);
+        }, (path, value) => {
+            let root = this.world.glTFNodes[0];
+            while (root.parent) {
+                root = root.parent;
+            }
+            const variants = KHR_materials_variants.GetAvailableVariants(root);
+            KHR_materials_variants.SelectVariant(root, variants[value]);
+        }, "int");
     }
 
     public extractBehaveGraphFromScene = (): any => {

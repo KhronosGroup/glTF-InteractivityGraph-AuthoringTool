@@ -1,7 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps, ICustomEvent} from "../../BehaveEngineNode";
 
 export class Send extends BehaveEngineNode {
-    REQUIRED_CONFIGURATIONS = [{id: "customEvent"}]
+    REQUIRED_CONFIGURATIONS = [{id: "event"}]
 
     constructor(props: IBehaviourNodeProps) {
         super(props);
@@ -12,14 +12,16 @@ export class Send extends BehaveEngineNode {
     }
 
     override processNode(flowSocket?: string) {
-        const {customEvent} = this.evaluateAllConfigurations(this.REQUIRED_CONFIGURATIONS.map(config => config.id));
+        const {event} = this.evaluateAllConfigurations(this.REQUIRED_CONFIGURATIONS.map(config => config.id));
 
-        const customEventDesc: ICustomEvent = this.customEvents[customEvent];
+        const customEventDesc: ICustomEvent = this.customEvents[event];
         this.graphEngine.clearValueEvaluationCache();
         const vals = this.evaluateAllValues([...customEventDesc.values].map(val => val.id));
         this.graphEngine.processNodeStarted(this);
 
         const e = new CustomEvent(`KHR_INTERACTIVITY:${customEventDesc.id}`, {detail: vals});
         document.dispatchEvent(e);
+
+        super.processNode(flowSocket);
     }
 }

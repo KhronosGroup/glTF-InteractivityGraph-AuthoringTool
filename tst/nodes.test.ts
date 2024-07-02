@@ -133,10 +133,10 @@ describe('nodes', () => {
         };
     })
 
-    it('customEvent/receive', async () => {
+    it('event/receive', async () => {
         const receive: Receive = new Receive({
             ...defaultProps,
-            configuration: [{ id: 'customEvent', value: 0 }],
+            configuration: [{ id: 'event', value: 0 }],
             customEvents: [{ id: 'testCustomEvent', values: [{ id: 'text', type: 7 }] }],
             flows: [{ id: 'out' }],
         });
@@ -148,10 +148,10 @@ describe('nodes', () => {
         expect(receive.outValues.text.value).toBe('test');
     }, 3000);
 
-    it('customEvent/send', async () => {
+    it('event/send', async () => {
         const send: Send = new Send({
             ...defaultProps,
-            configuration: [{ id: 'customEvent', value: 0 }],
+            configuration: [{ id: 'event', value: 0 }],
             customEvents: [{ id: 'testCustomEvent', values: [{ id: 'text' }] }],
             values: [{ id: 'text', value: 'test', type: 7}],
         });

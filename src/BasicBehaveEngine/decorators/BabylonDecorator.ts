@@ -6,9 +6,10 @@ import {Vector3} from "@babylonjs/core/Maths/math.vector";
 import {cubicBezier, easeFloat, easeFloat3, easeFloat4, linearFloat, slerpFloat4} from "../easingUtils";
 import {Scene} from "@babylonjs/core/scene";
 import {OnSelect} from "../nodes/experimental/OnSelect";
-import {WorldStopAnimation} from "../nodes/experimental/WorldStopAnimation";
-import {WorldStartAnimation} from "../nodes/experimental/WorldStartAnimation";
 import {KHR_materials_variants} from "@babylonjs/loaders/glTF/2.0";
+import {AnimationStart} from "../nodes/animation/AnimationStart";
+import {AnimationStop} from "../nodes/animation/AnimationStop";
+import {AnimationStopAt} from "../nodes/animation/AnimationStopAt";
 
 export class BabylonDecorator extends ADecorator {
     scene: Scene;
@@ -29,13 +30,10 @@ export class BabylonDecorator extends ADecorator {
         this.behaveEngine.addNodeClickedListener = this.addNodeClickedListener
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        this.behaveEngine.playAnimation = this.playAnimation
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        this.behaveEngine.cancelAnimation = this.cancelAnimation
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
         this.behaveEngine.stopAnimation = this.stopAnimation
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        this.behaveEngine.stopAnimationAt = this.stopAnimationAt
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         this.behaveEngine.startAnimation = this.startAnimation
@@ -45,8 +43,9 @@ export class BabylonDecorator extends ADecorator {
         this.behaveEngine.getWorld = this.getWorld;
         this.registerKnownPointers();
         this.registerBehaveEngineNode("node/OnSelect", OnSelect);
-        this.registerBehaveEngineNode("world/stopAnimation", WorldStopAnimation);
-        this.registerBehaveEngineNode("world/startAnimation", WorldStartAnimation);
+        this.registerBehaveEngineNode("animation/stop", AnimationStop);
+        this.registerBehaveEngineNode("animation/start", AnimationStart);
+        this.registerBehaveEngineNode("animation/stopAt", AnimationStopAt);
     }
 
     processAddingNodeToQueue = (flow: IFlow) => {
@@ -109,7 +108,6 @@ export class BabylonDecorator extends ADecorator {
     ) => {
         this.behaveEngine.getWorldAnimationPathCallback(path)?.cancel();
         const startTime = Date.now();
-        console.log("ANIMATING")
 
         const action = async () => {
             const elapsedDuration = (Date.now() - startTime) / 1000;
@@ -253,7 +251,9 @@ export class BabylonDecorator extends ADecorator {
     }
 
     public startAnimation = (animation: number, startTime: number, endTime: number, speed: number,  callback: () => void): void => {
-        const fps = this.behaveEngine.fps;
+        // const fps = this.behaveEngine.fps;
+        //TODO: how should animation fps be determined?
+        const fps = 60;
         const startFrame: number = startTime * fps;
         const endFrame: number = endTime * fps;
 
@@ -311,28 +311,40 @@ export class BabylonDecorator extends ADecorator {
         }
     }
 
-    public stopAnimation = (animationIndex: number, stopMode: number, exactFrameTime: number | undefined, callback: (time: number) => void): void => {
+    public stopAnimation = (animationIndex: number): void => {
         const animation: AnimationGroup = this.world.animations[animationIndex]
         const animationInstance: AnimationGroup = animation.metadata.instance;
         if (animationInstance === undefined) return;
-        if (stopMode === 0) {
-            const frame = animationInstance.animatables[0].masterFrame;
-            const fps = this.behaveEngine.fps;
-            const time: number = frame / fps;
+
+        animationInstance.stop();
+        animationInstance.dispose();
+        animation.metadata.instance = undefined;
+    }
+
+    public stopAnimationAt = (animationIndex: number, stopTime: number , callback: () => void): void => {
+        const animation: AnimationGroup = this.world.animations[animationIndex]
+        const animationInstance: AnimationGroup = animation.metadata.instance;
+        if (animationInstance === undefined) return;
+
+        const forward = animationInstance.metadata.isForward;
+        if (animationInstance.animatables[0] === undefined) {return}
+        const frame = animationInstance.animatables[0].animationStarted ? animationInstance.animatables[0].masterFrame : animationInstance.animatables[0].fromFrame;
+        const fps = 60;
+        const stopFrame = stopTime * fps;
+        if ((forward && (stopFrame < animationInstance.animatables[0].fromFrame || stopFrame > animationInstance.animatables[0].toFrame) ||
+            (!forward && (stopFrame > animationInstance.animatables[0].fromFrame || stopFrame < animationInstance.animatables[0].toFrame)))) {
+            //no-op since we are outside the animation range
+            return;
+        }
+        if ((forward && stopFrame <= frame) || (!forward && stopFrame >= frame)) {
+            //snap to stop frame if we have passed it
+            animationInstance.goToFrame(stopFrame);
             animationInstance.stop();
             animationInstance.dispose();
-            animation.metadata.instance = undefined;
-            callback(time);
-        } else if (stopMode === 1) {
-            const forward = animationInstance.metadata.isForward;
-            if (animationInstance.animatables[0] === undefined) {return}
-            const frame = animationInstance.animatables[0].masterFrame;
-            const fps = this.behaveEngine.fps;
-            const stopFrame = exactFrameTime! * fps;
-            this._animateRange(animationInstance.speedRatio, forward, false, frame, stopFrame, frame, animation, () => callback(exactFrameTime!), undefined);
-        } else {
-            throw Error(`Invalid stop Mode ${stopMode}`);
+            callback();
+            return;
         }
+        this._animateRange(animationInstance.speedRatio, forward, false, frame, stopFrame, frame, animation, () => callback(), undefined);
     }
 
     private _animateRange = (speed: float, isForward: boolean, isLoop: boolean, startFrame: float, endFrame: float, currentFrame: float,

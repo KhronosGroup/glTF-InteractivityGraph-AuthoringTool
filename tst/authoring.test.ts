@@ -7,7 +7,7 @@ describe("authoring", () => {
         const exampleGraph = {
             "nodes": [
                 {
-                    "type": "lifecycle/onStart",
+                    "type": "event/onStart",
                     "values": [],
                     "configuration": [],
                     "flows": [

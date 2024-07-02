@@ -14,8 +14,6 @@ export class CancelDelay extends BehaveEngineNode {
         this.graphEngine.clearValueEvaluationCache();
         const {delayIndex} = this.evaluateAllValues(this.REQUIRED_VALUES.map(val => val.id));
         this.graphEngine.processNodeStarted(this);
-        console.log("LOOKO HERE")
-        console.log(this.graphEngine.scheduledDelays.length)
         if (delayIndex < 0 || delayIndex >= this.graphEngine.scheduledDelays.length) {
             if (this.flows.err) {
                 this.processFlow(this.flows.err);

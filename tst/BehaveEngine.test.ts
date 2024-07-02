@@ -16,7 +16,7 @@ describe('BehaveEngine', () => {
         const behaviorGraph = {
             "nodes": [
                 {
-                    "type": "lifecycle/onStart",
+                    "type": "event/onStart",
                     "values": [],
                     "configuration": [],
                     "flows": [
@@ -53,7 +53,7 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "type": "customEvent/send",
+                    "type": "event/send",
                     "values": [
                         {
                             "id": "number",
@@ -63,7 +63,7 @@ describe('BehaveEngine', () => {
                     ],
                     "configuration": [
                         {
-                            "id": "customEvent",
+                            "id": "event",
                             "value": 0
                         }
                     ],
@@ -74,7 +74,7 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "type": "customEvent/send",
+                    "type": "event/send",
                     "values": [
                         {
                             "id": "float3ToSend",
@@ -84,7 +84,7 @@ describe('BehaveEngine', () => {
                     ],
                     "configuration": [
                         {
-                            "id": "customEvent",
+                            "id": "event",
                             "value": 1
                         }
                     ],
@@ -145,7 +145,7 @@ describe('BehaveEngine', () => {
         const behaviorGraph = {
             "nodes": [
                 {
-                    "type": "lifecycle/onStart",
+                    "type": "event/onStart",
                     "values": [],
                     "configuration": [],
                     "flows": [
@@ -283,7 +283,7 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "type": "customEvent/send",
+                    "type": "event/send",
                     "values": [
                         {
                             "id": "float3ToLog",
@@ -293,7 +293,7 @@ describe('BehaveEngine', () => {
                     ],
                     "configuration": [
                         {
-                            "id": "customEvent",
+                            "id": "event",
                             "value": 0
                         }
                     ],
@@ -319,7 +319,7 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "type": "customEvent/send",
+                    "type": "event/send",
                     "values": [
                         {
                             "id": "float3ToLog",
@@ -329,7 +329,7 @@ describe('BehaveEngine', () => {
                     ],
                     "configuration": [
                         {
-                            "id": "customEvent",
+                            "id": "event",
                             "value": 0
                         }
                     ],
@@ -355,7 +355,7 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "type": "customEvent/send",
+                    "type": "event/send",
                     "values": [
                         {
                             "id": "float3ToLog",
@@ -365,7 +365,7 @@ describe('BehaveEngine', () => {
                     ],
                     "configuration": [
                         {
-                            "id": "customEvent",
+                            "id": "event",
                             "value": 0
                         }
                     ],
@@ -447,7 +447,7 @@ describe('BehaveEngine', () => {
         const invalidNodeGraph = {
             "nodes": [
                 {
-                    "type": "lifecycle/onStart",
+                    "type": "event/onStart",
                     "values": [],
                     "configuration": [],
                     "flows": [
@@ -477,11 +477,11 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "type": "customEvent/send",
+                    "type": "event/send",
                     "values": [],
                     "configuration": [
                         {
-                            "id": "customEvent",
+                            "id": "event",
                             "value": "0"
                         }
                     ],
@@ -540,7 +540,7 @@ describe('BehaveEngine', () => {
         const mathExampleNodeGraph = {
             "nodes": [
                 {
-                    "type": "lifecycle/onStart",
+                    "type": "event/onStart",
                     "values": [],
                     "configuration": [],
                     "flows": [
@@ -603,7 +603,7 @@ describe('BehaveEngine', () => {
                     "flows": []
                 },
                 {
-                    "type": "customEvent/send",
+                    "type": "event/send",
                     "values": [
                         {
                             "id": "outFloat",
@@ -613,7 +613,7 @@ describe('BehaveEngine', () => {
                     ],
                     "configuration": [
                         {
-                            "id": "customEvent",
+                            "id": "event",
                             "value": "0"
                         }
                     ],
@@ -667,7 +667,7 @@ describe('BehaveEngine', () => {
         const worldPointerGraph = {
             "nodes": [
                 {
-                    "type": "lifecycle/onStart",
+                    "type": "event/onStart",
                     "values": [],
                     "configuration": [],
                     "flows": [
@@ -850,7 +850,7 @@ describe('BehaveEngine', () => {
         const tickGraph = {
             "nodes": [
                 {
-                    "type": "lifecycle/onTick",
+                    "type": "event/onTick",
                     "values": [],
                     "configuration": [],
                     "flows": [
@@ -968,11 +968,11 @@ describe('BehaveEngine', () => {
         const customEventGraph = {
             "nodes": [
                 {
-                    "type": "customEvent/receive",
+                    "type": "event/receive",
                     "values": [],
                     "configuration": [
                         {
-                            "id": "customEvent",
+                            "id": "event",
                             "value": 0
                         }
                     ],
@@ -1016,7 +1016,7 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "type": "customEvent/send",
+                    "type": "event/send",
                     "values": [
                         {
                             "id": "success",
@@ -1026,7 +1026,7 @@ describe('BehaveEngine', () => {
                     ],
                     "configuration": [
                         {
-                            "id": "customEvent",
+                            "id": "event",
                             "value": 1
                         }
                     ],
@@ -1095,18 +1095,18 @@ describe('BehaveEngine', () => {
         loggingBehaveEngine.emitCustomEvent("KHR_INTERACTIVITY:triggerScale", {scaleVector: "[10,10,10]"});
         await new Promise((resolve) => setTimeout(resolve, 250));
         expect(loggingWorld.nodes[0].scale).toEqual([10,10,10]);
-        expect(executionLog).toEqual("Running CustomEventReceiveNode: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":1,\"socket\":\"in\"}}Adding {\"id\":\"out\",\"node\":1,\"socket\":\"in\"} flow to queueRunning PointerSet: input values: {\"val\":{\"id\":\"val\",\"node\":0,\"socket\":\"scaleVector\",\"type\":4}}, output flows: {\"out\":{\"id\":\"out\",\"node\":2,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":2,\"socket\":\"in\"} flowRunning Send: input values: {\"success\":{\"id\":\"success\",\"value\":true,\"type\":0}}, output flows: {}");
+        expect(executionLog).toEqual("Running CustomEventReceiveNode: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":1,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":1,\"socket\":\"in\"} flowRunning PointerSet: input values: {\"val\":{\"id\":\"val\",\"node\":0,\"socket\":\"scaleVector\",\"type\":4}}, output flows: {\"out\":{\"id\":\"out\",\"node\":2,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":2,\"socket\":\"in\"} flowRunning Send: input values: {\"success\":{\"id\":\"success\",\"value\":true,\"type\":0}}, output flows: {}");
     });
 
     it("should get and set variables", async () => {
         const variablesGraph = {
             "nodes": [
                 {
-                    "type": "customEvent/receive",
+                    "type": "event/receive",
                     "values": [],
                     "configuration": [
                         {
-                            "id": "customEvent",
+                            "id": "event",
                             "value": 0
                         }
                     ],
@@ -1180,11 +1180,11 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "type": "customEvent/receive",
+                    "type": "event/receive",
                     "values": [],
                     "configuration": [
                         {
-                            "id": "customEvent",
+                            "id": "event",
                             "value": 2
                         }
                     ],
@@ -1201,7 +1201,7 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "type": "customEvent/send",
+                    "type": "event/send",
                     "values": [
                         {
                             "id": "sum",
@@ -1211,7 +1211,7 @@ describe('BehaveEngine', () => {
                     ],
                     "configuration": [
                         {
-                            "id": "customEvent",
+                            "id": "event",
                             "value": 1
                         }
                     ],
@@ -1292,7 +1292,7 @@ describe('BehaveEngine', () => {
         loggingBehaveEngine.emitCustomEvent("KHR_INTERACTIVITY:MyAdd", {toAdd: 7});
         await new Promise((resolve) => setTimeout(resolve, 250));
         loggingBehaveEngine.emitCustomEvent("KHR_INTERACTIVITY:triggerSum", {});
-        expect(executionLog).toEqual("Running CustomEventReceiveNode: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":3,\"socket\":\"in\"}}Adding {\"id\":\"out\",\"node\":3,\"socket\":\"in\"} flow to queueRunning VariableGetNode: input values: {}, output flows: {}Running AddNode: input values: {\"b\":{\"id\":\"b\",\"node\":0,\"socket\":\"toAdd\",\"type\":2},\"a\":{\"id\":\"a\",\"node\":1,\"socket\":\"cum\",\"type\":2}}, output flows: {}Running VariableSet: input values: {\"cum\":{\"id\":\"cum\",\"node\":2,\"socket\":\"val\",\"type\":2}}, output flows: {}Running CustomEventReceiveNode: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":3,\"socket\":\"in\"}}Adding {\"id\":\"out\",\"node\":3,\"socket\":\"in\"} flow to queueRunning VariableGetNode: input values: {}, output flows: {}Running AddNode: input values: {\"b\":{\"id\":\"b\",\"node\":0,\"socket\":\"toAdd\",\"type\":2},\"a\":{\"id\":\"a\",\"node\":1,\"socket\":\"cum\",\"type\":2}}, output flows: {}Running VariableSet: input values: {\"cum\":{\"id\":\"cum\",\"node\":2,\"socket\":\"val\",\"type\":2}}, output flows: {}Running CustomEventReceiveNode: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":5,\"socket\":\"in\"}}Adding {\"id\":\"out\",\"node\":5,\"socket\":\"in\"} flow to queueRunning VariableGetNode: input values: {}, output flows: {}Running Send: input values: {\"sum\":{\"id\":\"sum\",\"node\":1,\"socket\":\"cum\",\"type\":2}}, output flows: {}");
+        expect(executionLog).toEqual("Running CustomEventReceiveNode: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":3,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":3,\"socket\":\"in\"} flowRunning VariableGetNode: input values: {}, output flows: {}Running AddNode: input values: {\"b\":{\"id\":\"b\",\"node\":0,\"socket\":\"toAdd\",\"type\":2},\"a\":{\"id\":\"a\",\"node\":1,\"socket\":\"cum\",\"type\":2}}, output flows: {}Running VariableSet: input values: {\"cum\":{\"id\":\"cum\",\"node\":2,\"socket\":\"val\",\"type\":2}}, output flows: {}Running CustomEventReceiveNode: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":3,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":3,\"socket\":\"in\"} flowRunning VariableGetNode: input values: {}, output flows: {}Running AddNode: input values: {\"b\":{\"id\":\"b\",\"node\":0,\"socket\":\"toAdd\",\"type\":2},\"a\":{\"id\":\"a\",\"node\":1,\"socket\":\"cum\",\"type\":2}}, output flows: {}Running VariableSet: input values: {\"cum\":{\"id\":\"cum\",\"node\":2,\"socket\":\"val\",\"type\":2}}, output flows: {}Running CustomEventReceiveNode: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":5,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":5,\"socket\":\"in\"} flowRunning VariableGetNode: input values: {}, output flows: {}Running Send: input values: {\"sum\":{\"id\":\"sum\",\"node\":1,\"socket\":\"cum\",\"type\":2}}, output flows: {}");
     });
 
     it("should re-evaluate condition each loop iteration", async () => {
@@ -1330,7 +1330,7 @@ describe('BehaveEngine', () => {
                     }
                 },
                 {
-                    "type": "lifecycle/onStart",
+                    "type": "event/onStart",
                     "values": [],
                     "configuration": [],
                     "flows": [

@@ -242,8 +242,8 @@ export class BasicBehaveEngine implements IBehaveEngine {
         });
 
         //find start node, and start graph
-        const startNodeIndex = this.nodes.findIndex(node => node.type === "lifecycle/onStart");
-        this.onTickNodeIndex = this.nodes.findIndex(node => node.type === "lifecycle/onTick");
+        const startNodeIndex = this.nodes.findIndex(node => node.type === "event/onStart");
+        this.onTickNodeIndex = this.nodes.findIndex(node => node.type === "event/onTick");
         if (startNodeIndex !== -1) {
             const startFlow: IFlow = {node: startNodeIndex, id: "start"}
             this.addEventToWorkQueue(startFlow);
@@ -291,8 +291,8 @@ export class BasicBehaveEngine implements IBehaveEngine {
     }
 
     private registerKnownBehaviorNodes = () => {
-        this.registerBehaveEngineNode("lifecycle/onStart", OnStartNode);
-        this.registerBehaveEngineNode("lifecycle/onTick", OnTickNode);
+        this.registerBehaveEngineNode("event/onStart", OnStartNode);
+        this.registerBehaveEngineNode("event/onTick", OnTickNode);
         this.registerBehaveEngineNode("flow/branch", Branch);
         this.registerBehaveEngineNode("flow/setDelay", SetDelay);
         this.registerBehaveEngineNode("flow/cancelDelay", CancelDelay);
@@ -310,8 +310,8 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("pointer/interpolate", PointerInterpolate)
         this.registerBehaveEngineNode("ADBE/output_console_node", OutputConsole);
         this.registerBehaveEngineNode("math/abs", AbsoluteValue);
-        this.registerBehaveEngineNode("customEvent/receive", Receive);
-        this.registerBehaveEngineNode("customEvent/send", Send);
+        this.registerBehaveEngineNode("event/receive", Receive);
+        this.registerBehaveEngineNode("event/send", Send);
         this.registerBehaveEngineNode("variable/get", VariableGet);
         this.registerBehaveEngineNode("variable/set", VariableSet);
         this.registerBehaveEngineNode("math/e", Euler);

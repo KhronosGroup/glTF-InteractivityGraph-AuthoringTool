@@ -1,11 +1,11 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
-export class WorldStartAnimation extends BehaveEngineNode {
+export class AnimationStart extends BehaveEngineNode {
     REQUIRED_VALUES = [{id: "animation"}, {id:"startTime"}, {id:"endTime"}, {id:"speed"}]
 
     constructor(props: IBehaviourNodeProps) {
         super(props);
-        this.name = "WorldStartAnimation";
+        this.name = "AnimationStart";
         this.validateValues(this.values);
     }
 

@@ -190,13 +190,13 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         switch (category) {
             case "flow":
                 return "#b18cd9"
-            case "lifecycle":
+            case "event":
                 return "#f8a848"
             case "math":
                 return "#baf691"
             case "pointer":
                 return "#7ddede"
-            case "customEvent":
+            case "animation":
                 return "#e1b739"
             case "node":
                 return "#d97aff"

@@ -264,7 +264,7 @@ export const pointerNodeSpecs: IAuthoringNode[] = [
         }
     },
     {
-        type: "world/startAnimation",
+        type: "animation/start",
         description: "plays an animation",
         configuration: [],
         input: {
@@ -316,15 +316,9 @@ export const pointerNodeSpecs: IAuthoringNode[] = [
         }
     },
     {
-        type: "world/stopAnimation",
+        type: "animation/stop",
         description: "stops an animation instance",
-        configuration: [
-            {
-                id: "stopMode",
-                description: "0 - immediate, 1 - exactFrameTime",
-                type: "int"
-            }
-        ],
+        configuration: [],
         input: {
             values: [
                 {
@@ -341,13 +335,45 @@ export const pointerNodeSpecs: IAuthoringNode[] = [
             ]
         },
         output: {
+            values: [],
+            flows: [
+                {
+                    id: "out",
+                    description: "The synchronous flow to be followed"
+                },
+                {
+                    id: "err",
+                    description: "The flow to be followed if the input validation fails"
+                }
+            ]
+        }
+    },
+    {
+        type: "animation/stopAt",
+        description: "Schedule stopping a playing animation",
+        configuration: [],
+        input: {
             values: [
                 {
-                    id: "time",
-                    types:["float"],
-                    description: "The interpolation of the time the animation was stopped at"
+                    id: "animation",
+                    types: ["int"],
+                    description: "The animation to cancel"
+                },
+                {
+                    id: "stopTime",
+                    types: ["float"],
+                    description: "stop time"
                 }
             ],
+            flows: [
+                {
+                    id: "in",
+                    description: "in flow to trigger this node"
+                }
+            ]
+        },
+        output: {
+            values: [],
             flows: [
                 {
                     id: "out",
@@ -355,7 +381,7 @@ export const pointerNodeSpecs: IAuthoringNode[] = [
                 },
                 {
                     id: "done",
-                    description: "The flow to be followed when the animation is canceled"
+                    description: "The asynchronous flow to be followed when the animation is stopped"
                 },
                 {
                     id: "err",
@@ -698,11 +724,11 @@ export const experimentalNodeSpecs: IAuthoringNode[] = [
 
 export const customEventNodeSpecs: IAuthoringNode[] = [
     {
-        type: "customEvent/send",
+        type: "event/send",
         description: "Used to send custom events that may be consumed elsewhere in the graph or by the engines itself.",
         configuration:[
             {
-                id:"customEvent",
+                id:"event",
                 type:"int",
                 description:"Identifies the custom event by an index into the CustomEvents list."
             }
@@ -717,16 +743,21 @@ export const customEventNodeSpecs: IAuthoringNode[] = [
             values:[]
         },
         output:{
-            flows:[],
+            flows:[
+                {
+                    id:"out",
+                    description:"The flow to be followed when the custom event is fired."
+                }
+            ],
             values:[]
         }
     },
     {
-        type:"customEvent/receive",
+        type:"event/receive",
         description:"This node will fire when a custom event occurs.",
         configuration:[
             {
-                id:"customEvent",
+                id:"event",
                 type:"int",
                 description:"Identifies the custom event by an index into the CustomEvents list."
             }
@@ -749,7 +780,7 @@ export const customEventNodeSpecs: IAuthoringNode[] = [
 
 export const lifecycleNodeSpecs: IAuthoringNode[] = [
     {
-        type: "lifecycle/onStart",
+        type: "event/onStart",
         description: "This node will fire when the session starts.",
         configuration: [],
         input: {
@@ -767,7 +798,7 @@ export const lifecycleNodeSpecs: IAuthoringNode[] = [
         }
     },
     {
-        type: "lifecycle/onTick",
+        type: "event/onTick",
         description: "This node will fire each tick.",
         configuration: [],
         input: {
@@ -3651,36 +3682,35 @@ export const matrixNodeSpecs = [
             ]
         }
     },
-    //TODO: find numerically stable way to compute without library
-    // {
-    //     type: "math/inverse",
-    //     description: "Inverse operation",
-    //     configuration: [],
-    //     input: {
-    //         flows: [],
-    //         values: [
-    //             {
-    //                 id: "a",
-    //                 description: "Matrix",
-    //                 types: [
-    //                     "float4x4"
-    //                 ]
-    //             }
-    //         ]
-    //     },
-    //     output: {
-    //         flows: [],
-    //         values: [
-    //             {
-    //                 id: "val",
-    //                 description: "Inverse of a",
-    //                 types: [
-    //                     "float4x4"
-    //                 ]
-    //             }
-    //         ]
-    //     }
-    // },
+    {
+        type: "math/inverse",
+        description: "Inverse operation",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "Matrix",
+                    types: [
+                        "float4x4"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "val",
+                    description: "Inverse of a",
+                    types: [
+                        "float4x4"
+                    ]
+                }
+            ]
+        }
+    },
 ]
 
 export const specialFloatingPointNodeSpecs = [

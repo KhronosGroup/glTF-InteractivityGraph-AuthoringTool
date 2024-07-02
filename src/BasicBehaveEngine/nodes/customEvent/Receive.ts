@@ -1,7 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps, ICustomEvent} from "../../BehaveEngineNode";
 
 export class Receive extends BehaveEngineNode {
-    REQUIRED_CONFIGURATIONS = [{id: "customEvent"}]
+    REQUIRED_CONFIGURATIONS = [{id: "event"}]
 
     constructor(props: IBehaviourNodeProps) {
         super(props);
@@ -13,9 +13,9 @@ export class Receive extends BehaveEngineNode {
     }
 
     setUpEventListener() {
-        const {customEvent} = this.evaluateAllConfigurations(this.REQUIRED_CONFIGURATIONS.map(config => config.id));
+        const {event} = this.evaluateAllConfigurations(this.REQUIRED_CONFIGURATIONS.map(config => config.id));
 
-        const customEventDesc: ICustomEvent = this.customEvents[customEvent];
+        const customEventDesc: ICustomEvent = this.customEvents[event];
 
         this.graphEngine.addCustomEventListener(`KHR_INTERACTIVITY:${customEventDesc.id}`, (e: any) => {
             this.graphEngine.processNodeStarted(this);
@@ -31,7 +31,7 @@ export class Receive extends BehaveEngineNode {
                     type: typeIndex
                 }
             });
-            this.addEventToWorkQueue(this.flows.out);
+            super.processNode();
         })
     }
 

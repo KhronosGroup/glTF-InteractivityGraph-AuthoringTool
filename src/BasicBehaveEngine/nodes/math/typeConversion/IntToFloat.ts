@@ -22,6 +22,6 @@ export class IntToFloat extends BehaveEngineNode {
         const val = a;
 
 
-        return {'val': {id: "val", value: val, type: this.getTypeIndex('float')}}
+        return {'val': {id: "val", value: [val], type: this.getTypeIndex('float')}}
     }
 }

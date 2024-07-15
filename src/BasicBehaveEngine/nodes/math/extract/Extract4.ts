@@ -19,10 +19,10 @@ export class Extract4 extends BehaveEngineNode {
         }
 
         return {
-            '0': {id: "0", value: a[0], type: this.getTypeIndex("float")},
-            '1': {id: "1", value: a[1], type: this.getTypeIndex("float")},
-            '2': {id: "2", value: a[2], type: this.getTypeIndex("float")},
-            '3': {id: "3", value: a[3], type: this.getTypeIndex("float")},
+            '0': {id: "0", value: [a[0]], type: this.getTypeIndex("float")},
+            '1': {id: "1", value: [a[1]], type: this.getTypeIndex("float")},
+            '2': {id: "2", value: [a[2]], type: this.getTypeIndex("float")},
+            '3': {id: "3", value: [a[3]], type: this.getTypeIndex("float")},
         };
     }
 }

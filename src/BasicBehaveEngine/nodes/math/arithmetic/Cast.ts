@@ -12,7 +12,7 @@ export class Cast extends BehaveEngineNode {
     }
 
     override processNode(flowSocket?: string) {
-        const {a, b} = this.evaluateAllValues(this.REQUIRED_VALUES.map(val => val.id));
+        const {a} = this.evaluateAllValues(this.REQUIRED_VALUES.map(val => val.id));
         this.graphEngine.processNodeStarted(this);
         const castType = this.configuration['castType'].value!
 

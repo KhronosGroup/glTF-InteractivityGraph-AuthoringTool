@@ -18,7 +18,7 @@ export class Exponential extends BehaveEngineNode {
 
         switch (typeA) {
             case "float":
-                val = Math.exp(a)
+                val = [Math.exp(a)]
                 break;
             case "float3":
                 val = [

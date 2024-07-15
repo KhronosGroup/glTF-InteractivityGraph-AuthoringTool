@@ -26,7 +26,7 @@ export class Clamp extends BehaveEngineNode {
         switch (typeA) {
             case "int":
             case "float":
-                val = Math.min(Math.max(a,Math.min(b,c)), Math.max(b,c));
+                val = [Math.min(Math.max(a,Math.min(b,c)), Math.max(b,c))];
                 break;
             case "float3":
                 val = [

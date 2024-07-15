@@ -27,7 +27,7 @@ describe("authoring", () => {
                     "values": [
                         {
                             "id": "nodeIndex",
-                            "value": 0,
+                            "value": [0],
                             "type": 1
                         },
                         {

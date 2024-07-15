@@ -18,7 +18,7 @@ export class Log2 extends BehaveEngineNode {
 
         switch (type) {
             case "float":
-                val = Math.log2(a);
+                val = [Math.log2(a)];
                 break;
             case "float3":
                 val = [

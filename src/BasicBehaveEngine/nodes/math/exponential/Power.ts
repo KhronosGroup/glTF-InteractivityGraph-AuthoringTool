@@ -23,7 +23,7 @@ export class Power extends BehaveEngineNode {
 
         switch (typeA) {
             case "float":
-                val = Math.pow(a, b);
+                val = [Math.pow(a, b)];
                 break;
             case "float3":
                 val = [

@@ -18,6 +18,6 @@ export class CountLeadingZeros extends BehaveEngineNode {
             throw Error("invalid input type")
         }
         let val = Math.clz32(a);
-        return {'val': {id: "val", value: val, type: this.getTypeIndex('int')}}
+        return {'val': {id: "val", value: [val], type: this.getTypeIndex('int')}}
     }
 }

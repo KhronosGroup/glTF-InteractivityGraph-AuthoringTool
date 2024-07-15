@@ -138,10 +138,10 @@ const isNullish = (value: any): boolean => value === undefined || value === null
 const castParameter = (value: any, signature: string) => {
     switch (signature) {
         case "bool":
-            return value === "true" || value === true;
+            return [value === "true" || value === true];
         case "int":
         case "float":
-            return Number(value);
+            return [Number(value)];
         case "float2":
         case "float3":
         case "float4":

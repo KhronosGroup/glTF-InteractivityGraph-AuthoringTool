@@ -18,7 +18,7 @@ export class InverseHyperbolicCosine extends BehaveEngineNode {
 
         switch (type) {
             case "float":
-                val = Math.acosh(a);
+                val = [Math.acosh(a)];
                 break;
             case "float3":
                 val = [

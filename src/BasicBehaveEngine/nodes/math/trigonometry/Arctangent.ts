@@ -18,7 +18,7 @@ export class Arctangent extends BehaveEngineNode {
 
         switch (type) {
             case "float":
-                val = Math.atan(a);
+                val = [Math.atan(a)];
                 break;
             case "float3":
                 val = [

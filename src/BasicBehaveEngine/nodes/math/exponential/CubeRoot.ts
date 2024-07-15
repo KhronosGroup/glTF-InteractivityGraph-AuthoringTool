@@ -18,7 +18,7 @@ export class CubeRoot extends BehaveEngineNode {
 
         switch (type) {
             case "float":
-                val = Math.cbrt(a);
+                val = [Math.cbrt(a)];
                 break;
             case "float3":
                 val = [

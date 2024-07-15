@@ -61,11 +61,11 @@ export class PointerGet extends BehaveEngineNode {
 
             return {
                 'val':{id: "val", value: this.graphEngine.getPathValue(populatedPath), type: typeIndex},
-                'isValid':{id: "isValid", value: true, type: this.getTypeIndex('bool')}
+                'isValid':{id: "isValid", value: [true], type: this.getTypeIndex('bool')}
             };
         } else {
             return {
-                'isValid':{id: "isValid", value: false, type: this.getTypeIndex('bool')}
+                'isValid':{id: "isValid", value: [false], type: this.getTypeIndex('bool')}
             };
         }
     }

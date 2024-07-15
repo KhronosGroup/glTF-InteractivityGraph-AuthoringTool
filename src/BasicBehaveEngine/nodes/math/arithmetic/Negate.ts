@@ -18,10 +18,10 @@ export class Negate extends BehaveEngineNode {
 
         switch (type) {
             case "int":
-                val = (-a) | 0;
+                val = [(-a) | 0];
                 break;
             case "float":
-                val = a * -1;
+                val = [a * -1];
                 break;
             case "float3":
                 val = [

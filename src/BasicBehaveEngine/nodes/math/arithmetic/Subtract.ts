@@ -23,10 +23,10 @@ export class Subtract extends BehaveEngineNode {
 
         switch (typeA) {
             case "int":
-                val = (a - b) | 0;
+                val = [(a - b) | 0];
                 break;
             case "float":
-                val = a - b;
+                val = [a - b];
                 break;
             case "float3":
                 val = [

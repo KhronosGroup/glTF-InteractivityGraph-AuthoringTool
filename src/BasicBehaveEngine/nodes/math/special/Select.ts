@@ -24,7 +24,10 @@ export class Select extends BehaveEngineNode {
         if (typeCondition !== "bool") {
             throw Error("condition has invalid type")
         }
-        const val: any = JSON.parse(condition) ? a : b;
+        let val: any = JSON.parse(condition) ? a : b;
+        if (typeA === "int" || typeA === "bool" || typeA === "float") {
+            val = [val]
+        }
 
         return {'val': {id: "val", value: val, type: typeIndexA}};
     }

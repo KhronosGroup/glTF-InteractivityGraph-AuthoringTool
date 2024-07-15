@@ -18,7 +18,7 @@ export class HyperbolicTangent extends BehaveEngineNode {
 
         switch (type) {
             case "float":
-                val = Math.tanh(a);
+                val = [Math.tanh(a)];
                 break;
             case "float3":
                 val = [

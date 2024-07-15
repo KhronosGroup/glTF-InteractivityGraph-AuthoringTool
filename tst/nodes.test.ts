@@ -153,7 +153,7 @@ describe('nodes', () => {
             ...defaultProps,
             configuration: [{ id: 'event', value: 0 }],
             customEvents: [{ id: 'testCustomEvent', values: [{ id: 'text' }] }],
-            values: [{ id: 'text', value: 'test', type: 7}],
+            values: [{ id: 'text', value: ['test'], type: 7}],
         });
 
         // Replace the original function with the mock
@@ -170,7 +170,7 @@ describe('nodes', () => {
     it('flow/branch', async () => {
         const trueBranch: Branch = new Branch({
             ...defaultProps,
-            values: [{ id: 'condition', value: "true", type: 0 }],
+            values: [{ id: 'condition', value: [true], type: 0 }],
             flows: [
                 { id: 'true', node: 0 },
                 { id: 'false', node: 1 },
@@ -183,7 +183,7 @@ describe('nodes', () => {
 
         const falseBranch: Branch = new Branch({
             ...defaultProps,
-            values: [{ id: 'condition', value: "false", type: 0 }],
+            values: [{ id: 'condition', value: [false], type: 0 }],
             flows: [
                 { id: 'true', node: 0 },
                 { id: 'false', node: 1 },
@@ -199,7 +199,7 @@ describe('nodes', () => {
         graphEngine.clearScheduledDelays();
         const setDelay: SetDelay = new SetDelay({
             ...defaultProps,
-            values: [{ id: 'duration', value: 0.5, type: 2 }],
+            values: [{ id: 'duration', value: [0.5], type: 2 }],
             flows: [
                 { id: 'out', node: 1 },
                 {id: 'completed', node: 2 }
@@ -209,14 +209,14 @@ describe('nodes', () => {
         setDelay.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
         setDelay.processNode('in');
         setDelay.processNode('cancel');
-        expect(setDelay.outValues.lastDelayIndex.value).toBe(-1);
+        expect(setDelay.outValues.lastDelayIndex.value[0]).toBe(-1);
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
         expect(setDelay.addEventToWorkQueue).not.toHaveBeenCalled()
         expect(setDelay.processFlow).toHaveBeenCalledWith({"id": "out", "node": 1});
 
         setDelay.processNode('in');
-        expect(setDelay.outValues.lastDelayIndex.value).toBe(1);
+        expect(setDelay.outValues.lastDelayIndex.value[0]).toBe(1);
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
         expect(setDelay.addEventToWorkQueue).toHaveBeenCalledWith({"id": "completed", "node": 2});
@@ -227,7 +227,7 @@ describe('nodes', () => {
         graphEngine.clearScheduledDelays();
         const cancelDelay: CancelDelay = new CancelDelay({
             ...defaultProps,
-            values: [{ id: 'delayIndex', value: 0, type: 1 }],
+            values: [{ id: 'delayIndex', value: [0], type: 1 }],
             flows: [
                 { id: 'out', node: 1 }
             ]
@@ -237,7 +237,7 @@ describe('nodes', () => {
 
         const setDelay: SetDelay = new SetDelay({
             ...defaultProps,
-            values: [{ id: 'duration', value: 0.5, type: 2 }],
+            values: [{ id: 'duration', value: [0.5], type: 2 }],
             flows: [
                 { id: 'out', node: 1 },
                 {id: 'completed', node: 2 }
@@ -279,8 +279,8 @@ describe('nodes', () => {
                 {id: 'initialIndex', value: 0}
             ],
             values: [
-                { id: 'startIndex', value: 0, type: 1 },
-                { id: 'endIndex', value: 5, type: 1 },
+                { id: 'startIndex', value: [0], type: 1 },
+                { id: 'endIndex', value: [5], type: 1 },
             ],
             flows: [
                 { id: 'loopBody', node: 0 },
@@ -301,7 +301,7 @@ describe('nodes', () => {
             ...defaultProps,
             configuration: [],
             values: [
-                { id: 'n', value: 2, type: 1},
+                { id: 'n', value: [2], type: 1},
             ],
             flows: [
                 { id: 'out', node: 0 },
@@ -309,18 +309,18 @@ describe('nodes', () => {
         });
 
         doN.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
-        expect(doN.outValues.currentCount.value).toBe(0);
+        expect(doN.outValues.currentCount.value[0]).toBe(0);
         doN.processNode("in");
-        expect(doN.outValues.currentCount.value).toBe(1);
+        expect(doN.outValues.currentCount.value[0]).toBe(1);
         doN.processNode("in");
-        expect(doN.outValues.currentCount.value).toBe(2);
+        expect(doN.outValues.currentCount.value[0]).toBe(2);
         doN.processNode("in");
-        expect(doN.outValues.currentCount.value).toBe(2);
+        expect(doN.outValues.currentCount.value[0]).toBe(2);
 
         expect(doN.processFlow).toHaveBeenCalledTimes(2);
 
         doN.processNode("reset");
-        expect(doN.outValues.currentCount.value).toBe(0);
+        expect(doN.outValues.currentCount.value[0]).toBe(0);
         doN.processNode("in");
         expect(doN.processFlow).toHaveBeenCalledTimes(3);
     });
@@ -352,7 +352,7 @@ describe('nodes', () => {
         const switchNode: Switch = new Switch({
             ...defaultProps,
             configuration: [{ id: 'cases', value: [0, 1, 2] }],
-            values: [{ id: 'selection', value: 1, type: 1 }],
+            values: [{ id: 'selection', value: [1], type: 1 }],
             flows: [
                 { id: '0', node: 0 },
                 { id: '1', node: 1 },
@@ -368,7 +368,7 @@ describe('nodes', () => {
         const defaultSwitchNode: Switch = new Switch({
             ...defaultProps,
             configuration: [{ id: 'cases', value: [0, 1, 2] }],
-            values: [{ id: 'selection', value: 4, type: 1 }],
+            values: [{ id: 'selection', value: [4], type: 1 }],
             flows: [
                 { id: '0', node: 0 },
                 { id: '1', node: 1 },
@@ -386,25 +386,25 @@ describe('nodes', () => {
     it('flow/throttle', async () => {
         const throttleNode: Throttle = new Throttle({
             ...defaultProps,
-            values: [{ id: 'duration', value: 1, type: 2 }],
+            values: [{ id: 'duration', value: [1], type: 2 }],
             flows: [
                 { id: 'out', node: 0 },
             ],
         });
 
         throttleNode.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
-        expect(throttleNode.outValues.lastRemainingTime.value).toBe(NaN);
+        expect(throttleNode.outValues.lastRemainingTime.value[0]).toBe(NaN);
         throttleNode.processNode('in');
         expect(throttleNode.processFlow).toHaveBeenCalledWith({ id: 'out', node: 0 });
         await new Promise((resolve) => setTimeout(resolve, 100));
         throttleNode.processNode('in');
-        expect(throttleNode.outValues.lastRemainingTime.value).not.toBe(NaN);
-        expect(throttleNode.outValues.lastRemainingTime.value).toBeGreaterThan(0);
+        expect(throttleNode.outValues.lastRemainingTime.value[0]).not.toBe(NaN);
+        expect(throttleNode.outValues.lastRemainingTime.value[0]).toBeGreaterThan(0);
 
         //clear throttle limit
         await new Promise((resolve) => setTimeout(resolve, 1500));
         await throttleNode.processNode('in');
-        expect(throttleNode.outValues.lastRemainingTime.value).toBe(0);
+        expect(throttleNode.outValues.lastRemainingTime.value[0]).toBe(0);
     });
 
     it('flow/waitAll', async () => {
@@ -416,15 +416,15 @@ describe('nodes', () => {
 
         waitAll.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
         waitAll.processNode('0');
-        expect(waitAll.outValues.remainingInputs.value).toBe(1)
+        expect(waitAll.outValues.remainingInputs.value[0]).toBe(1)
         waitAll.processNode('reset');
-        expect(waitAll.outValues.remainingInputs.value).toBe(2);
+        expect(waitAll.outValues.remainingInputs.value[0]).toBe(2);
         waitAll.processNode('1');
         expect(waitAll.processFlow).toHaveBeenCalledTimes(2);
         expect(waitAll.processFlow).toHaveBeenCalledWith({ id: 'out', node: 1 });
 
         waitAll.processNode('0');
-        expect(waitAll.outValues.remainingInputs.value).toBe(0);
+        expect(waitAll.outValues.remainingInputs.value[0]).toBe(0);
         expect(waitAll.processFlow).toHaveBeenCalledTimes(3);
         expect(waitAll.processFlow).toHaveBeenCalledWith({ id: 'completed', node: 2 });
     });
@@ -432,7 +432,7 @@ describe('nodes', () => {
     it('flow/while', async () => {
         const whileLoop: WhileLoop = new WhileLoop({
             ...defaultProps,
-            values: [{ id: 'condition', value: false, type: 0 }],
+            values: [{ id: 'condition', value: [false], type: 0 }],
             flows: [
                 { id: 'loopBody', node: 0 },
                 { id: 'completed', node: 1 },
@@ -450,11 +450,11 @@ describe('nodes', () => {
         const variableGet: VariableGet = new VariableGet({
             ...defaultProps,
             configuration: [{ id: 'variable', value: 0 }],
-            variables: [{ id: 'testVariable', value: 42, initialValue: 42 }],
+            variables: [{ id: 'testVariable', value: [42], initialValue: [42] }],
         });
 
         const res = await variableGet.processNode()['testVariable'];
-        expect(res.value).toBe(42);
+        expect(res.value[0]).toBe(42);
     });
 
     it('variable/set', async () => {
@@ -462,7 +462,7 @@ describe('nodes', () => {
             ...defaultProps,
             configuration: [{ id: 'variable', value: 0 }],
             variables: [{ id: 'testVariable', initialValue: 42 }],
-            values: [{ id: 'testVariable', value: 10, type: 1 }],
+            values: [{ id: 'testVariable', value: [10], type: 1 }],
         });
 
         await variableSet.processNode('in');
@@ -474,13 +474,13 @@ describe('nodes', () => {
         const pointerGet: PointerGet = new PointerGet({
             ...defaultProps,
             configuration: [{ id: 'pointer', value: '/nodes/{index}/value' }],
-            values: [{ id: 'index', value: 1, type: 1 }],
+            values: [{ id: 'index', value: [1], type: 1 }],
         });
         graphEngine.registerJsonPointer(
             '/nodes/99/value',
             (path) => {
                 const parts: string[] = path.split('/');
-                return world.nodes[Number(parts[2])].value;
+                return [world.nodes[Number(parts[2])].value];
             },
             (path, value) => {
                 const parts: string[] = path.split('/');
@@ -490,7 +490,7 @@ describe('nodes', () => {
         );
 
         const res  = pointerGet.processNode();
-        expect(res['val']!.value).toBe(2);
+        expect(res['val']!.value[0]).toBe(2);
 
         const pointerGetCustomPtr: PointerGet = new PointerGet({
             ...defaultProps,
@@ -498,7 +498,7 @@ describe('nodes', () => {
         });
 
         const resCustom = await pointerGetCustomPtr.processNode();
-        expect(resCustom['val']!.value).toBe(1);
+        expect(resCustom['val']!.value[0]).toBe(1);
     });
 
     it('pointer/set', async () => {
@@ -521,8 +521,8 @@ describe('nodes', () => {
                 { id: 'pointer', value: '/nodes/{index}/value' },
             ],
             values: [
-                { id: 'index', value: 0, type: 1 },
-                { id: 'val', value: 42, type: 1 },
+                { id: 'index', value: [0], type: 1 },
+                { id: 'val', value: [42], type: 1 },
             ],
         });
 
@@ -552,11 +552,11 @@ describe('nodes', () => {
                 { id: "easingType", value: 0}
             ],
             values: [
-                { id: 'index', value: 0, type: 1 },
-                { id: "easingDuration", value: 0.5, type: 2},
-                { id: 'val', value: 42, type: 2 },
-                { id: 'cp1', value: 0, type: 2 },
-                { id: 'cp2', value: 42, type: 2}
+                { id: 'index', value: [0], type: 1 },
+                { id: "easingDuration", value: [0.5], type: 2},
+                { id: 'val', value: [42], type: 2 },
+                { id: 'cp1', value: [0], type: 2 },
+                { id: 'cp2', value: [42], type: 2}
             ],
         });
 
@@ -589,9 +589,9 @@ describe('nodes', () => {
                 { id: 'pointer', value: '/nodes/{index}/value' },
             ],
             values: [
-                { id: 'index', value: 0, type: 1 },
-                { id: "duration", value: 0.5, type: 2},
-                { id: 'val', value: 42, type: 2 },
+                { id: 'index', value: [0], type: 1 },
+                { id: "duration", value: [0.5], type: 2},
+                { id: 'val', value: [42], type: 2 },
                 { id: 'p1', value: [0,0], type: 3 },
                 { id: 'p2', value: [1,1], type: 3}
             ],
@@ -638,7 +638,7 @@ describe('nodes', () => {
         });
 
         const val = euler.processNode();
-        expect(val['val'].value).toBe(Math.E);
+        expect(val['val'].value[0]).toBe(Math.E);
     });
 
     it("math/Inf", () => {
@@ -647,7 +647,7 @@ describe('nodes', () => {
         });
 
         const val = inf.processNode();
-        expect(val['val'].value).toBe(Infinity);
+        expect(val['val'].value[0]).toBe(Infinity);
     });
 
     it("math/pi", () => {
@@ -656,7 +656,7 @@ describe('nodes', () => {
         });
 
         const val = pi.processNode();
-        expect(val['val'].value).toBe(Math.PI);
+        expect(val['val'].value[0]).toBe(Math.PI);
     });
 
     it("math/nan", () => {
@@ -665,29 +665,29 @@ describe('nodes', () => {
         });
 
         const val = nan.processNode();
-        expect(val['val'].value).toBe(NaN);
+        expect(val['val'].value[0]).toBe(NaN);
     });
 
     it("math/abs", () => {
         let abs: AbsoluteValue = new AbsoluteValue({
             ...defaultProps,
             values: [
-                {id: 'a', value: -10, type: 1}
+                {id: 'a', value: [-10], type: 1}
             ]
         });
 
         let val = abs.processNode();
-        expect(val['val'].value).toBe(10);
+        expect(val['val'].value[0]).toBe(10);
 
         abs = new AbsoluteValue({
             ...defaultProps,
             values: [
-                {id: 'a', value: -10, type: 2}
+                {id: 'a', value: [-10], type: 2}
             ]
         });
 
         val = abs.processNode();
-        expect(val['val'].value).toBe(10);
+        expect(val['val'].value[0]).toBe(10);
 
         abs = new AbsoluteValue({
             ...defaultProps,
@@ -706,12 +706,12 @@ describe('nodes', () => {
         let sign: Sign = new Sign({
             ...defaultProps,
             values: [
-                {id: 'a', value: -10, type: 2}
+                {id: 'a', value: [-10], type: 2}
             ]
         });
 
         let val = sign.processNode();
-        expect(val['val'].value).toBe(-1);
+        expect(val['val'].value[0]).toBe(-1);
 
         sign = new Sign({
             ...defaultProps,
@@ -730,12 +730,12 @@ describe('nodes', () => {
         let trunc: Truncate = new Truncate({
             ...defaultProps,
             values: [
-                {id: 'a', value: -10.1201223, type: 2}
+                {id: 'a', value: [-10.1201223], type: 2}
             ]
         });
 
         let val = trunc.processNode();
-        expect(val['val'].value).toBe(-10);
+        expect(val['val'].value[0]).toBe(-10);
 
         trunc = new Truncate({
             ...defaultProps,
@@ -754,12 +754,12 @@ describe('nodes', () => {
         let floor: Floor = new Floor({
             ...defaultProps,
             values: [
-                {id: 'a', value: -10.1201223, type: 2}
+                {id: 'a', value: [-10.1201223], type: 2}
             ]
         });
 
         let val = floor.processNode();
-        expect(val['val'].value).toBe(-11);
+        expect(val['val'].value[0]).toBe(-11);
 
         floor = new Floor({
             ...defaultProps,
@@ -778,12 +778,12 @@ describe('nodes', () => {
         let ceil: Ceil = new Ceil({
             ...defaultProps,
             values: [
-                {id: 'a', value: -10.1201223, type: 2}
+                {id: 'a', value: [-10.1201223], type: 2}
             ]
         });
 
         let val = ceil.processNode();
-        expect(val['val'].value).toBe(-10);
+        expect(val['val'].value[0]).toBe(-10);
 
         ceil = new Ceil({
             ...defaultProps,
@@ -802,13 +802,13 @@ describe('nodes', () => {
         let add: Add = new Add({
             ...defaultProps,
             values: [
-                {id: 'a', value: -10.5, type: 2},
-                {id: 'b', value: 5.5, type: 2}
+                {id: 'a', value: [-10.5], type: 2},
+                {id: 'b', value: [5.5], type: 2}
             ]
         });
 
         let val = add.processNode();
-        expect(val['val'].value).toBe(-5);
+        expect(val['val'].value[0]).toBe(-5);
 
         add = new Add({
             ...defaultProps,
@@ -833,8 +833,8 @@ describe('nodes', () => {
         });
 
         let val = extract2.processNode();
-        expect(val['0'].value).toBe(-10.5);
-        expect(val['1'].value).toBe(5.5);
+        expect(val['0'].value[0]).toBe(-10.5);
+        expect(val['1'].value[0]).toBe(5.5);
     });
 
     it("math/extract3", () => {
@@ -846,9 +846,9 @@ describe('nodes', () => {
         });
 
         let val = extract3.processNode();
-        expect(val['0'].value).toBe(-10.5);
-        expect(val['1'].value).toBe(5.5);
-        expect(val['2'].value).toBe(4);
+        expect(val['0'].value[0]).toBe(-10.5);
+        expect(val['1'].value[0]).toBe(5.5);
+        expect(val['2'].value[0]).toBe(4);
     });
 
     it("math/extract4", () => {
@@ -860,10 +860,10 @@ describe('nodes', () => {
         });
 
         let val = extract4.processNode();
-        expect(val['0'].value).toBe(-10.5);
-        expect(val['1'].value).toBe(5.5);
-        expect(val['2'].value).toBe(4);
-        expect(val['3'].value).toBe(6);
+        expect(val['0'].value[0]).toBe(-10.5);
+        expect(val['1'].value[0]).toBe(5.5);
+        expect(val['2'].value[0]).toBe(4);
+        expect(val['3'].value[0]).toBe(6);
     });
 
     it("math/extract4x4", () => {
@@ -875,30 +875,30 @@ describe('nodes', () => {
         });
 
         let val = extract4x4.processNode();
-        expect(val['0'].value).toBe(-10.5);
-        expect(val['1'].value).toBe(5.5);
-        expect(val['2'].value).toBe(4);
-        expect(val['3'].value).toBe(6);
-        expect(val['4'].value).toBe(1);
-        expect(val['5'].value).toBe(2);
-        expect(val['6'].value).toBe(3);
-        expect(val['7'].value).toBe(4);
-        expect(val['8'].value).toBe(5);
-        expect(val['9'].value).toBe(6);
-        expect(val['10'].value).toBe(7);
-        expect(val['11'].value).toBe(8);
-        expect(val['12'].value).toBe(9);
-        expect(val['13'].value).toBe(10);
-        expect(val['14'].value).toBe(11);
-        expect(val['15'].value).toBe(12);
+        expect(val['0'].value[0]).toBe(-10.5);
+        expect(val['1'].value[0]).toBe(5.5);
+        expect(val['2'].value[0]).toBe(4);
+        expect(val['3'].value[0]).toBe(6);
+        expect(val['4'].value[0]).toBe(1);
+        expect(val['5'].value[0]).toBe(2);
+        expect(val['6'].value[0]).toBe(3);
+        expect(val['7'].value[0]).toBe(4);
+        expect(val['8'].value[0]).toBe(5);
+        expect(val['9'].value[0]).toBe(6);
+        expect(val['10'].value[0]).toBe(7);
+        expect(val['11'].value[0]).toBe(8);
+        expect(val['12'].value[0]).toBe(9);
+        expect(val['13'].value[0]).toBe(10);
+        expect(val['14'].value[0]).toBe(11);
+        expect(val['15'].value[0]).toBe(12);
     });
 
     it("math/combine2", () => {
         let combine2: Combine2 = new Combine2({
             ...defaultProps,
             values: [
-                {id: 'a', value: -10.5, type: 2},
-                {id: 'b', value: 5.5, type: 2}
+                {id: 'a', value: [-10.5], type: 2},
+                {id: 'b', value: [5.5], type: 2}
             ]
         });
 
@@ -911,9 +911,9 @@ describe('nodes', () => {
         let combine3: Combine3 = new Combine3({
             ...defaultProps,
             values: [
-                {id: 'a', value: -10.5, type: 2},
-                {id: 'b', value: 5.5, type: 2},
-                {id: 'c', value: 0.5, type: 2}
+                {id: 'a', value: [-10.5], type: 2},
+                {id: 'b', value: [5.5], type: 2},
+                {id: 'c', value: [0.5], type: 2}
             ]
         });
 
@@ -927,10 +927,10 @@ describe('nodes', () => {
         let combine4: Combine4 = new Combine4({
             ...defaultProps,
             values: [
-                {id: 'a', value: -10.5, type: 2},
-                {id: 'b', value: 5.5, type: 2},
-                {id: 'c', value: 0.5, type: 2},
-                {id: 'd', value: 7.5, type: 2},
+                {id: 'a', value: [-10.5], type: 2},
+                {id: 'b', value: [5.5], type: 2},
+                {id: 'c', value: [0.5], type: 2},
+                {id: 'd', value: [7.5], type: 2},
             ]
         });
 
@@ -945,22 +945,22 @@ describe('nodes', () => {
         let combine4x4: Combine4x4 = new Combine4x4({
             ...defaultProps,
             values: [
-                {id: 'a', value: -10.5, type: 2},
-                {id: 'b', value: 5.5, type: 2},
-                {id: 'c', value: 0.5, type: 2},
-                {id: 'd', value: 7.5, type: 2},
-                {id: 'e', value: -10, type: 2},
-                {id: 'f', value: 5, type: 2},
-                {id: 'g', value: 0, type: 2},
-                {id: 'h', value: 7, type: 2},
-                {id: 'i', value: 10.5, type: 2},
-                {id: 'j', value: 5.8, type: 2},
-                {id: 'k', value: 9.5, type: 2},
-                {id: 'l', value: 2.5, type: 2},
-                {id: 'm', value: -1.5, type: 2},
-                {id: 'n', value: 5.7, type: 2},
-                {id: 'o', value: 6.5, type: 2},
-                {id: 'p', value: 7.7, type: 2},
+                {id: 'a', value: [-10.5], type: 2},
+                {id: 'b', value: [5.5], type: 2},
+                {id: 'c', value: [0.5], type: 2},
+                {id: 'd', value: [7.5], type: 2},
+                {id: 'e', value: [-10], type: 2},
+                {id: 'f', value: [5], type: 2},
+                {id: 'g', value: [0], type: 2},
+                {id: 'h', value: [7], type: 2},
+                {id: 'i', value: [10.5], type: 2},
+                {id: 'j', value: [5.8], type: 2},
+                {id: 'k', value: [9.5], type: 2},
+                {id: 'l', value: [2.5], type: 2},
+                {id: 'm', value: [-1.5], type: 2},
+                {id: 'n', value: [5.7], type: 2},
+                {id: 'o', value: [6.5], type: 2},
+                {id: 'p', value: [7.7], type: 2},
             ]
         });
 
@@ -987,21 +987,21 @@ describe('nodes', () => {
         let select: Select = new Select({
             ...defaultProps,
             values: [
-                {id: 'a', value: -10.5, type: 2},
-                {id: 'b', value: 5.5, type: 2},
-                {id: 'condition', value: true, type: 0}
+                {id: 'a', value: [-10.5], type: 2},
+                {id: 'b', value: [5.5], type: 2},
+                {id: 'condition', value: [true], type: 0}
             ]
         });
 
         let val = select.processNode();
-        expect(val['val'].value).toBe(-10.5);
+        expect(val['val'].value[0]).toBe(-10.5);
 
         select = new Select({
             ...defaultProps,
             values: [
                 {id: 'a', value: [-10.5, 0.5, 9] , type: 4},
                 {id: 'b', value: [4, -6, 10] , type: 4},
-                {id: 'condition', value: false, type: 0}
+                {id: 'condition', value: [false], type: 0}
             ]
         });
 
@@ -1015,13 +1015,13 @@ describe('nodes', () => {
         let sub: Subtract = new Subtract({
             ...defaultProps,
             values: [
-                {id: 'a', value: -10.5, type: 2},
-                {id: 'b', value: 5.5, type: 2}
+                {id: 'a', value: [-10.5], type: 2},
+                {id: 'b', value: [5.5], type: 2}
             ]
         });
 
         let val = sub.processNode();
-        expect(val['val'].value).toBe(-16);
+        expect(val['val'].value[0]).toBe(-16);
 
         sub = new Subtract({
             ...defaultProps,
@@ -1041,13 +1041,13 @@ describe('nodes', () => {
         let mul: Multiply = new Multiply({
             ...defaultProps,
             values: [
-                {id: 'a', value: -10, type: 2},
-                {id: 'b', value: 5.5, type: 2}
+                {id: 'a', value: [-10], type: 2},
+                {id: 'b', value: [5.5], type: 2}
             ]
         });
 
         let val = mul.processNode();
-        expect(val['val'].value).toBe(-55);
+        expect(val['val'].value[0]).toBe(-55);
 
         mul = new Multiply({
             ...defaultProps,
@@ -1067,13 +1067,13 @@ describe('nodes', () => {
         let div: Divide = new Divide({
             ...defaultProps,
             values: [
-                {id: 'a', value: -10, type: 2},
-                {id: 'b', value: 5, type: 2}
+                {id: 'a', value: [-10], type: 2},
+                {id: 'b', value: [5], type: 2}
             ]
         });
 
         let val = div.processNode();
-        expect(val['val'].value).toBe(-2);
+        expect(val['val'].value[0]).toBe(-2);
 
         div = new Divide({
             ...defaultProps,
@@ -1093,13 +1093,13 @@ describe('nodes', () => {
         let rem: Remainder = new Remainder({
             ...defaultProps,
             values: [
-                {id: 'a', value: -10, type: 2},
-                {id: 'b', value: 5, type: 2}
+                {id: 'a', value: [-10], type: 2},
+                {id: 'b', value: [5], type: 2}
             ]
         });
 
         let val = rem.processNode();
-        expect(val['val'].value).toBe(-0);
+        expect(val['val'].value[0]).toBe(-0);
 
         rem = new Remainder({
             ...defaultProps,
@@ -1119,13 +1119,13 @@ describe('nodes', () => {
         let max: Max = new Max({
             ...defaultProps,
             values: [
-                {id: 'a', value: -10, type: 2},
-                {id: 'b', value: 5, type: 2}
+                {id: 'a', value: [-10], type: 2},
+                {id: 'b', value: [5], type: 2}
             ]
         });
 
         let val = max.processNode();
-        expect(val['val'].value).toBe(5);
+        expect(val['val'].value[0]).toBe(5);
 
         max = new Max({
             ...defaultProps,
@@ -1145,13 +1145,13 @@ describe('nodes', () => {
         let min: Min = new Min({
             ...defaultProps,
             values: [
-                {id: 'a', value: -10, type: 2},
-                {id: 'b', value: 5, type: 2}
+                {id: 'a', value: [-10], type: 2},
+                {id: 'b', value: [5], type: 2}
             ]
         });
 
         let val = min.processNode();
-        expect(val['val'].value).toBe(-10);
+        expect(val['val'].value[0]).toBe(-10);
 
         min = new Min({
             ...defaultProps,
@@ -1171,12 +1171,12 @@ describe('nodes', () => {
         let rad: DegreeToRadians = new DegreeToRadians({
             ...defaultProps,
             values: [
-                {id: 'a', value: 180, type: 2},
+                {id: 'a', value: [180], type: 2},
             ]
         });
 
         let val = rad.processNode();
-        expect(val['val'].value).toBe(Math.PI);
+        expect(val['val'].value[0]).toBe(Math.PI);
 
         rad = new DegreeToRadians({
             ...defaultProps,
@@ -1195,12 +1195,12 @@ describe('nodes', () => {
         let deg: RadiansToDegrees = new RadiansToDegrees({
             ...defaultProps,
             values: [
-                {id: 'a', value: Math.PI, type: 2},
+                {id: 'a', value: [Math.PI], type: 2},
             ]
         });
 
         let val = deg.processNode();
-        expect(val['val'].value).toBe(180);
+        expect(val['val'].value[0]).toBe(180);
 
         deg = new RadiansToDegrees({
             ...defaultProps,
@@ -1219,12 +1219,12 @@ describe('nodes', () => {
         let sin: Sine = new Sine({
             ...defaultProps,
             values: [
-                {id: 'a', value: Math.PI, type: 2},
+                {id: 'a', value: [Math.PI], type: 2},
             ]
         });
 
         let val = sin.processNode();
-        expect(isCloseToVal(val['val'].value, 0)).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], 0)).toBe(true);
 
         sin = new Sine({
             ...defaultProps,
@@ -1243,12 +1243,12 @@ describe('nodes', () => {
         let cos: Cosine = new Cosine({
             ...defaultProps,
             values: [
-                {id: 'a', value: Math.PI, type: 2},
+                {id: 'a', value: [Math.PI], type: 2},
             ]
         });
 
         let val = cos.processNode();
-        expect(isCloseToVal(val['val'].value, -1)).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], -1)).toBe(true);
 
         cos = new Cosine({
             ...defaultProps,
@@ -1267,12 +1267,12 @@ describe('nodes', () => {
         let tan: Tangent = new Tangent({
             ...defaultProps,
             values: [
-                {id: 'a', value: Math.PI / 4, type: 2},
+                {id: 'a', value: [Math.PI / 4], type: 2},
             ]
         });
 
         let val = tan.processNode();
-        expect(isCloseToVal(val['val'].value, 1)).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], 1)).toBe(true);
 
         tan = new Tangent({
             ...defaultProps,
@@ -1292,12 +1292,12 @@ describe('nodes', () => {
         let asin: Arcsine = new Arcsine({
             ...defaultProps,
             values: [
-                { id: 'a', value: 0.5, type: 2 },
+                { id: 'a', value: [0.5], type: 2 },
             ]
         });
 
         let val = asin.processNode();
-        expect(isCloseToVal(val['val'].value, Math.asin(0.5))).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], Math.asin(0.5))).toBe(true);
 
         asin = new Arcsine({
             ...defaultProps,
@@ -1316,12 +1316,12 @@ describe('nodes', () => {
         let acos: Arccosine = new Arccosine({
             ...defaultProps,
             values: [
-                { id: 'a', value: 0.5, type: 2 },
+                { id: 'a', value: [0.5], type: 2 },
             ]
         });
 
         let val = acos.processNode();
-        expect(isCloseToVal(val['val'].value, Math.acos(0.5))).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], Math.acos(0.5))).toBe(true);
 
         acos = new Arccosine({
             ...defaultProps,
@@ -1340,12 +1340,12 @@ describe('nodes', () => {
         let atan: Arctangent = new Arctangent({
             ...defaultProps,
             values: [
-                { id: 'a', value: 0.5, type: 2 },
+                { id: 'a', value: [0.5], type: 2 },
             ]
         });
 
         let val = atan.processNode();
-        expect(isCloseToVal(val['val'].value, Math.atan(0.5))).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], Math.atan(0.5))).toBe(true);
 
         atan = new Arctangent({
             ...defaultProps,
@@ -1364,13 +1364,13 @@ describe('nodes', () => {
         let atan2: Arctangent2 = new Arctangent2({
             ...defaultProps,
             values: [
-                { id: 'a', value: 1.0, type: 2 },
-                { id: 'b', value: 1.0, type: 2 },
+                { id: 'a', value: [1.0], type: 2 },
+                { id: 'b', value: [1.0], type: 2 },
             ]
         });
 
         let val = atan2.processNode();
-        expect(val['val'].value).toBe(Math.atan2(1.0, 1.0));
+        expect(val['val'].value[0]).toBe(Math.atan2(1.0, 1.0));
 
         atan2 = new Arctangent2({
             ...defaultProps,
@@ -1390,12 +1390,12 @@ describe('nodes', () => {
         let log: Log = new Log({
             ...defaultProps,
             values: [
-                { id: 'a', value: 2.0, type: 2 },
+                { id: 'a', value: [2.0], type: 2 },
             ]
         });
 
         let val = log.processNode();
-        expect(isCloseToVal(val['val'].value, Math.log(2.0))).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], Math.log(2.0))).toBe(true);
 
         log = new Log({
             ...defaultProps,
@@ -1414,12 +1414,12 @@ describe('nodes', () => {
         let log2: Log2 = new Log2({
             ...defaultProps,
             values: [
-                { id: 'a', value: 8.0, type: 2 },
+                { id: 'a', value: [8.0], type: 2 },
             ]
         });
 
         let val = log2.processNode();
-        expect(isCloseToVal(val['val'].value, Math.log2(8.0))).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], Math.log2(8.0))).toBe(true);
 
         log2 = new Log2({
             ...defaultProps,
@@ -1438,12 +1438,12 @@ describe('nodes', () => {
         let log10: Log10 = new Log10({
             ...defaultProps,
             values: [
-                { id: 'a', value: 100.0, type: 2 },
+                { id: 'a', value: [100.0], type: 2 },
             ]
         });
 
         let val = log10.processNode();
-        expect(isCloseToVal(val['val'].value, Math.log10(100.0))).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], Math.log10(100.0))).toBe(true);
 
         log10 = new Log10({
             ...defaultProps,
@@ -1462,12 +1462,12 @@ describe('nodes', () => {
         let cubeRoot: CubeRoot = new CubeRoot({
             ...defaultProps,
             values: [
-                { id: 'a', value: 8.0, type: 2 },
+                { id: 'a', value: [8.0], type: 2 },
             ]
         });
 
         let val = cubeRoot.processNode();
-        expect(isCloseToVal(val['val'].value, Math.cbrt(8.0))).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], Math.cbrt(8.0))).toBe(true);
 
         cubeRoot = new CubeRoot({
             ...defaultProps,
@@ -1486,12 +1486,12 @@ describe('nodes', () => {
         let sqrt: SquareRoot = new SquareRoot({
             ...defaultProps,
             values: [
-                { id: 'a', value: 16.0, type: 2 },
+                { id: 'a', value: [16.0], type: 2 },
             ]
         });
 
         let val = sqrt.processNode();
-        expect(isCloseToVal(val['val'].value, Math.sqrt(16.0))).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], Math.sqrt(16.0))).toBe(true);
 
         sqrt = new SquareRoot({
             ...defaultProps,
@@ -1510,13 +1510,13 @@ describe('nodes', () => {
         let pow: Power = new Power({
             ...defaultProps,
             values: [
-                {id: 'a', value: 2, type: 2},
-                {id: 'b', value: 3, type: 2}
+                {id: 'a', value: [2], type: 2},
+                {id: 'b', value: [3], type: 2}
             ]
         });
 
         let val = pow.processNode();
-        expect(val['val'].value).toBe(8);
+        expect(val['val'].value[0]).toBe(8);
 
         pow = new Power({
             ...defaultProps,
@@ -1536,12 +1536,12 @@ describe('nodes', () => {
         let exp: Exponential = new Exponential({
             ...defaultProps,
             values: [
-                {id: 'a', value: 2, type: 2}
+                {id: 'a', value: [2], type: 2}
             ]
         });
 
         let val = exp.processNode();
-        expect(val['val'].value).toBe(Math.exp(2));
+        expect(val['val'].value[0]).toBe(Math.exp(2));
 
         exp = new Exponential({
             ...defaultProps,
@@ -1560,14 +1560,14 @@ describe('nodes', () => {
         let clamp: Clamp = new Clamp({
             ...defaultProps,
             values: [
-                {id: 'a', value: 2.5, type: 2},
-                {id: 'b', value: 0, type: 2},
-                {id: 'c', value: 1, type: 2}
+                {id: 'a', value: [2.5], type: 2},
+                {id: 'b', value: [0], type: 2},
+                {id: 'c', value: [1], type: 2}
             ]
         });
 
         let val = clamp.processNode();
-        expect(val['val'].value).toBe(1);
+        expect(val['val'].value[0]).toBe(1);
 
         clamp = new Clamp({
             ...defaultProps,
@@ -1588,12 +1588,12 @@ describe('nodes', () => {
         let saturate: Saturate = new Saturate({
             ...defaultProps,
             values: [
-                {id: 'a', value: 2.5, type: 2}
+                {id: 'a', value: [2.5], type: 2}
             ]
         });
 
         let val = saturate.processNode();
-        expect(val['val'].value).toBe(1);
+        expect(val['val'].value[0]).toBe(1);
 
         saturate = new Saturate({
             ...defaultProps,
@@ -1612,14 +1612,14 @@ describe('nodes', () => {
         let mix: Interpolate = new Interpolate({
             ...defaultProps,
             values: [
-                {id: 'a', value: 2.5, type: 2},
-                {id: 'b', value: 0, type: 2},
-                {id: 'c', value: 0.2, type: 2}
+                {id: 'a', value: [2.5], type: 2},
+                {id: 'b', value: [0], type: 2},
+                {id: 'c', value: [0.2], type: 2}
             ]
         });
 
         let val = mix.processNode();
-        expect(val['val'].value).toBe(2);
+        expect(val['val'].value[0]).toBe(2);
 
         mix = new Interpolate({
             ...defaultProps,
@@ -1640,12 +1640,12 @@ describe('nodes', () => {
         let neg: Negate = new Negate({
             ...defaultProps,
             values: [
-                {id: 'a', value: 2.5, type: 2}
+                {id: 'a', value: [2.5], type: 2}
             ]
         });
 
         let val = neg.processNode();
-        expect(val['val'].value).toBe(-2.5);
+        expect(val['val'].value[0]).toBe(-2.5);
 
         neg = new Negate({
             ...defaultProps,
@@ -1664,12 +1664,12 @@ describe('nodes', () => {
         let fract: Fraction = new Fraction({
             ...defaultProps,
             values: [
-                {id: 'a', value: 2.5, type: 2}
+                {id: 'a', value: [2.5], type: 2}
             ]
         });
 
         let val = fract.processNode();
-        expect(val['val'].value).toBe(0.5);
+        expect(val['val'].value[0]).toBe(0.5);
 
         fract = new Fraction({
             ...defaultProps,
@@ -1688,12 +1688,12 @@ describe('nodes', () => {
         let cosh: HyperbolicCosine = new HyperbolicCosine({
             ...defaultProps,
             values: [
-                { id: 'a', value: 2.0, type: 2 },
+                { id: 'a', value: [2.0], type: 2 },
             ]
         });
 
         let val = cosh.processNode();
-        expect(isCloseToVal(val['val'].value, Math.cosh(2.0))).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], Math.cosh(2.0))).toBe(true);
 
         cosh = new HyperbolicCosine({
             ...defaultProps,
@@ -1712,12 +1712,12 @@ describe('nodes', () => {
         let sinh: HyperbolicSine = new HyperbolicSine({
             ...defaultProps,
             values: [
-                { id: 'a', value: 2.0, type: 2 },
+                { id: 'a', value: [2.0], type: 2 },
             ]
         });
 
         let val = sinh.processNode();
-        expect(isCloseToVal(val['val'].value, Math.sinh(2.0))).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], Math.sinh(2.0))).toBe(true);
 
         sinh = new HyperbolicSine({
             ...defaultProps,
@@ -1736,12 +1736,12 @@ describe('nodes', () => {
         let tanh: HyperbolicTangent = new HyperbolicTangent({
             ...defaultProps,
             values: [
-                { id: 'a', value: 2.0, type: 2 },
+                { id: 'a', value: [2.0], type: 2 },
             ]
         });
 
         let val = tanh.processNode();
-        expect(isCloseToVal(val['val'].value, Math.tanh(2.0))).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], Math.tanh(2.0))).toBe(true);
 
         tanh = new HyperbolicTangent({
             ...defaultProps,
@@ -1760,12 +1760,12 @@ describe('nodes', () => {
         let acosh: InverseHyperbolicCosine = new InverseHyperbolicCosine({
             ...defaultProps,
             values: [
-                { id: 'a', value: 2.0, type: 2 },
+                { id: 'a', value: [2.0], type: 2 },
             ]
         });
 
         let val = acosh.processNode();
-        expect(isCloseToVal(val['val'].value, Math.acosh(2.0))).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], Math.acosh(2.0))).toBe(true);
 
         acosh = new InverseHyperbolicCosine({
             ...defaultProps,
@@ -1784,12 +1784,12 @@ describe('nodes', () => {
         let asinh: InverseHyperbolicSine = new InverseHyperbolicSine({
             ...defaultProps,
             values: [
-                { id: 'a', value: 2.0, type: 2 },
+                { id: 'a', value: [2.0], type: 2 },
             ]
         });
 
         let val = asinh.processNode();
-        expect(isCloseToVal(val['val'].value, Math.asinh(2.0))).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], Math.asinh(2.0))).toBe(true);
 
         asinh = new InverseHyperbolicSine({
             ...defaultProps,
@@ -1808,12 +1808,12 @@ describe('nodes', () => {
         let atanh: InverseHyperbolicTangent = new InverseHyperbolicTangent({
             ...defaultProps,
             values: [
-                { id: 'a', value: 0.5, type: 2 },
+                { id: 'a', value: [0.5], type: 2 },
             ]
         });
 
         let val = atanh.processNode();
-        expect(isCloseToVal(val['val'].value, Math.atanh(0.5))).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], Math.atanh(0.5))).toBe(true);
 
         atanh = new InverseHyperbolicTangent({
             ...defaultProps,
@@ -1857,7 +1857,7 @@ describe('nodes', () => {
 
         const expectedVecLen = Math.sqrt(3**2 + 4**2 + 5**2);
 
-        expect(isCloseToVal(val['val'].value, expectedVecLen)).toBe(true);
+        expect(isCloseToVal(val['val'].value[0], expectedVecLen)).toBe(true);
     });
 
     it("math/transform", () => {
@@ -1897,7 +1897,7 @@ describe('nodes', () => {
 
         const val = dot.processNode();
         const expected = -10.5 * 4 + 0.5 * -6 + 9 * 10
-        expect(val['val'].value).toBe(expected);
+        expect(val['val'].value[0]).toBe(expected);
     });
 
     it("math/cross", () => {
@@ -1927,7 +1927,7 @@ describe('nodes', () => {
             ...defaultProps,
             values: [
                 { id: 'a', value: [1.0, 0.0], type: 3 },
-                { id: 'b', value: Math.PI / 2, type: 2 },
+                { id: 'b', value: [Math.PI / 2], type: 2 },
             ]
         });
 
@@ -1945,7 +1945,7 @@ describe('nodes', () => {
             values: [
                 { id: 'a', value: [1.0, 0.0, 0.0], type: 4 },
                 { id: 'b', value: [0.0, 1.0, 0.0], type: 4 },
-                { id: 'c', value: Math.PI / 2, type: 2 },
+                { id: 'c', value: [Math.PI / 2], type: 2 },
             ]
         });
 
@@ -2024,7 +2024,7 @@ describe('nodes', () => {
 
         const val = determinant.processNode();
 
-        expect(val['val'].value).toBe(-4);
+        expect(val['val'].value[0]).toBe(-4);
     });
 
     it("math/matmul", () => {
@@ -2066,44 +2066,44 @@ describe('nodes', () => {
         let isInfNode: IsInfNode = new IsInfNode({
             ...defaultProps,
             values: [
-                { id: 'a', value: 1.0, type: 2 }
+                { id: 'a', value: [1.0], type: 2 }
             ]
         });
 
         let val = isInfNode.processNode()['val'].value;
-        expect(val).toBe(false);
+        expect(val[0]).toBe(false);
 
         isInfNode = new IsInfNode({
             ...defaultProps,
             values: [
-                { id: 'a', value: Infinity, type: 2 }
+                { id: 'a', value: [Infinity], type: 2 }
             ]
         });
 
         val = isInfNode.processNode()['val'].value;
-        expect(val).toBe(true);
+        expect(val[0]).toBe(true);
     });
 
     it("math/isNaNNode", () => {
         let isNaNNode: IsNaNNode = new IsNaNNode({
             ...defaultProps,
             values: [
-                { id: 'a', value: 1.0, type: 2 }
+                { id: 'a', value: [1.0], type: 2 }
             ]
         });
 
         let val = isNaNNode.processNode()['val'].value;
-        expect(val).toBe(false);
+        expect(val[0]).toBe(false);
 
         isNaNNode = new IsNaNNode({
             ...defaultProps,
             values: [
-                { id: 'a', value: NaN, type: 2 }
+                { id: 'a', value: [NaN], type: 2 }
             ]
         });
 
         val = isNaNNode.processNode()['val'].value;
-        expect(val).toBe(true);
+        expect(val[0]).toBe(true);
     });
 
     it("math/eq", () => {
@@ -2116,17 +2116,17 @@ describe('nodes', () => {
         });
 
         let val = eq.processNode()['val'].value;
-        expect(val).toBe(false);
+        expect(val[0]).toBe(false);
 
         eq = new Equality({
             ...defaultProps,
             values: [
-                {id: 'a', value: 5.0, type: 2},
-                {id: 'b', value: 5.0, type: 2}
+                {id: 'a', value: [5.0], type: 2},
+                {id: 'b', value: [5.0], type: 2}
             ]
         });
         val = eq.processNode()['val'].value;
-        expect(val).toBe(true);
+        expect(val[0]).toBe(true);
 
         eq = new Equality({
             ...defaultProps,
@@ -2137,7 +2137,7 @@ describe('nodes', () => {
         });
 
         val = eq.processNode()['val'].value;
-        expect(val).toBe(false);
+        expect(val[0]).toBe(false);
 
         eq = new Equality({
             ...defaultProps,
@@ -2148,54 +2148,54 @@ describe('nodes', () => {
         });
 
         val = eq.processNode()['val'].value;
-        expect(val).toBe(true);
+        expect(val[0]).toBe(true);
     });
 
     it("math/lt", () => {
         let lt: LessThan = new LessThan({
             ...defaultProps,
             values: [
-                {id: 'a', value: -10.5, type: 2},
-                {id: 'b', value: 5.5, type: 2}
+                {id: 'a', value: [-10.5], type: 2},
+                {id: 'b', value: [5.5], type: 2}
             ]
         });
 
         let val = lt.processNode()['val'].value;
-        expect(val).toBe(true);
+        expect(val[0]).toBe(true);
 
         lt = new LessThan({
             ...defaultProps,
             values: [
-                {id: 'a', value: 5.0, type: 2},
-                {id: 'b', value: 5.0, type: 2}
+                {id: 'a', value: [5.0], type: 2},
+                {id: 'b', value: [5.0], type: 2}
             ]
         });
         val = lt.processNode()['val'].value;
-        expect(val).toBe(false);
+        expect(val[0]).toBe(false);
     });
 
     it("math/le", () => {
         let le: LessThanOrEqualTo = new LessThanOrEqualTo({
             ...defaultProps,
             values: [
-                {id: 'a', value: 5.0, type: 2},
-                {id: 'b', value: 5.5, type: 2}
+                {id: 'a', value: [5.0], type: 2},
+                {id: 'b', value: [5.5], type: 2}
             ]
         });
 
         let val = le.processNode()['val'].value;
-        expect(val).toBe(true);
+        expect(val[0]).toBe(true);
 
         le = new LessThanOrEqualTo({
             ...defaultProps,
             values: [
-                {id: 'a', value: 5.5, type: 2},
-                {id: 'b', value: 5.5, type: 2}
+                {id: 'a', value: [5.5], type: 2},
+                {id: 'b', value: [5.5], type: 2}
             ]
         });
 
         val = le.processNode()['val'].value;
-        expect(val).toBe(true);
+        expect(val[0]).toBe(true);
 
         le = new LessThanOrEqualTo({
             ...defaultProps,
@@ -2205,64 +2205,64 @@ describe('nodes', () => {
             ]
         });
         val = le.processNode()['val'].value;
-        expect(val).toBe(false);
+        expect(val[0]).toBe(false);
     });
 
     it("math/gt", () => {
         let gt: GreaterThan = new GreaterThan({
             ...defaultProps,
             values: [
-                {id: 'a', value: 10.5, type: 2},
-                {id: 'b', value: 5.5, type: 2}
+                {id: 'a', value: [10.5], type: 2},
+                {id: 'b', value: [5.5], type: 2}
             ]
         });
 
         let val = gt.processNode()['val'].value;
-        expect(val).toBe(true);
+        expect(val[0]).toBe(true);
 
         gt = new GreaterThan({
             ...defaultProps,
             values: [
-                {id: 'a', value: 5.0, type: 2},
-                {id: 'b', value: 5.0, type: 2}
+                {id: 'a', value: [5.0], type: 2},
+                {id: 'b', value: [5.0], type: 2}
             ]
         });
         val = gt.processNode()['val'].value;
-        expect(val).toBe(false);
+        expect(val[0]).toBe(false);
     });
 
     it("math/ge", () => {
         let ge: GreaterThanOrEqualTo = new GreaterThanOrEqualTo({
             ...defaultProps,
             values: [
-                {id: 'a', value: 10.0, type: 2},
-                {id: 'b', value: 5.5, type: 2}
+                {id: 'a', value: [10.0], type: 2},
+                {id: 'b', value: [5.5], type: 2}
             ]
         });
 
         let val = ge.processNode()['val'].value;
-        expect(val).toBe(true);
+        expect(val[0]).toBe(true);
 
         ge = new GreaterThanOrEqualTo({
             ...defaultProps,
             values: [
-                {id: 'a', value: 5.5, type: 2},
-                {id: 'b', value: 5.5, type: 2}
+                {id: 'a', value: [5.5], type: 2},
+                {id: 'b', value: [5.5], type: 2}
             ]
         });
 
         val = ge.processNode()['val'].value;
-        expect(val).toBe(true);
+        expect(val[0]).toBe(true);
 
         ge = new GreaterThanOrEqualTo({
             ...defaultProps,
             values: [
-                {id: 'a', value: -10.0, type: 2},
-                {id: 'b', value: 5.0, type: 2}
+                {id: 'a', value: [-10.0], type: 2},
+                {id: 'b', value: [5.0], type: 2}
             ]
         });
         val = ge.processNode()['val'].value;
-        expect(val).toBe(false);
+        expect(val[0]).toBe(false);
     });
 
     it("type/boolToInt", () => {
@@ -2271,7 +2271,7 @@ describe('nodes', () => {
             values: [
                 {
                     id: 'a',
-                    value: true,
+                    value: [true],
                     type: 0
                 }
             ]
@@ -2279,14 +2279,14 @@ describe('nodes', () => {
 
         let val = boolToInt.processNode();
 
-        expect(val['val'].value).toBe(1);
+        expect(val['val'].value[0]).toBe(1);
 
         boolToInt = new BoolToInt({
             ...defaultProps,
             values: [
                 {
                     id: 'a',
-                    value: false,
+                    value: [false],
                     type: 0
                 }
             ]
@@ -2294,7 +2294,7 @@ describe('nodes', () => {
 
         val = boolToInt.processNode();
 
-        expect(val['val'].value).toBe(0);
+        expect(val['val'].value[0]).toBe(0);
     });
 
     it("type/boolToFloat", () => {
@@ -2303,7 +2303,7 @@ describe('nodes', () => {
             values: [
                 {
                     id: 'a',
-                    value: true,
+                    value: [true],
                     type: 0
                 }
             ]
@@ -2311,14 +2311,14 @@ describe('nodes', () => {
 
         let val = boolToFloat.processNode();
 
-        expect(val['val'].value).toBe(1);
+        expect(val['val'].value[0]).toBe(1);
 
         boolToFloat = new BoolToFloat({
             ...defaultProps,
             values: [
                 {
                     id: 'a',
-                    value: false,
+                    value: [false],
                     type: 0
                 }
             ]
@@ -2326,7 +2326,7 @@ describe('nodes', () => {
 
         val = boolToFloat.processNode();
 
-        expect(val['val'].value).toBe(0);
+        expect(val['val'].value[0]).toBe(0);
     });
 
     it("type/intToBool", () => {
@@ -2335,7 +2335,7 @@ describe('nodes', () => {
             values: [
                 {
                     id: 'a',
-                    value: 0,
+                    value: [0],
                     type: 1
                 }
             ]
@@ -2343,14 +2343,14 @@ describe('nodes', () => {
 
         let val = intToBool.processNode();
 
-        expect(val['val'].value).toBe(false);
+        expect(val['val'].value[0]).toBe(false);
 
         intToBool = new IntToBool({
             ...defaultProps,
             values: [
                 {
                     id: 'a',
-                    value: 10,
+                    value: [10],
                     type: 1
                 }
             ]
@@ -2358,7 +2358,7 @@ describe('nodes', () => {
 
         val = intToBool.processNode();
 
-        expect(val['val'].value).toBe(true);
+        expect(val['val'].value[0]).toBe(true);
     });
 
     it("type/intToFloat", () => {
@@ -2367,7 +2367,7 @@ describe('nodes', () => {
             values: [
                 {
                     id: 'a',
-                    value: 10,
+                    value: [10],
                     type: 1
                 }
             ]
@@ -2375,7 +2375,7 @@ describe('nodes', () => {
 
         let val = intToFloat.processNode();
 
-        expect(val['val'].value).toBe(10);
+        expect(val['val'].value[0]).toBe(10);
     });
 
     it("type/floatToBool", () => {
@@ -2384,7 +2384,7 @@ describe('nodes', () => {
             values: [
                 {
                     id: 'a',
-                    value: NaN,
+                    value: [NaN],
                     type: 2
                 }
             ]
@@ -2392,14 +2392,14 @@ describe('nodes', () => {
 
         let val = floatToBool.processNode();
 
-        expect(val['val'].value).toBe(false);
+        expect(val['val'].value[0]).toBe(false);
 
         floatToBool = new FloatToBool({
             ...defaultProps,
             values: [
                 {
                     id: 'a',
-                    value: 10.0,
+                    value: [10.0],
                     type: 2
                 }
             ]
@@ -2407,7 +2407,7 @@ describe('nodes', () => {
 
         val = floatToBool.processNode();
 
-        expect(val['val'].value).toBe(true);
+        expect(val['val'].value[0]).toBe(true);
     });
 
     it("type/floatToInt", () => {
@@ -2416,7 +2416,7 @@ describe('nodes', () => {
             values: [
                 {
                     id: 'a',
-                    value: NaN,
+                    value: [NaN],
                     type: 2
                 }
             ]
@@ -2424,14 +2424,14 @@ describe('nodes', () => {
 
         let val = floatToInt.processNode();
 
-        expect(val['val'].value).toBe(0);
+        expect(val['val'].value[0]).toBe(0);
 
         floatToInt = new FloatToInt({
             ...defaultProps,
             values: [
                 {
                     id: 'a',
-                    value: 10.7,
+                    value: [10.7],
                     type: 2
                 }
             ]
@@ -2439,7 +2439,7 @@ describe('nodes', () => {
 
         val = floatToInt.processNode();
 
-        expect(val['val'].value).toBe(10);
+        expect(val['val'].value[0]).toBe(10);
     });
 
     it("math/not", () => {
@@ -2448,7 +2448,7 @@ describe('nodes', () => {
             values: [
                 {
                     id: 'a',
-                    value: 10,
+                    value: [10],
                     type: 1
                 }
             ]
@@ -2456,14 +2456,14 @@ describe('nodes', () => {
 
         let val = not.processNode();
 
-        expect(val['val'].value).toBe(-11);
+        expect(val['val'].value[0]).toBe(-11);
 
         not = new Not({
             ...defaultProps,
             values: [
                 {
                     id: 'a',
-                    value: true,
+                    value: [true],
                     type: 0
                 }
             ]
@@ -2471,7 +2471,7 @@ describe('nodes', () => {
 
         val = not.processNode();
 
-        expect(val['val'].value).toBe(false);
+        expect(val['val'].value[0]).toBe(false);
     });
 
     it("math/and", () => {
@@ -2480,12 +2480,12 @@ describe('nodes', () => {
             values: [
                 {
                     id: 'a',
-                    value: 11,
+                    value: [11],
                     type: 1
                 },
                 {
                     id: 'b',
-                    value: 7,
+                    value: [7],
                     type: 1
                 }
             ]
@@ -2493,7 +2493,7 @@ describe('nodes', () => {
 
         let val = and.processNode();
 
-        expect(val['val'].value).toBe(3);
+        expect(val['val'].value[0]).toBe(3);
 
         and = new And({
             ...defaultProps,
@@ -2513,7 +2513,7 @@ describe('nodes', () => {
 
         val = and.processNode();
 
-        expect(val['val'].value).toBe(false);
+        expect(val['val'].value[0]).toBe(false);
     });
 
     it("math/or", () => {
@@ -2522,12 +2522,12 @@ describe('nodes', () => {
             values: [
                 {
                     id: 'a',
-                    value: 11,
+                    value: [11],
                     type: 1
                 },
                 {
                     id: 'b',
-                    value: 7,
+                    value: [7],
                     type: 1
                 }
             ]
@@ -2535,19 +2535,19 @@ describe('nodes', () => {
 
         let val = or.processNode();
 
-        expect(val['val'].value).toBe(15);
+        expect(val['val'].value[0]).toBe(15);
 
         or = new Or({
             ...defaultProps,
             values: [
                 {
                     id: 'a',
-                    value: true,
+                    value: [true],
                     type: 0
                 },
                 {
                     id: 'b',
-                    value: false,
+                    value: [false],
                     type: 0
                 }
             ]
@@ -2555,7 +2555,7 @@ describe('nodes', () => {
 
         val = or.processNode();
 
-        expect(val['val'].value).toBe(true);
+        expect(val['val'].value[0]).toBe(true);
     });
 
     it("math/xor", () => {
@@ -2564,12 +2564,12 @@ describe('nodes', () => {
             values: [
                 {
                     id: 'a',
-                    value: 11,
+                    value: [11],
                     type: 1
                 },
                 {
                     id: 'b',
-                    value: 7,
+                    value: [7],
                     type: 1
                 }
             ]
@@ -2577,7 +2577,7 @@ describe('nodes', () => {
 
         let val = xor.processNode();
 
-        expect(val['val'].value).toBe(12);
+        expect(val['val'].value[0]).toBe(12);
 
         xor = new Xor({
             ...defaultProps,
@@ -2597,7 +2597,7 @@ describe('nodes', () => {
 
         val = xor.processNode();
 
-        expect(val['val'].value).toBe(false);
+        expect(val['val'].value[0]).toBe(false);
     });
 
     it("math/asr", () => {
@@ -2606,12 +2606,12 @@ describe('nodes', () => {
             values: [
                 {
                     id: 'a',
-                    value: 4,
+                    value: [4],
                     type: 1
                 },
                 {
                     id: 'b',
-                    value: 2,
+                    value: [2],
                     type: 1
                 }
             ]
@@ -2619,7 +2619,7 @@ describe('nodes', () => {
 
         const val = rightShift.processNode();
 
-        expect(val['val'].value).toBe(1);
+        expect(val['val'].value[0]).toBe(1);
     });
 
     it("math/lsl", () => {
@@ -2628,12 +2628,12 @@ describe('nodes', () => {
             values: [
                 {
                     id: 'a',
-                    value: 4,
+                    value: [4],
                     type: 1
                 },
                 {
                     id: 'b',
-                    value: 2,
+                    value: [2],
                     type: 1
                 }
             ]
@@ -2641,7 +2641,7 @@ describe('nodes', () => {
 
         const val = leftShift.processNode();
 
-        expect(val['val'].value).toBe(16);
+        expect(val['val'].value[0]).toBe(16);
     });
 
     it("math/clz", () => {
@@ -2650,7 +2650,7 @@ describe('nodes', () => {
             values: [
                 {
                     id: 'a',
-                    value: 4,
+                    value: [4],
                     type: 1
                 }
             ]
@@ -2658,7 +2658,7 @@ describe('nodes', () => {
 
         const val = countLeadingZeros.processNode();
 
-        expect(val['val'].value).toBe(29);
+        expect(val['val'].value[0]).toBe(29);
     });
 
     it("math/ctz", () => {
@@ -2667,7 +2667,7 @@ describe('nodes', () => {
             values: [
                 {
                     id: 'a',
-                    value: 4,
+                    value: [4],
                     type: 1
                 }
             ]
@@ -2675,7 +2675,7 @@ describe('nodes', () => {
 
         const val = countTrailingZeros.processNode();
 
-        expect(val['val'].value).toBe(2);
+        expect(val['val'].value[0]).toBe(2);
     });
 
     it("math/popcnt", () => {
@@ -2684,7 +2684,7 @@ describe('nodes', () => {
             values: [
                 {
                     id: 'a',
-                    value: 11,
+                    value: [11],
                     type: 1
                 }
             ]
@@ -2692,7 +2692,7 @@ describe('nodes', () => {
 
         const val = countOneBits.processNode();
 
-        expect(val['val'].value).toBe(3);
+        expect(val['val'].value[0]).toBe(3);
     });
 });
 

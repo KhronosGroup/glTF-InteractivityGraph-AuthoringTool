@@ -18,7 +18,7 @@ export class SquareRoot extends BehaveEngineNode {
 
         switch (type) {
             case "float":
-                val = Math.sqrt(a);
+                val = [Math.sqrt(a)];
                 break;
             case "float3":
                 val = [

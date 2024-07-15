@@ -15,16 +15,16 @@ export class ForLoop extends BehaveEngineNode {
 
         const {initialIndex} = this.evaluateAllConfigurations(this.REQUIRED_CONFIGURATIONS.map(config => config.id));
         this._initialIndex = initialIndex;
-        this.outValues.index = {id: "index", value: this._initialIndex};
+        this.outValues.index = {id: "index", value: [this._initialIndex], type: this.getTypeIndex('int')};
     }
 
     override processNode(flowSocket?: string) {
         this.graphEngine.clearValueEvaluationCache();
         let {startIndex, endIndex} = this.evaluateAllValues(this.REQUIRED_VALUES.map(val => val.id));
         this.graphEngine.processNodeStarted(this);
-        this.outValues.index = {id: "index", value: 0}
+        this.outValues.index = {id: "index", value: [0], type: this.getTypeIndex('int')}
         for (let i = Number(startIndex); i < Number(endIndex); i++) {
-            this.outValues.index = {id: "index", value: i}
+            this.outValues.index = {id: "index", value: [i], type: this.getTypeIndex('int')}
             if (this.flows.loopBody != null) {
                 this.processFlow(this.flows.loopBody);
             }
@@ -34,7 +34,7 @@ export class ForLoop extends BehaveEngineNode {
             startIndex = reEvaluatedValues.startIndex;
             endIndex = reEvaluatedValues.endIndex;
         }
-        this.outValues.index = {id: "index", value: endIndex}
+        this.outValues.index = {id: "index", value: [endIndex], type: this.getTypeIndex('int')}
         if (this.flows.completed != null) {
             this.processFlow(this.flows.completed);
         }

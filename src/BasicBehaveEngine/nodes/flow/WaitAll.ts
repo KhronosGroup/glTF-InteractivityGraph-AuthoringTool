@@ -16,14 +16,14 @@ export class WaitAll extends BehaveEngineNode {
         const {inputFlows} = this.evaluateAllConfigurations(this.REQUIRED_CONFIGURATIONS.map(config => config.id));
         this._numberInputFlows = Number(inputFlows);
         this._lockedFlows = [...Array(this._numberInputFlows).keys()];
-        this.outValues.remainingInputs = {id: "remainingInputs", value: this._lockedFlows.length};
+        this.outValues.remainingInputs = {id: "remainingInputs", value: [this._lockedFlows.length], type: this.getTypeIndex('int')};
     }
 
     override processNode(flowSocket?: string) {
         this.graphEngine.processNodeStarted(this)
         if (flowSocket === "reset") {
             this._lockedFlows = [...Array(this._numberInputFlows).keys()];
-            this.outValues.remainingInputs = {id: "remainingInputs", value: this._lockedFlows.length};
+            this.outValues.remainingInputs = {id: "remainingInputs", value: [this._lockedFlows.length], type: this.getTypeIndex('int')};
             return;
         }
 
@@ -31,7 +31,7 @@ export class WaitAll extends BehaveEngineNode {
         if (flowIndexToRemove !== -1) {
             this._lockedFlows.splice(flowIndexToRemove, 1);
         }
-        this.outValues.remainingInputs = {id: "remainingInputs", value: this._lockedFlows.length};
+        this.outValues.remainingInputs = {id: "remainingInputs", value: [this._lockedFlows.length], type: this.getTypeIndex('int')};
 
         if (this._lockedFlows.length === 0) {
             if (this.flows.completed != null) {

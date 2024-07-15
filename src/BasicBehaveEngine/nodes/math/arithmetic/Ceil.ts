@@ -18,7 +18,7 @@ export class Ceil extends BehaveEngineNode {
 
         switch (type) {
             case "float":
-                val = Math.ceil(a);
+                val = [Math.ceil(a)];
                 break;
             case "float3":
                 val = [

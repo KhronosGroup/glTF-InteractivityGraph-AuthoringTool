@@ -19,7 +19,7 @@ export class Truncate extends BehaveEngineNode {
 
         switch (type) {
             case "float":
-                val = Math.trunc(a);
+                val = [Math.trunc(a)];
                 break;
             case "float3":
                 val = [

@@ -18,7 +18,7 @@ export class Saturate extends BehaveEngineNode {
 
         switch (type) {
             case "float":
-                val = Math.min(Math.max(a, 0.0), 1.0);
+                val = [Math.min(Math.max(a, 0.0), 1.0)];
                 break;
             case "float3":
                 val = [

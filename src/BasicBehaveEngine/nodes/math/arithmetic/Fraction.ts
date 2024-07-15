@@ -18,7 +18,7 @@ export class Fraction extends BehaveEngineNode {
 
         switch (type) {
             case "float":
-                val = a - Math.floor(a);
+                val = [a - Math.floor(a)];
                 break;
             case "float3":
                 val = [

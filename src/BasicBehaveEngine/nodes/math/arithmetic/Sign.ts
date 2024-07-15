@@ -20,7 +20,7 @@ export class Sign extends BehaveEngineNode {
         switch (type) {
             case "int":
             case "float":
-                val = Math.sign(a);
+                val = [Math.sign(a)];
                 break;
             case "float3":
                 val = [

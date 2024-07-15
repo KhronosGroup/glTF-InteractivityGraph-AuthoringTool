@@ -25,6 +25,6 @@ export class IsInfNode extends BehaveEngineNode {
                 throw Error("Invalid type")
         }
 
-        return {'val': {id: "val", value: val, type: this.getTypeIndex('bool')}}
+        return {'val': {id: "val", value: [val], type: this.getTypeIndex('bool')}}
     }
 }

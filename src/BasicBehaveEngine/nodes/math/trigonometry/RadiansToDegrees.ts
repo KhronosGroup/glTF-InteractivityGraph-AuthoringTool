@@ -18,7 +18,7 @@ export class RadiansToDegrees extends BehaveEngineNode {
 
         switch (type) {
             case "float":
-                val = (a * 180) / Math.PI;
+                val = [(a * 180) / Math.PI];
                 break;
             case "float3":
                 val = [

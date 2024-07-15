@@ -18,7 +18,7 @@ export class InverseHyperbolicTangent extends BehaveEngineNode {
 
         switch (type) {
             case "float":
-                val = Math.atanh(a);
+                val = [Math.atanh(a)];
                 break;
             case "float3":
                 val = [

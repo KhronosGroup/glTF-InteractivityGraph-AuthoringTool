@@ -188,7 +188,7 @@ export class BabylonDecorator extends ADecorator {
             }
             const variants = KHR_materials_variants.GetAvailableVariants(root);
             const selectedVariant = KHR_materials_variants.GetLastSelectedVariant(root);
-            return variants.indexOf(selectedVariant as string);
+            return [variants.indexOf(selectedVariant as string)];
         }, (path, value) => {
             let root = this.world.glTFNodes[0];
             while (root.parent) {

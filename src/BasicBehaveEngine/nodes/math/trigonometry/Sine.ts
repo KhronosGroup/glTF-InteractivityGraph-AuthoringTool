@@ -18,7 +18,7 @@ export class Sine extends BehaveEngineNode {
 
         switch (type) {
             case "float":
-                val = Math.sin(a);
+                val = [Math.sin(a)];
                 break;
             case "float3":
                 val = [

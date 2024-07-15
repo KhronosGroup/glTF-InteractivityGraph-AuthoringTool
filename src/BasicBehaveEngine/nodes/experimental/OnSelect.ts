@@ -26,11 +26,13 @@ export class OnSelect extends BehaveEngineNode {
         const callback = (localHitLocation: number[], hitNodeIndex: number) => {
             this.outValues.localHitLocation = {
                 id: 'pos3D',
+                type: this.getTypeIndex('float3'),
                 value: localHitLocation,
             };
             this.outValues.hitNodeIndex = {
                 id: 'hitNodeIndex',
-                value: hitNodeIndex,
+                type: this.getTypeIndex('int'),
+                value: [hitNodeIndex],
             };
 
             this.addEventToWorkQueue(this.flows.out);

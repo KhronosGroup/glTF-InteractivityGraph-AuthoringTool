@@ -36,6 +36,6 @@ export class Determinant extends BehaveEngineNode {
             a[1][2] * (a[2][0] * a[3][1] - a[2][1] * a[3][0])
         );
 
-        return {'val': {id: "val", value: val, type: this.getTypeIndex('float')}}
+        return {'val': {id: "val", value: [val], type: this.getTypeIndex('float')}}
     }
 }

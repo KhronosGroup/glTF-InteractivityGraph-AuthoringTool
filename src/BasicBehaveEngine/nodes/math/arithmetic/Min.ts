@@ -24,7 +24,7 @@ export class Min extends BehaveEngineNode {
         switch (typeA) {
             case "int":
             case "float":
-                val = Math.min(a,b);
+                val = [Math.min(a,b)];
                 break;
             case "float3":
                 val = [

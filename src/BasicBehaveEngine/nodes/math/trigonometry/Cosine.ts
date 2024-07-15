@@ -18,7 +18,7 @@ export class Cosine extends BehaveEngineNode {
 
         switch (type) {
             case "float":
-                val = Math.cos(a);
+                val = [Math.cos(a)];
                 break;
             case "float3":
                 val = [

@@ -23,10 +23,10 @@ export class Multiply extends BehaveEngineNode {
 
         switch (typeA) {
             case "int":
-                val = Math.imul(a, b);
+                val = [Math.imul(a, b)];
                 break;
             case "float":
-                val = a * b;
+                val = [a * b];
                 break;
             case "float3":
                 val = [

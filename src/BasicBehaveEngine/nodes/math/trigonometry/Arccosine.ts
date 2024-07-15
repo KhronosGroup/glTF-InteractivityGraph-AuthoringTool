@@ -18,7 +18,7 @@ export class Arccosine extends BehaveEngineNode {
 
         switch (type) {
             case "float":
-                val = Math.acos(a);
+                val = [Math.acos(a)];
                 break;
             case "float3":
                 val = [

@@ -18,7 +18,7 @@ export class HyperbolicSine extends BehaveEngineNode {
 
         switch (type) {
             case "float":
-                val = Math.sinh(a);
+                val = [Math.sinh(a)];
                 break;
             case "float3":
                 val = [

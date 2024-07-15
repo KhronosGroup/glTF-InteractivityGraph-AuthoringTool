@@ -38,7 +38,7 @@ export class MultiGate extends BehaveEngineNode {
             return
         }
 
-        this.outValues.lastIndex = {id: "lastIndex", value: this._currentIndex};
+        this.outValues.lastIndex = {id: "lastIndex", value: [this._currentIndex], type: this.getTypeIndex('int')};
         this.processFlow(this.flows[this._currentIndex]);
         this._unSeenOutFlows = this._unSeenOutFlows.filter(flow => flow !== this._currentIndex);
 

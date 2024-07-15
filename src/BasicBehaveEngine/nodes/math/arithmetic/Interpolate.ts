@@ -25,7 +25,7 @@ export class Interpolate extends BehaveEngineNode {
 
         switch (typeA) {
             case "float":
-                val = (1.0 - c) * a + c * b;
+                val = [(1.0 - c) * a + c * b];
                 break;
             case "float3":
                 val = [

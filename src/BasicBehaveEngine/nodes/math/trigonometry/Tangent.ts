@@ -18,7 +18,7 @@ export class Tangent extends BehaveEngineNode {
 
         switch (type) {
             case "float":
-                val = Math.tan(a);
+                val = [Math.tan(a)];
                 break;
             case "float3":
                 val = [

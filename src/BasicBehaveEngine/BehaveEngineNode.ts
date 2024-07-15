@@ -223,7 +223,8 @@ export class BehaveEngineNode {
                 this.values[val.id] = {...this.values[val.id], type: dependentValue.type};
             }
             this.graphEngine.addEntryToValueEvaluationCache(`${val.node}-${val.socket}`, {id: val.socket!, value: valueToReturn, type: typeIndex});
-            return valueToReturn;
+            const typeName = this.getType(typeIndex);
+            return this.parseType(typeName, valueToReturn);
         }
     }
 
@@ -260,11 +261,11 @@ export class BehaveEngineNode {
     protected parseType(type: string, val: any) {
         switch (type) {
             case "bool":
-                return val === "true" || val === true;
+                return val[0] === "true" || val[0] === true;
             case "int":
-                return Number(val);
+                return Number(val[0]);
             case "float":
-                return Number(val);
+                return Number(val[0]);
             case "float2":
                 return val;
             case "float3":

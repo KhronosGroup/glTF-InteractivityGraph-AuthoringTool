@@ -92,14 +92,14 @@ export class BabylonDecorator extends ADecorator {
 
             if (elapsedDuration >= easingParameters.easingDuration) {
                 this.behaveEngine.setPathValue(path, easingParameters.targetValue);
-                this.scene.onBeforeAnimationsObservable.removeCallback(action);
+                this.scene.unregisterBeforeRender(action);
                 callback()
             }
         }
 
-        this.scene.onBeforeAnimationsObservable.add(action);
+        this.scene.registerBeforeRender(action);
         const cancel = () => {
-            this.scene.onBeforeAnimationsObservable.removeCallback(action);
+            this.scene.unregisterBeforeRender(action);
             this.behaveEngine.setWorldAnimationPathCallback(path, undefined);
         }
         this.setWorldAnimationPathCallback(path, {cancel: cancel} );
@@ -136,14 +136,14 @@ export class BabylonDecorator extends ADecorator {
 
             if (elapsedDuration >= duration) {
                 this.behaveEngine.setPathValue(path, targetValue);
-                this.scene.onBeforeAnimationsObservable.removeCallback(action);
+                this.scene.unregisterBeforeRender(action);
                 callback()
             }
         }
 
-        this.scene.onBeforeAnimationsObservable.add(action);
+        this.scene.registerBeforeRender(action);
         const cancel = () => {
-            this.scene.onBeforeAnimationsObservable.removeCallback(action);
+            this.scene.unregisterBeforeRender(action);
             this.behaveEngine.setWorldAnimationPathCallback(path, undefined);
         }
         this.setWorldAnimationPathCallback(path, {cancel: cancel} );
@@ -208,16 +208,6 @@ export class BabylonDecorator extends ADecorator {
             return [activeCamera.position.x, activeCamera.position.y, activeCamera.position.z]
         }, (path, value) => {
             //no-op
-        }, "float3")
-
-        this.registerJsonPointer(`/nodes/${maxGltfNode}/scale`, (path) => {
-            const parts: string[] = path.split("/");
-            return [(this.world.glTFNodes[Number(parts[2])] as AbstractMesh).scaling.x,
-                (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).scaling.y,
-                (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).scaling.z];
-        }, (path, value) => {
-            const parts: string[] = path.split("/");
-            (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).scaling = new Vector3(value[0], value[1], value[2]);
         }, "float3")
 
         //TODO: update to match what object model has once that is published

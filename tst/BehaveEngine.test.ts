@@ -526,8 +526,7 @@ describe('BehaveEngine', () => {
         const engine: Engine = new NullEngine()
         const mockScene: Scene = new Scene(engine)
         let callback: undefined;
-        // @ts-ignore
-        mockScene.onBeforeAnimationsObservable.add = jest.fn((cb: any) => {
+        mockScene.registerBeforeRender = jest.fn((cb: any) => {
             callback = cb;
         })
         babylonBehaveEngine = new BabylonDecorator(new BasicBehaveEngine(1), {glTFNodes: []}, mockScene);

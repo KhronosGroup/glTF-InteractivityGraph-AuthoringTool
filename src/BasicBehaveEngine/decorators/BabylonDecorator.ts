@@ -1,7 +1,15 @@
 import {ADecorator} from "./ADecorator";
 import {BehaveEngineNode, IFlow} from "../BehaveEngineNode";
 import {IBehaveEngine} from "../IBehaveEngine";
-import {AbstractMesh, AnimationGroup, float, Matrix, PointerEventTypes, Quaternion} from "@babylonjs/core";
+import {
+    AbstractMesh,
+    AnimationGroup, Camera,
+    float,
+    Matrix,
+    PointerEventTypes,
+    Quaternion,
+    TargetCamera
+} from "@babylonjs/core";
 import {Vector3} from "@babylonjs/core/Maths/math.vector";
 import {cubicBezier, easeFloat, easeFloat3, easeFloat4, linearFloat, slerpFloat4} from "../easingUtils";
 import {Scene} from "@babylonjs/core/scene";
@@ -10,6 +18,7 @@ import {KHR_materials_variants} from "@babylonjs/loaders/glTF/2.0";
 import {AnimationStart} from "../nodes/animation/AnimationStart";
 import {AnimationStop} from "../nodes/animation/AnimationStop";
 import {AnimationStopAt} from "../nodes/animation/AnimationStopAt";
+import {Nullable} from "@babylonjs/core/types.js";
 
 export class BabylonDecorator extends ADecorator {
     scene: Scene;
@@ -83,14 +92,14 @@ export class BabylonDecorator extends ADecorator {
 
             if (elapsedDuration >= easingParameters.easingDuration) {
                 this.behaveEngine.setPathValue(path, easingParameters.targetValue);
-                this.scene.unregisterBeforeRender(action);
+                this.scene.onBeforeAnimationsObservable.removeCallback(action);
                 callback()
             }
         }
 
-        this.scene.registerBeforeRender(action);
+        this.scene.onBeforeAnimationsObservable.add(action);
         const cancel = () => {
-            this.scene.unregisterBeforeRender(action);
+            this.scene.onBeforeAnimationsObservable.removeCallback(action);
             this.behaveEngine.setWorldAnimationPathCallback(path, undefined);
         }
         this.setWorldAnimationPathCallback(path, {cancel: cancel} );
@@ -127,14 +136,14 @@ export class BabylonDecorator extends ADecorator {
 
             if (elapsedDuration >= duration) {
                 this.behaveEngine.setPathValue(path, targetValue);
-                this.scene.unregisterBeforeRender(action);
+                this.scene.onBeforeAnimationsObservable.removeCallback(action);
                 callback()
             }
         }
 
-        this.scene.registerBeforeRender(action);
+        this.scene.onBeforeAnimationsObservable.add(action);
         const cancel = () => {
-            this.scene.unregisterBeforeRender(action);
+            this.scene.onBeforeAnimationsObservable.removeCallback(action);
             this.behaveEngine.setWorldAnimationPathCallback(path, undefined);
         }
         this.setWorldAnimationPathCallback(path, {cancel: cancel} );
@@ -164,7 +173,6 @@ export class BabylonDecorator extends ADecorator {
                 (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).position.z];
         }, (path, value) => {
             const parts: string[] = path.split("/");
-            console.log(value);
             (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).position= new Vector3(value[0], value[1], value[2]);
         }, "float3")
 
@@ -179,6 +187,38 @@ export class BabylonDecorator extends ADecorator {
             const parts: string[] = path.split("/");
             (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).rotationQuaternion = new Quaternion(value[1], value[2], value[3], value[0]);
         }, "float4");
+
+        this.registerJsonPointer(`/activeCamera/rotation`, (path) => {
+            const activeCamera: Nullable<Camera> = this.scene.activeCamera;
+            if (activeCamera === null || !(activeCamera instanceof TargetCamera)) {
+                return [NaN, NaN, NaN, NaN]
+            }
+
+            return [activeCamera.rotationQuaternion.w, activeCamera.rotationQuaternion.x, activeCamera.rotationQuaternion.y, activeCamera.rotationQuaternion.z]
+        }, (path, value) => {
+            //no-op
+        }, "float4")
+
+        this.registerJsonPointer(`/activeCamera/position`, (path) => {
+            const activeCamera: Nullable<Camera> = this.scene.activeCamera;
+            if (activeCamera === null) {
+                return [NaN, NaN, NaN]
+            }
+
+            return [activeCamera.position.x, activeCamera.position.y, activeCamera.position.z]
+        }, (path, value) => {
+            //no-op
+        }, "float3")
+
+        this.registerJsonPointer(`/nodes/${maxGltfNode}/scale`, (path) => {
+            const parts: string[] = path.split("/");
+            return [(this.world.glTFNodes[Number(parts[2])] as AbstractMesh).scaling.x,
+                (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).scaling.y,
+                (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).scaling.z];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).scaling = new Vector3(value[0], value[1], value[2]);
+        }, "float3")
 
         //TODO: update to match what object model has once that is published
         this.registerJsonPointer(`/KHR_materials_variants/variant`, (path) => {

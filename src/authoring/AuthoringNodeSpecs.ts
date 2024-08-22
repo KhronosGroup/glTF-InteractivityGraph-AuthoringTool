@@ -681,7 +681,7 @@ export const experimentalNodeSpecs: IAuthoringNode[] = [
         }
     },
     {
-        type:"node/OnSelect",
+        type:"node/onSelect",
         description:"This node will fire when a node is selected.",
         configuration:[
             {

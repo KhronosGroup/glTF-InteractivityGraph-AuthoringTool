@@ -59,6 +59,20 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
         };
     }, []);
 
+    useEffect(() => {
+        if (fileUploaded) {
+            play()
+        }
+    }, [fileUploaded])
+
+    const play = () => {
+        resetScene()
+            .then((res: {nodes: Node[], animations: AnimationGroup[]}) => {
+                runGraph(babylonEngineRef, props.behaveGraphRef.current, sceneRef.current, res.nodes, res.animations);
+                setGraphRunning(true);
+            })
+    }
+
     const createScene = () => {
         // Create a scene
         sceneRef.current = new Scene(engineRef.current!);
@@ -219,11 +233,7 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
         <div style={{width: "90vw", margin: "0 auto"}}>
             <div style={{background: "#3d5987", padding: 16, borderTopLeftRadius: 16, borderTopRightRadius: 16}}>
                 <Button variant="outline-light" onClick={() => {
-                    resetScene()
-                        .then((res: {nodes: Node[], animations: AnimationGroup[]}) => {
-                            runGraph(babylonEngineRef, props.behaveGraphRef.current, sceneRef.current, res.nodes, res.animations);
-                            setGraphRunning(true);
-                        })
+                    play()
                 }} disabled={!fileUploaded}>
                     Play
                 </Button>

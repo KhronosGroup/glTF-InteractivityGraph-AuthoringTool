@@ -8,6 +8,18 @@ import {
     standardTypes
 } from "./AuthoringNodeSpecs";
 
+const validateGraphNodeNames = (nodes: Node[]) => {
+    const errors = []
+    const validNodeTypes = authoringNodeSpecs.map(node => node.type);
+    for (const node of nodes) {
+        if (node.type && !validNodeTypes.includes(node.type)) {
+            errors.push(`Detected an unrecognized node type ${node.type}`)
+        }
+    }
+
+    return errors;
+}
+
 /**
  * Converts authoring data to Behave graph format.
  *
@@ -18,6 +30,11 @@ import {
  * @returns The Behave graph representation of the provided data.
  */
 export const authorToBehave = (nodes: Node[], edges: Edge[], customEvents: ICustomEvent[], variables: IVariable[]) => {
+    const nodeTypeErrors = validateGraphNodeNames(nodes);
+    if (nodeTypeErrors.length > 0) {
+        throw new Error(`The graph has the following issues: ${nodeTypeErrors}`);
+    }
+
     const graph: any = { nodes: [], variables: [], customEvents: [], types: standardTypes};
 
     graph.customEvents = [...customEvents];

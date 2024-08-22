@@ -2,7 +2,7 @@ import ReactFlow, {
     addEdge, Background,
     Connection, Controls,
     Edge,
-    NodeTypes, Panel, useEdgesState, useNodesState, XYPosition
+    NodeTypes, Panel, useEdgesState, useNodesState, useReactFlow, XYPosition
 } from 'reactflow';
 import {authoringNodeSpecs, ICustomEvent, IVariable, standardTypes} from "../authoring/AuthoringNodeSpecs";
 import {AuthoringGraphNode} from "../authoring/AuthoringGraphNode";
@@ -181,6 +181,7 @@ export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromG
                     minZoom={0.1}
                     onPaneContextMenu={handleRightClick}
                     onPaneClick={handleLeftClick}
+                    fitView
                 >
                     <Controls />
                     <Background />

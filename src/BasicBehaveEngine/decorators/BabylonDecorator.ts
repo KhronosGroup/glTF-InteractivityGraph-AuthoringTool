@@ -51,7 +51,7 @@ export class BabylonDecorator extends ADecorator {
         this.behaveEngine.animateCubicBezier = this.animateCubicBezier;
         this.behaveEngine.getWorld = this.getWorld;
         this.registerKnownPointers();
-        this.registerBehaveEngineNode("node/OnSelect", OnSelect);
+        this.registerBehaveEngineNode("node/onSelect", OnSelect);
         this.registerBehaveEngineNode("animation/stop", AnimationStop);
         this.registerBehaveEngineNode("animation/start", AnimationStart);
         this.registerBehaveEngineNode("animation/stopAt", AnimationStopAt);

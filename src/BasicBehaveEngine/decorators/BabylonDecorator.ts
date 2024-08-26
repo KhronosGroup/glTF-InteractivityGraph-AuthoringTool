@@ -343,7 +343,7 @@ export class BabylonDecorator extends ADecorator {
 
     public stopAnimation = (animationIndex: number): void => {
         const animation: AnimationGroup = this.world.animations[animationIndex]
-        const animationInstance: AnimationGroup = animation.metadata.instance;
+        const animationInstance: AnimationGroup = animation?.metadata?.instance;
         if (animationInstance === undefined) return;
 
         animationInstance.stop();
@@ -353,7 +353,7 @@ export class BabylonDecorator extends ADecorator {
 
     public stopAnimationAt = (animationIndex: number, stopTime: number , callback: () => void): void => {
         const animation: AnimationGroup = this.world.animations[animationIndex]
-        const animationInstance: AnimationGroup = animation.metadata.instance;
+        const animationInstance: AnimationGroup = animation?.metadata?.instance;
         if (animationInstance === undefined) return;
 
         const forward = animationInstance.metadata.isForward;

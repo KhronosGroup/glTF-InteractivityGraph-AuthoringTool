@@ -285,6 +285,273 @@ export class BabylonDecorator extends ADecorator {
 
         //TODO: find babylon mapping for /materials/{}/occlusionTexture/strength
 
+
+        // BASE COLOR TEXTURE TRANSFORM
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/pbrMetallicRoughness/baseColorTexture/extensions/KHR_texture_transform/offset`, (path) => {
+            const parts: string[] = path.split("/");
+            const baseColorTexture = this.world.materials[Number(parts[2])].albedoTexture;
+            if (baseColorTexture === null) {
+                return [NaN, NaN];
+            }
+
+            return [baseColorTexture.uOffset, baseColorTexture.vOffset]
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const baseColorTexture = this.world.materials[Number(parts[2])].albedoTexture;
+            if (baseColorTexture !== null) {
+                baseColorTexture.uOffset = value[0];
+                baseColorTexture.vOffset = value[1];
+            }
+        }, "float2");
+
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/pbrMetallicRoughness/baseColorTexture/extensions/KHR_texture_transform/scale`, (path) => {
+            const parts: string[] = path.split("/");
+            const baseColorTexture = this.world.materials[Number(parts[2])].albedoTexture;
+            if (baseColorTexture === null) {
+                return [NaN, NaN];
+            }
+
+            return [baseColorTexture.uScale, baseColorTexture.vScale]
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const baseColorTexture = this.world.materials[Number(parts[2])].albedoTexture;
+            if (baseColorTexture !== null) {
+                baseColorTexture.uScale = value[0];
+                baseColorTexture.vScale = value[1];
+            }
+        }, "float2");
+
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/pbrMetallicRoughness/baseColorTexture/extensions/KHR_texture_transform/rotation`, (path) => {
+            const parts: string[] = path.split("/");
+            const baseColorTexture = this.world.materials[Number(parts[2])].albedoTexture;
+            if (baseColorTexture === null) {
+                return [NaN];
+            }
+
+            // is negated in babylon's loading so negating when getting https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/loaders/src/glTF/2.0/Extensions/KHR_texture_transform.ts#L73
+            return [-1 * baseColorTexture.wAng]
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const baseColorTexture = this.world.materials[Number(parts[2])].albedoTexture;
+            if (baseColorTexture !== null) {
+                // is negated in babylon's loading so negating when setting https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/loaders/src/glTF/2.0/Extensions/KHR_texture_transform.ts#L73
+                baseColorTexture.wAng = -1 * value[0];
+            }
+        }, "float");
+
+        // METALLIC ROUGHNESS TEXTURE TRANSFORM
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/pbrMetallicRoughness/metallicRoughnessTexture/extensions/KHR_texture_transform/offset`, (path) => {
+            const parts: string[] = path.split("/");
+            const metallicTexture = this.world.materials[Number(parts[2])].metallicTexture;
+            if (metallicTexture === null) {
+                return [NaN, NaN];
+            }
+
+            return [metallicTexture.uOffset, metallicTexture.vOffset]
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const metallicTexture = this.world.materials[Number(parts[2])].metallicTexture;
+            if (metallicTexture !== null) {
+                metallicTexture.uOffset = value[0];
+                metallicTexture.vOffset = value[1];
+            }
+        }, "float2");
+
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/pbrMetallicRoughness/metallicRoughnessTexture/extensions/KHR_texture_transform/scale`, (path) => {
+            const parts: string[] = path.split("/");
+            const metallicTexture = this.world.materials[Number(parts[2])].metallicTexture;
+            if (metallicTexture === null) {
+                return [NaN, NaN];
+            }
+
+            return [metallicTexture.uScale, metallicTexture.vScale]
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const metallicTexture = this.world.materials[Number(parts[2])].metallicTexture;
+            if (metallicTexture !== null) {
+                metallicTexture.uScale = value[0];
+                metallicTexture.vScale = value[1];
+            }
+        }, "float2");
+
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/pbrMetallicRoughness/metallicRoughnessTexture/extensions/KHR_texture_transform/rotation`, (path) => {
+            const parts: string[] = path.split("/");
+            const metallicTexture = this.world.materials[Number(parts[2])].metallicTexture;
+            if (metallicTexture === null) {
+                return [NaN];
+            }
+
+            // is negated in babylon's loading so negating when getting https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/loaders/src/glTF/2.0/Extensions/KHR_texture_transform.ts#L73
+            return [-1 * metallicTexture.wAng]
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const metallicTexture = this.world.materials[Number(parts[2])].metallicTexture;
+            if (metallicTexture !== null) {
+                // is negated in babylon's loading so negating when setting https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/loaders/src/glTF/2.0/Extensions/KHR_texture_transform.ts#L73
+                metallicTexture.wAng = -1 * value[0];
+            }
+        }, "float");
+
+        // NORMAL TEXTURE TRANSFORM
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/normalTexture/extensions/KHR_texture_transform/offset`, (path) => {
+            const parts: string[] = path.split("/");
+            const normalTexture = this.world.materials[Number(parts[2])].normalTexture;
+            if (normalTexture === null) {
+                return [NaN, NaN];
+            }
+
+            return [normalTexture.uOffset, normalTexture.vOffset]
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const normalTexture = this.world.materials[Number(parts[2])].normalTexture;
+            if (normalTexture !== null) {
+                normalTexture.uOffset = value[0];
+                normalTexture.vOffset = value[1];
+            }
+        }, "float2");
+
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/normalTexture/extensions/KHR_texture_transform/scale`, (path) => {
+            const parts: string[] = path.split("/");
+            const normalTexture = this.world.materials[Number(parts[2])].normalTexture;
+            if (normalTexture === null) {
+                return [NaN, NaN];
+            }
+
+            return [normalTexture.uScale, normalTexture.vScale]
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const normalTexture = this.world.materials[Number(parts[2])].normalTexture;
+            if (normalTexture !== null) {
+                normalTexture.uScale = value[0];
+                normalTexture.vScale = value[1];
+            }
+        }, "float2");
+
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/normalTexture/extensions/KHR_texture_transform/rotation`, (path) => {
+            const parts: string[] = path.split("/");
+            const normalTexture = this.world.materials[Number(parts[2])].normalTexture;
+            if (normalTexture === null) {
+                return [NaN];
+            }
+
+            // is negated in babylon's loading so negating when getting https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/loaders/src/glTF/2.0/Extensions/KHR_texture_transform.ts#L73
+            return [-1 * normalTexture.wAng]
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const normalTexture = this.world.materials[Number(parts[2])].normalTexture;
+            if (normalTexture !== null) {
+                // is negated in babylon's loading so negating when setting https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/loaders/src/glTF/2.0/Extensions/KHR_texture_transform.ts#L73
+                normalTexture.wAng = -1 * value[0];
+            }
+        }, "float");
+
+        // OCCLUSION TEXTURE TRANSFORM
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/occlusionTexture/extensions/KHR_texture_transform/offset`, (path) => {
+            const parts: string[] = path.split("/");
+            const occlusionTexture = this.world.materials[Number(parts[2])].occlusionTexture;
+            if (occlusionTexture === null) {
+                return [NaN, NaN];
+            }
+
+            return [occlusionTexture.uOffset, occlusionTexture.vOffset]
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const occlusionTexture = this.world.materials[Number(parts[2])].occlusionTexture;
+            if (occlusionTexture !== null) {
+                occlusionTexture.uOffset = value[0];
+                occlusionTexture.vOffset = value[1];
+            }
+        }, "float2");
+
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/occlusionTexture/extensions/KHR_texture_transform/scale`, (path) => {
+            const parts: string[] = path.split("/");
+            const occlusionTexture = this.world.materials[Number(parts[2])].occlusionTexture;
+            if (occlusionTexture === null) {
+                return [NaN, NaN];
+            }
+
+            return [occlusionTexture.uScale, occlusionTexture.vScale]
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const occlusionTexture = this.world.materials[Number(parts[2])].occlusionTexture;
+            if (occlusionTexture !== null) {
+                occlusionTexture.uScale = value[0];
+                occlusionTexture.vScale = value[1];
+            }
+        }, "float2");
+
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/occlusionTexture/extensions/KHR_texture_transform/rotation`, (path) => {
+            const parts: string[] = path.split("/");
+            const occlusionTexture = this.world.materials[Number(parts[2])].occlusionTexture;
+            if (occlusionTexture === null) {
+                return [NaN];
+            }
+
+            // is negated in babylon's loading so negating when getting https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/loaders/src/glTF/2.0/Extensions/KHR_texture_transform.ts#L73
+            return [-1 * occlusionTexture.wAng]
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const occlusionTexture = this.world.materials[Number(parts[2])].occlusionTexture;
+            if (occlusionTexture !== null) {
+                // is negated in babylon's loading so negating when setting https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/loaders/src/glTF/2.0/Extensions/KHR_texture_transform.ts#L73
+                occlusionTexture.wAng = -1 * value[0];
+            }
+        }, "float");
+
+        // EMISSIVE TEXTURE TRANSFORM
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/emissiveTexture/extensions/KHR_texture_transform/offset`, (path) => {
+            const parts: string[] = path.split("/");
+            const emissiveTexture = this.world.materials[Number(parts[2])].emissiveTexture;
+            if (emissiveTexture === null) {
+                return [NaN, NaN];
+            }
+
+            return [emissiveTexture.uOffset, emissiveTexture.vOffset];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const emissiveTexture = this.world.materials[Number(parts[2])].emissiveTexture;
+            if (emissiveTexture !== null) {
+                emissiveTexture.uOffset = value[0];
+                emissiveTexture.vOffset = value[1];
+            }
+        }, "float2");
+
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/emissiveTexture/extensions/KHR_texture_transform/scale`, (path) => {
+            const parts: string[] = path.split("/");
+            const emissiveTexture = this.world.materials[Number(parts[2])].emissiveTexture;
+            if (emissiveTexture === null) {
+                return [NaN, NaN];
+            }
+
+            return [emissiveTexture.uScale, emissiveTexture.vScale];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const emissiveTexture = this.world.materials[Number(parts[2])].emissiveTexture;
+            if (emissiveTexture !== null) {
+                emissiveTexture.uScale = value[0];
+                emissiveTexture.vScale = value[1];
+            }
+        }, "float2");
+
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/emissiveTexture/extensions/KHR_texture_transform/rotation`, (path) => {
+            const parts: string[] = path.split("/");
+            const emissiveTexture = this.world.materials[Number(parts[2])].emissiveTexture;
+            if (emissiveTexture === null) {
+                return [NaN];
+            }
+
+            // is negated in babylon's loading so negating when getting https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/loaders/src/glTF/2.0/Extensions/KHR_texture_transform.ts#L73
+            return [-1 * emissiveTexture.wAng];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const emissiveTexture = this.world.materials[Number(parts[2])].emissiveTexture;
+            if (emissiveTexture !== null) {
+                // is negated in babylon's loading so negating when setting https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/loaders/src/glTF/2.0/Extensions/KHR_texture_transform.ts#L73
+                emissiveTexture.wAng = -1 * value[0];
+            }
+        }, "float");
+
+
     }
 
     public extractBehaveGraphFromScene = (): any => {

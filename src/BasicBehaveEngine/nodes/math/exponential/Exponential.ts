@@ -20,6 +20,12 @@ export class Exponential extends BehaveEngineNode {
             case "float":
                 val = [Math.exp(a)]
                 break;
+            case "float2":
+                val = [
+                    Math.exp(a[0]),
+                    Math.exp(a[1])
+                ]
+                break;
             case "float3":
                 val = [
                     Math.exp(a[0]),

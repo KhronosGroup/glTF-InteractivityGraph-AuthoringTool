@@ -25,6 +25,12 @@ export class Power extends BehaveEngineNode {
             case "float":
                 val = [Math.pow(a, b)];
                 break;
+            case "float2":
+                val = [
+                    Math.pow(a[0], b[0]),
+                    Math.pow(a[1], b[1])
+                ]
+                break;
             case "float3":
                 val = [
                     Math.pow(a[0], b[0]),

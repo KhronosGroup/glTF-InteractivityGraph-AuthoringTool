@@ -89,7 +89,7 @@ export const pointerNodeSpecs: IAuthoringNode[] = [
                 {
                     id: "val",
                     description: "The value to set",
-                    types: ["bool", "int", "float", "float3", "float4"]
+                    types: ["bool", "int", "float","float2", "float3", "float4"]
                 },
                 {
                     id: "isValid",
@@ -120,7 +120,7 @@ export const pointerNodeSpecs: IAuthoringNode[] = [
                 {
                     id: "val",
                     description: "The value to set",
-                    types: ["bool", "int", "float", "float3", "float4"]
+                    types: ["bool", "int", "float", "float2", "float3", "float4"]
                 }
             ]
         },
@@ -166,6 +166,7 @@ export const pointerNodeSpecs: IAuthoringNode[] = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3",
                         "float4"
                     ],
@@ -238,6 +239,7 @@ export const pointerNodeSpecs: IAuthoringNode[] = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3",
                         "float4"
                     ],
@@ -1482,6 +1484,7 @@ export const arithmeticNodes = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -1496,6 +1499,7 @@ export const arithmeticNodes = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -1515,6 +1519,7 @@ export const arithmeticNodes = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -1529,6 +1534,7 @@ export const arithmeticNodes = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -1547,6 +1553,7 @@ export const arithmeticNodes = [
                     description: "Argument",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -1560,6 +1567,7 @@ export const arithmeticNodes = [
                     description: "Integer value equal to the nearest integer to a whose absolute value is not larger than the absolute value of a",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -1578,6 +1586,7 @@ export const arithmeticNodes = [
                     description: "Argument",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -1591,6 +1600,7 @@ export const arithmeticNodes = [
                     description: "Value equal to the nearest integer that is less than or equal to a",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -1609,6 +1619,7 @@ export const arithmeticNodes = [
                     description: "Argument",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -1622,6 +1633,7 @@ export const arithmeticNodes = [
                     description: "Value equal to the nearest integer that is greater than or equal to a",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -1640,6 +1652,7 @@ export const arithmeticNodes = [
                     description: "Argument",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -1653,6 +1666,7 @@ export const arithmeticNodes = [
                     description: "a - floor(a)",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -1672,6 +1686,7 @@ export const arithmeticNodes = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -1686,6 +1701,7 @@ export const arithmeticNodes = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -1705,6 +1721,7 @@ export const arithmeticNodes = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 },
@@ -1714,6 +1731,7 @@ export const arithmeticNodes = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -1728,6 +1746,7 @@ export const arithmeticNodes = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -1747,6 +1766,7 @@ export const arithmeticNodes = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 },
@@ -1756,6 +1776,7 @@ export const arithmeticNodes = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -1770,6 +1791,7 @@ export const arithmeticNodes = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -1789,6 +1811,7 @@ export const arithmeticNodes = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 },
@@ -1798,6 +1821,7 @@ export const arithmeticNodes = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -1812,6 +1836,7 @@ export const arithmeticNodes = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -1831,6 +1856,7 @@ export const arithmeticNodes = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 },
@@ -1840,6 +1866,7 @@ export const arithmeticNodes = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -1854,6 +1881,7 @@ export const arithmeticNodes = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -1873,6 +1901,7 @@ export const arithmeticNodes = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 },
@@ -1882,6 +1911,7 @@ export const arithmeticNodes = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -1896,6 +1926,7 @@ export const arithmeticNodes = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -1915,6 +1946,7 @@ export const arithmeticNodes = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 },
@@ -1924,6 +1956,7 @@ export const arithmeticNodes = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -1938,6 +1971,7 @@ export const arithmeticNodes = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -1957,6 +1991,7 @@ export const arithmeticNodes = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 },
@@ -1966,6 +2001,7 @@ export const arithmeticNodes = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -1980,6 +2016,7 @@ export const arithmeticNodes = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -1999,6 +2036,7 @@ export const arithmeticNodes = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 },
@@ -2008,6 +2046,7 @@ export const arithmeticNodes = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 },
@@ -2017,6 +2056,7 @@ export const arithmeticNodes = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -2031,6 +2071,7 @@ export const arithmeticNodes = [
                     types: [
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -2049,6 +2090,7 @@ export const arithmeticNodes = [
                     description: "Value to saturate",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -2062,6 +2104,7 @@ export const arithmeticNodes = [
                     description: "clamp(a,0,1)",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -2080,6 +2123,7 @@ export const arithmeticNodes = [
                     description: "Interpolated value at time 0.0",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 },
@@ -2088,6 +2132,7 @@ export const arithmeticNodes = [
                     description: "Interpolated value at time 1.0",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 },
@@ -2096,6 +2141,7 @@ export const arithmeticNodes = [
                     description: "Unclamped interpolation coefficient",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -2109,6 +2155,7 @@ export const arithmeticNodes = [
                     description: "(1.0 - c) * a + c * b",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -2130,6 +2177,7 @@ export const trigNodes = [
                     description: "Value in degrees",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -2143,6 +2191,7 @@ export const trigNodes = [
                     description: "a * pi / 180",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -2161,6 +2210,7 @@ export const trigNodes = [
                     description: "Value in radians",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -2174,6 +2224,7 @@ export const trigNodes = [
                     description: "a * 180 / pi",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -2192,6 +2243,7 @@ export const trigNodes = [
                     description: "Angle",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -2205,6 +2257,7 @@ export const trigNodes = [
                     description: "sin(a)",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -2223,6 +2276,7 @@ export const trigNodes = [
                     description: "Angle",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -2236,6 +2290,7 @@ export const trigNodes = [
                     description: "cos(a)",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -2254,6 +2309,7 @@ export const trigNodes = [
                     description: "Angle",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -2267,6 +2323,7 @@ export const trigNodes = [
                     description: "tan(a)",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -2285,6 +2342,7 @@ export const trigNodes = [
                     description: "Angle",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -2298,6 +2356,7 @@ export const trigNodes = [
                     description: "arcsin(a)",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -2316,6 +2375,7 @@ export const trigNodes = [
                     description: "Angle",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -2329,6 +2389,7 @@ export const trigNodes = [
                     description: "Arccos(a)",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -2347,6 +2408,7 @@ export const trigNodes = [
                     description: "Angle",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -2360,6 +2422,7 @@ export const trigNodes = [
                     description: "atan(a)",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -2378,6 +2441,7 @@ export const trigNodes = [
                     description: "Angle",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -2391,6 +2455,7 @@ export const trigNodes = [
                     description: "atan2(a)",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -2944,6 +3009,7 @@ export const hyperbolicNodes = [
                     description: "Hyperbolic Angle",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -2957,6 +3023,7 @@ export const hyperbolicNodes = [
                     description: "sinh(a)",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -2975,6 +3042,7 @@ export const hyperbolicNodes = [
                     description: "Hyperbolic Angle",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -2988,6 +3056,7 @@ export const hyperbolicNodes = [
                     description: "cosh(a)",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -3006,6 +3075,7 @@ export const hyperbolicNodes = [
                     description: "Hyperbolic Angle",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -3019,6 +3089,7 @@ export const hyperbolicNodes = [
                     description: "tanh(a)",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -3037,6 +3108,7 @@ export const hyperbolicNodes = [
                     description: "Hyperbolic sine value",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -3050,6 +3122,7 @@ export const hyperbolicNodes = [
                     description: "arcsinh(a)",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -3068,6 +3141,7 @@ export const hyperbolicNodes = [
                     description: "Hyperbolic cosine value",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -3081,6 +3155,7 @@ export const hyperbolicNodes = [
                     description: "Arccosh(a)",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -3099,6 +3174,7 @@ export const hyperbolicNodes = [
                     description: "Hyperbolic tangent value Angle",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -3112,6 +3188,7 @@ export const hyperbolicNodes = [
                     description: "atanh(a)",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -3133,6 +3210,7 @@ export const exponentialFunctionNodes = [
                     description: "Base",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 },
@@ -3141,6 +3219,7 @@ export const exponentialFunctionNodes = [
                     description: "Exponent",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -3154,6 +3233,7 @@ export const exponentialFunctionNodes = [
                     description: "b^a",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -3172,6 +3252,7 @@ export const exponentialFunctionNodes = [
                     description: "Exponent",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -3185,6 +3266,7 @@ export const exponentialFunctionNodes = [
                     description: "e^a",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -3203,6 +3285,7 @@ export const exponentialFunctionNodes = [
                     description: "Argument value",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -3216,6 +3299,7 @@ export const exponentialFunctionNodes = [
                     description: "ln(a)",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -3234,6 +3318,7 @@ export const exponentialFunctionNodes = [
                     description: "Argument value",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -3247,6 +3332,7 @@ export const exponentialFunctionNodes = [
                     description: "log_2(a)",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -3265,6 +3351,7 @@ export const exponentialFunctionNodes = [
                     description: "Argument value",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -3278,6 +3365,7 @@ export const exponentialFunctionNodes = [
                     description: "log_10(a)",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -3296,6 +3384,7 @@ export const exponentialFunctionNodes = [
                     description: "Radicand",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -3309,6 +3398,7 @@ export const exponentialFunctionNodes = [
                     description: "a root 2",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -3327,6 +3417,7 @@ export const exponentialFunctionNodes = [
                     description: "Radicand",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -3340,6 +3431,7 @@ export const exponentialFunctionNodes = [
                     description: "a root 3",
                     types: [
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }
@@ -3360,6 +3452,7 @@ export const vectorNodes: IAuthoringNode[] = [
                     id: "a",
                     description: "Vector",
                     types: [
+                        "float2",
                         "float3"
                     ]
                 }
@@ -3425,6 +3518,7 @@ export const vectorNodes: IAuthoringNode[] = [
                     id: "a",
                     description: "Vector",
                     types: [
+                        "float2",
                         "float3"
                     ]
                 }
@@ -3454,6 +3548,7 @@ export const vectorNodes: IAuthoringNode[] = [
                     id: "a",
                     description: "First Vector",
                     types: [
+                        "float2",
                         "float3"
                     ]
                 },
@@ -3855,6 +3950,7 @@ export const comparisonNodeSpecs = [
                         "bool",
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 },
@@ -3865,6 +3961,7 @@ export const comparisonNodeSpecs = [
                         "bool",
                         "int",
                         "float",
+                        "float2",
                         "float3"
                     ]
                 }

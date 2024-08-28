@@ -20,6 +20,12 @@ export class Log extends BehaveEngineNode {
             case "float":
                 val = [Math.log(a)];
                 break;
+            case "float2":
+                val = [
+                    Math.log(a[0]),
+                    Math.log(a[1])
+                ]
+                break;
             case "float3":
                 val = [
                     Math.log(a[0]),

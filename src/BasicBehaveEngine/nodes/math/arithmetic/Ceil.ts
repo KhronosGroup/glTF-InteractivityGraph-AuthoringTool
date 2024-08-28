@@ -20,6 +20,12 @@ export class Ceil extends BehaveEngineNode {
             case "float":
                 val = [Math.ceil(a)];
                 break;
+            case "float2":
+                val = [
+                    Math.ceil(a[0]),
+                    Math.ceil(a[1])
+                ]
+                break;
             case "float3":
                 val = [
                     Math.ceil(a[0]),

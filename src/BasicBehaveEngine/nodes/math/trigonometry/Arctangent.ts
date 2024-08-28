@@ -20,6 +20,12 @@ export class Arctangent extends BehaveEngineNode {
             case "float":
                 val = [Math.atan(a)];
                 break;
+            case "float2":
+                val = [
+                    Math.atan(a[0]),
+                    Math.atan(a[1])
+                ]
+                break;
             case "float3":
                 val = [
                     Math.atan(a[0]),

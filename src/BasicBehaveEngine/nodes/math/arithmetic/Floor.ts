@@ -20,6 +20,12 @@ export class Floor extends BehaveEngineNode {
             case "float":
                 val = [Math.floor(a)];
                 break;
+            case "float2":
+                val = [
+                    Math.floor(a[0]),
+                    Math.floor(a[1])
+                ]
+                break;
             case "float3":
                 val = [
                     Math.floor(a[0]),

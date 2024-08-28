@@ -20,6 +20,12 @@ export class InverseHyperbolicSine extends BehaveEngineNode {
             case "float":
                 val = [Math.asinh(a)];
                 break;
+            case "float2":
+                val = [
+                    Math.asinh(a[0]),
+                    Math.asinh(a[1])
+                ]
+                break;
             case "float3":
                 val = [
                     Math.asinh(a[0]),

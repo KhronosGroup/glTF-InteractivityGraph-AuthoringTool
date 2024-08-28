@@ -20,6 +20,12 @@ export class DegreeToRadians extends BehaveEngineNode {
             case "float":
                 val = [(a * Math.PI) / 180];
                 break;
+            case "float2":
+                val = [
+                    (a[0] * Math.PI) / 180,
+                    (a[1] * Math.PI) / 180
+                ]
+                break;
             case "float3":
                 val = [
                     (a[0] * Math.PI) / 180,

@@ -20,6 +20,12 @@ export class Sine extends BehaveEngineNode {
             case "float":
                 val = [Math.sin(a)];
                 break;
+            case "float2":
+                val = [
+                    Math.sin(a[0]),
+                    Math.sin(a[1])
+                ]
+                break;
             case "float3":
                 val = [
                     Math.sin(a[0]),

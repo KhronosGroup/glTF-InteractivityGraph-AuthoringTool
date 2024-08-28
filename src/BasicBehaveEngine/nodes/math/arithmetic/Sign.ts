@@ -22,6 +22,12 @@ export class Sign extends BehaveEngineNode {
             case "float":
                 val = [Math.sign(a)];
                 break;
+            case "float2":
+                val = [
+                    Math.sign(a[0]),
+                    Math.sign(a[1])
+                ]
+                break;
             case "float3":
                 val = [
                     Math.sign(a[0]),

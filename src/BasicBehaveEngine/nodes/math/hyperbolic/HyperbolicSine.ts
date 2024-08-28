@@ -20,6 +20,12 @@ export class HyperbolicSine extends BehaveEngineNode {
             case "float":
                 val = [Math.sinh(a)];
                 break;
+            case "float2":
+                val = [
+                    Math.sinh(a[0]),
+                    Math.sinh(a[1])
+                ]
+                break;
             case "float3":
                 val = [
                     Math.sinh(a[0]),

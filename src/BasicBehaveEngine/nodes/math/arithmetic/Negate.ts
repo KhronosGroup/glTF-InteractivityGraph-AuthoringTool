@@ -23,6 +23,12 @@ export class Negate extends BehaveEngineNode {
             case "float":
                 val = [a * -1];
                 break;
+            case "float2":
+                val = [
+                    a[0] * -1,
+                    a[1] * -1
+                ]
+                break;
             case "float3":
                 val = [
                     a[0] * -1,

@@ -20,6 +20,12 @@ export class HyperbolicCosine extends BehaveEngineNode {
             case "float":
                 val = [Math.cosh(a)];
                 break;
+            case "float2":
+                val = [
+                    Math.cosh(a[0]),
+                    Math.cosh(a[1])
+                ]
+                break;
             case "float3":
                 val = [
                     Math.cosh(a[0]),

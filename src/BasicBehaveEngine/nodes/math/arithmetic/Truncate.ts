@@ -21,6 +21,12 @@ export class Truncate extends BehaveEngineNode {
             case "float":
                 val = [Math.trunc(a)];
                 break;
+            case "float2":
+                val = [
+                    Math.trunc(a[0]),
+                    Math.trunc(a[1])
+                ]
+                break;
             case "float3":
                 val = [
                     Math.trunc(a[0]),

@@ -26,6 +26,12 @@ export class Max extends BehaveEngineNode {
             case "float":
                 val = [Math.max(a,b)];
                 break;
+            case "float2":
+                val = [
+                    Math.max(a[0], b[0]),
+                    Math.max(a[1], b[1])
+                ]
+                break;
             case "float3":
                 val = [
                     Math.max(a[0], b[0]),

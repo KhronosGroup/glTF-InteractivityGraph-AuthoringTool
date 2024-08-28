@@ -24,6 +24,12 @@ export class AbsoluteValue extends BehaveEngineNode {
             case "float":
                 val = [Math.abs(a)];
                 break;
+            case "float2":
+                val = [
+                    Math.abs(a[0]),
+                    Math.abs(a[1])
+                ]
+                break;
             case "float3":
                 val = [
                     Math.abs(a[0]),

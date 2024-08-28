@@ -17,6 +17,9 @@ export class VectorLength extends BehaveEngineNode {
         let val: any;
 
         switch (type) {
+            case "float2":
+                val = Math.sqrt(Math.pow(a[0],2) + Math.pow(a[1],2));
+                break;
             case "float3":
                 val = Math.sqrt(Math.pow(a[0],2) + Math.pow(a[1],2) + Math.pow(a[2],2));
                 break;

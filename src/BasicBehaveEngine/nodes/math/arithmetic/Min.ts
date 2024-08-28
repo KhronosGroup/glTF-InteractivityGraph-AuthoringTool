@@ -26,6 +26,12 @@ export class Min extends BehaveEngineNode {
             case "float":
                 val = [Math.min(a,b)];
                 break;
+            case "float2":
+                val = [
+                    Math.min(a[0], b[0]),
+                    Math.min(a[1], b[1])
+                ]
+                break;
             case "float3":
                 val = [
                     Math.min(a[0], b[0]),

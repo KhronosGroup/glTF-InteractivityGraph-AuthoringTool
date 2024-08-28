@@ -20,6 +20,12 @@ export class Cosine extends BehaveEngineNode {
             case "float":
                 val = [Math.cos(a)];
                 break;
+            case "float2":
+                val = [
+                    Math.cos(a[0]),
+                    Math.cos(a[1])
+                ]
+                break;
             case "float3":
                 val = [
                     Math.cos(a[0]),

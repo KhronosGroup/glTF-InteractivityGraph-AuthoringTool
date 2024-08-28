@@ -132,6 +132,9 @@ export class BabylonDecorator extends ADecorator {
             } else if (valueType === "float") {
                 const value = [linearFloat(p.y, initialValue[0], targetValue[0])]
                 this.behaveEngine.setPathValue(path, value);
+            } else if (valueType == "float2") {
+                const value = [linearFloat(p.y, initialValue[0], targetValue[0]), linearFloat(p.y, initialValue[1], targetValue[1])]
+                this.behaveEngine.setPathValue(path, value);
             }
 
             if (elapsedDuration >= duration) {

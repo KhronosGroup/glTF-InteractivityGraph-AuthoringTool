@@ -27,6 +27,12 @@ export class Interpolate extends BehaveEngineNode {
             case "float":
                 val = [(1.0 - c) * a + c * b];
                 break;
+            case "float2":
+                val = [
+                    (1.0 - c[0]) * a[0] + c[0] * b[0],
+                    (1.0 - c[1]) * a[1] + c[1] * b[1]
+                ]
+                break;
             case "float3":
                 val = [
                     (1.0 - c[0]) * a[0] + c[0] * b[0],

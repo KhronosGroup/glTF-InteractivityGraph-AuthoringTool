@@ -20,6 +20,12 @@ export class Saturate extends BehaveEngineNode {
             case "float":
                 val = [Math.min(Math.max(a, 0.0), 1.0)];
                 break;
+            case "float2":
+                val = [
+                    Math.min(Math.max(a[0], 0.0), 1.0),
+                    Math.min(Math.max(a[1], 0.0), 1.0)
+                ]
+                break;
             case "float3":
                 val = [
                     Math.min(Math.max(a[0], 0.0), 1.0),

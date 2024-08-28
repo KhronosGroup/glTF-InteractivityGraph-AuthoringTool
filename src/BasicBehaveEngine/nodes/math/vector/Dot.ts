@@ -22,6 +22,9 @@ export class Dot extends BehaveEngineNode {
         let val: any;
 
         switch (typeA) {
+            case "float2":
+                val = a[0] * b[0] + a[1] * b[1]
+                break;
             case "float3":
                 val = a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
                 break;

@@ -20,6 +20,12 @@ export class Arcsine extends BehaveEngineNode {
             case "float":
                 val = [Math.asin(a)];
                 break;
+            case "float2":
+                val = [
+                    Math.asin(a[0]),
+                    Math.asin(a[1])
+                ]
+                break;
             case "float3":
                 val = [
                     Math.asin(a[0]),

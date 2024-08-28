@@ -20,6 +20,12 @@ export class Tangent extends BehaveEngineNode {
             case "float":
                 val = [Math.tan(a)];
                 break;
+            case "float2":
+                val = [
+                    Math.tan(a[0]),
+                    Math.tan(a[1])
+                ]
+                break;
             case "float3":
                 val = [
                     Math.tan(a[0]),

@@ -20,6 +20,12 @@ export class CubeRoot extends BehaveEngineNode {
             case "float":
                 val = [Math.cbrt(a)];
                 break;
+            case "float2":
+                val = [
+                    Math.cbrt(a[0]),
+                    Math.cbrt(a[1])
+                ]
+                break;
             case "float3":
                 val = [
                     Math.cbrt(a[0]),

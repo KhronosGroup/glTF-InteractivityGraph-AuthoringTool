@@ -20,6 +20,12 @@ export class Fraction extends BehaveEngineNode {
             case "float":
                 val = [a - Math.floor(a)];
                 break;
+            case "float2":
+                val = [
+                    a[0] - Math.floor(a[0]),
+                    a[1] - Math.floor(a[1])
+                ]
+                break;
             case "float3":
                 val = [
                     a[0] - Math.floor(a[0]),

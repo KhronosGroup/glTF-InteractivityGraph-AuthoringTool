@@ -28,6 +28,12 @@ export class Multiply extends BehaveEngineNode {
             case "float":
                 val = [a * b];
                 break;
+            case "float2":
+                val = [
+                    a[0] * b[0],
+                    a[1] * b[1]
+                ]
+                break;
             case "float3":
                 val = [
                     a[0] * b[0],

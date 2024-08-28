@@ -17,13 +17,21 @@ export class Normalize extends BehaveEngineNode {
         let val: any;
 
         switch (type) {
+            case "float2":
+                // eslint-disable-next-line no-case-declarations
+                const length2 = Math.sqrt(Math.pow(a[0], 2) + Math.pow(a[1], 2));
+                val = [
+                    a[0]/length2,
+                    a[1]/length2
+                ];
+                break;
             case "float3":
                 // eslint-disable-next-line no-case-declarations
-                const length = Math.sqrt(Math.pow(a[0], 2) + Math.pow(a[1], 2) + Math.pow(a[2], 2));
+                const length3 = Math.sqrt(Math.pow(a[0], 2) + Math.pow(a[1], 2) + Math.pow(a[2], 2));
                 val = [
-                    a[0]/length,
-                    a[1]/length,
-                    a[2]/length,
+                    a[0]/length3,
+                    a[1]/length3,
+                    a[2]/length3,
                 ];
                 break;
             default:

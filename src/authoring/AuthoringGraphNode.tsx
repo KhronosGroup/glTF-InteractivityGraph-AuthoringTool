@@ -108,8 +108,8 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                 outputFlowsToSet.push(outputFlow);
             }
         }
-        if (props.data.configuration.customEvent !== undefined) {
-            const customEventId: number = JSON.parse(props.data.configuration.customEvent);
+        if (props.data.configuration.event !== undefined) {
+            const customEventId: number = JSON.parse(props.data.configuration.event);
             const ce: ICustomEvent = props.data.customEvents[customEventId];
 
             if (ce.values === undefined) {return}
@@ -131,9 +131,9 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                 values.push(value);
             }
 
-            if (props.node.type === "customEvent/send") {
+            if (props.node.type === "event/send") {
                 inputValuesToSet.push(...values)
-            } else if (props.node.type === "customEvent/receive") {
+            } else if (props.node.type === "event/receive") {
                 outputValuesToSet.push(...values);
             }
         }
@@ -220,6 +220,46 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                     {/*configuration*/}
                     <div>
                         {
+                            (props.node.type === "event/receive" || props.node.type === "event/send") &&
+                            <div>
+                                <label htmlFor="event">event</label>
+                                <select id="event" name="event" onChange={(event) => {
+                                    if (Number(event.target.value) === -1) {
+                                        return
+                                    }
+                                    onChangeConfiguration(event)
+                                }} >
+                                    <option key={-1} value={-1} selected={true}>--NO SELECTION--</option>
+                                    {
+                                        props.data.customEvents.map((ce: any, index: number) => (
+                                            <option key={index} value={index}>{ce.id}</option>
+                                        ))
+                                    }
+                                </select>
+                            </div>
+                        }
+                        {
+                            (props.node.type === "variable/get" || props.node.type === "variable/set") &&
+                            <div>
+                                <label htmlFor="variable">variable</label>
+                                <select id="variable" name="variable" onChange={(event) => {
+                                    if (Number(event.target.value) === -1) {
+                                        return
+                                    }
+                                    onChangeConfiguration(event)
+                                }}>
+                                    <option key={-1} value={-1} selected={true}>--NO SELECTION--</option>
+                                    {
+
+                                        props.data.variables.map((v: any, index: number) => (
+                                            <option key={index} value={index}>{v.id}</option>
+                                        ))
+                                    }
+                                </select>
+                            </div>
+                        }
+                        {
+                            !["event/send", "event/receive", "variable/set", "variable/get"].includes(props.node.type) &&
                             props.node.configuration.map((configuration, index) => {
                                 return (
                                     <div key={index}>

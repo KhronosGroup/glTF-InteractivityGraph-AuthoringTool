@@ -5,7 +5,7 @@ import {
     ArcRotateCamera,
     DirectionalLight,
     Engine,
-    HemisphericLight,
+    HemisphericLight, Material,
     Node,
     SceneLoader,
     TransformNode,
@@ -67,8 +67,8 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
 
     const play = () => {
         resetScene()
-            .then((res: {nodes: Node[], animations: AnimationGroup[]}) => {
-                runGraph(babylonEngineRef, props.behaveGraphRef.current, sceneRef.current, res.nodes, res.animations);
+            .then((res: {nodes: Node[], materials: Material[], animations: AnimationGroup[]}) => {
+                runGraph(babylonEngineRef, props.behaveGraphRef.current, sceneRef.current, res.nodes, res.materials, res.animations);
                 setGraphRunning(true);
             })
     }
@@ -109,7 +109,7 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
         const container = await SceneLoader.LoadAssetContainerAsync("", url, sceneRef.current, undefined, ".glb");
         container.addAllToScene();
 
-        return {nodes:buildGlTFNodeLayout(container.rootNodes[0]), animations: container.animationGroups};
+        return {nodes:buildGlTFNodeLayout(container.rootNodes[0]), animations: container.animationGroups, materials: container.materials};
     };
 
     const buildGlTFNodeLayout = (rootNode: Node): Node[] => {
@@ -142,12 +142,12 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
         return finalNodes;
     }
 
-    const runGraph = (babylonEngineRef: any, behaveGraph: any, scene: any, nodes: Node[], animations: AnimationGroup[]) => {
+    const runGraph = (babylonEngineRef: any, behaveGraph: any, scene: any, nodes: Node[], materials: Material[], animations: AnimationGroup[]) => {
         if (babylonEngineRef.current !== null) {
             babylonEngineRef.current.clearCustomEventListeners()
         }
 
-        const world = {glTFNodes: nodes, animations: animations};
+        const world = {glTFNodes: nodes, animations: animations, materials: materials};
         babylonEngineRef.current = new BabylonDecorator(new BasicBehaveEngine(10), world, scene)
 
         const extractedBehaveGraph = babylonEngineRef.current.extractBehaveGraphFromScene()

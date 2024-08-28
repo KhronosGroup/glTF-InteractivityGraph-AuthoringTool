@@ -431,6 +431,8 @@ describe('BehaveEngine', () => {
         const babylonWorld = {
             "glTFNodes":[
                 {"scaling":new Vector3(1,2,3), "position": new Vector3(0,0,0), "rotationQuaternion": new Quaternion(0, 0, 0, 0)}
+            ],
+            "materials": [
             ]
         }
         const engine: Engine = new NullEngine()
@@ -529,7 +531,7 @@ describe('BehaveEngine', () => {
         mockScene.registerBeforeRender = jest.fn((cb: any) => {
             callback = cb;
         })
-        babylonBehaveEngine = new BabylonDecorator(new BasicBehaveEngine(1), {glTFNodes: []}, mockScene);
+        babylonBehaveEngine = new BabylonDecorator(new BasicBehaveEngine(1), {glTFNodes: [], materials: []}, mockScene);
         babylonBehaveEngine.animateProperty("/",  {initialValue: 0, targetValue: 10, easingType: 2}, () => {return})
         await new Promise((resolve) => setTimeout(resolve, 2000));
 

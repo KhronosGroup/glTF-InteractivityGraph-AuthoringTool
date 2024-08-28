@@ -406,7 +406,9 @@ export const pointerNodeSpecs: IAuthoringNode[] = [
                     id: "message",
                     description: "First Argument",
                     types: [
-                        "AMZN_interactivity_string"
+                        "AMZN_interactivity_string",
+                        "bool",
+                        "float"
                     ]
                 }
             ]

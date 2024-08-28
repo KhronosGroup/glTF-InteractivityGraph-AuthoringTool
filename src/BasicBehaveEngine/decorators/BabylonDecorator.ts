@@ -3,9 +3,9 @@ import {BehaveEngineNode, IFlow} from "../BehaveEngineNode";
 import {IBehaveEngine} from "../IBehaveEngine";
 import {
     AbstractMesh,
-    AnimationGroup, Camera,
+    AnimationGroup, Camera, Color3,
     float,
-    Matrix,
+    Matrix, PBRMaterial,
     PointerEventTypes,
     Quaternion,
     TargetCamera
@@ -155,6 +155,7 @@ export class BabylonDecorator extends ADecorator {
 
     registerKnownPointers = () => {
         const maxGltfNode:number = this.world.glTFNodes.length-1;
+        const maxGlTFMaterials: number = this.world.materials.length-1;
 
         this.registerJsonPointer(`/nodes/${maxGltfNode}/scale`, (path) => {
             const parts: string[] = path.split("/");
@@ -227,6 +228,63 @@ export class BabylonDecorator extends ADecorator {
             const variants = KHR_materials_variants.GetAvailableVariants(root);
             KHR_materials_variants.SelectVariant(root, variants[value]);
         }, "int");
+
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/pbrMetallicRoughness/baseColorFactor`, (path) => {
+            const parts: string[] = path.split("/");
+            const baseColor = (this.world.materials[Number(parts[2])] as PBRMaterial).albedoColor;
+            const baseColorAlpha = (this.world.materials[Number(parts[2])] as PBRMaterial).alpha
+            return (baseColor === null || baseColorAlpha == null)? [NaN, NaN, NaN, NaN] : [baseColor.r, baseColor.g, baseColor.b, baseColorAlpha];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const material = this.world.materials[Number(parts[2])] as PBRMaterial;
+            material.albedoColor = new Color3(value[0], value[1], value[2]);
+            material.alpha = value[3];
+        }, "float4");
+
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/pbrMetallicRoughness/roughnessFactor`, (path) => {
+            const parts: string[] = path.split("/");
+            const roughness = (this.world.materials[Number(parts[2])] as PBRMaterial).roughness;
+            return roughness === null ? [NaN] : [roughness];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const material = this.world.materials[Number(parts[2])] as PBRMaterial;
+            material.roughness = value;
+        }, "float");
+
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/pbrMetallicRoughness/metallicFactor`, (path) => {
+            const parts: string[] = path.split("/");
+            const metallic = (this.world.materials[Number(parts[2])] as PBRMaterial).metallic;
+            return metallic === null ? [NaN] : [metallic];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const material = this.world.materials[Number(parts[2])] as PBRMaterial;
+            material.metallic = value;
+        }, "float");
+
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/alphaCutoff`, (path) => {
+            const parts: string[] = path.split("/");
+            const alphaCutoff = (this.world.materials[Number(parts[2])]).alphaCutoff;
+            return alphaCutoff === null ? [NaN] : [alphaCutoff];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const material = this.world.materials[Number(parts[2])];
+            material.alphaCutoff = value;
+        }, "float");
+
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/emissiveFactor`, (path) => {
+            const parts: string[] = path.split("/");
+            const emissiveFactor = (this.world.materials[Number(parts[2])]).emissiveFactor;
+            return emissiveFactor === undefined ? [NaN, NaN, NaN] : [emissiveFactor[0], emissiveFactor[1], emissiveFactor[2]];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const material = this.world.materials[Number(parts[2])];
+            material.emissiveFactor = value;
+        }, "float3");
+
+        //TODO: find babylon mapping for /materials/{}/normalTexture/scale
+
+        //TODO: find babylon mapping for /materials/{}/occlusionTexture/strength
+
     }
 
     public extractBehaveGraphFromScene = (): any => {

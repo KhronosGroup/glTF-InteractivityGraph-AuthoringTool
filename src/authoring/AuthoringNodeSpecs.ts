@@ -4446,4 +4446,4 @@ export const bitwiseNodeSpecs = [
 
 export const authoringNodeSpecs: IAuthoringNode[] = [...pointerNodeSpecs, ...flowNodeSpecs, ...lifecycleNodeSpecs, ...customEventNodeSpecs, ...variableNodeSpecs,
     ...constantsNodes, ...arithmeticNodes, ...trigNodes, ...hyperbolicNodes, ...exponentialFunctionNodes, ...experimentalNodeSpecs, ...vectorNodes,
-    ...specialFloatingPointNodeSpecs, ...matrixNodeSpecs, ...comparisonNodeSpecs, ...bitwiseNodeSpecs, ...typeConversionNodeSpecs, ...combine, ];
+    ...specialFloatingPointNodeSpecs, ...matrixNodeSpecs, ...comparisonNodeSpecs, ...bitwiseNodeSpecs, ...typeConversionNodeSpecs, ...combine, ...extract];

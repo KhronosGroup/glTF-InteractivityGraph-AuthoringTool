@@ -816,7 +816,18 @@ export const lifecycleNodeSpecs: IAuthoringNode[] = [
                     description: "The flow to be followed when a tick occurs."
                 }
             ],
-            values: []
+            values: [
+                {
+                    id: "timeSinceStart",
+                    description: "Relative time in seconds since the graph execution start",
+                    types: ["float"]
+                },
+                {
+                    id: "timeSinceLastTick",
+                    description: "Relative time in seconds since the last tick occurred",
+                    types: ["float"]
+                },
+            ]
         }
     },
 ]

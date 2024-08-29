@@ -247,10 +247,8 @@ export class BasicBehaveEngine implements IBehaveEngine {
         if (startNodeIndex !== -1) {
             const startFlow: IFlow = {node: startNodeIndex, id: "start"}
             this.addEventToWorkQueue(startFlow);
-        } else if (this.onTickNodeIndex !== -1) {
-            const tickFlow: IFlow = {node: this.onTickNodeIndex, id: "tick"}
-            this.addEventToWorkQueue(tickFlow)
         }
+        this.executeEventQueue();
     }
 
     public processNodeStarted = (behaveEngineNode: BehaveEngineNode) => {
@@ -409,29 +407,27 @@ export class BasicBehaveEngine implements IBehaveEngine {
 
         this.processAddingNodeToQueue(flow);
         this.eventQueue.push({behaveNode: nodeToPush, inSocketId: flow.socket});
-
-        // if only one event in queue, start it
-        if (this.eventQueue.length === 1) {
-            this.executeNextEvent();
-        }
     }
 
-    private executeNextEvent = () => {
-        while (this.eventQueue.length > 0) {
-            const eventToStart = this.eventQueue[0];
+    private executeEventQueue = () => {
+        const eventQueueCopy = [...this.eventQueue];
+        this.eventQueue = [];
+        while (eventQueueCopy.length > 0) {
+            const eventToStart = eventQueueCopy[0];
             eventToStart.behaveNode.processNode(eventToStart.inSocketId);
-            this.eventQueue.splice(0, 1);
+            eventQueueCopy.splice(0, 1);
         }
 
         if (this.onTickNodeIndex !== -1) {
-            const timeNow = Date.now();
-            const timeSinceLastTick = timeNow - this.lastTickTime;
-            setTimeout(() => {
-                const tickFlow: IFlow = {node: this.onTickNodeIndex, id: "tick"}
-                this.addEventToWorkQueue(tickFlow)
-                this.lastTickTime = timeNow;
-            }, Math.max(1000 / this.fps - timeSinceLastTick,0))
+            const tickFlow: IFlow = {node: this.onTickNodeIndex, id: "tick"}
+            const tickNode: BehaveEngineNode = this.idToBehaviourNodeMap.get(tickFlow.node!)!;
+
+            tickNode.processNode()
         }
+
+        setTimeout(() => {
+            this.executeEventQueue()
+        }, 1000 / this.fps)
     }
 
     getWorldAnimationPathCallback(path: string): ICancelable | undefined {

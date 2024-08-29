@@ -840,7 +840,7 @@ describe('BehaveEngine', () => {
         }
 
         let executionLog = "";
-        loggingBehaveEngine = new LoggingDecorator(new BasicBehaveEngine( 1), (line:string) => executionLog += line, loggingWorld);
+        loggingBehaveEngine = new LoggingDecorator(new BasicBehaveEngine( 30), (line:string) => executionLog += line, loggingWorld);
         loggingBehaveEngine.loadBehaveGraph(worldPointerGraph);
         await new Promise((resolve) => setTimeout(resolve, 250));
         expect(loggingWorld.nodes[0].scale).toEqual([1,1,1]);

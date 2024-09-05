@@ -103,6 +103,10 @@ export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromG
             if (inputField !== null) {
                 inputField.style.display = "none";
             }
+            const typeDropdown = targetNode.querySelector(`#${vals.targetHandle}-typeDropDown`) as HTMLInputElement;
+            if (typeDropdown !== null) {
+                typeDropdown.style.display = "none";
+            }
         }
 
         setEdges((eds: any) => addEdge(vals, eds));
@@ -115,6 +119,10 @@ export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromG
                 const inputField = targetNode.querySelector(`#in-${edges[0].targetHandle}`) as HTMLInputElement;
                 if (inputField !== null) {
                     inputField.style.display = "block";
+                }
+                const typeDropdown = targetNode.querySelector(`#${edges[0].targetHandle}-typeDropDown`) as HTMLInputElement;
+                if (typeDropdown !== null) {
+                    typeDropdown.style.display = "block";
                 }
             }
         }

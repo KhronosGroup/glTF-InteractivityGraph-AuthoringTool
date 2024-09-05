@@ -124,6 +124,11 @@ export const authorToBehave = (nodes: Node[], edges: Edge[], customEvents: ICust
                 const targetNode = nodes.find(node => node.id === edge.target);
                 // currently, flow/waitAll is the only node with a variable number of input flows
                 if (!inFlows.includes(edge.targetHandle!) && targetNode!.type !== "flow/waitAll") {
+                    //clear any old inlined value
+                    const index = behaveNode.values.findIndex((n: any) => n.id === edge.targetHandle);
+                    if (index !== -1) {
+                        behaveNode.values.splice(index, 1);
+                    }
                     // this is not an in flow edge which means it is an input value
                     behaveNode.values.push({id: edge.targetHandle, node: edge.source, socket: edge.sourceHandle})
                 }

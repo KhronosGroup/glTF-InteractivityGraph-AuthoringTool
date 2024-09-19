@@ -224,15 +224,16 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                             <div>
                                 <label htmlFor="event">event</label>
                                 <select id="event" name="event" onChange={(event) => {
+                                    console.log(props.data)
                                     if (Number(event.target.value) === -1) {
                                         return
                                     }
                                     onChangeConfiguration(event)
                                 }} >
-                                    <option key={-1} value={-1} selected={true}>--NO SELECTION--</option>
+                                    <option key={-1} value={-1} selected={!props.data.configuration || !props.data.configuration.event}>--NO SELECTION--</option>
                                     {
                                         props.data.customEvents.map((ce: any, index: number) => (
-                                            <option key={index} value={index}>{ce.id}</option>
+                                            <option key={index} value={index} selected={props.data.configuration && props.data.configuration.event == index}>{ce.id}</option>
                                         ))
                                     }
                                 </select>
@@ -248,11 +249,11 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                     }
                                     onChangeConfiguration(event)
                                 }}>
-                                    <option key={-1} value={-1} selected={true}>--NO SELECTION--</option>
+                                    <option key={-1} value={-1} selected={!props.data.configuration || !props.data.configuration.variable}>--NO SELECTION--</option>
                                     {
 
                                         props.data.variables.map((v: any, index: number) => (
-                                            <option key={index} value={index}>{v.id}</option>
+                                            <option key={index} value={index} selected={props.data.configuration && props.data.configuration.variable == index}>{v.id}</option>
                                         ))
                                     }
                                 </select>

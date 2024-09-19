@@ -37,7 +37,7 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
     const [openModal, setOpenModal] = useState<BabylonEngineModal>(BabylonEngineModal.NONE);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const babylonEngineRef = useRef<BabylonDecorator | null>(null)
-    const [fileUploaded, setFileUploaded] = useState(false);
+    const [fileUploaded, setFileUploaded] = useState<string | null>(null);
     const [clickedHotSpot, setClickedHotSpot] = useState<string | null>(null);
 
     useEffect(() => {
@@ -60,15 +60,15 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
     }, []);
 
     useEffect(() => {
-        if (fileUploaded) {
-            play()
+        if (fileUploaded !== null) {
+            play(true)
         }
     }, [fileUploaded])
 
-    const play = () => {
+    const play = (shouldOverrideGraph: boolean) => {
         resetScene()
             .then((res: {nodes: Node[], materials: Material[], animations: AnimationGroup[]}) => {
-                runGraph(babylonEngineRef, props.behaveGraphRef.current, sceneRef.current, res.nodes, res.materials, res.animations);
+                runGraph(babylonEngineRef, props.behaveGraphRef.current, sceneRef.current, res.nodes, res.materials, res.animations, shouldOverrideGraph);
                 setGraphRunning(true);
             })
     }
@@ -142,7 +142,7 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
         return finalNodes;
     }
 
-    const runGraph = (babylonEngineRef: any, behaveGraph: any, scene: any, nodes: Node[], materials: Material[], animations: AnimationGroup[]) => {
+    const runGraph = (babylonEngineRef: any, behaveGraph: any, scene: any, nodes: Node[], materials: Material[], animations: AnimationGroup[], shouldOverride: boolean) => {
         if (babylonEngineRef.current !== null) {
             babylonEngineRef.current.clearCustomEventListeners()
         }
@@ -151,7 +151,7 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
         babylonEngineRef.current = new BabylonDecorator(new BasicBehaveEngine(10), world, scene)
 
         const extractedBehaveGraph = babylonEngineRef.current.extractBehaveGraphFromScene()
-        if ((!behaveGraph.nodes || behaveGraph.nodes.length === 0) && extractedBehaveGraph) {
+        if ((!behaveGraph.nodes || behaveGraph.nodes.length === 0 || shouldOverride) && extractedBehaveGraph) {
             props.setBehaveGraphFromGlTF(extractedBehaveGraph);
             babylonEngineRef.current.loadBehaveGraph(extractedBehaveGraph);
         } else {
@@ -233,8 +233,8 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
         <div style={{width: "90vw", margin: "0 auto"}}>
             <div style={{background: "#3d5987", padding: 16, borderTopLeftRadius: 16, borderTopRightRadius: 16}}>
                 <Button variant="outline-light" onClick={() => {
-                    play()
-                }} disabled={!fileUploaded}>
+                    play(false)
+                }} disabled={fileUploaded == null}>
                     Play
                 </Button>
 
@@ -247,14 +247,20 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
                 <Spacer width={16} height={0}/>
 
                 <label className="mx-3" style={{color: "white"}}>Choose file: </label>
-                <input className="d-none" type="file" accept=".glb" ref={fileInputRef} onChange={() => setFileUploaded(true)}/>
+                <input className="d-none" type="file" accept=".glb" ref={fileInputRef} onChange={() => {
+                    if (fileInputRef.current == null || fileInputRef.current.files == null || fileInputRef.current.files.length == 0) {
+                        setFileUploaded(null);
+                        return;
+                    }
+                    setFileUploaded(fileInputRef.current.files[0].name)
+                }}/>
                 <Button variant="outline-light" onClick={() => fileInputRef.current!.click()}>
                     Upload glb
                 </Button>
 
                 <Spacer width={16} height={0}/>
 
-                <Button variant="outline-light" disabled={!fileUploaded} onClick={() => exportKHRInteractivityGLB()}>
+                <Button variant="outline-light" disabled={fileUploaded == null} onClick={() => exportKHRInteractivityGLB()}>
                     Download glb
                 </Button>
             </div>

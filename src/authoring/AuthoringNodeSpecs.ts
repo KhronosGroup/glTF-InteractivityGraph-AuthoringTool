@@ -685,7 +685,7 @@ export const experimentalNodeSpecs: IAuthoringNode[] = [
         }
     },
     {
-        type:"node/onSelect",
+        type:"event/onSelect",
         description:"This node will fire when a node is selected.",
         configuration:[
             {
@@ -712,13 +712,23 @@ export const experimentalNodeSpecs: IAuthoringNode[] = [
             ],
             values:[
                 {
-                    id: "hitNodeIndex",
-                    description: "The index of the first hit node",
+                    id: "selectedNodeIndex",
+                    description: "Index of the actual node that was selected by the user",
                     types: ["int"]
                 },
                 {
-                    id: "localHitLocation",
-                    description: "The local hit offset from the hit node's origin",
+                    id: "controllerIndex",
+                    description: "Index of the controller that generated the event",
+                    types: ["int"]
+                },
+                {
+                    id: "selectionPoint",
+                    description: "Position of intersection of the selection ray with the geometry of the selected node in global space",
+                    types: ["float3"]
+                },
+                {
+                    id: "selectionRayOrigin",
+                    description: "Position of the origin of the selection ray in global space",
                     types: ["float3"]
                 }
             ]

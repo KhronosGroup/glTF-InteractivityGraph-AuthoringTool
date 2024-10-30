@@ -19,20 +19,51 @@ export class OnSelect extends BehaveEngineNode {
         this._nodeIndex = nodeIndex;
         this._stopPropagation = stopPropagation;
 
+        this.outValues.selectionPoint = {
+            id: 'selectionPoint',
+            type: this.getTypeIndex('float3'),
+            value: [NaN, NaN, NaN],
+        };
+        this.outValues.selectionRayOrigin = {
+            id: 'selectionRayOrigin',
+            type: this.getTypeIndex('float3'),
+            value: [NaN, NaN, NaN],
+        };
+        this.outValues.selectedNodeIndex = {
+            id: 'selectedNodeIndex',
+            type: this.getTypeIndex('int'),
+            value: [-1],
+        };
+        this.outValues.controllerIndex = {
+            id: 'controllerIndex',
+            type: this.getTypeIndex('int'),
+            value: [-1],
+        };
+
         this.setUpOnSelect();
     }
 
     setUpOnSelect() {
-        const callback = (localHitLocation: number[], hitNodeIndex: number) => {
-            this.outValues.localHitLocation = {
-                id: 'pos3D',
+        const callback = (selectionPoint: number[], selectedNodeIndex: number, controllerIndex: number, selectionRayOrigin: number[]) => {
+            this.outValues.selectionPoint = {
+                id: 'selectionPoint',
                 type: this.getTypeIndex('float3'),
-                value: localHitLocation,
+                value: selectionPoint,
             };
-            this.outValues.hitNodeIndex = {
-                id: 'hitNodeIndex',
+            this.outValues.selectionRayOrigin = {
+                id: 'selectionRayOrigin',
+                type: this.getTypeIndex('float3'),
+                value: selectionRayOrigin,
+            };
+            this.outValues.selectedNodeIndex = {
+                id: 'selectedNodeIndex',
                 type: this.getTypeIndex('int'),
-                value: [hitNodeIndex],
+                value: [selectedNodeIndex],
+            };
+            this.outValues.controllerIndex = {
+                id: 'controllerIndex',
+                type: this.getTypeIndex('int'),
+                value: [controllerIndex],
             };
 
             this.addEventToWorkQueue(this.flows.out);
@@ -40,7 +71,7 @@ export class OnSelect extends BehaveEngineNode {
             if (!this._stopPropagation) {
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-ignore
-                this.graphEngine.alertParentOnSelect(localHitLocation, hitNodeIndex, this._nodeIndex);
+                this.graphEngine.alertParentOnSelect(selectionPoint, selectedNodeIndex, controllerIndex, selectionRayOrigin, this._nodeIndex);
             }
         }
 

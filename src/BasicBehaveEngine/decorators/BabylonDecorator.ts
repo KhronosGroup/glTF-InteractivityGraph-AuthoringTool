@@ -8,7 +8,7 @@ import {
     Matrix, PBRMaterial,
     PointerEventTypes,
     Quaternion,
-    TargetCamera
+    TargetCamera, Node
 } from "@babylonjs/core";
 import {Vector3} from "@babylonjs/core/Maths/math.vector";
 import {cubicBezier, easeFloat, easeFloat3, easeFloat4, linearFloat, slerpFloat4} from "../easingUtils";
@@ -51,7 +51,7 @@ export class BabylonDecorator extends ADecorator {
         this.behaveEngine.animateCubicBezier = this.animateCubicBezier;
         this.behaveEngine.getWorld = this.getWorld;
         this.registerKnownPointers();
-        this.registerBehaveEngineNode("node/onSelect", OnSelect);
+        this.registerBehaveEngineNode("event/onSelect", OnSelect);
         this.registerBehaveEngineNode("animation/stop", AnimationStop);
         this.registerBehaveEngineNode("animation/start", AnimationStart);
         this.registerBehaveEngineNode("animation/stopAt", AnimationStopAt);
@@ -554,7 +554,41 @@ export class BabylonDecorator extends ADecorator {
             }
         }, "float");
 
+        this.registerJsonPointer(`/nodes/${maxGltfNode}/extensions/KHR_node_selectability/selectable`, (path) => {
+            const parts: string[] = path.split("/");
+            const metadata = this.world.glTFNodes[Number(parts[2])].metadata;
+            if (metadata == undefined) {return true}
+            return metadata.selectable;
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            this.world.glTFNodes[Number(parts[2])].metadata = this.world.glTFNodes[Number(parts[2])].metadata || {};
+            this.world.glTFNodes[Number(parts[2])].metadata.selectable = value;
+            if (this.world.glTFNodes[Number(parts[2])] instanceof AbstractMesh) {
+                //swim up
+                let curNode = this.world.glTFNodes[Number(parts[2])];
+                let pickability: boolean = (curNode.metadata.selectable ?? true);
+                while (curNode.parnet != null && pickability) {
+                    curNode = curNode.parnet;
+                    pickability = pickability && (curNode.metadata.selectable ?? true)
+                }
+                this.world.glTFNodes[Number(parts[2])].isPickable = pickability;
+            }
+            for (const child of this.world.glTFNodes[Number(parts[2])].getChildren()) {
+                //swim down
+                this.swimDownSelectability(child, value)
+            }
+        }, "bool");
+    }
 
+    private swimDownSelectability(node: Node, parentSelctability: boolean) {
+        const curNodeSelectability = node.metadata.selectable ?? true;
+        const propagatedSelectability = curNodeSelectability && parentSelctability;
+        if (node instanceof AbstractMesh) {
+            (node as AbstractMesh).isPickable = propagatedSelectability;
+        }
+        for (const child of node.getChildren()) {
+            this.swimDownSelectability(child, propagatedSelectability);
+        }
     }
 
     public extractBehaveGraphFromScene = (): any => {
@@ -566,7 +600,7 @@ export class BabylonDecorator extends ADecorator {
         return (this.scene as never)['extras']['behaveGraph'];
     };
 
-    public addNodeClickedListener = (nodeIndex: number, callback: (localHitLocation: number[], hitNodeIndex: number) => void): void => {
+    public addNodeClickedListener = (nodeIndex: number, callback: (selectionPoint: number[], selectedNodeIndex: number, controllerIndex: number, selectionRayOrigin: number[]) => void): void => {
         this.world.glTFNodes[nodeIndex].metadata = this.world.glTFNodes[nodeIndex].metadata || {};
         this.world.glTFNodes[nodeIndex].metadata.onSelectCallback = callback;
 
@@ -590,21 +624,21 @@ export class BabylonDecorator extends ADecorator {
                     return;
                 } else {
                     const pos = [hit.pickedMesh.position.x, hit.pickedMesh.position.y, hit.pickedMesh.position.z];
-                    const hitNodeIndex = this.world.glTFNodes.findIndex((value: { uniqueId: number; }) => value.uniqueId === hit.pickedMesh!.uniqueId)
-                    callback(pos, hitNodeIndex);
+                    const hitNodeIndex = this.world.glTFNodes.findIndex((value: { uniqueId: number; }) => value.uniqueId === hit.pickedMesh!.uniqueId);
+                    callback(pos, hitNodeIndex, 0, [ray.origin.x, ray.origin.y, ray.origin.z]);
                 }
             }
         });
     }
 
-    public alertParentOnSelect = (localHitLocation: number[], hitNodeIndex: number, childNodeIndex: number): void => {
+    public alertParentOnSelect = (selectionPoint: number[], selectedNodeIndex: number, controllerIndex: number, selectionRayOrigin: number[], childNodeIndex: number): void => {
         let curNode = this.world.glTFNodes[childNodeIndex].parent;
         while (curNode !== null && (curNode.metadata == null || curNode.metadata.onSelectCallback == null)) {
             curNode = curNode.parent;
         }
 
         if (curNode !== null) {
-            curNode.metadata.onSelectCallback(localHitLocation, hitNodeIndex);
+            curNode.metadata.onSelectCallback(selectionPoint, selectedNodeIndex, controllerIndex, selectionRayOrigin);
         }
     }
 

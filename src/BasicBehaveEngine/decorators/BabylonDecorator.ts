@@ -8,7 +8,9 @@ import {
     Matrix, PBRMaterial,
     PointerEventTypes,
     Quaternion,
-    TargetCamera, Node
+    TargetCamera, Node,
+    PickingInfo,
+    IPointerEvent
 } from "@babylonjs/core";
 import {Vector3} from "@babylonjs/core/Maths/math.vector";
 import {cubicBezier, easeFloat, easeFloat3, easeFloat4, linearFloat, slerpFloat4} from "../easingUtils";
@@ -19,10 +21,14 @@ import {AnimationStart} from "../nodes/animation/AnimationStart";
 import {AnimationStop} from "../nodes/animation/AnimationStop";
 import {AnimationStopAt} from "../nodes/animation/AnimationStopAt";
 import {Nullable} from "@babylonjs/core/types.js";
+import { OnHoverIn } from "../nodes/experimental/OnHoverIn";
+import { OnHoverOut } from "../nodes/experimental/OnHoverOut";
 
 export class BabylonDecorator extends ADecorator {
     scene: Scene;
-    world: any
+    world: any;
+    hoveredNode: any;
+    hoveredNodeIndex: number;
 
     constructor(behaveEngine: IBehaveEngine, world: any, scene: Scene) {
         super(behaveEngine);
@@ -52,9 +58,75 @@ export class BabylonDecorator extends ADecorator {
         this.behaveEngine.getWorld = this.getWorld;
         this.registerKnownPointers();
         this.registerBehaveEngineNode("event/onSelect", OnSelect);
+        this.registerBehaveEngineNode("event/onHoverIn", OnHoverIn);
+        this.registerBehaveEngineNode("event/onHoverOut", OnHoverOut);
         this.registerBehaveEngineNode("animation/stop", AnimationStop);
         this.registerBehaveEngineNode("animation/start", AnimationStart);
         this.registerBehaveEngineNode("animation/stopAt", AnimationStopAt);
+
+        // dealing with hoverability refactor this once/if babylon has an api for hoverability
+        this.hoveredNodeIndex = -1;
+        this.scene.onPointerMove = (evt: IPointerEvent, pickInfo: PickingInfo, pickResult: PointerEventTypes) => {
+            const ray = this.scene.createPickingRay(
+                this.scene.pointerX,
+                this.scene.pointerY,
+                Matrix.Identity(),
+                this.scene.activeCamera,
+            );
+            const result = this.scene.pickWithRay(ray, (m) => m.metadata == null || m.metadata.compositeHoverability != false);
+            const oldHoveredNode = this.hoveredNode;
+            const oldHoveredNodeIndex = this.hoveredNodeIndex;
+
+            if (result && result.pickedMesh) {
+                let curNode: Node | null = result.pickedMesh;
+                this.hoveredNode = curNode;
+                const hitNodeIndex = this.world.glTFNodes.findIndex((value: { uniqueId: number; }) => value.uniqueId === result.pickedMesh!.uniqueId);
+                this.hoveredNodeIndex = hitNodeIndex;
+
+                //swim up tree and set hovered to true on parents
+                while (curNode != null) {
+                    curNode.metadata = curNode.metadata || {};
+                    curNode.metadata.shouldExecuteHoverIn = curNode.metadata.hovered == null || curNode.metadata.hovered == false;
+                    curNode.metadata.hovered = true;
+                    curNode.metadata.hoveredNodeIndex = hitNodeIndex;
+                    curNode = curNode.parent;
+                }
+
+                curNode = result.pickedMesh;
+                //swim up unitl find onHoverIn callback
+                while (curNode != null && (curNode.metadata == null || curNode.metadata.onHoverInCallback == null)) {
+                    curNode = curNode.parent;
+                }
+
+                if (curNode != null) {
+                    curNode.metadata.onHoverInCallback(hitNodeIndex, 0);
+                }
+            } else {
+                this.hoveredNode = undefined;
+                this.hoveredNodeIndex = -1;
+            }
+
+            if (oldHoveredNode && oldHoveredNode.uniqueId !== (this.hoveredNode?.uniqueId ?? null)) {
+                let curNode = oldHoveredNode;
+
+                //swim up tree and set hovered to false on parents
+                while (curNode != null) {
+                    curNode.metadata.shouldExecuteHoverOut = curNode.metadata.hovered === true && curNode.metadata.hoveredNodeIndex === oldHoveredNodeIndex;
+                    curNode.metadata.hovered = false;
+                    curNode.metadata.hoveredNodeIndex = -1;
+                    curNode = curNode.parent;
+                }
+
+                curNode = oldHoveredNode;
+                //swim up unitl find onHoverout callback
+                while (curNode != null && (curNode.metadata == null || curNode.metadata.onHoverOutCallback == null)) {
+                    curNode = curNode.parent;
+                }
+                if (curNode != null) {
+                    curNode.metadata.onHoverOutCallback(oldHoveredNodeIndex, 0);
+                }
+            }
+        }
     }
 
     processAddingNodeToQueue = (flow: IFlow) => {
@@ -566,9 +638,9 @@ export class BabylonDecorator extends ADecorator {
             if (this.world.glTFNodes[Number(parts[2])] instanceof AbstractMesh) {
                 //swim up
                 let curNode = this.world.glTFNodes[Number(parts[2])];
-                let pickability: boolean = (curNode.metadata.selectable ?? true);
-                while (curNode.parnet != null && pickability) {
-                    curNode = curNode.parnet;
+                let pickability: boolean = curNode.metadata.selectable;
+                while (curNode.parent != null && pickability) {
+                    curNode = curNode.parent;
                     pickability = pickability && (curNode.metadata.selectable ?? true)
                 }
                 this.world.glTFNodes[Number(parts[2])].isPickable = pickability;
@@ -576,6 +648,31 @@ export class BabylonDecorator extends ADecorator {
             for (const child of this.world.glTFNodes[Number(parts[2])].getChildren()) {
                 //swim down
                 this.swimDownSelectability(child, value)
+            }
+        }, "bool");
+
+        this.registerJsonPointer(`/nodes/${maxGltfNode}/extensions/KHR_node_hoverability/hoverable`, (path) => {
+            const parts: string[] = path.split("/");
+            const metadata = this.world.glTFNodes[Number(parts[2])].metadata;
+            if (metadata == undefined) {return true}
+            return metadata.hoverable;
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            this.world.glTFNodes[Number(parts[2])].metadata = this.world.glTFNodes[Number(parts[2])].metadata || {};
+            this.world.glTFNodes[Number(parts[2])].metadata.hoverable = value;
+            if (this.world.glTFNodes[Number(parts[2])] instanceof AbstractMesh) {
+                //swim up
+                let curNode = this.world.glTFNodes[Number(parts[2])];
+                let hoverability: boolean = curNode.metadata.hoverable;
+                while (curNode.parent != null && hoverability) {
+                    curNode = curNode.parent;
+                    hoverability = hoverability && (curNode.metadata.hoverable ?? true)
+                }
+                this.world.glTFNodes[Number(parts[2])].metadata.compositeHoverability = hoverability;
+            }
+            for (const child of this.world.glTFNodes[Number(parts[2])].getChildren()) {
+                //swim down
+                this.swimDownHoverability(child, value)
             }
         }, "bool");
     }
@@ -588,6 +685,15 @@ export class BabylonDecorator extends ADecorator {
         }
         for (const child of node.getChildren()) {
             this.swimDownSelectability(child, propagatedSelectability);
+        }
+    }
+
+    private swimDownHoverability(node: Node, parentHoverability: boolean) {
+        const curNodeHoverability = node.metadata.hoverable ?? true;
+        const propagatedHoverability = curNodeHoverability && parentHoverability;
+        node.metadata.compositeHoverability = propagatedHoverability;
+        for (const child of node.getChildren()) {
+            this.swimDownHoverability(child, propagatedHoverability);
         }
     }
 
@@ -639,6 +745,28 @@ export class BabylonDecorator extends ADecorator {
 
         if (curNode !== null) {
             curNode.metadata.onSelectCallback(selectionPoint, selectedNodeIndex, controllerIndex, selectionRayOrigin);
+        }
+    }
+
+    public alertParentOnHoverIn = (selectedNodeIndex: number, controllerIndex: number, childNodeIndex: number): void => {
+        let curNode = this.world.glTFNodes[childNodeIndex].parent;
+        while (curNode !== null && (curNode.metadata == null || curNode.metadata.onHoverInCallback == null)) {
+            curNode = curNode.parent;
+        }
+
+        if (curNode !== null) {
+            curNode.metadata.onHoverInCallback(selectedNodeIndex, controllerIndex);
+        }
+    }
+
+    public alertParentOnHoverOut = (selectedNodeIndex: number, controllerIndex: number, childNodeIndex: number): void => {
+        let curNode = this.world.glTFNodes[childNodeIndex].parent;
+        while (curNode !== null && (curNode.metadata == null || curNode.metadata.onHoverOutCallback == null)) {
+            curNode = curNode.parent;
+        }
+
+        if (curNode !== null) {
+            curNode.metadata.onHoverOutCallback(selectedNodeIndex, controllerIndex);
         }
     }
 

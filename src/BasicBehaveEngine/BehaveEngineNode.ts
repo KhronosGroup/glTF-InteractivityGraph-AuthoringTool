@@ -123,7 +123,7 @@ export class BehaveEngineNode {
 
         if (nextNode === undefined) {return}
         this.graphEngine.processExecutingNextNode(flow);
-        nextNode.processNode();
+        nextNode.processNode(flow.socket);
     }
 
 

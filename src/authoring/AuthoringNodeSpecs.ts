@@ -733,6 +733,86 @@ export const experimentalNodeSpecs: IAuthoringNode[] = [
                 }
             ]
         }
+    },
+    {
+        type:"event/onHoverIn",
+        description:"Hover In event",
+        configuration:[
+            {
+                id:"nodeIndex",
+                type:"int",
+                description:"The node to add the listener on"
+            },
+            {
+                id:"stopPropagation",
+                type:"bool",
+                description:"Should the event be propagated up the node parent hierarchy"
+            },
+        ],
+        input:{
+            flows:[],
+            values:[]
+        },
+        output:{
+            flows:[
+                {
+                    id:"out",
+                    description:"The flow to be followed when the custom event is fired."
+                }
+            ],
+            values:[
+                {
+                    id: "hoverNodeIndex",
+                    description: "Index of the actual node on which hover action was started",
+                    types: ["int"]
+                },
+                {
+                    id: "controllerIndex",
+                    description: "Index of the controller that generated the event",
+                    types: ["int"]
+                }
+            ]
+        }
+    },
+    {
+        type:"event/onHoverOut",
+        description:"Hover Out event",
+        configuration:[
+            {
+                id:"nodeIndex",
+                type:"int",
+                description:"The node to add the listener on"
+            },
+            {
+                id:"stopPropagation",
+                type:"bool",
+                description:"Should the event be propagated up the node parent hierarchy"
+            },
+        ],
+        input:{
+            flows:[],
+            values:[]
+        },
+        output:{
+            flows:[
+                {
+                    id:"out",
+                    description:"The flow to be followed when the custom event is fired."
+                }
+            ],
+            values:[
+                {
+                    id: "hoverNodeIndex",
+                    description: "Index of the actual node on which hover action was started",
+                    types: ["int"]
+                },
+                {
+                    id: "controllerIndex",
+                    description: "Index of the controller that generated the event",
+                    types: ["int"]
+                }
+            ]
+        }
     }
 ]
 

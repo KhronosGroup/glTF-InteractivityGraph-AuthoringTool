@@ -11,7 +11,12 @@ enum LoggingEngineModal {
     CUSTOM_EVENT = "CUSTOM_EVENT",
     NONE = "NONE"
 }
-export const LoggingEngineComponent = () => {
+
+interface LoggingEngineComponentProps {
+    modelUrl?: string | null;
+}
+
+export const LoggingEngineComponent: React.FC<LoggingEngineComponentProps> = ({ modelUrl }) => {
     const [executionLog, setExecutionLog] = useState("");
     const [openModal, setOpenModal] = useState<LoggingEngineModal>(LoggingEngineModal.NONE);
     const [world, setWorld] = useState("{}");
@@ -27,8 +32,35 @@ export const LoggingEngineComponent = () => {
             // Clean up resources when the component unmounts
             loggingEngineRef.current?.clearCustomEventListeners();
         };
-    }, [])
+    }, []);
 
+    // Effect to handle model URL
+    useEffect(() => {
+        if (modelUrl) {
+            // For the logging engine, we don't need to load the actual model,
+            // but we can simulate it by setting some world data
+            setWorld(JSON.stringify({
+                modelUrl: modelUrl,
+                simulated: true,
+                timestamp: new Date().toISOString()
+            }, null, 2));
+            
+            // Auto-run the engine with this world data
+            setTimeout(() => {
+                setExecutionLog("");
+                runGraph(
+                    getExecutableGraph(), 
+                    setExecutionLog, 
+                    {
+                        modelUrl: modelUrl,
+                        simulated: true,
+                        timestamp: new Date().toISOString()
+                    }
+                );
+                setGraphRunning(true);
+            }, 100);
+        }
+    }, [modelUrl]);
 
     const runGraph = (behaveGraph: any, setExecutionLog: any, world: any) => {
         console.log(behaveGraph);

@@ -191,7 +191,7 @@ export const knownDeclarations: IInteractivityDeclaration[] = [
         op: "math/rotate2d"
     },
     {
-        op: "math/rotate3d"
+        op: "math/rotate3D"
     },
     {
         op: "math/transform"
@@ -2358,14 +2358,14 @@ const mathVectorNodeSpecs: IInteractivityNode[] = [
         }
     },
     {
-        op: "math/rotate3d",
-        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/rotate3d"),
+        op: "math/rotate3D",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/rotate3D"),
         description: "Rotate a 3D vector by a quaternion",
         values: {
             input: {
                 a: {
-                    typeOptions: [4],
-                    type: 4,
+                    typeOptions: [3],
+                    type: 3,
                     value: [undefined, undefined, undefined]
                 },
                 rotation: {
@@ -2376,8 +2376,8 @@ const mathVectorNodeSpecs: IInteractivityNode[] = [
             },
             output: {
                 value: {
-                    typeOptions: [4],
-                    type: 4,
+                    typeOptions: [3],
+                    type: 3,
                     value: [undefined, undefined, undefined]
                 }
             }

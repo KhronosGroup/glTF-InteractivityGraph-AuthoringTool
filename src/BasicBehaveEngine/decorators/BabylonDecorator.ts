@@ -661,9 +661,17 @@ export class BabylonDecorator extends ADecorator {
         }, (path, value) => {
             const parts: string[] = path.split("/");
             const node = this.world.glTFNodes[Number(parts[2])];
+            const shouldBeVisible = value || value === undefined || value === null;
+
             if (node instanceof AbstractMesh) {
-                (node as AbstractMesh).isVisible = value || value === undefined || value === null;
+                (node as AbstractMesh).isVisible = shouldBeVisible;
             }
+            if (node._babylonTransformNode) {
+                (node._babylonTransformNode as AbstractMesh).isVisible = shouldBeVisible;
+            }
+            node._primitiveBabylonMeshes?.forEach((mesh: AbstractMesh) => {
+                mesh.isVisible = shouldBeVisible;
+            });
         }, "bool");
 
         this.registerJsonPointer(`/nodes/${maxGltfNode}/extensions/KHR_node_hoverability/hoverable`, (path) => {

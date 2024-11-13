@@ -34,6 +34,10 @@ With this app, you can easily import, create, edit, and export glTF assets with 
 
 Follow these instructions to set up and use the DCC React app for authoring glTF assets with KHR_interactivity extension.
 
+### Prerequisites
+
+1. Install [Node.js](https://nodejs.org/en/download/prebuilt-installer). Please use an LTS version of Node.js.
+
 ### Installation
 
 1. Install the required dependencies:
@@ -41,7 +45,7 @@ Follow these instructions to set up and use the DCC React app for authoring glTF
    ```bash
    npm install --force
    ```
-   there is some dependency conflicts between the version of react that jest wants and the version used by reactflow, until that is fixed use the force flag for installation.
+   There are some dependency conflicts between the version of react that jest wants and the version used by reactflow, until that is fixed use the force flag for installation.
 
 ## Usage
 

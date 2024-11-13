@@ -185,7 +185,7 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
 
             glTF['extensions'] = glTF['extensions'] || {};
             glTF['extensions']['KHR_interactivity'] = {
-                graph: props.behaveGraphRef.current
+                ...props.behaveGraphRef.current
             }
             glTF['extensionsUsed'] = glTF['extensionsUsed'] || []
             if (!glTF['extensionsUsed'].includes('KHR_interactivity')) {

@@ -60,7 +60,7 @@ export class PointerGet extends BehaveEngineNode {
             const typeIndex = this.getTypeIndex(typeName!);
 
             return {
-                'val':{id: "val", value: this.graphEngine.getPathValue(populatedPath), type: typeIndex},
+                'value':{id: "value", value: this.graphEngine.getPathValue(populatedPath), type: typeIndex},
                 'isValid':{id: "isValid", value: [true], type: this.getTypeIndex('bool')}
             };
         } else {

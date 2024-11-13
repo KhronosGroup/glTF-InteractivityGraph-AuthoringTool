@@ -2,7 +2,7 @@ import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class PointerSet extends BehaveEngineNode {
     REQUIRED_CONFIGURATIONS = [{id: "pointer"}]
-    REQUIRED_VALUES = [{id: "val"}]
+    REQUIRED_VALUES = [{id: "value"}]
 
     _pointer: string;
     _pointerVals: { id: string }[];

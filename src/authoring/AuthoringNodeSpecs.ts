@@ -87,7 +87,7 @@ export const pointerNodeSpecs: IAuthoringNode[] = [
             flows: [],
             values: [
                 {
-                    id: "val",
+                    id: "value",
                     description: "The value to set",
                     types: ["bool", "int", "float","float2", "float3", "float4"]
                 },
@@ -118,7 +118,7 @@ export const pointerNodeSpecs: IAuthoringNode[] = [
             ],
             values: [
                 {
-                    id: "val",
+                    id: "value",
                     description: "The value to set",
                     types: ["bool", "int", "float", "float2", "float3", "float4"]
                 }

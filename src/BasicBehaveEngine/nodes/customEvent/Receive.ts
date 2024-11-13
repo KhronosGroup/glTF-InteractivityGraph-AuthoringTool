@@ -15,7 +15,7 @@ export class Receive extends BehaveEngineNode {
     setUpEventListener() {
         const {event} = this.evaluateAllConfigurations(this.REQUIRED_CONFIGURATIONS.map(config => config.id));
 
-        const customEventDesc: ICustomEvent = this.customEvents[event];
+        const customEventDesc: ICustomEvent = this.events[event];
 
         this.graphEngine.addCustomEventListener(`KHR_INTERACTIVITY:${customEventDesc.id}`, (e: any) => {
             this.graphEngine.processNodeStarted(this);

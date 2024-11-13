@@ -93,7 +93,7 @@ export const LoggingEngineComponent = (props: {behaveGraphRef: any}) => {
                         activeKey={activeKey}
                         onSelect={(key: any) => setActiveKey(key)}
                     >
-                        {props.behaveGraphRef.current.customEvents?.map((customEvent: any, index: number) => {
+                        {props.behaveGraphRef.current.events?.map((customEvent: any, index: number) => {
                             return (
                                 <Tab title={customEvent.id} eventKey={index + 1}>
                                     <Row style={{textAlign: "left"}}>

@@ -37,7 +37,7 @@ export interface IBehaviourNodeProps {
     flows: IFlow[];
     values: IValue[];
     variables: IVariable[];
-    customEvents: ICustomEvent[],
+    events: ICustomEvent[],
     types: any[]
     configuration: IConfiguration[];
     addEventToWorkQueue: any
@@ -57,17 +57,17 @@ export class BehaveEngineNode {
     outValues: Record<string, any>
     variables: IVariable[];
     types: any[];
-    customEvents: ICustomEvent[];
+    events: ICustomEvent[];
     configuration: Record<string, IConfiguration>;
     addEventToWorkQueue: any;
 
     constructor(props: IBehaviourNodeProps) {
-        const {flows, values, idToBehaviourNodeMap, graphEngine, variables, customEvents, types, configuration, addEventToWorkQueue} = props;
+        const {flows, values, idToBehaviourNodeMap, graphEngine, variables, events, types, configuration, addEventToWorkQueue} = props;
         this.idToBehaviourNodeMap = idToBehaviourNodeMap;
         this.graphEngine = graphEngine;
         this.variables = variables;
         this.types = types;
-        this.customEvents = customEvents;
+        this.events = events;
         this.values = {};
         this.flows = {};
         this.configuration = {};

@@ -23,10 +23,10 @@ export class KHR_interactivity implements IGLTFLoaderExtension {
         return GLTFLoader.LoadExtensionAsync(context, scene, this.name, (extensionContext, extension) => {
             const promises = new Array<Promise<any>>();
             promises.push(this._loader.loadSceneAsync(context, scene));
-            if (scene.extensions && scene.extensions.KHR_interactivity && scene.extensions.KHR_interactivity.graph) {
+            if (scene.extensions && scene.extensions.KHR_interactivity && scene.extensions.KHR_interactivity) {
                 const p = async () => {
                     this._loader.babylonScene.extras = this._loader.babylonScene.extras || {};
-                    this._loader.babylonScene.extras.behaveGraph = scene.extensions!.KHR_interactivity.graph;
+                    this._loader.babylonScene.extras.behaveGraph = scene.extensions!.KHR_interactivity;
                 };
                 promises.push(p());
             }

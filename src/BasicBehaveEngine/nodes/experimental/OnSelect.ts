@@ -66,6 +66,8 @@ export class OnSelect extends BehaveEngineNode {
                 value: [controllerIndex],
             };
 
+            console.log("OnSelect", {node: this._nodeIndex, outValues: this.outValues});
+            
             this.addEventToWorkQueue(this.flows.out);
 
             if (!this._stopPropagation) {

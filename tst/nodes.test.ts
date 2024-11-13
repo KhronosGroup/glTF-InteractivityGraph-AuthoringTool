@@ -490,7 +490,7 @@ describe('nodes', () => {
         );
 
         const res  = pointerGet.processNode();
-        expect(res['val']!.value[0]).toBe(2);
+        expect(res['value']!.value[0]).toBe(2);
 
         const pointerGetCustomPtr: PointerGet = new PointerGet({
             ...defaultProps,
@@ -498,7 +498,7 @@ describe('nodes', () => {
         });
 
         const resCustom = await pointerGetCustomPtr.processNode();
-        expect(resCustom['val']!.value[0]).toBe(1);
+        expect(resCustom['value']!.value[0]).toBe(1);
     });
 
     it('pointer/set', async () => {
@@ -522,7 +522,7 @@ describe('nodes', () => {
             ],
             values: [
                 { id: 'index', value: [0], type: 1 },
-                { id: 'val', value: [42], type: 1 },
+                { id: 'value', value: [42], type: 1 },
             ],
         });
 

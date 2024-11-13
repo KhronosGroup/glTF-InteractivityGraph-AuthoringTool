@@ -149,7 +149,12 @@ export const behaveToAuthor = (graph: string): [Node[], Edge[], ICustomEvent[], 
         const nodeNumbers: number[] = [];
         disjointGraph.forEach((nodeId) => {
           const i = nodes.findIndex((n) => n.id === nodeId);
-          nodeNumbers.push(i);
+          if (i < 0) {
+            console.error(`Node with id ${nodeId} not found in nodes list. This is likely an issue with the graph data.`);
+          }
+          else {
+            nodeNumbers.push(i);
+          }
         });
 
         // Each layer is a vertical column of a disjoint graph. Since we start at the leftmost column where x = -500 (starting point).
@@ -169,7 +174,7 @@ export const behaveToAuthor = (graph: string): [Node[], Edge[], ICustomEvent[], 
           const nodeOutEdges: Edge[] = edges.filter(edge => Number(edge.source) === nodeIndex);
           nextLayer.push(...nodeOutEdges.map(edge => Number(edge.target)));
         }
-        nextLayer = [...new Set(nextLayer)]
+        nextLayer = [...new Set(nextLayer.filter(num => Number.isFinite(num)))];
 
         let xOffset = 0;
         while (nextLayer.length > 0) {
@@ -188,7 +193,7 @@ export const behaveToAuthor = (graph: string): [Node[], Edge[], ICustomEvent[], 
             const nodeOutEdges: Edge[] = edges.filter(edge => Number(edge.source) === nodeIndex);
             nextLayer.push(...nodeOutEdges.map(edge => Number(edge.target)));
           }
-          nextLayer = [...new Set(nextLayer)];
+          nextLayer = [...new Set(nextLayer.filter(num => Number.isFinite(num)))];
           xOffset += 500;
         }
         layerYAdditive = 800 + lastMaxY;

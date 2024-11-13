@@ -36,7 +36,7 @@ export class SetDelay extends BehaveEngineNode {
         } else {
             const delayIndex = this.graphEngine.scheduledDelays.length;
             const delayId = setTimeout(() => {
-                this.addEventToWorkQueue(this.flows.completed);
+                this.addEventToWorkQueue(this.flows.done);
             }, duration * 1000);
             this.graphEngine.pushScheduledDelay(delayId);
             this._runningDelayIndices.push(delayIndex);

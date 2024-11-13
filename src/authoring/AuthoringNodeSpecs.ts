@@ -984,7 +984,7 @@ export const flowNodeSpecs: IAuthoringNode[] = [
         output: {
             flows: [
                 {
-                    id: "completed",
+                    id: "done",
                     description: "The flow to be followed after the delay",
                 },
                 {

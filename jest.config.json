@@ -1,0 +1,38 @@
+{
+    "preset": "ts-jest/presets/default-esm",
+    "testEnvironment": "jsdom",
+    "moduleDirectories": [
+        "node_modules",
+        "src"
+    ],
+    "transform": {
+        "^.+\\.tsx?$": [
+            "ts-jest",
+            {
+                "useESM": true
+            }
+        ]
+    },
+    "verbose": true,
+    "testMatch": [
+        "**/**.test.ts"
+    ],
+    "collectCoverage": true,
+    "collectCoverageFrom": [
+        "<rootDir>/src/**/*.ts"
+    ],
+    "moduleNameMapper": {
+        "^uuid$": "uuid"
+    },
+    "coverageReporters": [
+        "cobertura",
+        "html",
+        "text"
+    ],
+    "coverageThreshold": {
+        "global": {
+            "lines": 70,
+            "statements": 70
+        }
+    }
+}

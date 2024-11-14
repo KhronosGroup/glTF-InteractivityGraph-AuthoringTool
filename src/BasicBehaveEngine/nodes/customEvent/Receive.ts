@@ -17,14 +17,25 @@ export class Receive extends BehaveEngineNode {
 
         const customEventDesc: ICustomEvent = this.events[event];
 
+        customEventDesc.values.forEach((key) => {
+            // TODO Probably should be the default value based on type
+            // TODO Spec says that the default for float is NaN, not sure why
+            const defaultValue = 0;
+            this.outValues[key.id] = {
+                id: key.id,
+                value: defaultValue,
+                type: key.type,
+            }
+        });
+
         this.graphEngine.addCustomEventListener(`KHR_INTERACTIVITY:${customEventDesc.id}`, (e: any) => {
             this.graphEngine.processNodeStarted(this);
-            const ce = e as CustomEvent;
-            Object.keys(ce.detail).forEach((key) => {
+            const ce = (e as CustomEvent).detail as { [key: string]: any };
+            Object.keys(ce).forEach((key) => {
                 const typeIndex = customEventDesc.values.find(val => val.id === key)!.type!
                 const typeName: string = this.getType(typeIndex);
-                const rawVal = ce.detail[key];
-                const val = this.parseType(typeName, rawVal);
+                const rawVal = ce[key];
+                const val = this.parseType(typeName, [rawVal]);
                 this.outValues[key] = {
                     id: key,
                     value: val,

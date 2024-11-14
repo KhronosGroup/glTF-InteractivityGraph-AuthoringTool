@@ -101,7 +101,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
     private _scheduledDelays: NodeJS.Timeout[];
     protected nodes: any[];
     protected variables: IVariable[];
-    protected customEvents: ICustomEvent[];
+    protected events: ICustomEvent[];
 
     //TODO: def for types
     protected types: any[];
@@ -122,7 +122,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.lastTickTime = 0;
         this.eventQueue = [];
         this.variables = [];
-        this.customEvents = [];
+        this.events = [];
         this._scheduledDelays = [];
         this.nodes = [];
         this.types = [];
@@ -212,13 +212,13 @@ export class BasicBehaveEngine implements IBehaveEngine {
 
         this.nodes = behaveGraph.nodes;
         this.variables = behaveGraph.variables;
-        this.customEvents = behaveGraph.customEvents;
+        this.events = behaveGraph.events;
         this.types = behaveGraph.types;
 
         const defaultProps = {
             idToBehaviourNodeMap: this.idToBehaviourNodeMap,
             variables: this.variables,
-            customEvents: this.customEvents,
+            events: this.events,
         };
 
         let index = 0;

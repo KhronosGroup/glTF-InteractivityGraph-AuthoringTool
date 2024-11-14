@@ -54,7 +54,7 @@ export class PointerSet extends BehaveEngineNode {
         const configValues = this.evaluateAllValues([...this._pointerVals].map(val => val.id));
         const requiredValues = this.evaluateAllValues([...this.REQUIRED_VALUES].map(val => val.id));
         const populatedPath = this.populatePath(this._pointer, configValues)
-        const targetValue = requiredValues.val;
+        const targetValue = requiredValues.value;
         this.graphEngine.processNodeStarted(this);
 
         if (this.graphEngine.isValidJsonPtr(populatedPath)) {

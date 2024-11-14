@@ -110,7 +110,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         }
         if (props.data.configuration.event !== undefined) {
             const customEventId: number = JSON.parse(props.data.configuration.event);
-            const ce: ICustomEvent = props.data.customEvents[customEventId];
+            const ce: ICustomEvent = props.data.events[customEventId];
 
             if (ce.values === undefined) {return}
 
@@ -232,7 +232,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                 }} >
                                     <option key={-1} value={-1} selected={!props.data.configuration || !props.data.configuration.event}>--NO SELECTION--</option>
                                     {
-                                        props.data.customEvents.map((ce: any, index: number) => (
+                                        props.data.events.map((ce: any, index: number) => (
                                             <option key={index} value={index} selected={props.data.configuration && props.data.configuration.event == index}>{ce.id}</option>
                                         ))
                                     }

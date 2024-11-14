@@ -25,19 +25,19 @@ const validateGraphNodeNames = (nodes: Node[]) => {
  *
  * @param nodes - An array of ReactFlow Node objects.
  * @param edges - An array of ReactFlow Edge objects.
- * @param customEvents - An array of custom event objects.
+ * @param events - An array of custom event objects.
  * @param variables - An array of variable objects.
  * @returns The Behave graph representation of the provided data.
  */
-export const authorToBehave = (nodes: Node[], edges: Edge[], customEvents: ICustomEvent[], variables: IVariable[]) => {
+export const authorToBehave = (nodes: Node[], edges: Edge[], events: ICustomEvent[], variables: IVariable[]) => {
     const nodeTypeErrors = validateGraphNodeNames(nodes);
     if (nodeTypeErrors.length > 0) {
         throw new Error(`The graph has the following issues: ${nodeTypeErrors}`);
     }
 
-    const graph: any = { nodes: [], variables: [], customEvents: [], types: standardTypes};
+    const graph: any = { nodes: [], variables: [], events: [], types: standardTypes};
 
-    graph.customEvents = [...customEvents];
+    graph.events = [...events];
     graph.variables = [...variables];
 
     // loop through all the nodes and embed the edge data in them to correspond to the behave graph spec
@@ -73,7 +73,7 @@ export const authorToBehave = (nodes: Node[], edges: Edge[], customEvents: ICust
             Object.entries(node.data.values).forEach(([key, val]) => {
                 let typeIndex;
                 if (node.type === "customEvent/send") {
-                    typeIndex = customEvents[node.data.configuration.customEvent].values!.find(val => key.includes(val.id))!.type
+                    typeIndex = events[node.data.configuration.events].values!.find(val => key.includes(val.id))!.type
                 } else if (node.type === "variable/set") {
                     typeIndex = variables[node.data.configuration.variable].type
                 } else {

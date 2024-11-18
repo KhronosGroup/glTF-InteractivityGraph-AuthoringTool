@@ -2,7 +2,7 @@ import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class PointerInterpolate extends BehaveEngineNode {
     REQUIRED_CONFIGURATIONS = [{id: "pointer"}]
-    REQUIRED_VALUES = [{id: "val"}, {id: "duration"}, {id: "p1"}, {id: "p2"}]
+    REQUIRED_VALUES = [{id: "value"}, {id: "duration"}, {id: "p1"}, {id: "p2"}]
 
     _pointer: string;
     _pointerVals: { id: string }[];
@@ -55,7 +55,7 @@ export class PointerInterpolate extends BehaveEngineNode {
         const requiredVals = this.evaluateAllValues([...this.REQUIRED_VALUES].map(val => val.id));
         const populatedPath = this.populatePath(this._pointer, configVals)
         const {p1, p2} = this.evaluateAllValues(["p1", "p2"]);
-        const targetValue = requiredVals.val;
+        const targetValue = requiredVals.value;
         const duration = requiredVals.duration;
 
         this.graphEngine.processNodeStarted(this);

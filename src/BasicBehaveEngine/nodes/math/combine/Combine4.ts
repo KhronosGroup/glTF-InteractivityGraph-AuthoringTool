@@ -24,6 +24,6 @@ export class Combine4 extends BehaveEngineNode {
             throw Error("invalid input types")
         }
 
-        return {'val': {id: "val", value: [a, b, c, d], type: this.getTypeIndex("float4")}};
+        return {'value': {id: "value", value: [a, b, c, d], type: this.getTypeIndex("float4")}};
     }
 }

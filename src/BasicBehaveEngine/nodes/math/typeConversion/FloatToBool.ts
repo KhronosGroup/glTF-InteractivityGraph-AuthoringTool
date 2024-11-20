@@ -22,6 +22,6 @@ export class FloatToBool extends BehaveEngineNode {
         const val = !!a;
 
 
-        return {'val': {id: "val", value: [val], type: this.getTypeIndex('bool')}}
+        return {'value': {id: "value", value: [val], type: this.getTypeIndex('bool')}}
     }
 }

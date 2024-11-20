@@ -33,6 +33,6 @@ export class Cross extends BehaveEngineNode {
                 throw Error("Invalid type")
         }
 
-        return {'val': {id: "val", value: val, type: typeIndexA}}
+        return {'value': {id: "value", value: val, type: typeIndexA}}
     }
 }

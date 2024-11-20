@@ -22,6 +22,6 @@ export class BoolToFloat extends BehaveEngineNode {
         const val = +JSON.parse(a);
 
 
-        return {'val': {id: "val", value: [val], type: this.getTypeIndex('float')}}
+        return {'value': {id: "value", value: [val], type: this.getTypeIndex('float')}}
     }
 }

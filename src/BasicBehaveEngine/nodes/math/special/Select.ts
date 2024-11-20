@@ -29,6 +29,6 @@ export class Select extends BehaveEngineNode {
             val = [val]
         }
 
-        return {'val': {id: "val", value: val, type: typeIndexA}};
+        return {'value': {id: "value", value: val, type: typeIndexA}};
     }
 }

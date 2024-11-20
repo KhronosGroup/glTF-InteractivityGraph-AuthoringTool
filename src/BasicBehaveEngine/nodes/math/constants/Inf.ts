@@ -10,6 +10,6 @@ export class Inf extends BehaveEngineNode {
     override processNode(flowSocket?: string) {
         this.graphEngine.processNodeStarted(this);
 
-        return {'val': {id: "val", value: [Infinity], type: this.getTypeIndex('float')}}
+        return {'value': {id: "value", value: [Infinity], type: this.getTypeIndex('float')}}
     }
 }

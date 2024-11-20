@@ -24,6 +24,6 @@ export class CountOneBits extends BehaveEngineNode {
             count++;
         }
 
-        return {'val': {id: "val", value: [count], type: this.getTypeIndex('int')}}
+        return {'value': {id: "value", value: [count], type: this.getTypeIndex('int')}}
     }
 }

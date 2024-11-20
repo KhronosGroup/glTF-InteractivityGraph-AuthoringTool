@@ -10,6 +10,6 @@ export class Pi extends BehaveEngineNode {
     override processNode(flowSocket?: string) {
         this.graphEngine.processNodeStarted(this);
 
-        return {'val': {id: "val", value: [Math.PI], type: this.getTypeIndex('float')}}
+        return {'value': {id: "value", value: [Math.PI], type: this.getTypeIndex('float')}}
     }
 }

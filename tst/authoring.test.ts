@@ -31,7 +31,7 @@ describe("authoring", () => {
                             "type": 1
                         },
                         {
-                            "id": "val",
+                            "id": "value",
                             "value": [1,2,3],
                             "type": 3
                         }

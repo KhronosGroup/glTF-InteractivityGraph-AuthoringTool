@@ -17,6 +17,6 @@ export class Cast extends BehaveEngineNode {
         const castType = this.configuration['castType'].value!
 
         const typeIndex = this.getTypeIndex(castType!);
-        return {id: "val", value: a, type: typeIndex}
+        return {id: "value", value: a, type: typeIndex}
     }
 }

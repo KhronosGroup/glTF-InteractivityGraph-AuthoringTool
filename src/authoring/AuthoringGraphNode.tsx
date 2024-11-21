@@ -153,7 +153,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         if (props.data.configuration.variable !== undefined) {
             const variableId: number = JSON.parse(props.data.configuration.variable);
             const v: IVariable = props.data.variables[variableId];
-            const value: IValueSocketDescriptor = {id: v.id, types: [props.data.types[v.type].signature], value: v.value, description: 'Value Socket for this variable'}
+            const value: IValueSocketDescriptor = {id: "value", types: [props.data.types[v.type].signature], value: v.value, description: 'Value Socket for this variable'}
 
             if (props.node.type === "variable/set") {
                 inputValuesToSet.push(value);

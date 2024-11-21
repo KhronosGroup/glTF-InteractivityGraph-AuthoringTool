@@ -20,7 +20,7 @@ export class VariableGet extends BehaveEngineNode {
         this.graphEngine.processNodeStarted(this);
 
         const result: Record<string, IValue> = {};
-        result[this.variables[this._variable].id] = this.variables[this._variable];
+        result["value"] = this.variables[this._variable];
         return result;
     }
 }

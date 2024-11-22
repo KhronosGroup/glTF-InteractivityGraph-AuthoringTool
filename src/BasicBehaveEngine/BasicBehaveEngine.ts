@@ -34,6 +34,7 @@ import {Divide} from "./nodes/math/arithmetic/Divide";
 import {Remainder} from "./nodes/math/arithmetic/Remainder";
 import {Min} from "./nodes/math/arithmetic/Min";
 import {Max} from "./nodes/math/arithmetic/Max";
+import {Clamp} from "./nodes/math/arithmetic/Clamp";
 import {DegreeToRadians} from "./nodes/math/trigonometry/DegreeToRadians";
 import {RadiansToDegrees} from "./nodes/math/trigonometry/RadiansToDegrees";
 import {Sine} from "./nodes/math/trigonometry/Sine";
@@ -339,6 +340,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/rem", Remainder);
         this.registerBehaveEngineNode("math/min", Min);
         this.registerBehaveEngineNode("math/max", Max);
+        this.registerBehaveEngineNode("math/clamp", Clamp);
         this.registerBehaveEngineNode("math/rad", DegreeToRadians);
         this.registerBehaveEngineNode("math/deg", RadiansToDegrees);
         this.registerBehaveEngineNode("math/sin", Sine);

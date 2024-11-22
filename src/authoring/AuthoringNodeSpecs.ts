@@ -410,7 +410,12 @@ export const pointerNodeSpecs: IAuthoringNode[] = [
                     types: [
                         "AMZN_interactivity_string",
                         "bool",
-                        "float"
+                        "float",
+                        "float2",
+                        "float3",
+                        "float4",
+                        "float4x4",
+                        "int[]"
                     ]
                 }
             ]

@@ -22,7 +22,7 @@ export class VariableSet extends BehaveEngineNode {
         const vals = this.evaluateAllValues(["value"]);
         this.graphEngine.processNodeStarted(this);
 
-        this.variables[this._variable].value = vals[variable.id];
+        this.variables[this._variable].value = vals["value"];
 
         super.processNode(flowSocket);
     }

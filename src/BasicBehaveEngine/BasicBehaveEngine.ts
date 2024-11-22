@@ -221,6 +221,17 @@ export class BasicBehaveEngine implements IBehaveEngine {
             events: this.events,
         };
 
+        this.variables.forEach(variable => {
+            if (variable.value === undefined) {
+                // TODO get the default value from the type
+                variable.value = 0;
+            }
+            // sanitize, these need to be arrays
+            if (!Array.isArray(variable.value)) {
+                variable.value = [variable.value];
+            }
+        });
+
         let index = 0;
         this.nodes.forEach(node => {
             const behaviourNodeProps: IBehaviourNodeProps = {

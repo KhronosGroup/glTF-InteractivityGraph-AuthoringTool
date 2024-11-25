@@ -212,11 +212,6 @@ export class BehaveEngineNode {
                 //this node has not been evaluated yet, so we need to process it in order to get the output
                 const dependentNodeValues = dependentNode.processNode();
                 const dependentValue = dependentNodeValues[val.socket!];
-                if (dependentValue === undefined) {
-                    console.log(this.values);
-                    console.log(val.socket!);
-                    console.log(dependentNodeValues);
-                }
 
                 typeIndex = dependentValue.type
                 valueToReturn = dependentValue.value

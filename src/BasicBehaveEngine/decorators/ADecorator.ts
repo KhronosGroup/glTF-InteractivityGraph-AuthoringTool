@@ -13,7 +13,7 @@ export abstract class ADecorator implements IBehaveEngine {
     abstract processAddingNodeToQueue: (flow: IFlow) => void;
     abstract processExecutingNextNode: (flow: IFlow) => void;
     abstract registerKnownPointers: () => void;
-    abstract registerJsonPointer: (jsonPtr: string, getterCallback: (path: string) => any, setterCallback: (path: string, value: any) => void, typeName: string) => void;
+    abstract registerJsonPointer: (jsonPtr: string, getterCallback: (path: string) => any, setterCallback: (path: string, value: any) => void, typeName: string, readOnly: boolean) => void;
     abstract animateProperty: (path: string, easingParameters: any, callback: () => void) => void;
     abstract animateCubicBezier: (path: string, p1: number[], p2: number[], initialValue: any, targetValue: any, duration: number, valueType: string, callback: () => void) => void;
     abstract getWorld: () => any;

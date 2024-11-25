@@ -1,3 +1,4 @@
+import { read } from "fs";
 import {BehaveEngineNode, IFlow, IValue} from "./BehaveEngineNode";
 import {IEasingParameters} from "./easingUtils";
 
@@ -41,7 +42,8 @@ export interface IBehaveEngine {
         jsonPtr: string,
         getterCallback: (path: string) => any,
         setterCallback: (path: string, value: any) => void,
-        typeName: string
+        typeName: string,
+        readOnly: boolean
     ) => void;
 
     /**

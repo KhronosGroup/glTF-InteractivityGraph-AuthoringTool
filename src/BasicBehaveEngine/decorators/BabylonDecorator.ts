@@ -224,8 +224,8 @@ export class BabylonDecorator extends ADecorator {
         this.setWorldAnimationPathCallback(path, {cancel: cancel} );
     }
 
-    registerJsonPointer = (jsonPtr: string, getterCallback: (path: string) => any, setterCallback: (path: string, value: any) => void, typeName: string) => {
-        this.behaveEngine.registerJsonPointer(jsonPtr, getterCallback, setterCallback, typeName);
+    registerJsonPointer = (jsonPtr: string, getterCallback: (path: string) => any, setterCallback: (path: string, value: any) => void, typeName: string, readOnly: boolean) => {
+        this.behaveEngine.registerJsonPointer(jsonPtr, getterCallback, setterCallback, typeName, readOnly);
     };
 
     registerKnownPointers = () => {
@@ -240,7 +240,7 @@ export class BabylonDecorator extends ADecorator {
         }, (path, value) => {
             const parts: string[] = path.split("/");
             (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).scaling = new Vector3(value[0], value[1], value[2]);
-        }, "float3")
+        }, "float3", false);
 
         this.registerJsonPointer(`/nodes/${maxGltfNode}/translation`, (path) => {
             const parts: string[] = path.split("/");
@@ -250,7 +250,7 @@ export class BabylonDecorator extends ADecorator {
         }, (path, value) => {
             const parts: string[] = path.split("/");
             (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).position= new Vector3(value[0], value[1], value[2]);
-        }, "float3")
+        }, "float3", false);
 
         this.registerJsonPointer(`/nodes/${maxGltfNode}/rotation`, (path) => {
             const parts: string[] = path.split("/");
@@ -262,7 +262,7 @@ export class BabylonDecorator extends ADecorator {
         }, (path, value) => {
             const parts: string[] = path.split("/");
             (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).rotationQuaternion = new Quaternion(value[1], value[2], value[3], value[0]);
-        }, "float4");
+        }, "float4", false);
 
         this.registerJsonPointer(`/activeCamera/rotation`, (path) => {
             const activeCamera: Nullable<Camera> = this.scene.activeCamera;
@@ -273,7 +273,7 @@ export class BabylonDecorator extends ADecorator {
             return [activeCamera.rotationQuaternion.w, activeCamera.rotationQuaternion.x, activeCamera.rotationQuaternion.y, activeCamera.rotationQuaternion.z]
         }, (path, value) => {
             //no-op
-        }, "float4")
+        }, "float4", true)
 
         this.registerJsonPointer(`/activeCamera/position`, (path) => {
             const activeCamera: Nullable<Camera> = this.scene.activeCamera;
@@ -284,7 +284,7 @@ export class BabylonDecorator extends ADecorator {
             return [activeCamera.position.x, activeCamera.position.y, activeCamera.position.z]
         }, (path, value) => {
             //no-op
-        }, "float3")
+        }, "float3", true)
 
         //TODO: update to match what object model has once that is published
         this.registerJsonPointer(`/KHR_materials_variants/variant`, (path) => {
@@ -302,7 +302,7 @@ export class BabylonDecorator extends ADecorator {
             }
             const variants = KHR_materials_variants.GetAvailableVariants(root);
             KHR_materials_variants.SelectVariant(root, variants[value]);
-        }, "int");
+        }, "int", false);
 
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/pbrMetallicRoughness/baseColorFactor`, (path) => {
             const parts: string[] = path.split("/");
@@ -314,7 +314,7 @@ export class BabylonDecorator extends ADecorator {
             const material = this.world.materials[Number(parts[2])] as PBRMaterial;
             material.albedoColor = new Color3(value[0], value[1], value[2]);
             material.alpha = value[3];
-        }, "float4");
+        }, "float4", false);
 
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/pbrMetallicRoughness/roughnessFactor`, (path) => {
             const parts: string[] = path.split("/");
@@ -324,7 +324,7 @@ export class BabylonDecorator extends ADecorator {
             const parts: string[] = path.split("/");
             const material = this.world.materials[Number(parts[2])] as PBRMaterial;
             material.roughness = value;
-        }, "float");
+        }, "float", false);
 
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/pbrMetallicRoughness/metallicFactor`, (path) => {
             const parts: string[] = path.split("/");
@@ -334,7 +334,7 @@ export class BabylonDecorator extends ADecorator {
             const parts: string[] = path.split("/");
             const material = this.world.materials[Number(parts[2])] as PBRMaterial;
             material.metallic = value;
-        }, "float");
+        }, "float", false);
 
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/alphaCutoff`, (path) => {
             const parts: string[] = path.split("/");
@@ -344,7 +344,7 @@ export class BabylonDecorator extends ADecorator {
             const parts: string[] = path.split("/");
             const material = this.world.materials[Number(parts[2])];
             material.alphaCutoff = value;
-        }, "float");
+        }, "float", false);
 
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/emissiveFactor`, (path) => {
             const parts: string[] = path.split("/");
@@ -354,7 +354,7 @@ export class BabylonDecorator extends ADecorator {
             const parts: string[] = path.split("/");
             const material = this.world.materials[Number(parts[2])];
             material.emissiveFactor = value;
-        }, "float3");
+        }, "float3", false);
 
         //TODO: find babylon mapping for /materials/{}/normalTexture/scale
 
@@ -377,7 +377,7 @@ export class BabylonDecorator extends ADecorator {
                 baseColorTexture.uOffset = value[0];
                 baseColorTexture.vOffset = value[1];
             }
-        }, "float2");
+        }, "float2", false);
 
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/pbrMetallicRoughness/baseColorTexture/extensions/KHR_texture_transform/scale`, (path) => {
             const parts: string[] = path.split("/");
@@ -394,7 +394,7 @@ export class BabylonDecorator extends ADecorator {
                 baseColorTexture.uScale = value[0];
                 baseColorTexture.vScale = value[1];
             }
-        }, "float2");
+        }, "float2", false);
 
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/pbrMetallicRoughness/baseColorTexture/extensions/KHR_texture_transform/rotation`, (path) => {
             const parts: string[] = path.split("/");
@@ -412,7 +412,7 @@ export class BabylonDecorator extends ADecorator {
                 // is negated in babylon's loading so negating when setting https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/loaders/src/glTF/2.0/Extensions/KHR_texture_transform.ts#L73
                 baseColorTexture.wAng = -1 * value[0];
             }
-        }, "float");
+        }, "float", false);
 
         // METALLIC ROUGHNESS TEXTURE TRANSFORM
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/pbrMetallicRoughness/metallicRoughnessTexture/extensions/KHR_texture_transform/offset`, (path) => {
@@ -430,7 +430,7 @@ export class BabylonDecorator extends ADecorator {
                 metallicTexture.uOffset = value[0];
                 metallicTexture.vOffset = value[1];
             }
-        }, "float2");
+        }, "float2", false);
 
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/pbrMetallicRoughness/metallicRoughnessTexture/extensions/KHR_texture_transform/scale`, (path) => {
             const parts: string[] = path.split("/");
@@ -447,7 +447,7 @@ export class BabylonDecorator extends ADecorator {
                 metallicTexture.uScale = value[0];
                 metallicTexture.vScale = value[1];
             }
-        }, "float2");
+        }, "float2", false);
 
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/pbrMetallicRoughness/metallicRoughnessTexture/extensions/KHR_texture_transform/rotation`, (path) => {
             const parts: string[] = path.split("/");
@@ -465,7 +465,7 @@ export class BabylonDecorator extends ADecorator {
                 // is negated in babylon's loading so negating when setting https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/loaders/src/glTF/2.0/Extensions/KHR_texture_transform.ts#L73
                 metallicTexture.wAng = -1 * value[0];
             }
-        }, "float");
+        }, "float", false);
 
         // NORMAL TEXTURE TRANSFORM
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/normalTexture/extensions/KHR_texture_transform/offset`, (path) => {
@@ -483,7 +483,7 @@ export class BabylonDecorator extends ADecorator {
                 normalTexture.uOffset = value[0];
                 normalTexture.vOffset = value[1];
             }
-        }, "float2");
+        }, "float2", false);
 
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/normalTexture/extensions/KHR_texture_transform/scale`, (path) => {
             const parts: string[] = path.split("/");
@@ -500,7 +500,7 @@ export class BabylonDecorator extends ADecorator {
                 normalTexture.uScale = value[0];
                 normalTexture.vScale = value[1];
             }
-        }, "float2");
+        }, "float2", false);
 
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/normalTexture/extensions/KHR_texture_transform/rotation`, (path) => {
             const parts: string[] = path.split("/");
@@ -518,7 +518,7 @@ export class BabylonDecorator extends ADecorator {
                 // is negated in babylon's loading so negating when setting https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/loaders/src/glTF/2.0/Extensions/KHR_texture_transform.ts#L73
                 normalTexture.wAng = -1 * value[0];
             }
-        }, "float");
+        }, "float", false);
 
         // OCCLUSION TEXTURE TRANSFORM
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/occlusionTexture/extensions/KHR_texture_transform/offset`, (path) => {
@@ -536,7 +536,7 @@ export class BabylonDecorator extends ADecorator {
                 occlusionTexture.uOffset = value[0];
                 occlusionTexture.vOffset = value[1];
             }
-        }, "float2");
+        }, "float2", false);
 
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/occlusionTexture/extensions/KHR_texture_transform/scale`, (path) => {
             const parts: string[] = path.split("/");
@@ -553,7 +553,7 @@ export class BabylonDecorator extends ADecorator {
                 occlusionTexture.uScale = value[0];
                 occlusionTexture.vScale = value[1];
             }
-        }, "float2");
+        }, "float2", false);
 
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/occlusionTexture/extensions/KHR_texture_transform/rotation`, (path) => {
             const parts: string[] = path.split("/");
@@ -571,7 +571,7 @@ export class BabylonDecorator extends ADecorator {
                 // is negated in babylon's loading so negating when setting https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/loaders/src/glTF/2.0/Extensions/KHR_texture_transform.ts#L73
                 occlusionTexture.wAng = -1 * value[0];
             }
-        }, "float");
+        }, "float", false);
 
         // EMISSIVE TEXTURE TRANSFORM
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/emissiveTexture/extensions/KHR_texture_transform/offset`, (path) => {
@@ -589,7 +589,7 @@ export class BabylonDecorator extends ADecorator {
                 emissiveTexture.uOffset = value[0];
                 emissiveTexture.vOffset = value[1];
             }
-        }, "float2");
+        }, "float2", false);
 
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/emissiveTexture/extensions/KHR_texture_transform/scale`, (path) => {
             const parts: string[] = path.split("/");
@@ -606,7 +606,7 @@ export class BabylonDecorator extends ADecorator {
                 emissiveTexture.uScale = value[0];
                 emissiveTexture.vScale = value[1];
             }
-        }, "float2");
+        }, "float2", false);
 
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/emissiveTexture/extensions/KHR_texture_transform/rotation`, (path) => {
             const parts: string[] = path.split("/");
@@ -624,13 +624,13 @@ export class BabylonDecorator extends ADecorator {
                 // is negated in babylon's loading so negating when setting https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/loaders/src/glTF/2.0/Extensions/KHR_texture_transform.ts#L73
                 emissiveTexture.wAng = -1 * value[0];
             }
-        }, "float");
+        }, "float", false);
 
         this.registerJsonPointer(`/nodes/${maxGltfNode}/extensions/KHR_node_selectability/selectable`, (path) => {
             const parts: string[] = path.split("/");
             const metadata = this.world.glTFNodes[Number(parts[2])].metadata;
             if (metadata == undefined) {return true}
-            return metadata.selectable;
+            return [metadata.selectable];
         }, (path, value) => {
             const parts: string[] = path.split("/");
             this.world.glTFNodes[Number(parts[2])].metadata = this.world.glTFNodes[Number(parts[2])].metadata || {};
@@ -649,15 +649,15 @@ export class BabylonDecorator extends ADecorator {
                 //swim down
                 this.swimDownSelectability(child, value)
             }
-        }, "bool");
+        }, "bool", false);
 
         this.registerJsonPointer(`/nodes/${maxGltfNode}/extensions/KHR_node_visibility/visible`, (path) => {
             const parts: string[] = path.split("/");
             const node = this.world.glTFNodes[Number(parts[2])];
             if (node instanceof AbstractMesh) {
-                return (node as AbstractMesh).isVisible;
+                return [(node as AbstractMesh).isVisible];
             }
-            return true;
+            return [true];
         }, (path, value) => {
             const parts: string[] = path.split("/");
             const node = this.world.glTFNodes[Number(parts[2])];
@@ -672,13 +672,13 @@ export class BabylonDecorator extends ADecorator {
             node._primitiveBabylonMeshes?.forEach((mesh: AbstractMesh) => {
                 mesh.isVisible = shouldBeVisible;
             });
-        }, "bool");
+        }, "bool", false);
 
         this.registerJsonPointer(`/nodes/${maxGltfNode}/extensions/KHR_node_hoverability/hoverable`, (path) => {
             const parts: string[] = path.split("/");
             const metadata = this.world.glTFNodes[Number(parts[2])].metadata;
-            if (metadata == undefined) {return true}
-            return metadata.hoverable;
+            if (metadata == undefined) {return [true]}
+            return [metadata.hoverable];
         }, (path, value) => {
             const parts: string[] = path.split("/");
             this.world.glTFNodes[Number(parts[2])].metadata = this.world.glTFNodes[Number(parts[2])].metadata || {};
@@ -697,7 +697,41 @@ export class BabylonDecorator extends ADecorator {
                 //swim down
                 this.swimDownHoverability(child, value)
             }
-        }, "bool");
+        }, "bool", false);
+
+        this.registerJsonPointer('/nodes.length', (path) => {
+            return [this.world.glTFNodes.length];
+        }, (path, value) => {
+            //no-op
+        }, "int", true);
+
+        this.registerJsonPointer('/materials.length', (path) => {
+            return [this.world.materials.length];
+        }, (path, value) => {
+            //no-op
+        }, "int", true);
+
+        this.registerJsonPointer('/animations.length', (path) => {
+            return [this.world.animations.length];
+        }, (path, value) => {
+            //no-op
+        }, "int", true);
+
+        this.registerJsonPointer(`/nodes/${maxGltfNode}/matrix`, (path) => {
+            const parts: string[] = path.split("/");
+            const node = this.world.glTFNodes[Number(parts[2])];
+            return (this.world.nodes[node] as AbstractMesh).getPoseMatrix().asArray();
+        }, (path, value) => {
+            //no-op
+        }, "float4x4", true);
+
+        this.registerJsonPointer(`/nodes/${maxGltfNode}/globalMatrix`, (path) => {
+            const parts: string[] = path.split("/");
+            const node = this.world.glTFNodes[Number(parts[2])];
+            return (this.world.nodes[node] as AbstractMesh).getWorldMatrix().asArray();
+        }, (path, value) => {
+            //no-op
+        }, "float4x4", true);
     }
 
     private swimDownSelectability(node: Node, parentSelctability: boolean) {

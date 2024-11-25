@@ -167,12 +167,16 @@ export class BasicBehaveEngine implements IBehaveEngine {
         return this.valueEvaluationCache.get(key);
     }
 
-    public registerJsonPointer = (jsonPtr: string, getterCallback: (path: string) => any, setterCallback: (path: string, value: any) => void, typeName: string): void => {
-        this.jsonPtrTrie.addPath(jsonPtr, getterCallback, setterCallback, typeName);
+    public registerJsonPointer = (jsonPtr: string, getterCallback: (path: string) => any, setterCallback: (path: string, value: any) => void, typeName: string, readOnly: boolean): void => {
+        this.jsonPtrTrie.addPath(jsonPtr, getterCallback, setterCallback, typeName, readOnly);
     }
 
     public isValidJsonPtr = (jsonPtr: string): boolean => {
         return this.jsonPtrTrie.isPathValid(jsonPtr);
+    }
+
+    public isReadOnly = (jsonPtr: string): boolean => {
+        return this.jsonPtrTrie.isReadOnly(jsonPtr);
     }
 
     public getPathValue = (path: string) => {

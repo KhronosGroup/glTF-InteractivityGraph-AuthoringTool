@@ -36,8 +36,8 @@ export class LoggingDecorator extends ADecorator {
         return this.world;
     }
 
-    registerJsonPointer = (jsonPtr: string, getterCallback: (path: string) => any, setterCallback: (path: string, value: any) => void, typeName: string) => {
-        this.behaveEngine.registerJsonPointer(jsonPtr, getterCallback, setterCallback, typeName);
+    registerJsonPointer = (jsonPtr: string, getterCallback: (path: string) => any, setterCallback: (path: string, value: any) => void, typeName: string, readOnly: boolean) => {
+        this.behaveEngine.registerJsonPointer(jsonPtr, getterCallback, setterCallback, typeName, readOnly);
     };
 
     animateCubicBezier = (path: string, p1: number[], p2: number[], initialValue: any, targetValue: any, duration: number, valueType: string, callback: () => void): void => {
@@ -86,7 +86,7 @@ export class LoggingDecorator extends ADecorator {
             if (this.world.nodes && this.world.nodes[Number(parts[2])] && this.world.nodes[Number(parts[2])].scale !== undefined) {
                 this.world.nodes[Number(parts[2])].scale = value
             }
-        }, "float3")
+        }, "float3", false)
 
         this.registerJsonPointer("/nodes/99/rotation", (path) => {
             const parts: string[] = path.split("/");
@@ -100,7 +100,7 @@ export class LoggingDecorator extends ADecorator {
             if (this.world.nodes && this.world.nodes[Number(parts[2])] && this.world.nodes[Number(parts[2])].rotation !== undefined) {
                 this.world.nodes[Number(parts[2])].rotation = value
             }
-        }, 'float4')
+        }, 'float4', false)
 
         this.registerJsonPointer("/nodes/99/translation", (path) => {
             const parts: string[] = path.split("/");
@@ -114,6 +114,6 @@ export class LoggingDecorator extends ADecorator {
             if (this.world.nodes && this.world.nodes[Number(parts[2])] && this.world.nodes[Number(parts[2])].translation !== undefined) {
                 this.world.nodes[Number(parts[2])].translation = value
             }
-        }, 'float3')
+        }, 'float3', false)
     }
 }

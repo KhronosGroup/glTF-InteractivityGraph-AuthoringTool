@@ -21,6 +21,18 @@ export class PointerSet extends BehaveEngineNode {
         for (let i = 0; i < valIds.length; i++) {
             generatedVals.push({id: valIds[i]});
         }
+
+        //create a test path with all 0's to check if the path is read only
+        const readOnlyTestValues: Record<string, number> = {};
+        for (let i = 0; i < valIds.length; i++) {
+            readOnlyTestValues[valIds[i]] = 0;
+        }
+        const readOnlyTestPath = this.populatePath(pointer, readOnlyTestValues);
+        const isReadOnly = this.graphEngine.isReadOnly(readOnlyTestPath);
+        if (isReadOnly) {
+            throw new Error(`Path ${pointer} is read only but is included in a pointer/set configuration`);
+        }
+        
         this._pointerVals = generatedVals;
     }
 

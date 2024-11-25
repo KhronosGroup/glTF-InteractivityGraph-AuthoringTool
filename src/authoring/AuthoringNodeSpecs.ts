@@ -89,7 +89,7 @@ export const pointerNodeSpecs: IAuthoringNode[] = [
                 {
                     id: "value",
                     description: "The value to set",
-                    types: ["bool", "int", "float","float2", "float3", "float4"]
+                    types: ["bool", "int", "float","float2", "float3", "float4", "float4x4"]
                 },
                 {
                     id: "isValid",

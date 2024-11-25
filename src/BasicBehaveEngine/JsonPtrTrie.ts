@@ -11,12 +11,14 @@ class TrieNode {
     setterCallback: ((path: string, value: any) => void) | undefined;
     getterCallback: ((path: string) => any) | undefined;
     typeName: string | undefined;
+    readOnly: boolean;
 
 
     constructor(type: TrieNodeType) {
         this.children = new Map<string, TrieNode>();
         this.isEndOfPath = false;
         this.trieNodeType = type;
+        this.readOnly = false;
     }
 }
 
@@ -33,7 +35,7 @@ export class JsonPtrTrie {
      * @param getterCallback - A callback function to get the value at the specified path.
      * @param setterCallback - A callback function to set the value at the specified path.
      */
-    public addPath(path: string, getterCallback: (path: string) => any, setterCallback: (path: string, value: any) => void, typeName: string): void {
+    public addPath(path: string, getterCallback: (path: string) => any, setterCallback: (path: string, value: any) => void, typeName: string, readOnly: boolean): void {
         const pathPieces = path.split('/');
         let currentNode = this.root;
 
@@ -68,6 +70,7 @@ export class JsonPtrTrie {
         currentNode.getterCallback = getterCallback;
         currentNode.setterCallback = setterCallback;
         currentNode.typeName = typeName;
+        currentNode.readOnly = readOnly;
     }
 
     /**
@@ -78,6 +81,11 @@ export class JsonPtrTrie {
     public isPathValid(path: string): boolean {
         const leafNode: TrieNode | undefined = this.traversePath(path);
         return leafNode === undefined ? false : leafNode.isEndOfPath;
+    }
+
+    public isReadOnly(path: string): boolean {
+        const node: TrieNode | undefined = this.traversePath(path);
+        return node === undefined ? false : node.readOnly
     }
 
     /**

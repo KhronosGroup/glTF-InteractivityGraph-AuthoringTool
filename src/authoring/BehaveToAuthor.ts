@@ -17,7 +17,7 @@ export const behaveToAuthor = (graph: string): [Node[], Edge[], ICustomEvent[], 
     return v;
   });  const nodes: Node[] = [];
   const edges: Edge[] = [];
-  const customEvents: ICustomEvent[] = graphJson.customEvents || [];
+  const events: ICustomEvent[] = graphJson.events || [];
   const variables: IVariable[] = graphJson.variables || [];
 
   // loop through all the nodes in our behave graph to extract nodes and edges
@@ -49,7 +49,7 @@ export const behaveToAuthor = (graph: string): [Node[], Edge[], ICustomEvent[], 
     }
 
     //add custom events and variables
-    node.data.customEvents = graphJson.customEvents;
+    node.data.events = graphJson.events;
     node.data.variables = graphJson.variables;
     node.data.types = graphJson.types;
 
@@ -202,5 +202,5 @@ export const behaveToAuthor = (graph: string): [Node[], Edge[], ICustomEvent[], 
 
   }
 
-  return [nodes, edges, customEvents, variables];
+  return [nodes, edges, events, variables];
 };

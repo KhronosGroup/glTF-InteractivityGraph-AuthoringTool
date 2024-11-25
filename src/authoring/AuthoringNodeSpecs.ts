@@ -162,7 +162,7 @@ export const pointerNodeSpecs: IAuthoringNode[] = [
                     types: ["float"]
                 },
                 {
-                    id: "val",
+                    id: "value",
                     types: [
                         "int",
                         "float",

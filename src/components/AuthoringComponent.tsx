@@ -41,7 +41,7 @@ export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromG
     // to handle nodes and edges in graph
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-    const {array: customEvents, setArray: setCustomEvents, push: pushCustomEvent} = useArray([]);
+    const {array: events, setArray: setEvents, push: pushEvent} = useArray([]);
     const {array: variables, setArray: setVariables, push: pushVariable} = useArray([]);
 
     //to handle the node picker props
@@ -61,7 +61,7 @@ export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromG
 
     useEffect(() => {
         props.behaveGraphRef.current = getBehaveGraph()
-    }, [nodes, edges, customEvents, variables])
+    }, [nodes, edges, events, variables])
 
     useEffect(() => {
         if (props.behaveGraphFromGlTF !== null) {
@@ -134,14 +134,14 @@ export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromG
             id: uuidv4(),
             type: nodeType,
             position: position,
-            data: {customEvents: customEvents, variables: variables, types: standardTypes}
+            data: {events: events, variables: variables, types: standardTypes}
         };
 
         onNodesChange([{type: "add", item: nodeToAdd}]);
-    }, [customEvents, variables]);
+    }, [events, variables]);
 
     const getBehaveGraph = () => {
-        return authorToBehave(nodes, edges, customEvents, variables);
+        return authorToBehave(nodes, edges, events, variables);
     }
 
     const setBehaveGraph = (behaveGraph: string) => {
@@ -149,7 +149,7 @@ export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromG
         console.log(result);
         setNodes(result[0]);
         setEdges(result[1]);
-        setCustomEvents(result[2]);
+        setEvents(result[2]);
         setVariables(result[3]);
     }
 
@@ -204,10 +204,10 @@ export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromG
                         <JSONViewComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)} getBehaviorGraph={getBehaveGraph}/>
                     </RenderIf>
                     <RenderIf shouldShow={authoringComponentModal === AuthoringComponentModelType.ADD_CUSTOM_EVENT}>
-                        <AddCustomEventComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)} pushCustomEvent={pushCustomEvent}/>
+                        <AddCustomEventComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)} pushCustomEvent={pushEvent}/>
                     </RenderIf>
                     <RenderIf shouldShow={authoringComponentModal === AuthoringComponentModelType.SHOW_CUSTOM_EVENTS}>
-                        <ShowCustomEventComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)} customEvents={customEvents}/>
+                        <ShowCustomEventComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)} events={events}/>
                     </RenderIf>
                     <RenderIf shouldShow={authoringComponentModal === AuthoringComponentModelType.ADD_VARIABLE}>
                         <AddVariableComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)} pushVariable={pushVariable}/>
@@ -397,13 +397,13 @@ const AddVariableComponent = (props: {closeModal: any, pushVariable: any}) => {
     )
 }
 
-const ShowCustomEventComponent = (props: {closeModal: any, customEvents: any}) => {
+const ShowCustomEventComponent = (props: {closeModal: any, events: any}) => {
     return (
         <Panel id={"show-custom-event-panel"} position={"top-center"} style={{border:"1px solid gray", background: "white"}}>
             <Container style={{padding: 16}}>
                 <h3>Custom Events</h3>
                 <pre style={{textAlign: "left"}}>
-                    {JSON.stringify(props.customEvents, undefined, ' ')}
+                    {JSON.stringify(props.events, undefined, ' ')}
                 </pre>
                 <hr style={{ borderTop: '1px solid #777', margin: '16px 0' }} />
                 <Button variant={"outline-danger"} onClick={() => props.closeModal()}>Close</Button>

@@ -16,7 +16,7 @@ export class Send extends BehaveEngineNode {
     }
 
     override processNode(flowSocket?: string) {
-        const customEventDesc: ICustomEvent = this.customEvents[this._event];
+        const customEventDesc: ICustomEvent = this.events[this._event];
         this.graphEngine.clearValueEvaluationCache();
         const vals = this.evaluateAllValues([...customEventDesc.values].map(val => val.id));
         this.graphEngine.processNodeStarted(this);

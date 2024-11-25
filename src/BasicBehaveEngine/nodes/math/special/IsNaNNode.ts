@@ -25,6 +25,6 @@ export class IsNaNNode extends BehaveEngineNode {
                 throw Error("Invalid type")
         }
 
-        return {'val': {id: "val", value: [val], type: this.getTypeIndex('bool')}}
+        return {'value': {id: "value", value: [val], type: this.getTypeIndex('bool')}}
     }
 }

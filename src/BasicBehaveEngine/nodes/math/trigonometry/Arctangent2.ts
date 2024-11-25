@@ -50,6 +50,6 @@ export class Arctangent2 extends BehaveEngineNode {
                 throw Error("Invalid type")
         }
 
-        return {'val': {id: "val", value: val, type: typeAIndex}}
+        return {'value': {id: "value", value: val, type: typeAIndex}}
     }
 }

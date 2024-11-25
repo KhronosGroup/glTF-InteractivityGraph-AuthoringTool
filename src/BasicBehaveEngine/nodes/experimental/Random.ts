@@ -10,6 +10,6 @@ export class Random extends BehaveEngineNode {
     override processNode(flowSocket?: string) {
         this.graphEngine.processNodeStarted(this);
 
-        return {'val': {id: "val", value: [Math.random()], type: this.getTypeIndex('float')}}
+        return {'value': {id: "value", value: [Math.random()], type: this.getTypeIndex('float')}}
     }
 }

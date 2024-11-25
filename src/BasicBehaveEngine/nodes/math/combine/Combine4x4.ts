@@ -24,6 +24,6 @@ export class Combine4x4 extends BehaveEngineNode {
             }
         }
 
-        return {'val': {id: "val", value: [[a, b, c, d], [e, f, g, h], [i, j, k, l], [m, n, o, p]], type: this.getTypeIndex("float4x4")}};
+        return {'value': {id: "value", value: [[a, b, c, d], [e, f, g, h], [i, j, k, l], [m, n, o, p]], type: this.getTypeIndex("float4x4")}};
     }
 }

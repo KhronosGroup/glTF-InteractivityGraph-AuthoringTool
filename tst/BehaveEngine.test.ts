@@ -581,7 +581,7 @@ describe('BehaveEngine', () => {
                         {
                             "id": "a",
                             "node": 1,
-                            "socket": "val"
+                            "socket": "value"
                         }
                     ],
                     "configuration": [],
@@ -598,7 +598,7 @@ describe('BehaveEngine', () => {
                         {
                             "id": "a",
                             "node": 2,
-                            "socket": "val"
+                            "socket": "value"
                         }
                     ],
                     "configuration": [],
@@ -610,7 +610,7 @@ describe('BehaveEngine', () => {
                         {
                             "id": "outFloat",
                             "node": 3,
-                            "socket": "val"
+                            "socket": "value"
                         }
                     ],
                     "configuration": [
@@ -701,7 +701,7 @@ describe('BehaveEngine', () => {
                     "type": "pointer/animateTo",
                     "values": [
                         {
-                            "id": "val",
+                            "id": "value",
                             "value": [5,5,5],
                             "type": 4
                         },
@@ -789,9 +789,9 @@ describe('BehaveEngine', () => {
                             "type": 1
                         },
                         {
-                            "id": "val",
+                            "id": "value",
                             "node": 5,
-                            "socket": "val"
+                            "socket": "value"
                         },
                         {
                             "id": "easingDuration",
@@ -920,7 +920,7 @@ describe('BehaveEngine', () => {
                         {
                             "id": "value",
                             "node": 3,
-                            "socket": "val"
+                            "socket": "value"
                         }
                     ],
                     "configuration": [
@@ -1166,7 +1166,7 @@ describe('BehaveEngine', () => {
                         {
                             "id": "cum",
                             "node": 2,
-                            "socket": "val"
+                            "socket": "value"
                         }
                     ],
                     "configuration": [
@@ -1321,7 +1321,7 @@ describe('BehaveEngine', () => {
                         {
                             "id": "a",
                             "node": 0,
-                            "socket": "val"
+                            "socket": "value"
                         }
                     ],
                     "configuration": [],
@@ -1353,7 +1353,7 @@ describe('BehaveEngine', () => {
                         {
                             "id": "condition",
                             "node": 1,
-                            "socket": "val"
+                            "socket": "value"
                         }
                     ],
                     "configuration": [],
@@ -1445,7 +1445,7 @@ describe('BehaveEngine', () => {
                         {
                             "id": "value",
                             "node": 6,
-                            "socket": "val"
+                            "socket": "value"
                         }
                     ],
                     "configuration": [

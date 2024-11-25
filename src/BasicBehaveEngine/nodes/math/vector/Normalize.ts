@@ -48,6 +48,6 @@ export class Normalize extends BehaveEngineNode {
                 throw Error("Invalid type")
         }
 
-        return {'val': {id: "val", value: val, type: typeIndex}}
+        return {'value': {id: "value", value: val, type: typeIndex}}
     }
 }

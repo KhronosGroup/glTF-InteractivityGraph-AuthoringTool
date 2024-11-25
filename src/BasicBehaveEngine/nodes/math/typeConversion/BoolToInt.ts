@@ -22,6 +22,6 @@ export class BoolToInt extends BehaveEngineNode {
         const val = JSON.parse(a) | 0;
 
 
-        return {'val': {id: "val", value: [val], type: this.getTypeIndex('int')}}
+        return {'value': {id: "value", value: [val], type: this.getTypeIndex('int')}}
     }
 }

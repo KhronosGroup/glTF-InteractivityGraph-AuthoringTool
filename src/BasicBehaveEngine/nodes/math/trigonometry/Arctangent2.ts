@@ -38,6 +38,14 @@ export class Arctangent2 extends BehaveEngineNode {
                     Math.atan2(a[2], b[2]),
                 ]
                 break;
+            case "float4":
+                val = [
+                    Math.atan2(a[0], b[0]),
+                    Math.atan2(a[1], b[1]),
+                    Math.atan2(a[2], b[2]),
+                    Math.atan2(a[3], b[3]),
+                ]
+                break
             default:
                 throw Error("Invalid type")
         }

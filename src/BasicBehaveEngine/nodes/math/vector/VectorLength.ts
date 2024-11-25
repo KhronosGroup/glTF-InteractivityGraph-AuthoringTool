@@ -23,6 +23,9 @@ export class VectorLength extends BehaveEngineNode {
             case "float3":
                 val = Math.sqrt(Math.pow(a[0],2) + Math.pow(a[1],2) + Math.pow(a[2],2));
                 break;
+            case "float4":
+                val = Math.sqrt(Math.pow(a[0],2) + Math.pow(a[1],2) + Math.pow(a[2],2) + Math.pow(a[3],2));
+                break;
             default:
                 throw Error("Invalid type")
         }

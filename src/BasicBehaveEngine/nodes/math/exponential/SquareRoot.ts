@@ -33,6 +33,14 @@ export class SquareRoot extends BehaveEngineNode {
                     Math.sqrt(a[2]),
                 ]
                 break;
+            case "float4":
+                val = [
+                    Math.sqrt(a[0]),
+                    Math.sqrt(a[1]),
+                    Math.sqrt(a[2]),
+                    Math.sqrt(a[3]),
+                ]
+                break
             default:
                 throw Error("Invalid type")
         }

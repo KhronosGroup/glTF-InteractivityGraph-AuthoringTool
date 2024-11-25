@@ -38,6 +38,14 @@ export class Power extends BehaveEngineNode {
                     Math.pow(a[2], b[2]),
                 ]
                 break;
+            case "float4":
+                val = [
+                    Math.pow(a[0], b[0]),
+                    Math.pow(a[1], b[1]),
+                    Math.pow(a[2], b[2]),
+                    Math.pow(a[3], b[3]),
+                ]
+                break
             default:
                 throw Error("Invalid type")
         }

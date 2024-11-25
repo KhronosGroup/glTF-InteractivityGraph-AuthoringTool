@@ -35,6 +35,9 @@ export class Equality extends BehaveEngineNode {
             case "float3":
                 val = a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
                 break;
+            case "float4":
+                val = a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3];
+                break
             default:
                 throw Error("Invalid type")
         }

@@ -36,6 +36,14 @@ export class Negate extends BehaveEngineNode {
                     a[2] * -1,
                 ]
                 break;
+            case "float4":
+                val = [
+                    a[0] * -1,
+                    a[1] * -1,
+                    a[2] * -1,
+                    a[3] * -1,
+                ]
+                break
             default:
                 throw Error("Invalid type")
         }

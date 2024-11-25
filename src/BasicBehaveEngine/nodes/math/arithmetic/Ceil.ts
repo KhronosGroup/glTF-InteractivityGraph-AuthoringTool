@@ -33,6 +33,14 @@ export class Ceil extends BehaveEngineNode {
                     Math.ceil(a[2]),
                 ]
                 break;
+            case "float4":
+                val = [
+                    Math.ceil(a[0]),
+                    Math.ceil(a[1]),
+                    Math.ceil(a[2]),
+                    Math.ceil(a[3]),
+                ]
+                break;
             default:
                 throw Error("Invalid type")
         }

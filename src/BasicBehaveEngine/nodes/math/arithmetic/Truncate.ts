@@ -34,6 +34,14 @@ export class Truncate extends BehaveEngineNode {
                     Math.trunc(a[2]),
                 ]
                 break;
+            case "float4":
+                val = [
+                    Math.trunc(a[0]),
+                    Math.trunc(a[1]),
+                    Math.trunc(a[2]),
+                    Math.trunc(a[3]),
+                ]
+                break
             default:
                 throw Error("Invalid type")
         }

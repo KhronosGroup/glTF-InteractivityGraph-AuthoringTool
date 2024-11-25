@@ -33,6 +33,14 @@ export class Sine extends BehaveEngineNode {
                     Math.sin(a[2]),
                 ]
                 break;
+            case "float4":
+                val = [
+                    Math.sin(a[0]),
+                    Math.sin(a[1]),
+                    Math.sin(a[2]),
+                    Math.sin(a[3]),
+                ]
+                break
             default:
                 throw Error("Invalid type")
         }

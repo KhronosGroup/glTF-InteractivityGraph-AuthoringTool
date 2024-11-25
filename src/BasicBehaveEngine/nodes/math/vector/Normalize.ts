@@ -34,6 +34,16 @@ export class Normalize extends BehaveEngineNode {
                     a[2]/length3,
                 ];
                 break;
+            case "float4":
+                // eslint-disable-next-line no-case-declarations
+                const length4 = Math.sqrt(Math.pow(a[0], 2) + Math.pow(a[1], 2) + Math.pow(a[2], 2) + Math.pow(a[3], 2));
+                val = [
+                    a[0]/length4,
+                    a[1]/length4,
+                    a[2]/length4,
+                    a[3]/length4,
+                ];
+                break;
             default:
                 throw Error("Invalid type")
         }

@@ -33,6 +33,14 @@ export class InverseHyperbolicTangent extends BehaveEngineNode {
                     Math.atanh(a[2]),
                 ]
                 break;
+            case "float4":
+                val = [
+                    Math.atanh(a[0]),
+                    Math.atanh(a[1]),
+                    Math.atanh(a[2]),
+                    Math.atanh(a[3]),
+                ]
+                break
             default:
                 throw Error("Invalid type")
         }

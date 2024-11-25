@@ -33,6 +33,14 @@ export class Cosine extends BehaveEngineNode {
                     Math.cos(a[2]),
                 ]
                 break;
+            case "float4":
+                val = [
+                    Math.cos(a[0]),
+                    Math.cos(a[1]),
+                    Math.cos(a[2]),
+                    Math.cos(a[3]),
+                ]
+                break
             default:
                 throw Error("Invalid type")
         }

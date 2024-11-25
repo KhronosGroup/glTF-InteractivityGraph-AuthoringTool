@@ -1586,7 +1586,8 @@ export const arithmeticNodes = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -1601,7 +1602,8 @@ export const arithmeticNodes = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -1621,7 +1623,8 @@ export const arithmeticNodes = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -1636,7 +1639,8 @@ export const arithmeticNodes = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -1655,7 +1659,8 @@ export const arithmeticNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -1669,7 +1674,8 @@ export const arithmeticNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -1688,7 +1694,8 @@ export const arithmeticNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -1702,7 +1709,8 @@ export const arithmeticNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -1721,7 +1729,8 @@ export const arithmeticNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -1735,7 +1744,8 @@ export const arithmeticNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -1754,7 +1764,8 @@ export const arithmeticNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -1768,7 +1779,8 @@ export const arithmeticNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -1788,7 +1800,8 @@ export const arithmeticNodes = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -1803,7 +1816,8 @@ export const arithmeticNodes = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -1823,7 +1837,9 @@ export const arithmeticNodes = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
+
                     ]
                 },
                 {
@@ -1833,7 +1849,8 @@ export const arithmeticNodes = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -1848,7 +1865,8 @@ export const arithmeticNodes = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -1868,7 +1886,8 @@ export const arithmeticNodes = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 },
                 {
@@ -1878,7 +1897,8 @@ export const arithmeticNodes = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -1893,7 +1913,8 @@ export const arithmeticNodes = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -1913,7 +1934,8 @@ export const arithmeticNodes = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 },
                 {
@@ -1923,7 +1945,8 @@ export const arithmeticNodes = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -1938,7 +1961,8 @@ export const arithmeticNodes = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -1958,7 +1982,8 @@ export const arithmeticNodes = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 },
                 {
@@ -1968,7 +1993,8 @@ export const arithmeticNodes = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -1983,7 +2009,8 @@ export const arithmeticNodes = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -2003,7 +2030,8 @@ export const arithmeticNodes = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 },
                 {
@@ -2013,7 +2041,8 @@ export const arithmeticNodes = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -2028,7 +2057,8 @@ export const arithmeticNodes = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -2048,7 +2078,8 @@ export const arithmeticNodes = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 },
                 {
@@ -2058,7 +2089,8 @@ export const arithmeticNodes = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -2073,7 +2105,8 @@ export const arithmeticNodes = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -2093,7 +2126,8 @@ export const arithmeticNodes = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 },
                 {
@@ -2103,7 +2137,8 @@ export const arithmeticNodes = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -2118,7 +2153,8 @@ export const arithmeticNodes = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -2138,7 +2174,8 @@ export const arithmeticNodes = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 },
                 {
@@ -2148,7 +2185,8 @@ export const arithmeticNodes = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 },
                 {
@@ -2158,7 +2196,8 @@ export const arithmeticNodes = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -2173,7 +2212,8 @@ export const arithmeticNodes = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -2192,7 +2232,8 @@ export const arithmeticNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -2206,7 +2247,8 @@ export const arithmeticNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -2225,7 +2267,8 @@ export const arithmeticNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 },
                 {
@@ -2234,7 +2277,8 @@ export const arithmeticNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 },
                 {
@@ -2243,7 +2287,8 @@ export const arithmeticNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -2257,7 +2302,8 @@ export const arithmeticNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -2279,7 +2325,8 @@ export const trigNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -2293,7 +2340,8 @@ export const trigNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -2312,7 +2360,8 @@ export const trigNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -2326,7 +2375,8 @@ export const trigNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -2345,7 +2395,8 @@ export const trigNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -2359,7 +2410,8 @@ export const trigNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -2378,7 +2430,8 @@ export const trigNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -2392,7 +2445,8 @@ export const trigNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -2411,7 +2465,8 @@ export const trigNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -2425,7 +2480,8 @@ export const trigNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -2444,7 +2500,8 @@ export const trigNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -2458,7 +2515,8 @@ export const trigNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -2477,7 +2535,8 @@ export const trigNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -2491,7 +2550,8 @@ export const trigNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -2510,7 +2570,8 @@ export const trigNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -2524,7 +2585,8 @@ export const trigNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -2543,7 +2605,8 @@ export const trigNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -2557,7 +2620,8 @@ export const trigNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -3111,7 +3175,8 @@ export const hyperbolicNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -3125,7 +3190,8 @@ export const hyperbolicNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -3144,7 +3210,8 @@ export const hyperbolicNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -3158,7 +3225,8 @@ export const hyperbolicNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -3177,7 +3245,8 @@ export const hyperbolicNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -3191,7 +3260,8 @@ export const hyperbolicNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -3210,7 +3280,8 @@ export const hyperbolicNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -3224,7 +3295,8 @@ export const hyperbolicNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -3243,7 +3315,8 @@ export const hyperbolicNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -3257,7 +3330,8 @@ export const hyperbolicNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -3276,7 +3350,8 @@ export const hyperbolicNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -3290,7 +3365,8 @@ export const hyperbolicNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -3312,7 +3388,8 @@ export const exponentialFunctionNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 },
                 {
@@ -3321,7 +3398,8 @@ export const exponentialFunctionNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -3335,7 +3413,8 @@ export const exponentialFunctionNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -3354,7 +3433,8 @@ export const exponentialFunctionNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -3368,7 +3448,8 @@ export const exponentialFunctionNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -3387,7 +3468,8 @@ export const exponentialFunctionNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -3401,7 +3483,8 @@ export const exponentialFunctionNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -3420,7 +3503,8 @@ export const exponentialFunctionNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -3434,7 +3518,8 @@ export const exponentialFunctionNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -3453,7 +3538,8 @@ export const exponentialFunctionNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -3467,7 +3553,8 @@ export const exponentialFunctionNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -3486,7 +3573,8 @@ export const exponentialFunctionNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -3500,7 +3588,8 @@ export const exponentialFunctionNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -3519,7 +3608,8 @@ export const exponentialFunctionNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -3533,7 +3623,8 @@ export const exponentialFunctionNodes = [
                     types: [
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -3554,7 +3645,8 @@ export const vectorNodes: IAuthoringNode[] = [
                     description: "Vector",
                     types: [
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -3620,7 +3712,8 @@ export const vectorNodes: IAuthoringNode[] = [
                     description: "Vector",
                     types: [
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -3632,7 +3725,9 @@ export const vectorNodes: IAuthoringNode[] = [
                     id: "val",
                     description: "Normalized Vector",
                     types: [
-                        "float3"
+                        "float2",
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -3650,14 +3745,17 @@ export const vectorNodes: IAuthoringNode[] = [
                     description: "First Vector",
                     types: [
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 },
                 {
                     id: "b",
                     description: "Second Vector",
                     types: [
-                        "float3"
+                        "float2",
+                        "float3",
+                        "float4"
                     ]
                 }
             ]
@@ -4052,7 +4150,8 @@ export const comparisonNodeSpecs = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 },
                 {
@@ -4063,7 +4162,8 @@ export const comparisonNodeSpecs = [
                         "int",
                         "float",
                         "float2",
-                        "float3"
+                        "float3",
+                        "float4"
                     ]
                 }
             ]

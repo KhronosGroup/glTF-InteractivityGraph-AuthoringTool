@@ -50,7 +50,7 @@ describe("authoring", () => {
                 }
             ],
             "variables": [],
-            "customEvents": [],
+            "events": [],
             "types": [
                 {
                     "signature": "bool"

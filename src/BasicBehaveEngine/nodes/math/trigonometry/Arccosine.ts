@@ -33,6 +33,14 @@ export class Arccosine extends BehaveEngineNode {
                     Math.acos(a[2]),
                 ]
                 break;
+            case "float4":
+                val = [
+                    Math.acos(a[0]),
+                    Math.acos(a[1]),
+                    Math.acos(a[2]),
+                    Math.acos(a[3]),
+                ]
+                break
             default:
                 throw Error("Invalid type")
         }

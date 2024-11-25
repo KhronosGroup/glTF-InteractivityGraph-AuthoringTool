@@ -33,6 +33,14 @@ export class Arcsine extends BehaveEngineNode {
                     Math.asin(a[2]),
                 ]
                 break;
+            case "float4":
+                val = [
+                    Math.asin(a[0]),
+                    Math.asin(a[1]),
+                    Math.asin(a[2]),
+                    Math.asin(a[3]),
+                ]
+                break
             default:
                 throw Error("Invalid type")
         }

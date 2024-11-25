@@ -124,7 +124,7 @@ describe('nodes', () => {
             idToBehaviourNodeMap: new Map<number, BehaveEngineNode>(),
             graphEngine: graphEngine,
             variables: [],
-            customEvents: [],
+            events: [],
             types: standardTypes,
             flows: [],
             values: [],
@@ -137,7 +137,7 @@ describe('nodes', () => {
         const receive: Receive = new Receive({
             ...defaultProps,
             configuration: [{ id: 'event', value: 0 }],
-            customEvents: [{ id: 'testCustomEvent', values: [{ id: 'text', type: 7 }] }],
+            events: [{ id: 'testCustomEvent', values: [{ id: 'text', type: 7 }] }],
             flows: [{ id: 'out' }],
         });
         await new Promise((resolve) => setTimeout(resolve, 500));
@@ -145,14 +145,14 @@ describe('nodes', () => {
         graphEngine.emitCustomEvent('KHR_INTERACTIVITY:testCustomEvent', { text: 'test' });
         //wait for graph to emit
         await new Promise((resolve) => setTimeout(resolve, 1000));
-        expect(receive.outValues.text.value).toBe('test');
+        expect(receive.outValues.text.value).toStrictEqual(['test']);
     }, 3000);
 
     it('event/send', async () => {
         const send: Send = new Send({
             ...defaultProps,
             configuration: [{ id: 'event', value: 0 }],
-            customEvents: [{ id: 'testCustomEvent', values: [{ id: 'text' }] }],
+            events: [{ id: 'testCustomEvent', values: [{ id: 'text' }] }],
             values: [{ id: 'text', value: ['test'], type: 7}],
         });
 
@@ -202,7 +202,7 @@ describe('nodes', () => {
             values: [{ id: 'duration', value: [0.5], type: 2 }],
             flows: [
                 { id: 'out', node: 1 },
-                {id: 'completed', node: 2 }
+                {id: 'done', node: 2 }
             ]
         });
         setDelay.addEventToWorkQueue = jest.fn<(flow: IFlow) => Promise<void>>();
@@ -219,7 +219,7 @@ describe('nodes', () => {
         expect(setDelay.outValues.lastDelayIndex.value[0]).toBe(1);
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        expect(setDelay.addEventToWorkQueue).toHaveBeenCalledWith({"id": "completed", "node": 2});
+        expect(setDelay.addEventToWorkQueue).toHaveBeenCalledWith({"id": "done", "node": 2});
         expect(setDelay.processFlow).toHaveBeenCalledWith({"id": "out", "node": 1});
     });
 
@@ -240,7 +240,7 @@ describe('nodes', () => {
             values: [{ id: 'duration', value: [0.5], type: 2 }],
             flows: [
                 { id: 'out', node: 1 },
-                {id: 'completed', node: 2 }
+                {id: 'done', node: 2 }
             ]
         });
         setDelay.addEventToWorkQueue = jest.fn<(flow: IFlow) => Promise<void>>();
@@ -486,7 +486,7 @@ describe('nodes', () => {
                 const parts: string[] = path.split('/');
                 world.nodes[Number(parts[2])].value = value;
             },
-            "float"
+            "float", false
         );
 
         const res  = pointerGet.processNode();
@@ -513,7 +513,7 @@ describe('nodes', () => {
                 const parts: string[] = path.split('/');
                world.nodes[Number(parts[2])].value = value;
             },
-            "float"
+            "float", false
         );
         const pointerSet: PointerSet = new PointerSet({
             ...defaultProps,
@@ -543,7 +543,7 @@ describe('nodes', () => {
                 const parts: string[] = path.split('/');
                 world.nodes[Number(parts[2])].value = value;
             },
-            "float"
+            "float", false
         );
         const pointerAnimateTo: PointerAnimateTo = new PointerAnimateTo({
             ...defaultProps,
@@ -581,7 +581,7 @@ describe('nodes', () => {
                 const parts: string[] = path.split('/');
                 world.nodes[Number(parts[2])].value = value;
             },
-            "float"
+            "float", false
         );
         const pointerInterpolate: PointerInterpolate = new PointerInterpolate({
             ...defaultProps,
@@ -591,7 +591,7 @@ describe('nodes', () => {
             values: [
                 { id: 'index', value: [0], type: 1 },
                 { id: "duration", value: [0.5], type: 2},
-                { id: 'val', value: [42], type: 2 },
+                { id: 'value', value: [42], type: 2 },
                 { id: 'p1', value: [0,0], type: 3 },
                 { id: 'p2', value: [1,1], type: 3}
             ],

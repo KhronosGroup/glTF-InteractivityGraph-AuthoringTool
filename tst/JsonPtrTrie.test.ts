@@ -15,7 +15,7 @@ describe('jsonPtrTrie', () => {
             (path, value) => {
                 mockSetter(value);
             },
-            "float3"
+            "float3", false
         );
         expect(jsonPtr.isPathValid('nodes/99/translation')).toBe(true);
         expect(jsonPtr.getPathValue('nodes/99/translation')).toBe('GOT FROM PATH');
@@ -32,7 +32,7 @@ describe('jsonPtrTrie', () => {
             (path, value) => {
                 // set
             },
-            "float3"
+            "float3", false
         );
         expect(jsonPtr.isPathValid('nodes/99/translation')).toBe(false);
 
@@ -44,7 +44,7 @@ describe('jsonPtrTrie', () => {
             (path, value) => {
                 // set
             },
-            "float3"
+            "float3", false
         );
         expect(jsonPtr.isPathValid('nodes/99/translation')).toBe(true);
 
@@ -56,7 +56,7 @@ describe('jsonPtrTrie', () => {
             (path, value) => {
                 // set
             },
-            "float3"
+            "float3", false
         );
         expect(jsonPtr.isPathValid('nodes/99/translation')).toBe(false);
     });

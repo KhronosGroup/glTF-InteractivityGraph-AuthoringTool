@@ -33,6 +33,14 @@ export class Tangent extends BehaveEngineNode {
                     Math.tan(a[2]),
                 ]
                 break;
+            case "float4":
+                val = [
+                    Math.tan(a[0]),
+                    Math.tan(a[1]),
+                    Math.tan(a[2]),
+                    Math.tan(a[3]),
+                ]
+                break
             default:
                 throw Error("Invalid type")
         }

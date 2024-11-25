@@ -35,6 +35,14 @@ export class Sign extends BehaveEngineNode {
                     Math.sign(a[2]),
                 ]
                 break;
+            case "float4":
+                val = [
+                    Math.sign(a[0]),
+                    Math.sign(a[1]),
+                    Math.sign(a[2]),
+                    Math.sign(a[3]),
+                ]
+                break
             default:
                 throw Error("Invalid type")
         }

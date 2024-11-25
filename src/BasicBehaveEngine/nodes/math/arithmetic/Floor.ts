@@ -33,6 +33,14 @@ export class Floor extends BehaveEngineNode {
                     Math.floor(a[2]),
                 ]
                 break;
+            case "float4":
+                val = [
+                    Math.floor(a[0]),
+                    Math.floor(a[1]),
+                    Math.floor(a[2]),
+                    Math.floor(a[3]),
+                ]
+                break;
             default:
                 throw Error("Invalid type")
         }

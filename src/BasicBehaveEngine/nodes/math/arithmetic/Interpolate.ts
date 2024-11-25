@@ -40,6 +40,14 @@ export class Interpolate extends BehaveEngineNode {
                     (1.0 - c[2]) * a[2] + c[2] * b[2]
                 ]
                 break;
+            case "float4":
+                val = [
+                    (1.0 - c[0]) * a[0] + c[0] * b[0],
+                    (1.0 - c[1]) * a[1] + c[1] * b[1],
+                    (1.0 - c[2]) * a[2] + c[2] * b[2],
+                    (1.0 - c[3]) * a[3] + c[3] * b[3]
+                ]
+                break
             default:
                 throw Error("Invalid type")
         }

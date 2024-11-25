@@ -33,6 +33,14 @@ export class RadiansToDegrees extends BehaveEngineNode {
                     (a[2] * 180) / Math.PI,
                 ]
                 break;
+            case "float4":
+                val = [
+                    (a[0] * 180) / Math.PI,
+                    (a[1] * 180) / Math.PI,
+                    (a[2] * 180) / Math.PI,
+                    (a[3] * 180) / Math.PI,
+                ]
+                break
             default:
                 throw Error("Invalid type")
         }

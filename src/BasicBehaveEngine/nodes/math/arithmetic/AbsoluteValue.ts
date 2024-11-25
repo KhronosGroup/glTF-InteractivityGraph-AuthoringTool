@@ -37,6 +37,14 @@ export class AbsoluteValue extends BehaveEngineNode {
                     Math.abs(a[2]),
                 ]
                 break;
+            case "float4":
+                val = [
+                    Math.abs(a[0]),
+                    Math.abs(a[1]),
+                    Math.abs(a[2]),
+                    Math.abs(a[3]),
+                ]
+                break;
             default:
                 throw Error("Invalid type")
         }

@@ -33,6 +33,14 @@ export class InverseHyperbolicCosine extends BehaveEngineNode {
                     Math.acosh(a[2]),
                 ]
                 break;
+            case "float4":
+                val = [
+                    Math.acosh(a[0]),
+                    Math.acosh(a[1]),
+                    Math.acosh(a[2]),
+                    Math.acosh(a[3]),
+                ]
+                break
             default:
                 throw Error("Invalid type")
         }

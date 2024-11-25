@@ -33,6 +33,14 @@ export class Saturate extends BehaveEngineNode {
                     Math.min(Math.max(a[2], 0.0), 1.0),
                 ]
                 break;
+            case "float4":
+                val = [
+                    Math.min(Math.max(a[0], 0.0), 1.0),
+                    Math.min(Math.max(a[1], 0.0), 1.0),
+                    Math.min(Math.max(a[2], 0.0), 1.0),
+                    Math.min(Math.max(a[3], 0.0), 1.0),
+                ]
+                break
             default:
                 throw Error("Invalid type")
         }

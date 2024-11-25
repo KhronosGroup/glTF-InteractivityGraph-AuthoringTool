@@ -41,6 +41,14 @@ export class Clamp extends BehaveEngineNode {
                     Math.min(Math.max(a[2],Math.min(b[2],c[2])), Math.max(b[2],c[2]))
                 ]
                 break;
+            case "float4":
+                val = [
+                    Math.min(Math.max(a[0],Math.min(b[0],c[0])), Math.max(b[0],c[0])),
+                    Math.min(Math.max(a[1],Math.min(b[1],c[1])), Math.max(b[1],c[1])),
+                    Math.min(Math.max(a[2],Math.min(b[2],c[2])), Math.max(b[2],c[2])),
+                    Math.min(Math.max(a[3],Math.min(b[3],c[3])), Math.max(b[3],c[3]))
+                ]
+                break
             default:
                 throw Error("Invalid type")
         }

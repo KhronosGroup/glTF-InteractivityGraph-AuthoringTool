@@ -33,6 +33,14 @@ export class Log2 extends BehaveEngineNode {
                     Math.log2(a[2]),
                 ]
                 break;
+            case "float4":
+                val = [
+                    Math.log2(a[0]),
+                    Math.log2(a[1]),
+                    Math.log2(a[2]),
+                    Math.log2(a[3]),
+                ]
+                break
             default:
                 throw Error("Invalid type")
         }

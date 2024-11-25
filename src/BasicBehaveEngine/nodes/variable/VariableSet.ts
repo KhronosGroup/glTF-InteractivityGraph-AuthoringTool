@@ -19,10 +19,10 @@ export class VariableSet extends BehaveEngineNode {
     override processNode(flowSocket?:string) {
         const variable: IVariable = this.variables[this._variable];
         this.graphEngine.clearValueEvaluationCache();
-        const vals = this.evaluateAllValues([variable.id]);
+        const vals = this.evaluateAllValues(["value"]);
         this.graphEngine.processNodeStarted(this);
 
-        this.variables[this._variable].value = vals[variable.id];
+        this.variables[this._variable].value = vals["value"];
 
         super.processNode(flowSocket);
     }

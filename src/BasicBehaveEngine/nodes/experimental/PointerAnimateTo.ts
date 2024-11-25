@@ -2,7 +2,7 @@ import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class PointerAnimateTo extends BehaveEngineNode {
     REQUIRED_CONFIGURATIONS = [{id: "pointer"}, {id: "easingType"}]
-    REQUIRED_VALUES = [{id: "val"}, {id: "easingDuration"}]
+    REQUIRED_VALUES = [{id: "value"}, {id: "easingDuration"}]
 
     _pointer: string;
     _easingType: number;

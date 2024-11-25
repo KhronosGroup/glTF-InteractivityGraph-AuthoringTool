@@ -20,7 +20,12 @@ export class VariableGet extends BehaveEngineNode {
         this.graphEngine.processNodeStarted(this);
 
         const result: Record<string, IValue> = {};
-        result[this.variables[this._variable].id] = this.variables[this._variable];
+        const res = this.variables[this._variable];
+        // TODO It's unclear when the value needs to be a glTF value (always an array)
+        // or when it needs to be the actual value. Since the result of this node is always parsed
+        // with parseType, it currently needs to be an array.
+        if (!Array.isArray(res.value)) res.value = [res.value];
+        result["value"] = res;
         return result;
     }
 }

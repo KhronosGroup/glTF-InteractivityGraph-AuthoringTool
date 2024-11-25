@@ -82,11 +82,8 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
     const createScene = () => {
         // Create a scene
         sceneRef.current = new Scene(engineRef.current!);
+        sceneRef.current?.createDefaultCamera(true, true, true);
 
-        // Create a camera
-        const camera = new ArcRotateCamera('camera', Math.PI / 3, Math.PI / 3, 10, Vector3.Zero(), sceneRef.current);
-        camera.attachControl(canvasRef.current, true);
-        camera.minZ = 0.001;
         canvasRef.current!.addEventListener("wheel", (e: any) => {
             e.preventDefault();
             e.stopPropagation();
@@ -114,6 +111,8 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
         });
         const container = await SceneLoader.LoadAssetContainerAsync("", url, sceneRef.current, undefined, ".glb");
         container.addAllToScene();
+
+        sceneRef.current?.createDefaultCamera(true, true, true);
 
         return {nodes:buildGlTFNodeLayout(container.rootNodes[0]), animations: container.animationGroups, materials: container.materials};
     };

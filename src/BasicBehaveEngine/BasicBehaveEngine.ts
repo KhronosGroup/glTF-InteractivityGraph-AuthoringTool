@@ -98,7 +98,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
     protected registry: Map<string, any>;
     protected idToBehaviourNodeMap: Map<number, BehaveEngineNode>;
     private eventQueue: IEventQueueItem[];
-    protected onTickNodeIndex: number;
+    protected onTickNodeIndices: number[];
     private lastTickTime: number;
     private _scheduledDelays: NodeJS.Timeout[];
     protected nodes: any[];
@@ -120,7 +120,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this._fps = fps;
         this.valueEvaluationCache = new Map<string, IValue>();
         this.pathToWorldAnimationCallback = new Map<string, ICancelable>();
-        this.onTickNodeIndex = -1;
+        this.onTickNodeIndices = [];
         this.lastTickTime = 0;
         this.eventQueue = [];
         this.variables = [];
@@ -258,13 +258,21 @@ export class BasicBehaveEngine implements IBehaveEngine {
             index++;
         });
 
-        //find start node, and start graph
-        const startNodeIndex = this.nodes.findIndex(node => node.type === "event/onStart");
-        this.onTickNodeIndex = this.nodes.findIndex(node => node.type === "event/onTick");
-        if (startNodeIndex !== -1) {
-            const startFlow: IFlow = {node: startNodeIndex, id: "start"}
-            this.addEventToWorkQueue(startFlow);
+        this.onTickNodeIndices = this.nodes
+            .map((node, idx) => node.type === "event/onTick" ? idx : -1)
+            .filter(idx => idx !== -1);
+
+        const onTickStartIndices = this.nodes
+            .map((node, idx) => node.type === "event/onStart" ? idx : -1)
+            .filter(idx => idx !== -1);
+
+        for (const startNodeIndex of onTickStartIndices) {
+            if (startNodeIndex !== -1) {
+                const startFlow: IFlow = {node: startNodeIndex, id: "start"}
+                this.addEventToWorkQueue(startFlow);
+            }
         }
+
         this.executeEventQueue();
     }
 
@@ -437,13 +445,13 @@ export class BasicBehaveEngine implements IBehaveEngine {
             eventQueueCopy.splice(0, 1);
         }
 
-        if (this.onTickNodeIndex !== -1) {
-            const tickFlow: IFlow = {node: this.onTickNodeIndex, id: "tick"}
+        for (const onTickNodeIndex of this.onTickNodeIndices) {
+            const tickFlow: IFlow = { node: onTickNodeIndex, id: "tick"}
             const tickNode: BehaveEngineNode = this.idToBehaviourNodeMap.get(tickFlow.node!)!;
 
             tickNode.processNode()
         }
-
+        
         setTimeout(() => {
             this.executeEventQueue()
         }, 1000 / this.fps)

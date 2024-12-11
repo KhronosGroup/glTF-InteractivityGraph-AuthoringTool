@@ -15,7 +15,7 @@ export class OnTickNode extends BehaveEngineNode {
 
     override processNode(flowSocket?: string) {
         this.graphEngine.processNodeStarted(this);
-        const tickTime = Date.now();
+        const tickTime = Date.now() / 1000;
         if (isNaN(this._startTime)) {
             this.outValues.timeSinceStart = { id: "timeSinceStart", value: [0], type: this._floatTypeIndex };
             this.outValues.timeSinceLastTick = { id: "timeSinceLastTick", value: [0], type: this._floatTypeIndex };

@@ -1114,7 +1114,30 @@ describe('nodes', () => {
         expect(val['value'].value[0]).toBe(-0);
         expect(val['value'].value[1]).toBe(4);
         expect(val['value'].value[2]).toBe(9);
+    });
 
+    it("math/saturate", () => {
+        let sat: Saturate = new Saturate({
+            ...defaultProps,
+            values: [
+                { id: 'a', value: [2], type: 2 },
+            ]
+        });
+
+        let val = sat.processNode();
+        expect(val['value'].value[0]).toBe(1);
+
+        sat = new Saturate({
+            ...defaultProps,
+            values: [
+                { id: 'a', value: [2, 0.5, -2], type: 3 }
+            ]
+        });
+
+        val = sat.processNode();
+        expect(val['value'].value[0]).toBe(1);
+        expect(val['value'].value[1]).toBe(0.5);
+        expect(val['value'].value[2]).toBe(0);
     });
 
     it("math/max", () => {

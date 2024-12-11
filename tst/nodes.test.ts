@@ -33,6 +33,7 @@ import {Divide} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Divide";
 import {Remainder} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Remainder";
 import {Max} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Max";
 import {Min} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Min";
+import {Mix} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Mix";
 import {DegreeToRadians} from "../src/BasicBehaveEngine/nodes/math/trigonometry/DegreeToRadians";
 import {RadiansToDegrees} from "../src/BasicBehaveEngine/nodes/math/trigonometry/RadiansToDegrees";
 import {Sine} from "../src/BasicBehaveEngine/nodes/math/trigonometry/Sine";
@@ -1165,6 +1166,34 @@ describe('nodes', () => {
         expect(val['val'].value[0]).toBe(-10);
         expect(val['val'].value[1]).toBe(6);
         expect(val['val'].value[2]).toBe(-10);
+    });
+
+    it("math/mix", () => {
+        let mix: Mix = new Mix({
+            ...defaultProps,
+            values: [
+                { id: 'a', value: [1], type: 2 },
+                { id: 'b', value: [2], type: 2 },
+                { id: 'c', value: [0.5], type: 2 }
+            ]
+        });
+
+        let val = mix.processNode();
+        expect(val['val'].value[0]).toBe(1.5);
+
+        mix = new Mix({
+            ...defaultProps,
+            values: [
+                { id: 'a', value: [0, 1, 3], type: 4 },
+                { id: 'b', value: [1, 2, 4], type: 4 },
+                { id: 'c', value: [0.5], type: 2 }
+            ]
+        });
+
+        val = mix.processNode();
+        expect(val['val'].value[0]).toBe(0.5);
+        expect(val['val'].value[1]).toBe(1.5);
+        expect(val['val'].value[2]).toBe(3.5);
     });
 
     it("math/rad", () => {

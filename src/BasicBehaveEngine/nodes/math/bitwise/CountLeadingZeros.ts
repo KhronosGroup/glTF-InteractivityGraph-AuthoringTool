@@ -17,7 +17,7 @@ export class CountLeadingZeros extends BehaveEngineNode {
         if (typeA !== "int") {
             throw Error("invalid input type")
         }
-        let val = Math.clz32(a);
+        const val = Math.clz32(a);
         return {'value': {id: "value", value: [val], type: this.getTypeIndex('int')}}
     }
 }

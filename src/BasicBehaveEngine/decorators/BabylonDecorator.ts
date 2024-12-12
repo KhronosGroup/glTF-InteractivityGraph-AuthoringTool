@@ -786,9 +786,12 @@ export class BabylonDecorator extends ADecorator {
                 } else if (targetMesh.getChildMeshes(false).includes(hit.pickedMesh) && hit.pickedMesh.metadata.onSelectCallback != null) {
                     return;
                 } else {
-                    const pos = [hit.pickedMesh.position.x, hit.pickedMesh.position.y, hit.pickedMesh.position.z];
+                    let pos = [hit.pickedMesh.position.x, hit.pickedMesh.position.y, hit.pickedMesh.position.z];
+                    if (hit.pickedPoint != null) {
+                        pos = [-hit.pickedPoint.x, hit.pickedPoint.y, hit.pickedPoint.z];
+                    }
                     const hitNodeIndex = this.world.glTFNodes.findIndex((value: { uniqueId: number; }) => value.uniqueId === hit.pickedMesh!.uniqueId);
-                    callback(pos, hitNodeIndex, 0, [ray.origin.x, ray.origin.y, ray.origin.z]);
+                    callback(pos, hitNodeIndex, 0, [-ray.origin.x, ray.origin.y, ray.origin.z]);
                 }
             }
         });

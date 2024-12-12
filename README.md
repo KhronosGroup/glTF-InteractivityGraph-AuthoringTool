@@ -65,6 +65,9 @@ Follow these instructions to set up and use the DCC React app for authoring glTF
 
 6. Once you're satisfied, export the glTF asset with the KHR_interactivity extension included.
 
+## Imporant Notes About Tool Execution
+1. **Variable Intial State:** The tool passes around JSON for the execution graph (in which initial variable values can be updated by running) please read [Variable Behavior Guide](variable-behavior.md).
+
 ## Advanced
 
 This section is about how to add custom nodes and types to the authoring view and the execution engines as well as configuring the app to work with your own engine.

@@ -1,6 +1,7 @@
 {
   "name": "khr_interactivity_authoring",
   "version": "0.1.0",
+  "homepage": "https://github.khronos.org/glTF-InteractivityGraph-AuthoringTool",
   "private": true,
   "type": "module",
   "dependencies": {

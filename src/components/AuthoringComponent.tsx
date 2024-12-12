@@ -286,12 +286,18 @@ const NodePickerComponent = (props: {onAddNode: any, closeModal: any, mousePos: 
 
 const ShowVariableComponent = (props: {closeModal: any, variables: any}) => {
     return (
-        <Panel id={"show-variable-panel"} position={"top-center"} style={{border:"1px solid gray", background: "white"}}>
-            <Container style={{padding: 16}}>
+        <Panel id={"show-variable-panel"} position={"top-center"} style={{border:"1px solid gray", background: "white", height: 500}}>
+           <Container style={{ padding: 16, flex: 1, display: 'flex', flexDirection: 'column', height: 500 }}>
                 <h3>Variables</h3>
-                <pre style={{ textAlign: 'left' }}>{JSON.stringify(props.variables, undefined, ' ')}</pre>
+                <div style={{ flex: 1, overflowY: 'auto', textAlign: 'left', border: '1px solid #ccc', padding: 8, borderRadius: 4 }}>
+                    <pre>{JSON.stringify(props.variables, undefined, ' ')}</pre>
+                </div>
                 <hr style={{ borderTop: '1px solid #777', margin: '16px 0' }} />
-                <Button variant={"outline-danger"} onClick={() => props.closeModal()}>Close</Button>
+                <div style={{ textAlign: 'right' }}>
+                    <Button variant={"outline-danger"} onClick={() => props.closeModal()} style={{ position: 'sticky', bottom: 0 }}>
+                        Close
+                    </Button>
+                </div>
             </Container>
         </Panel>
     )
@@ -399,14 +405,18 @@ const AddVariableComponent = (props: {closeModal: any, pushVariable: any}) => {
 
 const ShowCustomEventComponent = (props: {closeModal: any, events: any}) => {
     return (
-        <Panel id={"show-custom-event-panel"} position={"top-center"} style={{border:"1px solid gray", background: "white"}}>
-            <Container style={{padding: 16}}>
+        <Panel id={"show-custom-event-panel"} position={"top-center"} style={{border:"1px solid gray", background: "white", height: 500}}>
+            <Container style={{padding: 16, flex: 1, display: 'flex', flexDirection: 'column', height: 500}}>
                 <h3>Custom Events</h3>
-                <pre style={{textAlign: "left"}}>
-                    {JSON.stringify(props.events, undefined, ' ')}
-                </pre>
+                <div style={{ flex: 1, overflowY: 'auto', textAlign: 'left', border: '1px solid #ccc', padding: 8, borderRadius: 4 }}>
+                    <pre>{JSON.stringify(props.events, undefined, ' ')}</pre>
+                </div>
                 <hr style={{ borderTop: '1px solid #777', margin: '16px 0' }} />
-                <Button variant={"outline-danger"} onClick={() => props.closeModal()}>Close</Button>
+             <div style={{ textAlign: 'right' }}>
+                 <Button variant={"outline-danger"} onClick={() => props.closeModal()} style={{ position: 'sticky', bottom: 0 }}>
+                     Close
+                 </Button>
+             </div>
             </Container>
         </Panel>
     )

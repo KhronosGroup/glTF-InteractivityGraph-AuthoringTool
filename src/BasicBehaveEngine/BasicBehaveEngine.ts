@@ -84,6 +84,15 @@ import {Combine3} from "./nodes/math/combine/Combine3";
 import {Combine4} from "./nodes/math/combine/Combine4";
 import {Combine4x4} from "./nodes/math/combine/Combine4x4";
 import {PointerInterpolate} from "./nodes/pointer/PointerInterpolate";
+import {Not} from "./nodes/math/bitwise/Not";
+import {Xor} from "./nodes/math/bitwise/Xor";
+import {Or} from "./nodes/math/bitwise/Or";
+import {And} from "./nodes/math/bitwise/And";
+import {LeftShift} from "./nodes/math/bitwise/LeftShift";
+import {RightShift} from "./nodes/math/bitwise/RightShift";
+import {CountLeadingZeros} from "./nodes/math/bitwise/CountLeadingZeros";
+import {CountOneBits} from "./nodes/math/bitwise/CountOneBits";
+import {CountTrailingZeros} from "./nodes/math/bitwise/CountTrailingZeros";
 
 export interface ICustomEventListener {
     type: string,
@@ -398,6 +407,15 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("type/floatToInt", FloatToInt);
         this.registerBehaveEngineNode("type/intToBool", IntToBool);
         this.registerBehaveEngineNode("type/intToFloat", IntToFloat);
+        this.registerBehaveEngineNode("math/not", Not);
+        this.registerBehaveEngineNode("math/xor", Xor);
+        this.registerBehaveEngineNode("math/or", Or);
+        this.registerBehaveEngineNode("math/and", And);
+        this.registerBehaveEngineNode("math/lsl", LeftShift);
+        this.registerBehaveEngineNode("math/asr", RightShift);
+        this.registerBehaveEngineNode("math/clz", CountLeadingZeros);
+        this.registerBehaveEngineNode("math/ctz", CountTrailingZeros);
+        this.registerBehaveEngineNode("math/popcnt", CountOneBits);
     }
 
     protected validateGraph = (behaviorGraph: any) => {

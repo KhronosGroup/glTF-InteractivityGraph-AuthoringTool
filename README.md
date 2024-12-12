@@ -2,6 +2,8 @@
 
 This README provides an overview and instructions for using the DCC (Digital Content Creation) React app for authoring glTF assets with the new KHR_interactivity extension.
 
+[Live Link](https://github.khronos.org/glTF-InteractivityGraph-AuthoringTool/)
+
 ## Table of Contents
 - [Introduction](#introduction)
 - [Features](#features)

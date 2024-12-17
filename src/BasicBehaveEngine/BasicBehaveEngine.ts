@@ -56,6 +56,7 @@ import {Random} from "./nodes/experimental/Random";
 import {Dot} from "./nodes/math/vector/Dot";
 import {Rotate2D} from "./nodes/math/vector/Rotate2D";
 import {Rotate3D} from "./nodes/math/vector/Rotate3D";
+import {VectorLength} from "./nodes/math/vector/VectorLength";
 import {IsInfNode} from "./nodes/math/special/IsInfNode";
 import {IsNaNNode} from "./nodes/math/special/IsNaNNode";
 import {LessThanOrEqualTo} from "./nodes/math/comparison/LessThanOrEqualTo";
@@ -390,6 +391,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/dot", Dot);
         this.registerBehaveEngineNode("math/rotate2d", Rotate2D);
         this.registerBehaveEngineNode("math/rotate3d", Rotate3D);
+        this.registerBehaveEngineNode("math/length", VectorLength);
         this.registerBehaveEngineNode("math/isinf", IsInfNode);
         this.registerBehaveEngineNode("math/isnan", IsNaNNode);
         this.registerBehaveEngineNode("math/select", Select);

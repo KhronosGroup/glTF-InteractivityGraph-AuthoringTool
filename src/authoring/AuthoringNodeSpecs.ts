@@ -3902,6 +3902,35 @@ export const vectorNodes: IAuthoringNode[] = [
         }
     },
     {
+        type: "math/length",
+        description: "Vector Length",
+        configuration: [],
+        input: {
+            flows: [],
+            values: [
+                {
+                    id: "a",
+                    description: "Vector",
+                    types: [
+                        "float2", "float3", "float4"
+                    ]
+                }
+            ]
+        },
+        output: {
+            flows: [],
+            values: [
+                {
+                    id: "value",
+                    description: "Length of vector",
+                    types: [
+                        "float"
+                    ]
+                }
+            ]
+        }
+    },
+    {
         type: "math/rotate2D",
         description: "Vector Rotation",
         configuration: [],

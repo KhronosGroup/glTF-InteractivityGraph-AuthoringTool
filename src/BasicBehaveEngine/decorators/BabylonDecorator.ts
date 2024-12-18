@@ -42,6 +42,12 @@ export class BabylonDecorator extends ADecorator {
         this.behaveEngine.alertParentOnSelect = this.alertParentOnSelect
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
+        this.behaveEngine.alertParentOnHoverIn = this.alertParentOnHoverIn
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        this.behaveEngine.alertParentOnHoverOut = this.alertParentOnHoverOut
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         this.behaveEngine.addNodeClickedListener = this.addNodeClickedListener
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore

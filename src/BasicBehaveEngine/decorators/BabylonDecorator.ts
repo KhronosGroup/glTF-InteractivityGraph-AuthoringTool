@@ -738,6 +738,27 @@ export class BabylonDecorator extends ADecorator {
         }, (path, value) => {
             //no-op
         }, "float4x4", true);
+
+        this.registerJsonPointer(`/nodes/${maxGltfNode}/mesh`, (path) => {
+            const parts: string[] = path.split("/");
+            const node = this.world.glTFNodes[Number(parts[2])];
+            return this.world.meshes.indexOf(node.subMeshes[0].mesh);
+        }, (path, value) => {
+            //no-op
+        }, "int", true);
+
+        this.registerJsonPointer(`/meshes/${maxGltfNode}/primitives/${maxGltfNode}/material`, (path) => {
+            const parts: string[] = path.split("/");
+            const mesh = this.world.glTFNodes[Number(parts[2])];
+            const primitive = mesh._primitiveBabylonMeshes[Number(parts[4])];
+            console.log("results", mesh, primitive, this.world.materials.indexOf(primitive.material));
+            return this.world.materials.indexOf(primitive.material);
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const mesh = this.world.glTFNodes[Number(parts[2])];
+            const primitive = mesh._primitiveBabylonMeshes[Number(parts[4])];
+            primitive.material = this.world.materials[value];
+        }, "int", false);
     }
 
     private swimDownSelectability(node: Node, parentSelctability: boolean) {

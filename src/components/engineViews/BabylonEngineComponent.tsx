@@ -1,6 +1,7 @@
 import React, {useEffect, useRef, useState} from "react";
 import {Button, Col, Container, Form, Modal, Row, Tab, Tabs} from "react-bootstrap";
 import {
+    AbstractMesh,
     AnimationGroup,
     ArcRotateCamera,
     DirectionalLight,
@@ -73,8 +74,8 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
 
     const play = (shouldOverrideGraph: boolean) => {
         resetScene()
-            .then((res: {nodes: Node[], materials: Material[], animations: AnimationGroup[]}) => {
-                runGraph(babylonEngineRef, props.behaveGraphRef.current, sceneRef.current, res.nodes, res.materials, res.animations, shouldOverrideGraph);
+            .then((res: {nodes: Node[], materials: Material[], animations: AnimationGroup[], meshes: AbstractMesh[]}) => {
+                runGraph(babylonEngineRef, props.behaveGraphRef.current, sceneRef.current, res.nodes, res.materials, res.animations, res.meshes, shouldOverrideGraph);
                 setGraphRunning(true);
             })
     }
@@ -114,7 +115,12 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
 
         sceneRef.current?.createDefaultCamera(true, true, true);
 
-        return {nodes:buildGlTFNodeLayout(container.rootNodes[0]), animations: container.animationGroups, materials: container.materials};
+        return {
+            nodes: buildGlTFNodeLayout(container.rootNodes[0]), 
+            animations: container.animationGroups, 
+            materials: container.materials,
+            meshes: container.meshes,
+        };
     };
 
     const buildGlTFNodeLayout = (rootNode: Node): Node[] => {
@@ -147,12 +153,12 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
         return finalNodes;
     }
 
-    const runGraph = (babylonEngineRef: any, behaveGraph: any, scene: any, nodes: Node[], materials: Material[], animations: AnimationGroup[], shouldOverride: boolean) => {
+    const runGraph = (babylonEngineRef: any, behaveGraph: any, scene: any, nodes: Node[], materials: Material[], animations: AnimationGroup[], meshes: AbstractMesh[], shouldOverride: boolean) => {
         if (babylonEngineRef.current !== null) {
             babylonEngineRef.current.clearCustomEventListeners()
         }
 
-        const world = {glTFNodes: nodes, animations: animations, materials: materials};
+        const world = {glTFNodes: nodes, animations: animations, materials: materials, meshes: meshes};
         babylonEngineRef.current = new BabylonDecorator(new BasicBehaveEngine(60), world, scene)
 
         const extractedBehaveGraph = babylonEngineRef.current.extractBehaveGraphFromScene()

@@ -54,6 +54,7 @@ import {SquareRoot} from "./nodes/math/exponential/SquareRoot";
 import {CubeRoot} from "./nodes/math/exponential/CubeRoot";
 import {Random} from "./nodes/experimental/Random";
 import {Dot} from "./nodes/math/vector/Dot";
+import {Normalize} from "./nodes/math/vector/Normalize";
 import {Rotate2D} from "./nodes/math/vector/Rotate2D";
 import {Rotate3D} from "./nodes/math/vector/Rotate3D";
 import {VectorLength} from "./nodes/math/vector/VectorLength";
@@ -389,6 +390,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/ge", GreaterThanOrEqualTo);
         this.registerBehaveEngineNode("math/gt", GreaterThan);
         this.registerBehaveEngineNode("math/dot", Dot);
+        this.registerBehaveEngineNode("math/normalize", Normalize);
         this.registerBehaveEngineNode("math/rotate2d", Rotate2D);
         this.registerBehaveEngineNode("math/rotate3d", Rotate3D);
         this.registerBehaveEngineNode("math/length", VectorLength);

@@ -276,7 +276,7 @@ export class BabylonDecorator extends ADecorator {
                 return [NaN, NaN, NaN, NaN]
             }
 
-            return [activeCamera.rotationQuaternion.w, activeCamera.rotationQuaternion.x, activeCamera.rotationQuaternion.y, activeCamera.rotationQuaternion.z]
+            return [activeCamera.absoluteRotation.w, activeCamera.absoluteRotation.x, activeCamera.absoluteRotation.y, activeCamera.absoluteRotation.z]
         }, (path, value) => {
             //no-op
         }, "float4", true)

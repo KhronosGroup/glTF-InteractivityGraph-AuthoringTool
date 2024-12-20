@@ -2201,58 +2201,6 @@ export const arithmeticNodes = [
         }
     },
     {
-        type: "math/mix",
-        description: "Linear interpolation operation",
-        configuration: [],
-        input: {
-            flows: [],
-            values: [
-                {
-                    id: "a",
-                    description: "First Arg",
-                    types: [
-                        "float",
-                        "float2",
-                        "float3",
-                        "float4"
-                    ]
-                },
-                {
-                    id: "b",
-                    description: "Second Arg",
-                    types: [
-                        "float",
-                        "float2",
-                        "float3",
-                        "float4"
-                    ]
-                },
-                {
-                    id: "c",
-                    description: "Unclamped interpolation coefficient",
-                    types: [
-                        "float"
-                    ]
-                }
-            ]
-        },
-        output: {
-            flows: [],
-            values: [
-                {
-                    id: "value",
-                    description: "mix of a and b",
-                    types: [
-                        "float",
-                        "float2",
-                        "float3",
-                        "float4"
-                    ]
-                }
-            ]
-        }
-    },
-    {
         type: "math/clamp",
         description: "Clamp operation",
         configuration: [],

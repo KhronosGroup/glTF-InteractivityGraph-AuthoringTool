@@ -32,23 +32,23 @@ export class Mix extends BehaveEngineNode {
                 break;
             case "float2":
                 val = [
-                    this.mix(a[0], b[0], c),
-                    this.mix(a[1], b[1], c)
+                    this.mix(a[0], b[0], c[0]),
+                    this.mix(a[1], b[1], c[1])
                 ]
                 break;
             case "float3":
                 val = [
-                    this.mix(a[0], b[0], c),
-                    this.mix(a[1], b[1], c),
-                    this.mix(a[2], b[2], c),
+                    this.mix(a[0], b[0], c[0]),
+                    this.mix(a[1], b[1], c[1]),
+                    this.mix(a[2], b[2], c[2]),
                 ]
                 break;
             case "float4":
                 val = [
-                    this.mix(a[0], b[0], c),
-                    this.mix(a[1], b[1], c),
-                    this.mix(a[2], b[2], c),
-                    this.mix(a[3], b[3], c),
+                    this.mix(a[0], b[0], c[0]),
+                    this.mix(a[1], b[1], c[1]),
+                    this.mix(a[2], b[2], c[2]),
+                    this.mix(a[3], b[3], c[3]),
                 ]
                 break
             default:

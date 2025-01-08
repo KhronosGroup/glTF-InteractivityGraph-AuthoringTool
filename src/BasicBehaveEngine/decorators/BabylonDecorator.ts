@@ -261,13 +261,13 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/nodes/${maxGltfNode}/rotation`, (path) => {
             const parts: string[] = path.split("/");
             return [
-                (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).rotationQuaternion?.w,
                 (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).rotationQuaternion?.x,
                 (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).rotationQuaternion?.y,
-                (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).rotationQuaternion?.z];
+                (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).rotationQuaternion?.z,
+                (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).rotationQuaternion?.w];
         }, (path, value) => {
             const parts: string[] = path.split("/");
-            (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).rotationQuaternion = new Quaternion(value[1], value[2], value[3], value[0]);
+            (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).rotationQuaternion = new Quaternion(value[0], value[1], value[2], value[3]);
         }, "float4", false);
 
         this.registerJsonPointer(`/activeCamera/rotation`, (path) => {

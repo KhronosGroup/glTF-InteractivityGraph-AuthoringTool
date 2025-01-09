@@ -95,6 +95,7 @@ import {RightShift} from "./nodes/math/bitwise/RightShift";
 import {CountLeadingZeros} from "./nodes/math/bitwise/CountLeadingZeros";
 import {CountOneBits} from "./nodes/math/bitwise/CountOneBits";
 import {CountTrailingZeros} from "./nodes/math/bitwise/CountTrailingZeros";
+import { Fraction } from "./nodes/math/arithmetic/Fraction";
 
 export interface ICustomEventListener {
     type: string,
@@ -356,6 +357,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/sign", Sign);
         this.registerBehaveEngineNode("math/trunc", Truncate);
         this.registerBehaveEngineNode("math/floor", Floor);
+        this.registerBehaveEngineNode("math/fract", Fraction);
         this.registerBehaveEngineNode("math/ceil", Ceil);
         this.registerBehaveEngineNode("math/neg", Negate);
         this.registerBehaveEngineNode("math/add", Add);

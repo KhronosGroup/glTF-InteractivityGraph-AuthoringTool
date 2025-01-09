@@ -96,6 +96,13 @@ import {CountLeadingZeros} from "./nodes/math/bitwise/CountLeadingZeros";
 import {CountOneBits} from "./nodes/math/bitwise/CountOneBits";
 import {CountTrailingZeros} from "./nodes/math/bitwise/CountTrailingZeros";
 import { Fraction } from "./nodes/math/arithmetic/Fraction";
+import { HyperbolicSine } from "./nodes/math/hyperbolic/HyperbolicSine";
+import { InverseHyperbolicSine } from "./nodes/math/hyperbolic/InverseHyperbolicSine";
+import { InverseHyperbolicCosine } from "./nodes/math/hyperbolic/InverseHyperbolicCosine";
+import { InverseHyperbolicTangent } from "./nodes/math/hyperbolic/InverseHyperbolicTangent";
+import { Exponential } from "./nodes/math/exponential/Exponential";
+import { HyperbolicCosine } from "./nodes/math/hyperbolic/HyperbolicCosine";
+import { HyperbolicTangent } from "./nodes/math/hyperbolic/HyperbolicTangent";
 
 export interface ICustomEventListener {
     type: string,
@@ -379,6 +386,13 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/acos", Arccosine);
         this.registerBehaveEngineNode("math/atan", Arctangent);
         this.registerBehaveEngineNode("math/atan2", Arctangent2);
+        this.registerBehaveEngineNode("math/sinh", HyperbolicSine);
+        this.registerBehaveEngineNode("math/cosh", HyperbolicCosine);
+        this.registerBehaveEngineNode("math/tanh", HyperbolicTangent);
+        this.registerBehaveEngineNode("math/asinh", InverseHyperbolicSine);
+        this.registerBehaveEngineNode("math/acosh", InverseHyperbolicCosine);
+        this.registerBehaveEngineNode("math/atanh", InverseHyperbolicTangent);
+        this.registerBehaveEngineNode("math/exp", Exponential);
         this.registerBehaveEngineNode("math/log", Log);
         this.registerBehaveEngineNode("math/log2", Log2);
         this.registerBehaveEngineNode("math/log10", Log10);

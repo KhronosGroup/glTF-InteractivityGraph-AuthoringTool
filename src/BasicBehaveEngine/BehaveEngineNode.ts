@@ -195,7 +195,8 @@ export class BehaveEngineNode {
             const cachedValue = this.graphEngine.getValueEvaluationCacheValue(`${val.node}-${val.socket}`);
             if (cachedValue !== undefined) {
                 this.values[val.id] = {...this.values[val.id], type: cachedValue.type};
-                return cachedValue.value;
+                const typeName = this.getType(cachedValue.type!);
+                return this.parseType(typeName, cachedValue.value);
             }
 
             // the value depends on the output of another node's socket, so we need to go and determine that

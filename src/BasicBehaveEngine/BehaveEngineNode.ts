@@ -180,7 +180,11 @@ export class BehaveEngineNode {
     protected evaluateAllValues(vals: string[]): Record<string, any> {
         const res: Record<string, any> = {};
         for (let i = 0; i < vals.length; i++) {
-            res[vals[i]] = this.evaluateValue(this.values[vals[i]]);
+            const val = this.evaluateValue(this.values[vals[i]]);
+            if (Array.isArray(val) && val.length === 1) {
+                console.error("This should not happen – an array with a single value was returned");
+            }
+            res[vals[i]] = val;
         }
         return res;
     }

@@ -3779,37 +3779,6 @@ export const vectorNodes: IAuthoringNode[] = [
         }
     },
     {
-        type: "math/length",
-        description: "Length of a Vector",
-        configuration: [],
-        input: {
-            flows: [],
-            values: [
-                {
-                    id: "a",
-                    description: "Vector",
-                    types: [
-                        "float2",
-                        "float3",
-                        "float4"
-                    ]
-                }
-            ]
-        },
-        output: {
-            flows: [],
-            values: [
-                {
-                    id: "value",
-                    description: "Length",
-                    types: [
-                        "float"
-                    ]
-                }
-            ]
-        }
-    },
-    {
         type: "math/cross",
         description: "Cross Product",
         configuration: [],
@@ -3840,35 +3809,6 @@ export const vectorNodes: IAuthoringNode[] = [
                     description: "Cross product",
                     types: [
                         "float3"
-                    ]
-                }
-            ]
-        }
-    },
-    {
-        type: "math/length",
-        description: "Vector Length",
-        configuration: [],
-        input: {
-            flows: [],
-            values: [
-                {
-                    id: "a",
-                    description: "Vector",
-                    types: [
-                        "float2", "float3", "float4"
-                    ]
-                }
-            ]
-        },
-        output: {
-            flows: [],
-            values: [
-                {
-                    id: "value",
-                    description: "Length of vector",
-                    types: [
-                        "float"
                     ]
                 }
             ]

@@ -2118,41 +2118,6 @@ export const arithmeticNodes = [
         }
     },
     {
-        type: "math/saturate",
-        description: "Saturate operation",
-        configuration: [],
-        input: {
-            flows: [],
-            values: [
-                {
-                    id: "a",
-                    description: "First Arg",
-                    types: [
-                        "float",
-                        "float2",
-                        "float3",
-                        "float4"
-                    ]
-                }
-            ]
-        },
-        output: {
-            flows: [],
-            values: [
-                {
-                    id: "value",
-                    description: "Clamps between 0 and 1",
-                    types: [
-                        "float",
-                        "float2",
-                        "float3",
-                        "float4"
-                    ]
-                }
-            ]
-        }
-    },
-    {
         type: "math/max",
         description: "Maximum operation",
         configuration: [],

@@ -115,6 +115,8 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
 
         sceneRef.current?.createDefaultCamera(true, true, true);
 
+        //TODO: the true meshes of glTF are not the ones babylon exposes as objects (these are instantiated node meshes) we should find a way to pass the mesh itself and not the instantiation via a node
+        // or else we have cases where two nodes refere to the single mesh => we will have 2 meshes where really we only truly have one in glTF
         return {
             nodes: buildGlTFNodeLayout(container.rootNodes[0]), 
             animations: container.animationGroups, 

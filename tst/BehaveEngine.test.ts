@@ -442,7 +442,7 @@ describe('BehaveEngine', () => {
         await new Promise((resolve) => setTimeout(resolve, 250));
         expect(babylonWorld.glTFNodes[0].scaling).toEqual(new Vector3(4,5,6));
         expect(babylonWorld.glTFNodes[0].position).toEqual(new Vector3(10,20,30));
-        expect(babylonWorld.glTFNodes[0].rotationQuaternion).toEqual(new Quaternion(0,0,1, 1.57));
+        expect(babylonWorld.glTFNodes[0].rotationQuaternion).toEqual(new Quaternion(1.57,0,0, 1));
     });
 
     it('should not execute given invalid node type graph', async () => {
@@ -656,13 +656,13 @@ describe('BehaveEngine', () => {
         };
 
         let executionLog = "";
-        loggingBehaveEngine = new LoggingDecorator(new BasicBehaveEngine( 1), (line:string) => executionLog += line, {});
+        loggingBehaveEngine = new LoggingDecorator(new BasicBehaveEngine(1), (line:string) => executionLog += line, {});
         loggingBehaveEngine.addCustomEventListener("KHR_INTERACTIVITY:MyCustomMath", (e:any) => {
             expect(e.detail.outFloat).toEqual(42)
         })
         loggingBehaveEngine.loadBehaveGraph(mathExampleNodeGraph);
         await new Promise((resolve) => setTimeout(resolve, 250));
-        expect(executionLog).toEqual("Adding {\"node\":0,\"id\":\"start\"} flow to queueRunning OnStart: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":4,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":4,\"socket\":\"in\"} flowRunning DotNode: input values: {\"a\":{\"id\":\"a\",\"value\":[10,10,10],\"type\":4},\"b\":{\"id\":\"b\",\"value\":[1,2,3],\"type\":4}}, output flows: {}Running MultiplyNode: input values: {\"b\":{\"id\":\"b\",\"value\":[2],\"type\":2},\"a\":{\"id\":\"a\",\"node\":1,\"socket\":\"val\",\"type\":2}}, output flows: {}Running SubtractNode: input values: {\"b\":{\"id\":\"b\",\"value\":[78],\"type\":2},\"a\":{\"id\":\"a\",\"node\":2,\"socket\":\"val\",\"type\":2}}, output flows: {}Running Send: input values: {\"outFloat\":{\"id\":\"outFloat\",\"node\":3,\"socket\":\"val\",\"type\":2}}, output flows: {}");
+        expect(executionLog).toEqual("Adding {\"node\":0,\"id\":\"start\"} flow to queueRunning OnStart: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":4,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":4,\"socket\":\"in\"} flowRunning DotNode: input values: {\"a\":{\"id\":\"a\",\"value\":[10,10,10],\"type\":4},\"b\":{\"id\":\"b\",\"value\":[1,2,3],\"type\":4}}, output flows: {}Running MultiplyNode: input values: {\"b\":{\"id\":\"b\",\"value\":[2],\"type\":2},\"a\":{\"id\":\"a\",\"node\":1,\"socket\":\"value\",\"type\":2}}, output flows: {}Running SubtractNode: input values: {\"b\":{\"id\":\"b\",\"value\":[78],\"type\":2},\"a\":{\"id\":\"a\",\"node\":2,\"socket\":\"value\",\"type\":2}}, output flows: {}Running Send: input values: {\"outFloat\":{\"id\":\"outFloat\",\"node\":3,\"socket\":\"value\",\"type\":2}}, output flows: {}");
     });
 
     it("should do world pointer operations", async () => {
@@ -843,9 +843,10 @@ describe('BehaveEngine', () => {
         loggingBehaveEngine = new LoggingDecorator(new BasicBehaveEngine( 30), (line:string) => executionLog += line, loggingWorld);
         loggingBehaveEngine.loadBehaveGraph(worldPointerGraph);
         await new Promise((resolve) => setTimeout(resolve, 250));
+        console.log(loggingWorld.nodes[0]);
         expect(loggingWorld.nodes[0].scale).toEqual([1,1,1]);
         expect(loggingWorld.nodes[0].translation).toEqual([0,3,0]);
-        expect(executionLog).toEqual("Adding {\"node\":0,\"id\":\"start\"} flow to queueRunning OnStart: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":1,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":1,\"socket\":\"in\"} flowRunning Sequence: input values: {}, output flows: {\"0\":{\"id\":\"0\",\"node\":2,\"socket\":\"in\"},\"1\":{\"id\":\"1\",\"node\":6,\"socket\":\"in\"}}Executing {\"id\":\"0\",\"node\":2,\"socket\":\"in\"} flowRunning PointerAnimateTo: input values: {\"val\":{\"id\":\"val\",\"value\":[5,5,5],\"type\":4},\"easingDuration\":{\"id\":\"easingDuration\",\"value\":[0.1],\"type\":2}}, output flows: {\"done\":{\"id\":\"done\",\"node\":3,\"socket\":\"in\"}}Executing {\"id\":\"1\",\"node\":6,\"socket\":\"in\"} flowRunning PointerGet: input values: {\"nodeIndex\":{\"id\":\"nodeIndex\",\"value\":[0],\"type\":1}}, output flows: {}Running AddNode: input values: {\"b\":{\"id\":\"b\",\"value\":[0,5,0],\"type\":4},\"a\":{\"id\":\"a\",\"node\":4,\"socket\":\"value\",\"type\":4}}, output flows: {}Running PointerAnimateTo: input values: {\"nodeIndex\":{\"id\":\"nodeIndex\",\"value\":[0],\"type\":1},\"val\":{\"id\":\"val\",\"node\":5,\"socket\":\"val\",\"type\":4},\"easingDuration\":{\"id\":\"easingDuration\",\"value\":[0.1],\"type\":2}}, output flows: {}Adding {\"id\":\"done\",\"node\":3,\"socket\":\"in\"} flow to queueRunning PointerSet: input values: {\"value\":{\"id\":\"value\",\"value\":[1,1,1],\"type\":4}}, output flows: {}");
+        expect(executionLog).toEqual("Adding {\"node\":0,\"id\":\"start\"} flow to queueRunning OnStart: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":1,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":1,\"socket\":\"in\"} flowRunning Sequence: input values: {}, output flows: {\"0\":{\"id\":\"0\",\"node\":2,\"socket\":\"in\"},\"1\":{\"id\":\"1\",\"node\":6,\"socket\":\"in\"}}Executing {\"id\":\"0\",\"node\":2,\"socket\":\"in\"} flowRunning PointerAnimateTo: input values: {\"value\":{\"id\":\"value\",\"value\":[5,5,5],\"type\":4},\"easingDuration\":{\"id\":\"easingDuration\",\"value\":[0.1],\"type\":2}}, output flows: {\"done\":{\"id\":\"done\",\"node\":3,\"socket\":\"in\"}}Executing {\"id\":\"1\",\"node\":6,\"socket\":\"in\"} flowRunning PointerGet: input values: {\"nodeIndex\":{\"id\":\"nodeIndex\",\"value\":[0],\"type\":1}}, output flows: {}Running AddNode: input values: {\"b\":{\"id\":\"b\",\"value\":[0,5,0],\"type\":4},\"a\":{\"id\":\"a\",\"node\":4,\"socket\":\"value\",\"type\":4}}, output flows: {}Running PointerAnimateTo: input values: {\"nodeIndex\":{\"id\":\"nodeIndex\",\"value\":[0],\"type\":1},\"value\":{\"id\":\"value\",\"node\":5,\"socket\":\"value\",\"type\":4},\"easingDuration\":{\"id\":\"easingDuration\",\"value\":[0.1],\"type\":2}}, output flows: {}Adding {\"id\":\"done\",\"node\":3,\"socket\":\"in\"} flow to queueRunning PointerSet: input values: {\"value\":{\"id\":\"value\",\"value\":[1,1,1],\"type\":4}}, output flows: {}");
     });
 
     it("should tick 5 times", async () => {
@@ -1150,7 +1151,7 @@ describe('BehaveEngine', () => {
                         {
                             "id": "a",
                             "node": 1,
-                            "socket": "cum"
+                            "socket": "value"
                         }
                     ],
                     "configuration": [],
@@ -1164,7 +1165,7 @@ describe('BehaveEngine', () => {
                     "type": "variable/set",
                     "values": [
                         {
-                            "id": "cum",
+                            "id": "value",
                             "node": 2,
                             "socket": "value"
                         }
@@ -1208,7 +1209,7 @@ describe('BehaveEngine', () => {
                         {
                             "id": "sum",
                             "node": 1,
-                            "socket": "cum"
+                            "socket": "value"
                         }
                     ],
                     "configuration": [
@@ -1294,7 +1295,7 @@ describe('BehaveEngine', () => {
         loggingBehaveEngine.emitCustomEvent("KHR_INTERACTIVITY:MyAdd", {toAdd: 7});
         await new Promise((resolve) => setTimeout(resolve, 250));
         loggingBehaveEngine.emitCustomEvent("KHR_INTERACTIVITY:triggerSum", {});
-        expect(executionLog).toEqual("Running CustomEventReceiveNode: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":3,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":3,\"socket\":\"in\"} flowRunning VariableGetNode: input values: {}, output flows: {}Running AddNode: input values: {\"b\":{\"id\":\"b\",\"node\":0,\"socket\":\"toAdd\",\"type\":2},\"a\":{\"id\":\"a\",\"node\":1,\"socket\":\"cum\",\"type\":2}}, output flows: {}Running VariableSet: input values: {\"cum\":{\"id\":\"cum\",\"node\":2,\"socket\":\"val\",\"type\":2}}, output flows: {}Running CustomEventReceiveNode: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":3,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":3,\"socket\":\"in\"} flowRunning VariableGetNode: input values: {}, output flows: {}Running AddNode: input values: {\"b\":{\"id\":\"b\",\"node\":0,\"socket\":\"toAdd\",\"type\":2},\"a\":{\"id\":\"a\",\"node\":1,\"socket\":\"cum\",\"type\":2}}, output flows: {}Running VariableSet: input values: {\"cum\":{\"id\":\"cum\",\"node\":2,\"socket\":\"val\",\"type\":2}}, output flows: {}Running CustomEventReceiveNode: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":5,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":5,\"socket\":\"in\"} flowRunning VariableGetNode: input values: {}, output flows: {}Running Send: input values: {\"sum\":{\"id\":\"sum\",\"node\":1,\"socket\":\"cum\",\"type\":2}}, output flows: {}");
+        expect(executionLog).toEqual("Running CustomEventReceiveNode: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":3,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":3,\"socket\":\"in\"} flowRunning VariableGetNode: input values: {}, output flows: {}Running AddNode: input values: {\"b\":{\"id\":\"b\",\"node\":0,\"socket\":\"toAdd\",\"type\":2},\"a\":{\"id\":\"a\",\"node\":1,\"socket\":\"value\",\"type\":2}}, output flows: {}Running VariableSet: input values: {\"value\":{\"id\":\"value\",\"node\":2,\"socket\":\"value\",\"type\":2}}, output flows: {}Running CustomEventReceiveNode: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":3,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":3,\"socket\":\"in\"} flowRunning VariableGetNode: input values: {}, output flows: {}Running AddNode: input values: {\"b\":{\"id\":\"b\",\"node\":0,\"socket\":\"toAdd\",\"type\":2},\"a\":{\"id\":\"a\",\"node\":1,\"socket\":\"value\",\"type\":2}}, output flows: {}Running VariableSet: input values: {\"value\":{\"id\":\"value\",\"node\":2,\"socket\":\"value\",\"type\":2}}, output flows: {}Running CustomEventReceiveNode: input values: {}, output flows: {\"out\":{\"id\":\"out\",\"node\":5,\"socket\":\"in\"}}Executing {\"id\":\"out\",\"node\":5,\"socket\":\"in\"} flowRunning VariableGetNode: input values: {}, output flows: {}Running Send: input values: {\"sum\":{\"id\":\"sum\",\"node\":1,\"socket\":\"value\",\"type\":2}}, output flows: {}")
     });
 
     it("should re-evaluate condition each loop iteration", async () => {

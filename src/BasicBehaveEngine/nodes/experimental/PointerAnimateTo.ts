@@ -56,7 +56,7 @@ export class PointerAnimateTo extends BehaveEngineNode {
         const configVals = this.evaluateAllValues([...this._pointerVals].map(val => val.id));
         const requiredVals = this.evaluateAllValues([...this.REQUIRED_VALUES].map(val => val.id));
         const populatedPath = this.populatePath(this._pointer, configVals)
-        const targetValue = requiredVals.val;
+        const targetValue = requiredVals.value;
         const easingDuration = requiredVals.easingDuration;
 
         const easingParameters: any = {
@@ -76,6 +76,7 @@ export class PointerAnimateTo extends BehaveEngineNode {
         if (this.graphEngine.isValidJsonPtr(populatedPath)) {
             easingParameters.valueType = this.graphEngine.getPathtypeName(populatedPath)!;
             easingParameters.initialValue = this.graphEngine.getPathValue(populatedPath);
+            console.log(populatedPath, easingParameters);
 
             this.graphEngine.animateProperty(populatedPath, easingParameters, () => {
                 if (this.flows.done) {

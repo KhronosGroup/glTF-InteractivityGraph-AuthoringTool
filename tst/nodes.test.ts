@@ -52,7 +52,6 @@ import {Power} from "../src/BasicBehaveEngine/nodes/math/exponential/Power";
 import {standardTypes} from "../src/authoring/AuthoringNodeSpecs";
 import {Clamp} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Clamp";
 import {Saturate} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Saturate";
-import {Interpolate} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Interpolate";
 import {Negate} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Negate";
 import {Fraction} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Fraction";
 import {Exponential} from "../src/BasicBehaveEngine/nodes/math/exponential/Exponential";
@@ -454,7 +453,7 @@ describe('nodes', () => {
             variables: [{ id: 'testVariable', value: [42], initialValue: [42] }],
         });
 
-        const res = await variableGet.processNode()['testVariable'];
+        const res = await variableGet.processNode()['value'];
         expect(res.value[0]).toBe(42);
     });
 
@@ -463,7 +462,7 @@ describe('nodes', () => {
             ...defaultProps,
             configuration: [{ id: 'variable', value: 0 }],
             variables: [{ id: 'testVariable', initialValue: 42 }],
-            values: [{ id: 'testVariable', value: [10], type: 1 }],
+            values: [{ id: 'value', value: [10], type: 1 }],
         });
 
         await variableSet.processNode('in');
@@ -1116,30 +1115,6 @@ describe('nodes', () => {
         expect(val['value'].value[2]).toBe(9);
     });
 
-    it("math/saturate", () => {
-        let sat: Saturate = new Saturate({
-            ...defaultProps,
-            values: [
-                { id: 'a', value: [2], type: 2 },
-            ]
-        });
-
-        let val = sat.processNode();
-        expect(val['value'].value[0]).toBe(1);
-
-        sat = new Saturate({
-            ...defaultProps,
-            values: [
-                { id: 'a', value: [2, 0.5, -2], type: 3 }
-            ]
-        });
-
-        val = sat.processNode();
-        expect(val['value'].value[0]).toBe(1);
-        expect(val['value'].value[1]).toBe(0.5);
-        expect(val['value'].value[2]).toBe(0);
-    });
-
     it("math/max", () => {
         let max: Max = new Max({
             ...defaultProps,
@@ -1190,34 +1165,6 @@ describe('nodes', () => {
         expect(val['value'].value[0]).toBe(-10);
         expect(val['value'].value[1]).toBe(6);
         expect(val['value'].value[2]).toBe(-10);
-    });
-
-    it("math/mix", () => {
-        let mix: Mix = new Mix({
-            ...defaultProps,
-            values: [
-                { id: 'a', value: [1], type: 2 },
-                { id: 'b', value: [2], type: 2 },
-                { id: 'c', value: [0.5], type: 2 }
-            ]
-        });
-
-        let val = mix.processNode();
-        expect(val['value'].value[0]).toBe(1.5);
-
-        mix = new Mix({
-            ...defaultProps,
-            values: [
-                { id: 'a', value: [0, 1, 3], type: 4 },
-                { id: 'b', value: [1, 2, 4], type: 4 },
-                { id: 'c', value: [0.5], type: 2 }
-            ]
-        });
-
-        val = mix.processNode();
-        expect(val['value'].value[0]).toBe(0.5);
-        expect(val['value'].value[1]).toBe(1.5);
-        expect(val['value'].value[2]).toBe(3.5);
     });
 
     it("math/rad", () => {
@@ -1662,7 +1609,7 @@ describe('nodes', () => {
     });
 
     it("math/mix", () => {
-        let mix: Interpolate = new Interpolate({
+        let mix: Mix = new Mix({
             ...defaultProps,
             values: [
                 {id: 'a', value: [2.5], type: 2},
@@ -1674,7 +1621,7 @@ describe('nodes', () => {
         let val = mix.processNode();
         expect(val['value'].value[0]).toBe(2);
 
-        mix = new Interpolate({
+        mix = new Mix({
             ...defaultProps,
             values: [
                 {id: 'a', value: [-1, 0.5, 10] , type: 4},

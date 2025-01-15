@@ -18,7 +18,7 @@ export class OnTickNode extends BehaveEngineNode {
         const tickTime = Date.now() / 1000;
         if (isNaN(this._startTime)) {
             this.outValues.timeSinceStart = { id: "timeSinceStart", value: [0], type: this._floatTypeIndex };
-            this.outValues.timeSinceLastTick = { id: "timeSinceLastTick", value: [0], type: this._floatTypeIndex };
+            this.outValues.timeSinceLastTick = { id: "timeSinceLastTick", value: [NaN], type: this._floatTypeIndex };
             this._startTime = tickTime;
         } else {
             this.outValues.timeSinceStart = { id: "timeSinceStart", value: [tickTime - this._startTime], type: this._floatTypeIndex };

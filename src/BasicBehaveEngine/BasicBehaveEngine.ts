@@ -286,11 +286,9 @@ export class BasicBehaveEngine implements IBehaveEngine {
             .map((node, idx) => node.type === "event/onStart" ? idx : -1)
             .filter(idx => idx !== -1);
 
-        for (const startNodeIndex of onStartIndices) {
-            if (startNodeIndex !== -1) {
-                const startFlow: IFlow = {node: startNodeIndex, id: "start"}
-                this.addEventToWorkQueue(startFlow);
-            }
+        for (const startNodeIndex of onStartIndices) {            
+            const startFlow: IFlow = {node: startNodeIndex, id: "start"}
+            this.addEventToWorkQueue(startFlow);
         }
 
         this.executeEventQueue();

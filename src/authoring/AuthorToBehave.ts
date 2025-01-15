@@ -160,7 +160,7 @@ const isNullish = (value: any): boolean => value === undefined || value === null
 const castParameter = (value: any, signature: string) => {
     switch (signature) {
         case "bool":
-            return [value === "true" || value === true];
+            return  typeof value === "string" ? [value === "true"] : value;
         case "int":
         case "float":
             return [Number(value)];

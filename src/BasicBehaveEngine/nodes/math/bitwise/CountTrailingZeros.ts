@@ -17,7 +17,7 @@ export class CountTrailingZeros extends BehaveEngineNode {
         if (typeA !== "int") {
             throw Error("invalid input type")
         }
-        let val = a ? (31 - Math.clz32(a & -a)) : 32;
+        const val = a ? (31 - Math.clz32(a & -a)) : 32;
         return {'value': {id: "value", value: [val], type: this.getTypeIndex('int')}}
     }
 }

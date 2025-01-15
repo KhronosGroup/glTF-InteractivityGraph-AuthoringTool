@@ -99,7 +99,25 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
             }
         }
         if (props.data.configuration.cases !== undefined) {
-            const cases: number[] = JSON.parse(props.data.configuration.cases);
+            let cases = props.data.configuration.cases;
+            // Allow input formats in the UI, such as:
+            // - 0,1, (while typing)
+            // - [0,1,2 (while typing)
+            // - [0,1,2]
+            // - 0,1,2
+            if (typeof cases === "string") {
+                if (cases.endsWith(",")) cases = cases.slice(0, -1);
+                cases = cases.replace(/\s/g, '');
+                if (!cases.startsWith("[")) cases = `[${cases}`;
+                if (!cases.endsWith("]")) cases = `${cases}]`;
+                try {
+                    cases = JSON.parse(cases);
+                }
+                catch (e) {
+                    console.error("Couldn't parse configuration array string: ", cases, e);
+                    cases = [];
+                }
+            }            
             for (let i = 0; i < cases.length; i++) {
                 const outputFlow: IFlowSocketDescriptor = {
                     id: `${cases[i]}`,

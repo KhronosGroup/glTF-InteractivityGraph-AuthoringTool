@@ -180,7 +180,11 @@ export class BehaveEngineNode {
     protected evaluateAllValues(vals: string[]): Record<string, any> {
         const res: Record<string, any> = {};
         for (let i = 0; i < vals.length; i++) {
-            res[vals[i]] = this.evaluateValue(this.values[vals[i]]);
+            const val = this.evaluateValue(this.values[vals[i]]);
+            if (Array.isArray(val) && val.length === 1) {
+                console.error("This should not happen – an array with a single value was returned");
+            }
+            res[vals[i]] = val;
         }
         return res;
     }
@@ -195,7 +199,8 @@ export class BehaveEngineNode {
             const cachedValue = this.graphEngine.getValueEvaluationCacheValue(`${val.node}-${val.socket}`);
             if (cachedValue !== undefined) {
                 this.values[val.id] = {...this.values[val.id], type: cachedValue.type};
-                return cachedValue.value;
+                const typeName = this.getType(cachedValue.type!);
+                return this.parseType(typeName, cachedValue.value);
             }
 
             // the value depends on the output of another node's socket, so we need to go and determine that

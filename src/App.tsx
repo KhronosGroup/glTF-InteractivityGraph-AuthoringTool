@@ -8,7 +8,7 @@ import {Tab, Tabs} from "react-bootstrap";
 import {Spacer} from "./components/Spacer";
 
 export const App = () => {
-  const [engineType, setEngineType] = useState<EngineType>(EngineType.LOGGING);
+  const [engineType, setEngineType] = useState<EngineType>(EngineType.BABYLON);
   const [behaveGraphFromGlTF, setBehaveGraphFromGlTF] = useState<null | string>(null)
   const behaveGraphRef = useRef<any>({})
 
@@ -35,7 +35,7 @@ interface EngineSelectorProps {
 }
 
 export const EngineSelector: React.FC<EngineSelectorProps> = ({setEngineType}) => {
-    const [activeKey, setActiveKey] = useState('1');
+    const [activeKey, setActiveKey] = useState('2');
     const handleEngineChange = (key: any) => {
         let engine;
         switch (key) {

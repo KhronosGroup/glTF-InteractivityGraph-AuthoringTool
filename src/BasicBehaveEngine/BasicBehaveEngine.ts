@@ -34,6 +34,8 @@ import {Divide} from "./nodes/math/arithmetic/Divide";
 import {Remainder} from "./nodes/math/arithmetic/Remainder";
 import {Min} from "./nodes/math/arithmetic/Min";
 import {Max} from "./nodes/math/arithmetic/Max";
+import {Mix} from "./nodes/math/arithmetic/Mix";
+import {Saturate} from "./nodes/math/arithmetic/Saturate";
 import {Clamp} from "./nodes/math/arithmetic/Clamp";
 import {DegreeToRadians} from "./nodes/math/trigonometry/DegreeToRadians";
 import {RadiansToDegrees} from "./nodes/math/trigonometry/RadiansToDegrees";
@@ -52,8 +54,10 @@ import {SquareRoot} from "./nodes/math/exponential/SquareRoot";
 import {CubeRoot} from "./nodes/math/exponential/CubeRoot";
 import {Random} from "./nodes/experimental/Random";
 import {Dot} from "./nodes/math/vector/Dot";
+import {Normalize} from "./nodes/math/vector/Normalize";
 import {Rotate2D} from "./nodes/math/vector/Rotate2D";
 import {Rotate3D} from "./nodes/math/vector/Rotate3D";
+import {VectorLength} from "./nodes/math/vector/VectorLength";
 import {IsInfNode} from "./nodes/math/special/IsInfNode";
 import {IsNaNNode} from "./nodes/math/special/IsNaNNode";
 import {LessThanOrEqualTo} from "./nodes/math/comparison/LessThanOrEqualTo";
@@ -82,6 +86,23 @@ import {Combine3} from "./nodes/math/combine/Combine3";
 import {Combine4} from "./nodes/math/combine/Combine4";
 import {Combine4x4} from "./nodes/math/combine/Combine4x4";
 import {PointerInterpolate} from "./nodes/pointer/PointerInterpolate";
+import {Not} from "./nodes/math/bitwise/Not";
+import {Xor} from "./nodes/math/bitwise/Xor";
+import {Or} from "./nodes/math/bitwise/Or";
+import {And} from "./nodes/math/bitwise/And";
+import {LeftShift} from "./nodes/math/bitwise/LeftShift";
+import {RightShift} from "./nodes/math/bitwise/RightShift";
+import {CountLeadingZeros} from "./nodes/math/bitwise/CountLeadingZeros";
+import {CountOneBits} from "./nodes/math/bitwise/CountOneBits";
+import {CountTrailingZeros} from "./nodes/math/bitwise/CountTrailingZeros";
+import { Fraction } from "./nodes/math/arithmetic/Fraction";
+import { HyperbolicSine } from "./nodes/math/hyperbolic/HyperbolicSine";
+import { InverseHyperbolicSine } from "./nodes/math/hyperbolic/InverseHyperbolicSine";
+import { InverseHyperbolicCosine } from "./nodes/math/hyperbolic/InverseHyperbolicCosine";
+import { InverseHyperbolicTangent } from "./nodes/math/hyperbolic/InverseHyperbolicTangent";
+import { Exponential } from "./nodes/math/exponential/Exponential";
+import { HyperbolicCosine } from "./nodes/math/hyperbolic/HyperbolicCosine";
+import { HyperbolicTangent } from "./nodes/math/hyperbolic/HyperbolicTangent";
 
 export interface ICustomEventListener {
     type: string,
@@ -97,7 +118,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
     protected registry: Map<string, any>;
     protected idToBehaviourNodeMap: Map<number, BehaveEngineNode>;
     private eventQueue: IEventQueueItem[];
-    protected onTickNodeIndex: number;
+    protected onTickNodeIndices: number[];
     private lastTickTime: number;
     private _scheduledDelays: NodeJS.Timeout[];
     protected nodes: any[];
@@ -119,7 +140,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this._fps = fps;
         this.valueEvaluationCache = new Map<string, IValue>();
         this.pathToWorldAnimationCallback = new Map<string, ICancelable>();
-        this.onTickNodeIndex = -1;
+        this.onTickNodeIndices = [];
         this.lastTickTime = 0;
         this.eventQueue = [];
         this.variables = [];
@@ -257,13 +278,19 @@ export class BasicBehaveEngine implements IBehaveEngine {
             index++;
         });
 
-        //find start node, and start graph
-        const startNodeIndex = this.nodes.findIndex(node => node.type === "event/onStart");
-        this.onTickNodeIndex = this.nodes.findIndex(node => node.type === "event/onTick");
-        if (startNodeIndex !== -1) {
+        this.onTickNodeIndices = this.nodes
+            .map((node, idx) => node.type === "event/onTick" ? idx : -1)
+            .filter(idx => idx !== -1);
+
+        const onStartIndices = this.nodes
+            .map((node, idx) => node.type === "event/onStart" ? idx : -1)
+            .filter(idx => idx !== -1);
+
+        for (const startNodeIndex of onStartIndices) {            
             const startFlow: IFlow = {node: startNodeIndex, id: "start"}
             this.addEventToWorkQueue(startFlow);
         }
+
         this.executeEventQueue();
     }
 
@@ -335,6 +362,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/sign", Sign);
         this.registerBehaveEngineNode("math/trunc", Truncate);
         this.registerBehaveEngineNode("math/floor", Floor);
+        this.registerBehaveEngineNode("math/fract", Fraction);
         this.registerBehaveEngineNode("math/ceil", Ceil);
         this.registerBehaveEngineNode("math/neg", Negate);
         this.registerBehaveEngineNode("math/add", Add);
@@ -344,6 +372,8 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/rem", Remainder);
         this.registerBehaveEngineNode("math/min", Min);
         this.registerBehaveEngineNode("math/max", Max);
+        this.registerBehaveEngineNode("math/mix", Mix);
+        this.registerBehaveEngineNode("math/saturate", Saturate);
         this.registerBehaveEngineNode("math/clamp", Clamp);
         this.registerBehaveEngineNode("math/rad", DegreeToRadians);
         this.registerBehaveEngineNode("math/deg", RadiansToDegrees);
@@ -354,6 +384,13 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/acos", Arccosine);
         this.registerBehaveEngineNode("math/atan", Arctangent);
         this.registerBehaveEngineNode("math/atan2", Arctangent2);
+        this.registerBehaveEngineNode("math/sinh", HyperbolicSine);
+        this.registerBehaveEngineNode("math/cosh", HyperbolicCosine);
+        this.registerBehaveEngineNode("math/tanh", HyperbolicTangent);
+        this.registerBehaveEngineNode("math/asinh", InverseHyperbolicSine);
+        this.registerBehaveEngineNode("math/acosh", InverseHyperbolicCosine);
+        this.registerBehaveEngineNode("math/atanh", InverseHyperbolicTangent);
+        this.registerBehaveEngineNode("math/exp", Exponential);
         this.registerBehaveEngineNode("math/log", Log);
         this.registerBehaveEngineNode("math/log2", Log2);
         this.registerBehaveEngineNode("math/log10", Log10);
@@ -367,8 +404,10 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/ge", GreaterThanOrEqualTo);
         this.registerBehaveEngineNode("math/gt", GreaterThan);
         this.registerBehaveEngineNode("math/dot", Dot);
+        this.registerBehaveEngineNode("math/normalize", Normalize);
         this.registerBehaveEngineNode("math/rotate2d", Rotate2D);
         this.registerBehaveEngineNode("math/rotate3d", Rotate3D);
+        this.registerBehaveEngineNode("math/length", VectorLength);
         this.registerBehaveEngineNode("math/isinf", IsInfNode);
         this.registerBehaveEngineNode("math/isnan", IsNaNNode);
         this.registerBehaveEngineNode("math/select", Select);
@@ -386,6 +425,15 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("type/floatToInt", FloatToInt);
         this.registerBehaveEngineNode("type/intToBool", IntToBool);
         this.registerBehaveEngineNode("type/intToFloat", IntToFloat);
+        this.registerBehaveEngineNode("math/not", Not);
+        this.registerBehaveEngineNode("math/xor", Xor);
+        this.registerBehaveEngineNode("math/or", Or);
+        this.registerBehaveEngineNode("math/and", And);
+        this.registerBehaveEngineNode("math/lsl", LeftShift);
+        this.registerBehaveEngineNode("math/asr", RightShift);
+        this.registerBehaveEngineNode("math/clz", CountLeadingZeros);
+        this.registerBehaveEngineNode("math/ctz", CountTrailingZeros);
+        this.registerBehaveEngineNode("math/popcnt", CountOneBits);
     }
 
     protected validateGraph = (behaviorGraph: any) => {
@@ -435,13 +483,13 @@ export class BasicBehaveEngine implements IBehaveEngine {
             eventQueueCopy.splice(0, 1);
         }
 
-        if (this.onTickNodeIndex !== -1) {
-            const tickFlow: IFlow = {node: this.onTickNodeIndex, id: "tick"}
+        for (const onTickNodeIndex of this.onTickNodeIndices) {
+            const tickFlow: IFlow = { node: onTickNodeIndex, id: "tick"}
             const tickNode: BehaveEngineNode = this.idToBehaviourNodeMap.get(tickFlow.node!)!;
 
             tickNode.processNode()
         }
-
+        
         setTimeout(() => {
             this.executeEventQueue()
         }, 1000 / this.fps)

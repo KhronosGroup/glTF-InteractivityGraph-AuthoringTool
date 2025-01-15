@@ -19,7 +19,7 @@ export class RightShift extends BehaveEngineNode {
         if (typeA !== "int" || typeB !== "int") {
             throw Error("invalid input type")
         }
-        let val = a >> b;
+        const val = a >> b;
         return {'value': {id: "value", value: [val], type: this.getTypeIndex('int')}}
     }
 }

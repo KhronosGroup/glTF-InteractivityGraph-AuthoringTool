@@ -103,3 +103,6 @@ To add your own pointer, simply add the logic for your getter and setter to the 
 3. [Continued New Node Support] The Spec is not finalized and there will be new nodes and updates to current nodes as it progresses
 4. [Refactor Node Inheritance Tree] Currently, all nodes extend the base [BehaveEngineNode](./src/BasicBehaveEngine/BehaveEngineNode.ts), as the node library progresses there may be the opportunity to split the inheritance tree (e.x. a pure functional node group vs. a side effect node group)
 5. [Subgraph Support] Subgraph support is currently being talked about, depending on if this will be done as a core piece or as an extension, the tool will need to be updated to allow authoring of subgraphs and the engine updated to support reading & running subgraphs.
+
+### Non normative implementations
+- writing mesh material with pointer path (will be replaced in the future when KHR_materials_variants is specified) > "/meshes/${nodeIndex}/primitives/${primitiveIndex}/material""

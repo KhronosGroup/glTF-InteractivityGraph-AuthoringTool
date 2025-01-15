@@ -24,6 +24,7 @@ const nodeTypes = authoringNodeSpecs.reduce((nodes, node) => {
 enum AuthoringComponentModelType {
     NODE_PICKER,
     JSON_VIEW,
+    NODE_LIST,
     UPLOAD_GRAPH,
     ADD_CUSTOM_EVENT,
     SHOW_CUSTOM_EVENTS,
@@ -151,6 +152,11 @@ export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromG
         setEdges(result[1]);
         setEvents(result[2]);
         setVariables(result[3]);
+
+        // Log all node types
+        const allNodeTypes = result[0].map(node => node.type);
+        const uniqueNodeTypes = new Set(allNodeTypes);
+        console.log(JSON.stringify(Array.from(uniqueNodeTypes)));
     }
 
     // handle clicking on the react flow pane
@@ -203,6 +209,9 @@ export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromG
                     <RenderIf shouldShow={authoringComponentModal === AuthoringComponentModelType.JSON_VIEW}>
                         <JSONViewComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)} getBehaviorGraph={getBehaveGraph}/>
                     </RenderIf>
+                    <RenderIf shouldShow={authoringComponentModal === AuthoringComponentModelType.NODE_LIST}>
+                        <NodeListComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)} getBehaviorGraph={getBehaveGraph}/>
+                    </RenderIf>
                     <RenderIf shouldShow={authoringComponentModal === AuthoringComponentModelType.ADD_CUSTOM_EVENT}>
                         <AddCustomEventComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)} pushCustomEvent={pushEvent}/>
                     </RenderIf>
@@ -231,6 +240,8 @@ export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromG
                             <Spacer width={0} height={8}/>
                             <hr/>
                             <Button variant="outline-primary" id={"show-json-btn"} onClick={() => setAuthoringComponentModal(AuthoringComponentModelType.JSON_VIEW)}>JSON View</Button>
+                            <Spacer width={0} height={8}/>
+                            <Button variant="outline-primary" id={"show-node-list-btn"} onClick={() => setAuthoringComponentModal(AuthoringComponentModelType.NODE_LIST)}>Node Types</Button>
                             <Spacer width={0} height={8}/>
                             <Button variant="outline-primary" id={"upload-graph-btn"} onClick={() => setAuthoringComponentModal(AuthoringComponentModelType.UPLOAD_GRAPH)}>Upload Graph</Button>
                         </div>
@@ -321,6 +332,50 @@ const JSONViewComponent = (props: {closeModal: any, getBehaviorGraph: any}) => {
             <Container style={{padding: 16}}>
                 <h3>JSON View</h3>
                 <pre style={{textAlign: "left", overflow:"scroll", height: 400, width: 400}}>{JSON.stringify(props.getBehaviorGraph(), undefined, ' ')}</pre>
+                <Row style={{ marginTop: 16 }}>
+                    <Col xs={12} md={6}>
+                        <Button variant={"outline-primary"}  style={{width: "100%"}} onClick={copyToClipboard}>
+                            {copied ? 'Copied!' : 'Copy to Clipboard'}
+                        </Button>
+                    </Col>
+                    <Col xs={12} md={6}>
+                        <Button variant={"outline-danger"} style={{width: "100%"}} onClick={() => props.closeModal()}>
+                            Cancel
+                        </Button>
+                    </Col>
+                </Row>
+            </Container>
+        </Panel>
+    )
+}
+
+
+const NodeListComponent = (props: {closeModal: any, getBehaviorGraph: any}) => {
+    const [copied, setCopied] = useState(false);
+
+    const getData = () => {
+        const graph = props.getBehaviorGraph();
+        const nodes = graph.nodes;
+        const nodeTypeSet = new Set(nodes.map((node: any) => node.type));
+        const nodeTypes = Array.from(nodeTypeSet);
+        return nodeTypes;
+    }
+
+    const copyToClipboard = async () => {
+        const jsonString = JSON.stringify(getData());
+        await navigator.clipboard.writeText(jsonString);
+
+        setCopied(true)
+        setTimeout(() => {
+            setCopied(false);
+        }, 2000); // Reset the copied state after 2 seconds
+    };
+
+    return (
+        <Panel id={"node-list-panel"} position={"top-center"} style={{border:"1px solid gray", background: "white"}}>
+            <Container style={{padding: 16}}>
+                <h3>Nde List</h3>
+                <pre style={{textAlign: "left", overflow:"scroll", height: 400, width: 400}}>{JSON.stringify(getData())}</pre>
                 <Row style={{ marginTop: 16 }}>
                     <Col xs={12} md={6}>
                         <Button variant={"outline-primary"}  style={{width: "100%"}} onClick={copyToClipboard}>

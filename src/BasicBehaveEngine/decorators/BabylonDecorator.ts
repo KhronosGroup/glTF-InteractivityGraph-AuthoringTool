@@ -42,6 +42,12 @@ export class BabylonDecorator extends ADecorator {
         this.behaveEngine.alertParentOnSelect = this.alertParentOnSelect
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
+        this.behaveEngine.alertParentOnHoverIn = this.alertParentOnHoverIn
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        this.behaveEngine.alertParentOnHoverOut = this.alertParentOnHoverOut
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         this.behaveEngine.addNodeClickedListener = this.addNodeClickedListener
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
@@ -255,13 +261,13 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/nodes/${maxGltfNode}/rotation`, (path) => {
             const parts: string[] = path.split("/");
             return [
-                (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).rotationQuaternion?.w,
                 (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).rotationQuaternion?.x,
                 (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).rotationQuaternion?.y,
-                (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).rotationQuaternion?.z];
+                (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).rotationQuaternion?.z,
+                (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).rotationQuaternion?.w];
         }, (path, value) => {
             const parts: string[] = path.split("/");
-            (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).rotationQuaternion = new Quaternion(value[1], value[2], value[3], value[0]);
+            (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).rotationQuaternion = new Quaternion(value[0], value[1], value[2], value[3]);
         }, "float4", false);
 
         this.registerJsonPointer(`/activeCamera/rotation`, (path) => {
@@ -270,7 +276,7 @@ export class BabylonDecorator extends ADecorator {
                 return [NaN, NaN, NaN, NaN]
             }
 
-            return [activeCamera.rotationQuaternion.w, activeCamera.rotationQuaternion.x, activeCamera.rotationQuaternion.y, activeCamera.rotationQuaternion.z]
+            return [activeCamera.absoluteRotation.x, activeCamera.absoluteRotation.y, activeCamera.absoluteRotation.z, activeCamera.absoluteRotation.w]
         }, (path, value) => {
             //no-op
         }, "float4", true)
@@ -720,7 +726,7 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/nodes/${maxGltfNode}/matrix`, (path) => {
             const parts: string[] = path.split("/");
             const node = this.world.glTFNodes[Number(parts[2])];
-            return (this.world.nodes[node] as AbstractMesh).getPoseMatrix().asArray();
+            return (this.world.glTFNodes[node] as AbstractMesh).getPoseMatrix().asArray();
         }, (path, value) => {
             //no-op
         }, "float4x4", true);
@@ -728,10 +734,31 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/nodes/${maxGltfNode}/globalMatrix`, (path) => {
             const parts: string[] = path.split("/");
             const node = this.world.glTFNodes[Number(parts[2])];
-            return (this.world.nodes[node] as AbstractMesh).getWorldMatrix().asArray();
+            return (node as AbstractMesh).getWorldMatrix().asArray();
         }, (path, value) => {
             //no-op
         }, "float4x4", true);
+
+        this.registerJsonPointer(`/nodes/${maxGltfNode}/mesh`, (path) => {
+            const parts: string[] = path.split("/");
+            const node = this.world.glTFNodes[Number(parts[2])];
+            return this.world.meshes.indexOf(node);
+        }, (path, value) => {
+            //no-op
+        }, "int", true);
+
+        this.registerJsonPointer(`/meshes/${maxGltfNode}/primitives/${maxGltfNode}/material`, (path) => {
+            const parts: string[] = path.split("/");
+            const mesh = this.world.glTFNodes[Number(parts[2])];
+            const primitive = mesh._primitiveBabylonMeshes[Number(parts[4])];
+            console.log("results", mesh, primitive, this.world.materials.indexOf(primitive.material));
+            return this.world.materials.indexOf(primitive.material);
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const mesh = this.world.glTFNodes[Number(parts[2])];
+            const primitive = mesh._primitiveBabylonMeshes[Number(parts[4])];
+            primitive.material = this.world.materials[value];
+        }, "int", false);
     }
 
     private swimDownSelectability(node: Node, parentSelctability: boolean) {
@@ -786,9 +813,13 @@ export class BabylonDecorator extends ADecorator {
                 } else if (targetMesh.getChildMeshes(false).includes(hit.pickedMesh) && hit.pickedMesh.metadata.onSelectCallback != null) {
                     return;
                 } else {
-                    const pos = [hit.pickedMesh.position.x, hit.pickedMesh.position.y, hit.pickedMesh.position.z];
+                    let pos = [hit.pickedMesh.position.x, hit.pickedMesh.position.y, hit.pickedMesh.position.z];
+                    if (hit.pickedPoint != null) {
+                        // Babylon.js uses a left-handed coordinate system, so we negate the x value to convert to right-handed
+                        pos = [-hit.pickedPoint.x, hit.pickedPoint.y, hit.pickedPoint.z];
+                    }
                     const hitNodeIndex = this.world.glTFNodes.findIndex((value: { uniqueId: number; }) => value.uniqueId === hit.pickedMesh!.uniqueId);
-                    callback(pos, hitNodeIndex, 0, [ray.origin.x, ray.origin.y, ray.origin.z]);
+                    callback(pos, hitNodeIndex, 0, [-ray.origin.x, ray.origin.y, ray.origin.z]);
                 }
             }
         });

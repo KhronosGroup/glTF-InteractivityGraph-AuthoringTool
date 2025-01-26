@@ -31,7 +31,6 @@ const validateGraphNodeNames = (nodes: Node[]) => {
  * @returns The Behave graph representation of the provided data.
  */
 export const authorToBehave = (nodes: Node[], edges: Edge[], events: ICustomEvent[], variables: IVariable[]) => {
-    console.log(nodes)
     const nodeTypeErrors = validateGraphNodeNames(nodes);
     if (nodeTypeErrors.length > 0) {
         throw new Error(`The graph has the following issues: ${nodeTypeErrors}`);
@@ -44,7 +43,6 @@ export const authorToBehave = (nodes: Node[], edges: Edge[], events: ICustomEven
 
     // loop through all the nodes and embed the edge data in them to correspond to the behave graph spec
     nodes.forEach((node) => {
-        console.log(node.data)
         const interactivityNode: IInteractivityNode = node.data.interactivityNode;
         if (interactivityNode === undefined) return;
         if (node.type === undefined) return;
@@ -53,9 +51,9 @@ export const authorToBehave = (nodes: Node[], edges: Edge[], events: ICustomEven
         const behaveNode: any = {
             id: node.id,
             type: node.type,
-            values: interactivityNode.values?.in || {},
+            values: interactivityNode.values?.input || {},
             configuration: interactivityNode.configuration || {},
-            flows: interactivityNode.flows?.out || {},
+            flows: interactivityNode.flows?.output || {},
             metadata: {
                 positionX: String(node.position.x),
                 positionY: String(node.position.y),
@@ -118,7 +116,7 @@ export const authorToBehave = (nodes: Node[], edges: Edge[], events: ICustomEven
         //         behaveNode.values.push({id: key.replace("in-", ""), value: castParameter((val as any).value, typename), type: typeIndex})
         //     });
         // }
-        const inFlows = Object.keys(interactivityNode.flows?.in || {})
+        const inFlows = Object.keys(interactivityNode.flows?.input || {})
 
         // look for all edges going into our current node which are not flows, meaning they are input value references
         edges
@@ -134,11 +132,15 @@ export const authorToBehave = (nodes: Node[], edges: Edge[], events: ICustomEven
             });
 
         // get all edges that go out of our node which are flows
+        const outVals = Object.keys(interactivityNode.values?.output || {});
+        console.log(interactivityNode)
         edges
             .filter((edge) => edge.source === node.id)
             .filter((edge) => !isNullish(edge.targetHandle) && !isNullish(edge.sourceHandle))
             .forEach((edge) => {
-                behaveNode.flows[edge.sourceHandle!] = {id: edge.sourceHandle, node: edge.target, socket: edge.targetHandle};
+                if (!outVals.includes(edge.sourceHandle!)) {
+                    behaveNode.flows[edge.sourceHandle!] = {id: edge.sourceHandle, node: edge.target, socket: edge.targetHandle};
+                }
             });
 
         graph.nodes?.push(behaveNode);

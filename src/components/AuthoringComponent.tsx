@@ -4,7 +4,6 @@ import ReactFlow, {
     Edge,
     NodeTypes, Panel, useEdgesState, useNodesState, useReactFlow, XYPosition
 } from 'reactflow';
-import {authoringNodeSpecs, ICustomEvent, IVariable, standardTypes} from "../authoring/AuthoringNodeSpecs";
 import {AuthoringGraphNode} from "../authoring/AuthoringGraphNode";
 import React, {useCallback, useEffect, useRef, useState} from "react";
 import {v4 as uuidv4} from "uuid";
@@ -15,14 +14,15 @@ import 'reactflow/dist/style.css';
 import {authorToBehave} from "../authoring/AuthorToBehave";
 import {behaveToAuthor} from "../authoring/BehaveToAuthor";
 import {Spacer} from "./Spacer";
-import {interactivityNodeSpecs, knownNodes} from "../types/nodes";
+import {interactivityNodeSpecs, knownNodes, standardTypes} from "../types/nodes";
+import { IInteractivityEvent, IInteractivityVariable } from '../types/InteractivityGraph';
 
 const nodeTypes = interactivityNodeSpecs.reduce((nodes, node) => {
     nodes[knownNodes[node.decleration].op] = (props: any) => {
         console.log(props);
         if (props.data.values !== undefined) {
             node.values = node.values || {};
-            node.values.in = props.data.values;
+            node.values.input = props.data.values;
         }
         if (props.data.configuration !== undefined) {
             node.configuration = props.data.configuration;
@@ -33,10 +33,6 @@ const nodeTypes = interactivityNodeSpecs.reduce((nodes, node) => {
     return nodes;
 }, {} as NodeTypes);
 
-// const nodeTypes = authoringNodeSpecs.reduce((nodes, node) => {
-//     nodes[node.type] = (props: any) => <AuthoringGraphNode node={node} {...props} />;
-//     return nodes;
-// }, {} as NodeTypes);
 
 enum AuthoringComponentModelType {
     NODE_PICKER,
@@ -50,7 +46,7 @@ enum AuthoringComponentModelType {
     NONE
 }
 
-const nodesWithConfigurations = authoringNodeSpecs.filter(node => node.configuration.length > 0).map(node => node.type);
+const nodesWithConfigurations = interactivityNodeSpecs.filter(node => node.configuration !== undefined).map(node => knownNodes[node.decleration].op);
 export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromGlTF: any}) => {
     const reactFlowRef = useRef<HTMLDivElement | null>(null);
     const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
@@ -65,7 +61,7 @@ export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromG
     //to handle the node picker props
     const [mousePos, setMousePos] = useState({x:0, y:0});
 
-    const hasIntersection = (arr1: string[], arr2: string[]): boolean => {
+    const hasIntersection = (arr1: any[], arr2: any[]): boolean => {
         const set1 = new Set(arr1);
 
         for (const item of arr2) {
@@ -91,27 +87,27 @@ export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromG
     const onConnect = useCallback((vals: Edge<any> | Connection) => {
         const sourceNodeId = vals.source;
         const sourceNodeType = nodes.find(node => node.id === sourceNodeId)!.type;
-        const sourceNodeSpec = authoringNodeSpecs.find(nodeSpec => nodeSpec.type === sourceNodeType);
+        const sourceNodeSpec = interactivityNodeSpecs.find(nodeSpec => knownNodes[nodeSpec.decleration].op === sourceNodeType);
         if (sourceNodeSpec === undefined) {return}
 
         const targetNodeId = vals.target;
         const targetNodeType = nodes.find(node => node.id === targetNodeId)!.type;
-        const targetNodeSpec = authoringNodeSpecs.find(nodeSpec => nodeSpec.type === targetNodeType);
+        const targetNodeSpec = interactivityNodeSpecs.find(nodeSpec => knownNodes[nodeSpec.decleration].op === targetNodeType);
         if (targetNodeSpec === undefined) {return}
 
         if (sourceNodeId === targetNodeId) {return}
 
-        const isConfigurableSocket = nodesWithConfigurations.includes(sourceNodeSpec.type) || nodesWithConfigurations.includes(targetNodeSpec.type) || sourceNodeType === "flow/sequence";
-
+        const isConfigurableSocket = nodesWithConfigurations.includes(knownNodes[sourceNodeSpec.decleration].op) || nodesWithConfigurations.includes(knownNodes[targetNodeSpec.decleration].op) || sourceNodeType === "flow/sequence";
+       
         // if one is flow and one isn't then do not connect
-        const sourceIsFlow = sourceNodeSpec.output.flows.find(flow => flow.id === vals.sourceHandle) !== undefined;
-        const targetIsFlow = targetNodeSpec.input.flows.find(flow => flow.id === vals.targetHandle) !== undefined;
+        const sourceIsFlow = sourceNodeSpec.flows?.output?.[vals.sourceHandle!] !== undefined;
+        const targetIsFlow = targetNodeSpec.flows?.input?.[vals.targetHandle!] !== undefined;
         if (!isConfigurableSocket && targetIsFlow !== sourceIsFlow) {return}
 
         if (!sourceIsFlow && !targetIsFlow) {
             // make sure the valueTypes are compatible
-            const sourceValueTypes = sourceNodeSpec.output.values.find(output => output.id === vals.sourceHandle)?.types;
-            const targetValueTypes = targetNodeSpec.input.values.find(input => input.id === vals.targetHandle)?.types;
+            const sourceValueTypes = sourceNodeSpec.values?.output?.[vals.sourceHandle!].typeOptions;
+            const targetValueTypes = targetNodeSpec.values?.input?.[vals.targetHandle!].typeOptions;
             if (!isConfigurableSocket && (sourceValueTypes === undefined || targetValueTypes === undefined || !hasIntersection(sourceValueTypes, targetValueTypes))) {return}
         }
 
@@ -419,7 +415,7 @@ const AddVariableComponent = (props: {closeModal: any, pushVariable: any}) => {
         if (idRef.current === null || initialValueRef.current === null || typeRef.current === null) {return}
         if (idRef.current.value === "" || initialValueRef.current.value === "" || typeRef.current.value === "") {return}
 
-        const variable: IVariable = {id: idRef.current.value, value: initialValueRef.current.value, type: typeRef.current.selectedIndex};
+        const variable: IInteractivityVariable = {name: idRef.current.value, value: castParameter(initialValueRef.current.value, standardTypes[typeRef.current.selectedIndex].name!), type: typeRef.current.selectedIndex};
         props.pushVariable(variable);
         props.closeModal();
     }
@@ -504,8 +500,12 @@ const AddCustomEventComponent = (props: {closeModal: any, pushCustomEvent: any})
 
     const addCustomEvent = () => {
         if (idRef.current === null || idRef.current.value === "") {return}
+        const valuesObject: Record<string, {type: number, value?: any[]}> = {};
+        values.forEach((val, index) => {
+            valuesObject[val.id] = {type: val.type, value: val.value};
+        });
 
-        const customEvent: ICustomEvent = {id: idRef.current!.value, values: values}
+        const customEvent: IInteractivityEvent = {id: idRef.current!.value, values: valuesObject}
         props.pushCustomEvent(customEvent);
         props.closeModal();
     }
@@ -617,4 +617,28 @@ const UploadGraphComponent = (props: { setBehaveGraph: any, closeModal: any}) =>
             </Container>
         </Panel>
     );
+}
+
+const stringToListOfNumbers = (inputString: string) => {
+    const numberStrings = inputString.split(',');
+    return numberStrings.map(numberString => parseFloat(numberString));
+}
+
+const castParameter = (value: any, signature: string) => {
+    switch (signature) {
+        case "bool":
+            return typeof value === "string" ? [value === "true"] : [JSON.parse(value)];
+        case "int":
+        case "float":
+            return [Number(value)];
+        case "float2":
+        case "float3":
+        case "float4":
+        case "float4x4":
+            return typeof value === "string" ? stringToListOfNumbers(value) : value
+        case "AMZN_interactivity_string":
+            return String(value)
+        default:
+            return String(value)
+    }
 }

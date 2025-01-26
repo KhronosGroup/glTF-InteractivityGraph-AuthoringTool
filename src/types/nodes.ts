@@ -15,6 +15,12 @@ export const knownNodes: IInteractivityDecleration[] = [
     },
     {
         op: "flow/sequence"
+    },
+    {
+        op: "variable/set"
+    },
+    {
+        op: "variable/get"
     }
 ]
 
@@ -56,12 +62,47 @@ export const standardTypes: IInteractivityValueType[] = [
     }
 ]
 
+const variableNodeSpecs: IInteractivityNode[] = [
+    {
+        decleration: 5,
+        description: "Set a variable to a value",
+        configuration: {
+            variable: {
+                value: [undefined],
+            }
+        },
+        flows: {
+            input: { 
+                in: {
+                    node: undefined,
+                    socket: undefined
+                }
+            },
+            output: {
+                out: {
+                    node: undefined,
+                    socket: undefined
+                }
+            }
+        }
+    },
+    {
+        decleration: 6,
+        description: "Get a variable's value",
+        configuration: {
+            variable: {
+                value: [undefined]
+            }
+        }
+    }
+]
+
 const lifecycleNodeSpecs: IInteractivityNode[] = [
     {
         decleration: 0,
         description: "This node will fire when the session starts.",
         flows: {
-            out: {
+            output: {
                 out: {
                     node: undefined,
                     socket: undefined
@@ -73,7 +114,7 @@ const lifecycleNodeSpecs: IInteractivityNode[] = [
         decleration: 1,
         description: "This node will fire each tick.",
         flows: {
-            out: {
+            output: {
                 out: {
                     node: undefined,
                     socket: undefined
@@ -81,7 +122,7 @@ const lifecycleNodeSpecs: IInteractivityNode[] = [
             }
         },
         values: {
-            out: {
+            output: {
                 timeSinceStart: {
                     typeOptions: [2],
                     type: 2,
@@ -104,13 +145,13 @@ const flowNodeSpecs: IInteractivityNode[] = [
         decleration: 2,
         description:"Branch the control flow based on a condition.",
         flows: {
-            in: {
+            input: {
                 in: {
                     node: undefined,
                     socket: undefined
                 }
             },
-            out: {
+            output: {
                 true: {
                     node: undefined,
                     socket: undefined
@@ -122,7 +163,7 @@ const flowNodeSpecs: IInteractivityNode[] = [
             }
         },
         values: {
-            in: {
+            input: {
                 condition: {
                     typeOptions: [0],
                     type: 0,
@@ -140,13 +181,13 @@ const flowNodeSpecs: IInteractivityNode[] = [
             }
         },
         flows: {
-            in: {
+            input: {
                 in: {
                     node: undefined,
                     socket: undefined
                 }
             },
-            out: {
+            output: {
                 loopBody: {
                     node: undefined,
                     socket: undefined
@@ -158,7 +199,7 @@ const flowNodeSpecs: IInteractivityNode[] = [
             }
         },
         values: {
-            in: {
+            input: {
                 startIndex: {
                     typeOptions: [1],
                     type: 1,
@@ -176,7 +217,7 @@ const flowNodeSpecs: IInteractivityNode[] = [
         decleration: 4,
         description: "Takes in a single in flow and executes the out flows in order",
         flows: {
-            in: {
+            input: {
                 in: {
                     node: undefined,
                     socket: undefined
@@ -186,4 +227,4 @@ const flowNodeSpecs: IInteractivityNode[] = [
     }
 ];
 
-export const interactivityNodeSpecs = [...lifecycleNodeSpecs, ...flowNodeSpecs];
+export const interactivityNodeSpecs = [...lifecycleNodeSpecs, ...flowNodeSpecs, ...variableNodeSpecs];

@@ -3,7 +3,7 @@ import {useCallback, useEffect, useState} from "react";
 import { Handle, Position} from "reactflow";
 
 import {RenderIf} from "../components/RenderIf";
-import { IInteractivityFlow, IInteractivityValue, IInteractivityNode, IInteractivityConfigurationValue } from "../types/InteractivityGraph";
+import { IInteractivityFlow, IInteractivityValue, IInteractivityNode, IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityVariable } from "../types/InteractivityGraph";
 import { knownNodes, standardTypes } from "../types/nodes";
 
 require("../css/flowNodes.css");
@@ -30,19 +30,30 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     const [configuration, setConfiguration] = useState<Record<string, IInteractivityConfigurationValue>>({});
 
     useEffect(() => {
-        setInputFlows(props.node.flows?.in || {});
-        setOutputFlows(props.node.flows?.out || {});
-        setInputValues(props.node.values?.in || {});
-        setOutputValues(props.node.values?.out || {});
+        setInputFlows(props.node.flows?.input || {});
+        setOutputFlows(props.node.flows?.output || {});
+        setInputValues(props.node.values?.input || {});
+        setOutputValues(props.node.values?.output || {});
         setConfiguration(props.node.configuration || {});
-        // evaluateConfigurationWhichChangeSockets();
     }, []);
 
     useEffect(() => {
         if (Object.keys(inputValues).length > 0) {
-            props.data.interactivityNode.values.in = inputValues;
+            props.data.interactivityNode.values = props.node.values || {};
+            props.data.interactivityNode.values.input = inputValues;
         }
-    }, [inputValues])
+    }, [inputValues]);
+
+    useEffect(() => {
+        if (Object.keys(outputValues).length > 0) {
+            props.data.interactivityNode.values = props.node.values || {};
+            props.data.interactivityNode.values.output = outputValues;
+        }
+    }, [outputValues]);
+
+    useEffect(() => {
+        props.data.interactivityNode.configuration = configuration;
+    }, [configuration])
 
     const onChangeParameter = useCallback((evt: { target: { value: any; }; }) => {
         const socketId = (evt.target as HTMLInputElement).id.replace("in-", "");
@@ -58,7 +69,9 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
 
     const onChangeConfiguration = useCallback((evt: { target: { value: any; }; }) => {
         const configurationId = (evt.target as HTMLInputElement).id;
-        setConfiguration({...configuration, [configurationId]: evt.target.value});
+        // TODO: how can I properly pares the value for config without knowing type
+        setConfiguration({...configuration, [configurationId]: {value: [evt.target.value]}});
+        evaluateConfigurationWhichChangeSockets();
     }, [configuration]);
 
     const parsePath = (path: string): string[] => {
@@ -79,129 +92,114 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     }
 
 
-    // const evaluateConfigurationWhichChangeSockets = () => {
-    //     const nodeSpec: IAuthoringNode | undefined = authoringNodeSpecs.find(nodeSpec => nodeSpec.type === props.node.type);
-    //     if (nodeSpec === undefined) {return}
+    const evaluateConfigurationWhichChangeSockets = () => {
+        const nodeType = knownNodes[props.node.decleration].op;
 
-    //     const inputValuesToSet: IValueSocketDescriptor[] = nodeSpec.input.values.slice();
-    //     const outputValuesToSet: IValueSocketDescriptor[] = nodeSpec.output.values.slice();
-    //     const inputFlowsToSet: IFlowSocketDescriptor[] = nodeSpec.input.flows.slice();
-    //     const outputFlowsToSet: IFlowSocketDescriptor[] = nodeSpec.output.flows.slice();
+        const inputValuesToSet: Record<string, IInteractivityValue> = {};
+        const outputValuesToSet: Record<string, IInteractivityValue> = {};
+        const inputFlowsToSet: Record<string, IInteractivityFlow> = {};
+        const outputFlowsToSet: Record<string, IInteractivityFlow> = {};
 
-    //     if (props.data.configuration.inputFlows !== undefined) {
-    //         const numberInputFlows = Number(props.data.configuration.inputFlows);
-    //         for (let i = 0; i < numberInputFlows; i++) {
-    //             const inputFlow: IFlowSocketDescriptor = {
-    //                 id: `${i}`,
-    //                 description: `The ${i} inflow of this node`
-    //             }
-    //             inputFlowsToSet.push(inputFlow);
-    //         }
-    //     }
-    //     if (props.data.configuration.cases !== undefined) {
-    //         let cases = props.data.configuration.cases;
-    //         // Allow input formats in the UI, such as:
-    //         // - 0,1, (while typing)
-    //         // - [0,1,2 (while typing)
-    //         // - [0,1,2]
-    //         // - 0,1,2
-    //         if (typeof cases === "string") {
-    //             if (cases.endsWith(",")) cases = cases.slice(0, -1);
-    //             cases = cases.replace(/\s/g, '');
-    //             if (!cases.startsWith("[")) cases = `[${cases}`;
-    //             if (!cases.endsWith("]")) cases = `${cases}]`;
-    //             try {
-    //                 cases = JSON.parse(cases);
-    //             }
-    //             catch (e) {
-    //                 console.error("Couldn't parse configuration array string: ", cases, e);
-    //                 cases = [];
-    //             }
-    //         }            
-    //         for (let i = 0; i < cases.length; i++) {
-    //             const outputFlow: IFlowSocketDescriptor = {
-    //                 id: `${cases[i]}`,
-    //                 description: `The outflow of this node for case ${cases[i]}`
-    //             }
-    //             outputFlowsToSet.push(outputFlow);
-    //         }
-    //     }
-    //     if (props.data.configuration.event !== undefined) {
-    //         const customEventId: number = JSON.parse(props.data.configuration.event);
-    //         const ce: ICustomEvent = props.data.events[customEventId];
+        if (configuration.inputFlows !== undefined) {
+            const numberInputFlows = Number(configuration.inputFlows.value?.[0] || 0);
+            for (let i = 0; i < numberInputFlows; i++) {
+                const inputFlow: IInteractivityFlow = {
+                    node: undefined,
+                    socket: undefined
+                }
+                inputFlowsToSet[`${i}`] = inputFlow;
+            }
+        }
+        if (configuration.cases !== undefined) {
+            let cases = configuration.cases.value?.[0] || "";
+            // Allow input formats in the UI, such as:
+            // - 0,1, (while typing)
+            // - [0,1,2 (while typing)
+            // - [0,1,2]
+            // - 0,1,2
+            if (typeof cases === "string") {
+                if (cases.endsWith(",")) cases = cases.slice(0, -1);
+                cases = cases.replace(/\s/g, '');
+                if (!cases.startsWith("[")) cases = `[${cases}`;
+                if (!cases.endsWith("]")) cases = `${cases}]`;
+                try {
+                    cases = JSON.parse(cases);
+                }
+                catch (e) {
+                    console.error("Couldn't parse configuration array string: ", cases, e);
+                    cases = [];
+                }
+            }            
+            for (let i = 0; i < cases.length; i++) {
+                const outputFlow: IInteractivityFlow = {
+                    node: undefined,
+                    socket: undefined
+                }
+                outputFlowsToSet[`${i}`] = outputFlow;
+            }
+        }
+        if (configuration.event !== undefined) {
+            const customEventId: number = JSON.parse(configuration.event.value?.[0] || "");
+            const ce: IInteractivityEvent = props.data.events[customEventId];
 
-    //         if (ce.values === undefined) {return}
+            if (ce.values === undefined) {return}
 
-    //         const values: IValueSocketDescriptor[] = [];
-    //         for (let i = 0; i < ce.values.length; i++) {
-    //             const type = props.data.types[ce.values[i].type];
-    //             let typename;
-    //             if (type.signature === "custom" && type.extensions) {
-    //                 typename = Object.keys(type.extensions)[0]
-    //             } else {
-    //                 typename = type.signature;
-    //             }
-    //             const value: IValueSocketDescriptor = {
-    //                 id: ce.values[i].id,
-    //                 types: [typename],
-    //                 description: `Value socket for ${ce.values[i].id}`
-    //             }
-    //             values.push(value);
-    //         }
+            for (const key of Object.keys(ce.values)) {
+                const type = ce.values[key].type;
+                
+                const value: IInteractivityValue = {
+                    value: [undefined],
+                    typeOptions: [type],
+                    type: type
+                }
+                inputValuesToSet[key] = value;
 
-    //         if (props.node.type === "event/send") {
-    //             inputValuesToSet.push(...values)
-    //         } else if (props.node.type === "event/receive") {
-    //             outputValuesToSet.push(...values);
-    //         }
-    //     }
-    //     if (props.data.configuration.pointer !== undefined) {
-    //         const vals = parsePath(props.data.configuration.pointer)
-    //         for (let i = 0; i < vals.length; i++) {
-    //             const value: IValueSocketDescriptor = {id: vals[i], types: ["int"], description: `Value for ${vals[i]}`}
-    //             inputValuesToSet.push(value);
-    //         }
-    //     }
-    //     if (props.data.configuration.easingType !== undefined) {
-    //         if (props.data.configuration.easingType === "0") {
-    //             // CUBIC BEZIER
-    //             inputValuesToSet.push({id: "cp1", types: ["float", "float3", "float4"], description: "First control point"}, {id: "cp2", types: ["float","float3", "float4"], description: "Second control point"});
-    //         }
-    //     }
-    //     if (props.data.configuration.variable !== undefined) {
-    //         const variableId: number = JSON.parse(props.data.configuration.variable);
-    //         const v: IVariable = props.data.variables[variableId];
-    //         const value: IValueSocketDescriptor = {id: "value", types: [props.data.types[v.type].signature], value: v.value, description: 'Value Socket for this variable'}
+                if (nodeType === "event/send") {
+                    inputValuesToSet[key] = value;
+                } else if (nodeType === "event/receive") {
+                    outputValuesToSet[key] = value;
+                }
+            }
 
-    //         if (props.node.type === "variable/set") {
-    //             inputValuesToSet.push(value);
-    //         } else if (props.node.type === "variable/get") {
-    //             outputValuesToSet.push(value);
-    //         }
-    //     }
-    //     if (props.data.configuration.stopMode !== undefined) {
-    //         if (props.data.configuration.stopMode === "1") {
-    //             // EXACT FRAME TIME
-    //             inputValuesToSet.push({id: "stopTime", types: ["float"], description: "Target time to stop at"});
-    //         }
-    //     }
+            
+        }
+        if (configuration.pointer !== undefined) {
+            const vals = parsePath(configuration.pointer.value?.[0] || "");
+            for (let i = 0; i < vals.length; i++) {
+                const value: IInteractivityValue = {value: [undefined], typeOptions: [2], type: 2}
+                inputValuesToSet[vals[i]] = value;
+            }
+        }
+        if (configuration.easingType !== undefined) {
+            if (configuration.easingType.value?.[0] === "0") {
+                // CUBIC BEZIER
+                inputValuesToSet["cp1"] = {value: [NaN, NaN], typeOptions: [2], type: 2};
+                inputValuesToSet["cp2"] = {value: [NaN, NaN], typeOptions: [2], type: 2};
+            }
+        }
+        if (configuration.variable !== undefined) {
+            const variableId = Number(configuration.variable.value?.[0] || 0);
+            const v: IInteractivityVariable = props.data.variables[variableId];
+            const value: IInteractivityValue =  {typeOptions: [v.type], type: v.type, value: [undefined]}
 
-    //     if (props.data.flowIds) {
-    //         props.data.flowIds.forEach((flowId: string) => {
-    //             const existingFlowId = outputFlowsToSet.findIndex(outFlow => outFlow.id === flowId);
-    //             if (existingFlowId !== -1) {
-    //                 outputFlowsToSet[existingFlowId] = {id: flowId, description: ""};
-    //             } else {
-    //                 outputFlowsToSet.push({id: flowId, description: ""});
-    //             }
-    //         })
-    //     }
+            if (nodeType === "variable/set") {
+                inputValuesToSet["value"] = value;
+            } else if (nodeType === "variable/get") {
+                outputValuesToSet["value"] = value;
+            }
+        }
+        if (configuration.stopMode !== undefined) {
+            if (configuration.stopMode.value?.[0] === "1") {
+                // EXACT FRAME TIME
+                inputValuesToSet["stopTime"] = {value: [NaN], typeOptions: [2], type: 2};
+            }
+        }
 
-    //     setOutputFlows(outputFlowsToSet);
-    //     setInputFlows(inputFlowsToSet);
-    //     setInputValues(inputValuesToSet);
-    //     setOutputValues(outputValuesToSet);
-    // }
+        setOutputFlows({...outputFlows, ...outputFlowsToSet});
+        setInputFlows({...inputFlows, ...inputFlowsToSet});
+        setInputValues({...inputValues, ...inputValuesToSet});
+        setOutputValues({...outputValues, ...outputValuesToSet});
+    }
 
     const stringToListOfNumbers = (inputString: string) => {
         const numberStrings = inputString.split(',');
@@ -294,7 +292,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                     {
 
                                         props.data.variables.map((v: any, index: number) => (
-                                            <option key={index} value={index} selected={configuration.variable.value?.[0] == index}>{v.id}</option>
+                                            <option key={index} value={index} selected={configuration.variable.value?.[0] == index}>{v.name}</option>
                                         ))
                                     }
                                 </select>
@@ -367,7 +365,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                         <label htmlFor={socket}>{socket}</label>
                                         <input id={`in-${socket}`} name={socket} onChange={onChangeParameter} defaultValue={inputValues[socket].value} style={{display: props.data.linked && props.data.linked[socket] ? "none" : "block"}}/>
                                         <select id={`${socket}-typeDropDown`} onChange={onChangeType} defaultValue={inputValues[socket].type} style={{display: props.data.linked && props.data.linked[socket] ? "none" : "block"}}>
-                                            {value.typeOptions.map((type, index) => (
+                                            {(value.typeOptions || []).map((type, index) => (
                                                 <option key={index} value={type}>
                                                     {standardTypes[type].name}
                                                 </option>

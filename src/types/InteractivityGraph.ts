@@ -30,6 +30,7 @@ export interface IInteractivityDecleration {
 
 export interface IInteractivityVariable {
     type: number,
+    name?: string,
     value?: any
 }
 
@@ -37,7 +38,7 @@ export interface IInteractivityEvent {
     id: string,
     values: Record<string, {
         type: number,
-        value?: any
+        value?: any[]
     }>
 }
 
@@ -71,12 +72,12 @@ export interface IInteractivityNode {
     description?: string,
     configuration?: Record<string, IInteractivityConfigurationValue>,
     flows?: {
-        in?: Record<string, IInteractivityFlow>,
-        out?: Record<string, IInteractivityFlow>
+        input?: Record<string, IInteractivityFlow>,
+        output?: Record<string, IInteractivityFlow>
     },
     values?: {
-        in?: Record<string, IInteractivityValue>,
-        out?: Record<string, IInteractivityValue>
+        input?: Record<string, IInteractivityValue>,
+        output?: Record<string, IInteractivityValue>
     }
 }
 

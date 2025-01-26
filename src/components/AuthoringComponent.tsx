@@ -24,6 +24,9 @@ const nodeTypes = interactivityNodeSpecs.reduce((nodes, node) => {
             node.values = node.values || {};
             node.values.in = props.data.values;
         }
+        if (props.data.configuration !== undefined) {
+            node.configuration = props.data.configuration;
+        }
         props.data.interactivityNode = node;
         return <AuthoringGraphNode node={node} {...props} />;
     };

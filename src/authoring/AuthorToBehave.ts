@@ -54,7 +54,7 @@ export const authorToBehave = (nodes: Node[], edges: Edge[], events: ICustomEven
             id: node.id,
             type: node.type,
             values: interactivityNode.values?.in || {},
-            configuration: [],
+            configuration: interactivityNode.configuration || {},
             flows: interactivityNode.flows?.out || {},
             metadata: {
                 positionX: String(node.position.x),

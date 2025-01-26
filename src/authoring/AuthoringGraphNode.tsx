@@ -3,7 +3,7 @@ import {useCallback, useEffect, useState} from "react";
 import { Handle, Position} from "reactflow";
 
 import {RenderIf} from "../components/RenderIf";
-import { IInteractivityFlow, IInteractivityValue, IInteractivityNode } from "../types/InteractivityGraph";
+import { IInteractivityFlow, IInteractivityValue, IInteractivityNode, IInteractivityConfigurationValue } from "../types/InteractivityGraph";
 import { knownNodes, standardTypes } from "../types/nodes";
 
 require("../css/flowNodes.css");
@@ -27,13 +27,14 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     const [outputFlows, setOutputFlows] = useState<Record<string, IInteractivityFlow>>({});
     const [inputValues, setInputValues] = useState<Record<string, IInteractivityValue>>({});
     const [outputValues, setOutputValues] = useState<Record<string, IInteractivityValue>>({});
+    const [configuration, setConfiguration] = useState<Record<string, IInteractivityConfigurationValue>>({});
 
     useEffect(() => {
-        props.data.configuration = props.data.configuration || {};
         setInputFlows(props.node.flows?.in || {});
         setOutputFlows(props.node.flows?.out || {});
         setInputValues(props.node.values?.in || {});
         setOutputValues(props.node.values?.out || {});
+        setConfiguration(props.node.configuration || {});
         // evaluateConfigurationWhichChangeSockets();
     }, []);
 
@@ -55,11 +56,10 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         setInputValues({...inputValues, [socketId]: {value: curParam.value, typeOptions:curParam.typeOptions, type:evt.target.value}});
     }, [inputValues]);
 
-    // const onChangeConfiguration = useCallback((evt: { target: { value: any; }; }) => {
-    //     props.data.configuration = props.data.configuration || {}
-    //     props.data.configuration[(evt.target as HTMLInputElement).id] = evt.target.value;
-    //     evaluateConfigurationWhichChangeSockets();
-    // }, []);
+    const onChangeConfiguration = useCallback((evt: { target: { value: any; }; }) => {
+        const configurationId = (evt.target as HTMLInputElement).id;
+        setConfiguration({...configuration, [configurationId]: evt.target.value});
+    }, [configuration]);
 
     const parsePath = (path: string): string[] => {
         const regex = /{([^}]+)}/g;
@@ -258,31 +258,30 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
             </div>
 
             <div style={{padding: 16}}>
-                {/* <RenderIf shouldShow={props.node.configuration.length > 0}> */}
-                    {/*configuration*/}
-                    {/* <div> */}
-                        {/* {
-                            (props.node.type === "event/receive" || props.node.type === "event/send") &&
+                <RenderIf shouldShow={Object.keys(configuration).length > 0}>
+                    {/* configuration */}
+                    <div>
+                        {
+                            (configuration.event !== undefined) &&
                             <div>
                                 <label htmlFor="event">event</label>
                                 <select id="event" name="event" onChange={(event) => {
-                                    console.log(props.data)
                                     if (Number(event.target.value) === -1) {
                                         return
                                     }
                                     onChangeConfiguration(event)
                                 }} >
-                                    <option key={-1} value={-1} selected={!props.data.configuration || !props.data.configuration.event}>--NO SELECTION--</option>
+                                    <option key={-1} value={-1} selected={configuration.event.value === undefined}>--NO SELECTION--</option>
                                     {
                                         props.data.events.map((ce: any, index: number) => (
-                                            <option key={index} value={index} selected={props.data.configuration && props.data.configuration.event == index}>{ce.id}</option>
+                                            <option key={index} value={index} selected={configuration.event.value?.[0] == index}>{ce.id}</option>
                                         ))
                                     }
                                 </select>
                             </div>
                         }
                         {
-                            (props.node.type === "variable/get" || props.node.type === "variable/set") &&
+                            (configuration.variable !== undefined) &&
                             <div>
                                 <label htmlFor="variable">variable</label>
                                 <select id="variable" name="variable" onChange={(event) => {
@@ -291,29 +290,30 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                     }
                                     onChangeConfiguration(event)
                                 }}>
-                                    <option key={-1} value={-1} selected={!props.data.configuration || !props.data.configuration.variable}>--NO SELECTION--</option>
+                                    <option key={-1} value={-1} selected={configuration.variable.value === undefined}>--NO SELECTION--</option>
                                     {
 
                                         props.data.variables.map((v: any, index: number) => (
-                                            <option key={index} value={index} selected={props.data.configuration && props.data.configuration.variable == index}>{v.id}</option>
+                                            <option key={index} value={index} selected={configuration.variable.value?.[0] == index}>{v.id}</option>
                                         ))
                                     }
                                 </select>
                             </div>
                         }
                         {
-                            !["event/send", "event/receive", "variable/set", "variable/get"].includes(props.node.type) &&
-                            props.node.configuration.map((configuration, index) => {
+                            Object.keys(configuration)
+                            .filter((configurationId) => configurationId !== "event" && configurationId !== "variable")
+                            .map((configurationId) => {
                                 return (
-                                    <div key={index}>
-                                        <label htmlFor={configuration.id}>{configuration.id}</label>
-                                        <input id={configuration.id} name={configuration.id} defaultValue={props.data.configuration !== undefined ? props.data.configuration[configuration.id] : ""} onChange={onChangeConfiguration}/>
+                                    <div key={configurationId}>
+                                        <label htmlFor={configurationId}>{configurationId}</label>
+                                        <input id={configurationId} name={configurationId} defaultValue={configuration[configurationId].value} onChange={onChangeConfiguration}/>
                                     </div>
                                 )
                             })
                         }
                     </div>
-                </RenderIf> */}
+                </RenderIf>
 
                 <RenderIf shouldShow={Object.keys(inputFlows).length > 0 || Object.keys(outputFlows).length > 0}>
                     <hr/>

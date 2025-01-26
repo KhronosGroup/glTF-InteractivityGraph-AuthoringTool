@@ -4,9 +4,10 @@ import {
     IAuthoringNode,
     ICustomEvent,
     IFlowSocketDescriptor,
-    IVariable,
-    standardTypes
+    IVariable
 } from "./AuthoringNodeSpecs";
+import { IInteractivityFlow, IInteractivityNode } from "../types/InteractivityGraph";
+import { standardTypes } from "../types/nodes";
 
 const validateGraphNodeNames = (nodes: Node[]) => {
     const errors = []
@@ -30,6 +31,7 @@ const validateGraphNodeNames = (nodes: Node[]) => {
  * @returns The Behave graph representation of the provided data.
  */
 export const authorToBehave = (nodes: Node[], edges: Edge[], events: ICustomEvent[], variables: IVariable[]) => {
+    console.log(nodes)
     const nodeTypeErrors = validateGraphNodeNames(nodes);
     if (nodeTypeErrors.length > 0) {
         throw new Error(`The graph has the following issues: ${nodeTypeErrors}`);
@@ -42,79 +44,81 @@ export const authorToBehave = (nodes: Node[], edges: Edge[], events: ICustomEven
 
     // loop through all the nodes and embed the edge data in them to correspond to the behave graph spec
     nodes.forEach((node) => {
+        console.log(node.data)
+        const interactivityNode: IInteractivityNode = node.data.interactivityNode;
+        if (interactivityNode === undefined) return;
         if (node.type === undefined) return;
 
         //create behave node
         const behaveNode: any = {
             id: node.id,
             type: node.type,
-            values: [],
+            values: interactivityNode.values?.in || {},
             configuration: [],
-            flows: [],
+            flows: interactivityNode.flows?.out || {},
             metadata: {
                 positionX: String(node.position.x),
                 positionY: String(node.position.y),
             }, // Metadata is left in for ease of placing nodes when re-imported to authoring, but is not part of the spec
         };
 
-        const nodeSpec = authoringNodeSpecs.find((nodeSpec: IAuthoringNode) => nodeSpec.type === node.type)!
+        // const nodeSpec = authoringNodeSpecs.find((nodeSpec: IAuthoringNode) => nodeSpec.type === node.type)!
 
         // embed configuration
-        if (node.data.configuration !== undefined) {
-            Object.entries(node.data.configuration).forEach(([key, value]) => {
-                const configEntry = nodeSpec.configuration.find(config => config.id === key);
-                const configVal = castParameter(value, configEntry!.type);
-                behaveNode.configuration.push({id: key, value: configVal})
-            });
-        }
+        // if (node.data.configuration !== undefined) {
+        //     Object.entries(node.data.configuration).forEach(([key, value]) => {
+        //         const configEntry = nodeSpec.configuration.find(config => config.id === key);
+        //         const configVal = castParameter(value, configEntry!.type);
+        //         behaveNode.configuration.push({id: key, value: configVal})
+        //     });
+        // }
 
         // for all the inlined values (i.e. does not reference the outValue of another node) embed the value into the graph
-        if (node.data.values !== undefined) {
-            Object.entries(node.data.values).forEach(([key, val]) => {
-                let typeIndex;
-                if (node.type === "customEvent/send") {
-                    typeIndex = events[node.data.configuration.events].values!.find(val => key.includes(val.id))!.type
-                } else if (node.type === "variable/set") {
-                    typeIndex = variables[node.data.configuration.variable].type
-                } else {
-                    //TODO: refactor this logic it is gross
-                    const nodeSpecParam = nodeSpec.input.values.find(val => key.includes(val.id));
-                    if (nodeSpecParam === undefined && isNaN((val as any).type)) {
-                        if (key === "cp1" || key === "cp2") {
-                            const signature = (val as any).type || 'float';
-                            typeIndex = node.data.types.findIndex((typeItem: any) => typeItem.signature === signature);
-                        } else if (key === "stopTime") {
-                            typeIndex = node.data.types.findIndex((typeItem: any) => typeItem.signature === 'float');
-                        } else {
-                            // unknown names are for path templates which must be ints
-                            typeIndex = node.data.types.findIndex((typeItem: any) => typeItem.signature === 'int');
-                        }
-                    } else {
-                        if (!isNaN((val as any).type)) {
-                            typeIndex = (val as any).type
-                        } else {
-                            const allowedTypes = nodeSpecParam!.types
-                            const valType = (val as any).type ?? allowedTypes[0];
-                            typeIndex = graph.types.findIndex((typeItem: any) => {
-                                if (typeItem.signature === valType) {return true}
-                                if (typeItem.signature === "custom" && typeItem.extensions && valType === Object.keys(typeItem.extensions)[0]) {return true}
-                            });
-                        }
-                    }
-                }
+        // if (node.data.values !== undefined) {
+        //     Object.entries(node.data.values).forEach(([key, val]) => {
+        //         let typeIndex;
+        //         if (node.type === "customEvent/send") {
+        //             typeIndex = events[node.data.configuration.events].values!.find(val => key.includes(val.id))!.type
+        //         } else if (node.type === "variable/set") {
+        //             typeIndex = variables[node.data.configuration.variable].type
+        //         } else {
+        //             //TODO: refactor this logic it is gross
+        //             const nodeSpecParam = nodeSpec.input.values.find(val => key.includes(val.id));
+        //             if (nodeSpecParam === undefined && isNaN((val as any).type)) {
+        //                 if (key === "cp1" || key === "cp2") {
+        //                     const signature = (val as any).type || 'float';
+        //                     typeIndex = node.data.types.findIndex((typeItem: any) => typeItem.signature === signature);
+        //                 } else if (key === "stopTime") {
+        //                     typeIndex = node.data.types.findIndex((typeItem: any) => typeItem.signature === 'float');
+        //                 } else {
+        //                     // unknown names are for path templates which must be ints
+        //                     typeIndex = node.data.types.findIndex((typeItem: any) => typeItem.signature === 'int');
+        //                 }
+        //             } else {
+        //                 if (!isNaN((val as any).type)) {
+        //                     typeIndex = (val as any).type
+        //                 } else {
+        //                     const allowedTypes = nodeSpecParam!.types
+        //                     const valType = (val as any).type ?? allowedTypes[0];
+        //                     typeIndex = graph.types.findIndex((typeItem: any) => {
+        //                         if (typeItem.signature === valType) {return true}
+        //                         if (typeItem.signature === "custom" && typeItem.extensions && valType === Object.keys(typeItem.extensions)[0]) {return true}
+        //                     });
+        //                 }
+        //             }
+        //         }
 
-                let typename;
-                if (node.data.types[typeIndex].signature === "custom" && node.data.types[typeIndex].extensions) {
-                    typename = Object.keys(node.data.types[typeIndex].extensions)[0]
-                } else {
-                    typename = node.data.types[typeIndex].signature;
-                }
+        //         let typename;
+        //         if (node.data.types[typeIndex].signature === "custom" && node.data.types[typeIndex].extensions) {
+        //             typename = Object.keys(node.data.types[typeIndex].extensions)[0]
+        //         } else {
+        //             typename = node.data.types[typeIndex].signature;
+        //         }
 
-                behaveNode.values.push({id: key.replace("in-", ""), value: castParameter((val as any).value, typename), type: typeIndex})
-            });
-        }
-
-        const inFlows = nodeSpec.input.flows.map((flow: IFlowSocketDescriptor) => flow.id)
+        //         behaveNode.values.push({id: key.replace("in-", ""), value: castParameter((val as any).value, typename), type: typeIndex})
+        //     });
+        // }
+        const inFlows = Object.keys(interactivityNode.flows?.in || {})
 
         // look for all edges going into our current node which are not flows, meaning they are input value references
         edges
@@ -125,12 +129,7 @@ export const authorToBehave = (nodes: Node[], edges: Edge[], events: ICustomEven
                 // currently, flow/waitAll is the only node with a variable number of input flows
                 if (!inFlows.includes(edge.targetHandle!) && targetNode!.type !== "flow/waitAll") {
                     //clear any old inlined value
-                    const index = behaveNode.values.findIndex((n: any) => n.id === edge.targetHandle);
-                    if (index !== -1) {
-                        behaveNode.values.splice(index, 1);
-                    }
-                    // this is not an in flow edge which means it is an input value
-                    behaveNode.values.push({id: edge.targetHandle, node: edge.source, socket: edge.sourceHandle})
+                    behaveNode.values[edge.targetHandle!] = {id: edge.targetHandle, node: edge.source, socket: edge.sourceHandle};
                 }
             });
 
@@ -139,12 +138,7 @@ export const authorToBehave = (nodes: Node[], edges: Edge[], events: ICustomEven
             .filter((edge) => edge.source === node.id)
             .filter((edge) => !isNullish(edge.targetHandle) && !isNullish(edge.sourceHandle))
             .forEach((edge) => {
-                // look up the target in flows to determine if this edge corresponds to one of them
-                const targetNode = nodes.find(node => node.id === edge.target);
-                const inFlows = authoringNodeSpecs.find((nodeSpec: IAuthoringNode) => nodeSpec.type === targetNode!.type)!.input.flows.map((flow: IFlowSocketDescriptor) => flow.id)
-                if (inFlows.includes(edge.targetHandle!) || targetNode!.type === "flow/waitAll") {
-                    behaveNode.flows.push({id: edge.sourceHandle, node: edge.target, socket: edge.targetHandle})
-                }
+                behaveNode.flows[edge.sourceHandle!] = {id: edge.sourceHandle, node: edge.target, socket: edge.targetHandle};
             });
 
         graph.nodes?.push(behaveNode);
@@ -160,7 +154,7 @@ const isNullish = (value: any): boolean => value === undefined || value === null
 const castParameter = (value: any, signature: string) => {
     switch (signature) {
         case "bool":
-            return  typeof value === "string" ? [value === "true"] : value;
+            return typeof value === "string" ? [value === "true"] : [JSON.parse(value)];
         case "int":
         case "float":
             return [Number(value)];
@@ -196,14 +190,14 @@ const topologicalSort = (nodes: any[]) => {
     for (const node of nodes) {
         // for flow references, increase referenced node's in degree
         if (node.flows !== undefined) {
-            const outFlowIds = node.flows.map((flow: any) => flow.node);
+            const outFlowIds = Object.values(node.flows).map((flow: any) => flow.node);
             for (const outflowId of outFlowIds) {
                 nodeIdToInDegree.set(outflowId, nodeIdToInDegree.get(outflowId) + 1);
             }
         }
         // for value links, increase your own in degree
         if (node.values !== undefined) {
-            const valueBackRefNodeIds = node.values
+            const valueBackRefNodeIds = Object.values(node.values)
                 .filter((val: any) => val.node !== undefined)
                 .map((val: any) => val.node);
             // create fakeLinks so we know to decrement the link in degree when we remove it
@@ -230,7 +224,7 @@ const topologicalSort = (nodes: any[]) => {
 
         // flows
         if (curNode.flows !== undefined) {
-            const outFlowIds = curNode.flows.map((flow: any) => flow.node);
+            const outFlowIds = Object.values(curNode.flows).map((flow: any) => flow.node);
             outIds.push(...outFlowIds);
         }
 
@@ -257,12 +251,12 @@ const topologicalSort = (nodes: any[]) => {
     for (const node of nodes) {
         node.id = Number(`${oldIdToTopologicalId.get(node.id)}`);
         if (node.flows !== undefined) {
-            node.flows.forEach((flow: any) => {
+            Object.values(node.flows).forEach((flow: any) => {
                 flow.node = Number(`${oldIdToTopologicalId.get(flow.node)}`);
             })
         }
         if (node.values !== undefined) {
-            node.values.forEach((val: any) => {
+            Object.values(node.values).forEach((val: any) => {
                 if (val.node !== undefined) {
                     val.node = Number(`${oldIdToTopologicalId.get(val.node)}`);
                 }

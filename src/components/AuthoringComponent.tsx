@@ -15,11 +15,25 @@ import 'reactflow/dist/style.css';
 import {authorToBehave} from "../authoring/AuthorToBehave";
 import {behaveToAuthor} from "../authoring/BehaveToAuthor";
 import {Spacer} from "./Spacer";
+import {interactivityNodeSpecs, knownNodes} from "../types/nodes";
 
-const nodeTypes = authoringNodeSpecs.reduce((nodes, node) => {
-    nodes[node.type] = (props: any) => <AuthoringGraphNode node={node} {...props} />;
+const nodeTypes = interactivityNodeSpecs.reduce((nodes, node) => {
+    nodes[knownNodes[node.decleration].op] = (props: any) => {
+        console.log(props);
+        if (props.data.values !== undefined) {
+            node.values = node.values || {};
+            node.values.in = props.data.values;
+        }
+        props.data.interactivityNode = node;
+        return <AuthoringGraphNode node={node} {...props} />;
+    };
     return nodes;
 }, {} as NodeTypes);
+
+// const nodeTypes = authoringNodeSpecs.reduce((nodes, node) => {
+//     nodes[node.type] = (props: any) => <AuthoringGraphNode node={node} {...props} />;
+//     return nodes;
+// }, {} as NodeTypes);
 
 enum AuthoringComponentModelType {
     NODE_PICKER,

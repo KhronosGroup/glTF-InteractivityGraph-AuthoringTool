@@ -1,10 +1,11 @@
+import { IInteractivityValue } from "../../../types/InteractivityGraph";
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class PointerGet extends BehaveEngineNode {
     REQUIRED_CONFIGURATIONS = {pointer: {}, type: {}}
 
     _pointer: string;
-    _pointerVals: { id: string }[];
+    _pointerVals: Record<string, IInteractivityValue>;
     _typeIndex: number;
     constructor(props: IBehaviourNodeProps) {
         super(props);
@@ -16,9 +17,9 @@ export class PointerGet extends BehaveEngineNode {
         this._pointer = pointer[0];
         this._typeIndex = type;
         const valIds = this.parsePath(this._pointer);
-        const generatedParams = [];
+        const generatedParams: Record<string, IInteractivityValue> = {};
         for (let i = 0; i < valIds.length; i++) {
-            generatedParams.push({id: valIds[i]});
+            generatedParams[valIds[i]] = {value: [undefined], type: 1};
         }
         this._pointerVals = generatedParams;
     }
@@ -50,7 +51,7 @@ export class PointerGet extends BehaveEngineNode {
 
     override processNode(flowSocket?: string) {
         this.graphEngine.clearValueEvaluationCache();
-        const vals = this.evaluateAllValues([...this._pointerVals].map(val => val.id));
+        const vals = this.evaluateAllValues(Object.keys(this._pointerVals));
         const populatedPath = this.populatePath(this._pointer, vals)
         this.graphEngine.processNodeStarted(this);
 

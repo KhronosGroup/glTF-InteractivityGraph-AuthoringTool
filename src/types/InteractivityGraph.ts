@@ -31,7 +31,7 @@ export interface IInteractivityDeclaration {
 export interface IInteractivityVariable {
     type: number,
     name?: string,
-    value?: any
+    value?: any[]
 }
 
 export interface IInteractivityEvent {

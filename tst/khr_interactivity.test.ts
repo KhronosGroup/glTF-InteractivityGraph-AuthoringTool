@@ -40,21 +40,29 @@ class MockBehaviorLoader extends MockLoader {
             asset: { version: '1' },
             extensions: {
                 KHR_interactivity: {
-                    nodes: [
+                    graphs: [
                         {
-                            id: '0',
-                            type: 'lifecycle/start',
-                            metadata: {
-                                positionX: '243',
-                                positionY: '190',
-                            },
-                            flows: {
-                            },
-                        },
+                            declarations: [
+                                {
+                                    op: "event/onStart"
+                                }
+                            ],
+                            nodes: [
+                                {
+                                    declaration: 0,
+                                    values: {},
+                                    configuration: {},
+                                    flows: {
+                                        out: {}
+                                    },
+                                }
+                            ],
+                            variables: [],
+                            events: [],
+                            types: []
+                        }
                     ],
-                    variables: [],
-                    customEvents: [],
-                    types: []
+                    graph: 0
                 },
             },
         };

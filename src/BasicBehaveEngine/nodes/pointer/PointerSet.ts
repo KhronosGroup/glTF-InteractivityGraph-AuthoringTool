@@ -1,3 +1,4 @@
+import { IInteractivityValue } from "../../../types/InteractivityGraph";
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class PointerSet extends BehaveEngineNode {
@@ -5,7 +6,7 @@ export class PointerSet extends BehaveEngineNode {
     REQUIRED_VALUES = {value: {}}
 
     _pointer: string;
-    _pointerVals: { id: string }[];
+    _pointerVals: Record<string, IInteractivityValue>;
     _typeIndex: number;
     constructor(props: IBehaviourNodeProps) {
         super(props);
@@ -17,9 +18,9 @@ export class PointerSet extends BehaveEngineNode {
         this._pointer = pointer[0];
         this._typeIndex = type;
         const valIds = this.parsePath(this._pointer);
-        const generatedVals = [];
+        const generatedVals: Record<string, IInteractivityValue> = {};
         for (let i = 0; i < valIds.length; i++) {
-            generatedVals.push({id: valIds[i]});
+            generatedVals[valIds[i]] = {value: [undefined], type: 1};
         }
 
         //create a test path with all 0's to check if the path is read only

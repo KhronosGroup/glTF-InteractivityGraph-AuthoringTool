@@ -103,7 +103,7 @@ import { InverseHyperbolicTangent } from "./nodes/math/hyperbolic/InverseHyperbo
 import { Exponential } from "./nodes/math/exponential/Exponential";
 import { HyperbolicCosine } from "./nodes/math/hyperbolic/HyperbolicCosine";
 import { HyperbolicTangent } from "./nodes/math/hyperbolic/HyperbolicTangent";
-import { IInteractivityVariable, IInteractivityEvent, IInteractivityValue, IInteractivityFlow, IInteractivityGraph, IInteractivityNode } from "../types/InteractivityGraph";
+import { IInteractivityVariable, IInteractivityEvent, IInteractivityValue, IInteractivityFlow, IInteractivityGraph, IInteractivityNode, IInteractivityValueType } from "../types/InteractivityGraph";
 import { VariableInterpolate } from "./nodes/variable/VariableInterpolate";
 
 export interface ICustomEventListener {
@@ -127,8 +127,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
     protected variables: IInteractivityVariable[];
     protected events: IInteractivityEvent[];
 
-    //TODO: def for types
-    protected types: any[];
+    protected types: IInteractivityValueType[];
     private jsonPtrTrie: JsonPtrTrie;
     private customEventListeners: ICustomEventListener[]
     private _fps: number;
@@ -260,7 +259,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.variables.forEach(variable => {
             if (variable.value === undefined) {
                 // TODO get the default value from the type
-                variable.value = 0;
+                variable.value = [0];
             }
             // sanitize, these need to be arrays
             if (!Array.isArray(variable.value)) {

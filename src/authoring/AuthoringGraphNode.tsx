@@ -22,7 +22,6 @@ export interface IAuthoringGraphNodeProps {
  * @returns {JSX.Element} - A JSX element representing the AuthoringGraphNode.
  */
 
-//TODO: add a graph context and use it for maanging updates to the graph
 export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     const [inputFlows, setInputFlows] = useState<Record<string, IInteractivityFlow>>({});
     const [outputFlows, setOutputFlows] = useState<Record<string, IInteractivityFlow>>({});

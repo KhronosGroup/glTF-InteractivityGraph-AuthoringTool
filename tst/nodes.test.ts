@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 import {BasicBehaveEngine} from "../src/BasicBehaveEngine/BasicBehaveEngine";
-import {BehaveEngineNode, IBehaviourNodeProps, IFlow} from '../src/BasicBehaveEngine/BehaveEngineNode';
+import {BehaveEngineNode, IBehaviourNodeProps} from '../src/BasicBehaveEngine/BehaveEngineNode';
 import {Receive} from "../src/BasicBehaveEngine/nodes/customEvent/Receive";
 import {Send} from "../src/BasicBehaveEngine/nodes/customEvent/Send";
 import {Branch} from "../src/BasicBehaveEngine/nodes/flow/Branch";
@@ -13,7 +13,6 @@ import {PointerSet} from "../src/BasicBehaveEngine/nodes/pointer/PointerSet";
 import {OnStartNode} from "../src/BasicBehaveEngine/nodes/lifecycle/onStart";
 import {Switch} from "../src/BasicBehaveEngine/nodes/flow/Switch";
 import {PointerGet} from "../src/BasicBehaveEngine/nodes/pointer/PointerGet";
-import {PointerAnimateTo} from "../src/BasicBehaveEngine/nodes/experimental/PointerAnimateTo";
 import {WhileLoop} from "../src/BasicBehaveEngine/nodes/flow/WhileLoop";
 import {WaitAll} from "../src/BasicBehaveEngine/nodes/flow/WaitAll";
 import {MultiGate} from "../src/BasicBehaveEngine/nodes/flow/MultiGate";
@@ -49,7 +48,7 @@ import {Log10} from "../src/BasicBehaveEngine/nodes/math/exponential/Log10";
 import {CubeRoot} from "../src/BasicBehaveEngine/nodes/math/exponential/CubeRoot";
 import {SquareRoot} from "../src/BasicBehaveEngine/nodes/math/exponential/SquareRoot";
 import {Power} from "../src/BasicBehaveEngine/nodes/math/exponential/Power";
-import {standardTypes} from "../src/authoring/AuthoringNodeSpecs";
+import {standardTypes} from "../src/types/nodes";
 import {Clamp} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Clamp";
 import {Saturate} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Saturate";
 import {Negate} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Negate";
@@ -107,6 +106,7 @@ import {Extract3} from "../src/BasicBehaveEngine/nodes/math/extract/Extract3";
 import {Extract4} from "../src/BasicBehaveEngine/nodes/math/extract/Extract4";
 import {Extract4x4} from "../src/BasicBehaveEngine/nodes/math/extract/Extract4x4";
 import {PointerInterpolate} from "../src/BasicBehaveEngine/nodes/pointer/PointerInterpolate";
+import { IInteractivityFlow, IInteractivityVariable } from '../src/types/InteractivityGraph';
 
 
 describe('nodes', () => {
@@ -126,9 +126,9 @@ describe('nodes', () => {
             variables: [],
             events: [],
             types: standardTypes,
-            flows: [],
-            values: [],
-            configuration: [],
+            flows: {},
+            values: {},
+            configuration: {},
             addEventToWorkQueue: jest.fn,
         };
     })
@@ -136,9 +136,9 @@ describe('nodes', () => {
     it('event/receive', async () => {
         const receive: Receive = new Receive({
             ...defaultProps,
-            configuration: [{ id: 'event', value: 0 }],
-            events: [{ id: 'testCustomEvent', values: [{ id: 'text', type: 7 }] }],
-            flows: [{ id: 'out' }],
+            configuration: {event: { value: [0] }},
+            events: [{ id: 'testCustomEvent', values: {text: { type: 7 }} }],
+            flows: {out: { }},
         });
         await new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -151,9 +151,9 @@ describe('nodes', () => {
     it('event/send', async () => {
         const send: Send = new Send({
             ...defaultProps,
-            configuration: [{ id: 'event', value: 0 }],
-            events: [{ id: 'testCustomEvent', values: [{ id: 'text' }] }],
-            values: [{ id: 'text', value: ['test'], type: 7}],
+            configuration: {event: { value: [0] }},
+            events: [{ id: 'testCustomEvent', values: {text: { type: 7 }} }],
+            values: {text: { value: ['test'], type: 7}},
         });
 
         // Replace the original function with the mock
@@ -170,157 +170,126 @@ describe('nodes', () => {
     it('flow/branch', async () => {
         const trueBranch: Branch = new Branch({
             ...defaultProps,
-            values: [{ id: 'condition', value: [true], type: 0 }],
-            flows: [
-                { id: 'true', node: 0 },
-                { id: 'false', node: 1 },
-            ],
+            values: {condition: { value: [true], type: 0 }},
+            flows: {true: { node: 0, socket: 'in' }, false: { node: 1, socket: 'in' }},
         });
 
-        trueBranch.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
+        trueBranch.processFlow = jest.fn<(flow: IInteractivityFlow) => Promise<void>>();
         await trueBranch.processNode();
-        expect(trueBranch.processFlow).toHaveBeenCalledWith({ id: 'true', node: 0 });
+        expect(trueBranch.processFlow).toHaveBeenCalledWith({ socket: 'in', node: 0 });
 
         const falseBranch: Branch = new Branch({
             ...defaultProps,
-            values: [{ id: 'condition', value: [false], type: 0 }],
-            flows: [
-                { id: 'true', node: 0 },
-                { id: 'false', node: 1 },
-            ],
+            values: {condition: { value: [false], type: 0 }},
+            flows: {true: { node: 0, socket: 'in' }, false: { node: 1, socket: 'in' }},
         });
 
-        falseBranch.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
+        falseBranch.processFlow = jest.fn<(flow: IInteractivityFlow) => Promise<void>>();
         await falseBranch.processNode();
-        expect(falseBranch.processFlow).toHaveBeenCalledWith({ id: 'false', node: 1 });
+        expect(falseBranch.processFlow).toHaveBeenCalledWith({ socket: 'in', node: 1 });
     });
 
     it('flow/setDelay', async () => {
         graphEngine.clearScheduledDelays();
         const setDelay: SetDelay = new SetDelay({
             ...defaultProps,
-            values: [{ id: 'duration', value: [0.5], type: 2 }],
-            flows: [
-                { id: 'out', node: 1 },
-                {id: 'done', node: 2 }
-            ]
+            values: {duration: { value: [0.5], type: 2 }},
+            flows: {out: { node: 1, socket: 'in' }, done: { node: 2, socket: 'in' }}
         });
-        setDelay.addEventToWorkQueue = jest.fn<(flow: IFlow) => Promise<void>>();
-        setDelay.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
+        setDelay.addEventToWorkQueue = jest.fn<(flow: IInteractivityFlow) => Promise<void>>();
+        setDelay.processFlow = jest.fn<(flow: IInteractivityFlow) => Promise<void>>();
         setDelay.processNode('in');
         setDelay.processNode('cancel');
-        expect(setDelay.outValues.lastDelayIndex.value[0]).toBe(-1);
+        expect(setDelay.outValues.lastDelayIndex.value![0]).toBe(-1);
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
         expect(setDelay.addEventToWorkQueue).not.toHaveBeenCalled()
-        expect(setDelay.processFlow).toHaveBeenCalledWith({"id": "out", "node": 1});
+        expect(setDelay.processFlow).toHaveBeenCalledWith({ socket: 'in', node: 1 });
 
         setDelay.processNode('in');
-        expect(setDelay.outValues.lastDelayIndex.value[0]).toBe(1);
+        expect(setDelay.outValues.lastDelayIndex.value![0]).toBe(1);
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        expect(setDelay.addEventToWorkQueue).toHaveBeenCalledWith({"id": "done", "node": 2});
-        expect(setDelay.processFlow).toHaveBeenCalledWith({"id": "out", "node": 1});
+        expect(setDelay.addEventToWorkQueue).toHaveBeenCalledWith({ socket: 'in', node: 2 });
+        expect(setDelay.processFlow).toHaveBeenCalledWith({ socket: 'in', node: 1 });
     });
 
     it('flow/cancelDelay', async () => {
         graphEngine.clearScheduledDelays();
         const cancelDelay: CancelDelay = new CancelDelay({
             ...defaultProps,
-            values: [{ id: 'delayIndex', value: [0], type: 1 }],
-            flows: [
-                { id: 'out', node: 1 }
-            ]
+            values: {delayIndex: { value: [0], type: 1 }},
+            flows: {out: { node: 1, socket: 'in' }}
         });
-        cancelDelay.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
+        cancelDelay.processFlow = jest.fn<(flow: IInteractivityFlow) => Promise<void>>();
         cancelDelay.processNode("in");
 
         const setDelay: SetDelay = new SetDelay({
             ...defaultProps,
-            values: [{ id: 'duration', value: [0.5], type: 2 }],
-            flows: [
-                { id: 'out', node: 1 },
-                {id: 'done', node: 2 }
-            ]
+            values: {duration: { value: [0.5], type: 2 }},
+            flows: {out: { node: 1, socket: 'in' }, done: { node: 2, socket: 'in' }}
         });
-        setDelay.addEventToWorkQueue = jest.fn<(flow: IFlow) => Promise<void>>();
-        setDelay.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
+        setDelay.addEventToWorkQueue = jest.fn<(flow: IInteractivityFlow) => Promise<void>>();
+        setDelay.processFlow = jest.fn<(flow: IInteractivityFlow) => Promise<void>>();
         setDelay.processNode('in');
         cancelDelay.processNode("in");
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        expect(cancelDelay.processFlow).toHaveBeenCalledWith({"id": "out", "node": 1});
+        expect(cancelDelay.processFlow).toHaveBeenCalledWith({socket: "in", node: 1});
         expect(setDelay.addEventToWorkQueue).not.toHaveBeenCalled();
-        expect(setDelay.processFlow).toHaveBeenCalledWith({"id": "out", "node": 1});
+        expect(setDelay.processFlow).toHaveBeenCalledWith({socket: "in", node: 1});
     });
 
     it('flow/sequence', async () => {
         const sequence: Sequence = new Sequence({
             ...defaultProps,
-            flows: [
-                { id: '0', node: 0 },
-                { id: '1', node: 1 },
-                { id: '2', node: 2 },
-            ],
+            flows: {0: { node: 0, socket: 'in' }, 1: { node: 1, socket: 'in' }, 2: { node: 2, socket: 'in' }},
         });
 
-        sequence.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
+        sequence.processFlow = jest.fn<(flow: IInteractivityFlow) => Promise<void>>();
         await sequence.processNode();
 
-        expect(sequence.processFlow).toHaveBeenCalledWith({ id: '0', node: 0 });
-        expect(sequence.processFlow).toHaveBeenCalledWith({ id: '1', node: 1 });
-        expect(sequence.processFlow).toHaveBeenCalledWith({ id: '2', node: 2 });
+        expect(sequence.processFlow).toHaveBeenCalledWith({ socket: 'in', node: 0 });
+        expect(sequence.processFlow).toHaveBeenCalledWith({ socket: 'in', node: 1 });
+        expect(sequence.processFlow).toHaveBeenCalledWith({ socket: 'in', node: 2 });
     });
 
     it('flow/for', async () => {
         const forLoop: ForLoop = new ForLoop({
             ...defaultProps,
-            configuration: [
-                {id: 'initialIndex', value: 0}
-            ],
-            values: [
-                { id: 'startIndex', value: [0], type: 1 },
-                { id: 'endIndex', value: [5], type: 1 },
-            ],
-            flows: [
-                { id: 'loopBody', node: 0 },
-                { id: 'completed', node: 1 },
-            ],
+            configuration: {initialIndex: { value: [0] }},
+            values: {startIndex: { value: [0], type: 1 }, endIndex: { value: [5], type: 1 }},
+            flows: {loopBody: { node: 0, socket: 'in' }, completed: { node: 1, socket: 'in' }},
         });
 
-        forLoop.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
+        forLoop.processFlow = jest.fn<(flow: IInteractivityFlow) => Promise<void>>();
         await forLoop.processNode();
 
-        expect(forLoop.processFlow).toHaveBeenCalledWith({ id: 'loopBody', node: 0 });
-        expect(forLoop.processFlow).toHaveBeenCalledWith({ id: 'completed', node: 1 });
+        expect(forLoop.processFlow).toHaveBeenCalledWith({ socket: 'in', node: 0 });
+        expect(forLoop.processFlow).toHaveBeenCalledWith({ socket: 'in', node: 1 });
         expect(forLoop.processFlow).toHaveBeenCalledTimes(6);
     });
 
     it('flow/doN', async () => {
         const doN: DoN = new DoN({
             ...defaultProps,
-            configuration: [],
-            values: [
-                { id: 'n', value: [2], type: 1},
-            ],
-            flows: [
-                { id: 'out', node: 0 },
-            ],
+            values: {n: { value: [2], type: 1}},
+            flows: {out: { node: 0, socket: 'in' }},
         });
 
-        doN.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
-        expect(doN.outValues.currentCount.value[0]).toBe(0);
+        doN.processFlow = jest.fn<(flow: IInteractivityFlow) => Promise<void>>();
+        expect(doN.outValues.currentCount.value![0]).toBe(0);
         doN.processNode("in");
-        expect(doN.outValues.currentCount.value[0]).toBe(1);
+        expect(doN.outValues.currentCount.value![0]).toBe(1);
         doN.processNode("in");
-        expect(doN.outValues.currentCount.value[0]).toBe(2);
+        expect(doN.outValues.currentCount.value![0]).toBe(2);
         doN.processNode("in");
-        expect(doN.outValues.currentCount.value[0]).toBe(2);
+        expect(doN.outValues.currentCount.value![0]).toBe(2);
 
         expect(doN.processFlow).toHaveBeenCalledTimes(2);
 
         doN.processNode("reset");
-        expect(doN.outValues.currentCount.value[0]).toBe(0);
+        expect(doN.outValues.currentCount.value![0]).toBe(0);
         doN.processNode("in");
         expect(doN.processFlow).toHaveBeenCalledTimes(3);
     });
@@ -328,18 +297,11 @@ describe('nodes', () => {
     it('flow/multiGate', async () => {
         const multiGate: MultiGate = new MultiGate({
             ...defaultProps,
-            configuration: [
-                { id: 'isRandom', value: false },
-                { id: 'loop', value: false },
-            ],
-            flows: [
-                { id: '0', node: 0 },
-                { id: '1', node: 1 },
-                { id: '2', node: 2 },
-            ]
+            configuration: {isRandom: { value: [false] }, loop: { value: [false] }},
+            flows: {0: { node: 0, socket: 'in' }, 1: { node: 1, socket: 'in' }, 2: { node: 2, socket: 'in' }},
         });
 
-        multiGate.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
+        multiGate.processFlow = jest.fn<(flow: IInteractivityFlow) => Promise<void>>();
         await multiGate.processNode('in');
         await multiGate.processNode('in');
         await multiGate.processNode('in');
@@ -351,130 +313,117 @@ describe('nodes', () => {
     it('flow/switch', async () => {
         const switchNode: Switch = new Switch({
             ...defaultProps,
-            configuration: [{ id: 'cases', value: [0, 1, 2] }],
-            values: [{ id: 'selection', value: [1], type: 1 }],
-            flows: [
-                { id: '0', node: 0 },
-                { id: '1', node: 1 },
-                { id: '2', node: 2 },
-            ],
+            configuration: {cases: { value: [0, 1, 2] }},
+            values: {selection: { value: [1], type: 1 }},
+            flows: {0: { node: 0, socket: 'in' }, 1: { node: 1, socket: 'in' }, 2: { node: 2, socket: 'in' }},
         });
 
-        switchNode.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
+        switchNode.processFlow = jest.fn<(flow: IInteractivityFlow) => Promise<void>>();
         await switchNode.processNode('in');
 
-        expect(switchNode.processFlow).toHaveBeenCalledWith({ id: '1', node: 1 });
+        expect(switchNode.processFlow).toHaveBeenCalledWith({ socket: 'in', node: 1 });
 
         const defaultSwitchNode: Switch = new Switch({
             ...defaultProps,
-            configuration: [{ id: 'cases', value: [0, 1, 2] }],
-            values: [{ id: 'selection', value: [4], type: 1 }],
-            flows: [
-                { id: '0', node: 0 },
-                { id: '1', node: 1 },
-                { id: '2', node: 2 },
-                { id: 'default', node: 4 },
-            ],
+            configuration: {cases: { value: [0, 1, 2] }},
+            values: {selection: { value: [4], type: 1 }},
+            flows: {0: { node: 0, socket: 'in' }, 1: { node: 1, socket: 'in' }, 2: { node: 2, socket: 'in' }, default: { node: 4, socket: 'in' }},
         });
 
-        defaultSwitchNode.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
+        defaultSwitchNode.processFlow = jest.fn<(flow: IInteractivityFlow) => Promise<void>>();
         await defaultSwitchNode.processNode('in');
 
-        expect(defaultSwitchNode.processFlow).toHaveBeenCalledWith({ id: 'default', node: 4 });
+        expect(defaultSwitchNode.processFlow).toHaveBeenCalledWith({ socket: 'in', node: 4 });
     });
 
     it('flow/throttle', async () => {
         const throttleNode: Throttle = new Throttle({
             ...defaultProps,
-            values: [{ id: 'duration', value: [1], type: 2 }],
-            flows: [
-                { id: 'out', node: 0 },
-            ],
+            values: {duration: { value: [1], type: 2 }},
+            flows: {out: { node: 0, socket: 'in' }},
         });
 
-        throttleNode.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
-        expect(throttleNode.outValues.lastRemainingTime.value[0]).toBe(NaN);
+        throttleNode.processFlow = jest.fn<(flow: IInteractivityFlow) => Promise<void>>();
+        expect(throttleNode.outValues.lastRemainingTime.value![0]).toBe(NaN);
         throttleNode.processNode('in');
-        expect(throttleNode.processFlow).toHaveBeenCalledWith({ id: 'out', node: 0 });
+        expect(throttleNode.processFlow).toHaveBeenCalledWith({ socket: 'in', node: 0 });
         await new Promise((resolve) => setTimeout(resolve, 100));
         throttleNode.processNode('in');
-        expect(throttleNode.outValues.lastRemainingTime.value[0]).not.toBe(NaN);
-        expect(throttleNode.outValues.lastRemainingTime.value[0]).toBeGreaterThan(0);
+        expect(throttleNode.outValues.lastRemainingTime.value![0]).not.toBe(NaN);
+        expect(throttleNode.outValues.lastRemainingTime.value![0]).toBeGreaterThan(0);
 
         //clear throttle limit
         await new Promise((resolve) => setTimeout(resolve, 1500));
         await throttleNode.processNode('in');
-        expect(throttleNode.outValues.lastRemainingTime.value[0]).toBe(0);
+        expect(throttleNode.outValues.lastRemainingTime.value![0]).toBe(0);
     });
 
     it('flow/waitAll', async () => {
         const waitAll: WaitAll = new WaitAll({
             ...defaultProps,
-            configuration: [{ id: 'inputFlows', value: 2 }],
-            flows: [{ id: 'out', node: 1 }, {id: 'completed', node: 2}],
+            configuration: {inputFlows: { value: [2] }},
+            flows: {out: { node: 1, socket: 'in' }, completed: { node: 2, socket: 'in' }},
         });
 
-        waitAll.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
+        waitAll.processFlow = jest.fn<(flow: IInteractivityFlow) => Promise<void>>();
         waitAll.processNode('0');
-        expect(waitAll.outValues.remainingInputs.value[0]).toBe(1)
+        expect(waitAll.outValues.remainingInputs.value![0]).toBe(1)
         waitAll.processNode('reset');
-        expect(waitAll.outValues.remainingInputs.value[0]).toBe(2);
+        expect(waitAll.outValues.remainingInputs.value![0]).toBe(2);
         waitAll.processNode('1');
         expect(waitAll.processFlow).toHaveBeenCalledTimes(2);
-        expect(waitAll.processFlow).toHaveBeenCalledWith({ id: 'out', node: 1 });
+        expect(waitAll.processFlow).toHaveBeenCalledWith({ socket: 'in', node: 1 });
 
         waitAll.processNode('0');
-        expect(waitAll.outValues.remainingInputs.value[0]).toBe(0);
+        expect(waitAll.outValues.remainingInputs.value![0]).toBe(0);
         expect(waitAll.processFlow).toHaveBeenCalledTimes(3);
-        expect(waitAll.processFlow).toHaveBeenCalledWith({ id: 'completed', node: 2 });
+        expect(waitAll.processFlow).toHaveBeenCalledWith({ socket: 'in', node: 2 });
     });
 
     it('flow/while', async () => {
         const whileLoop: WhileLoop = new WhileLoop({
             ...defaultProps,
-            values: [{ id: 'condition', value: [false], type: 0 }],
-            flows: [
-                { id: 'loopBody', node: 0 },
-                { id: 'completed', node: 1 },
-            ],
+            values: {condition: { value: [false], type: 0 }},
+            flows: {loopBody: { node: 0, socket: 'in' }, completed: { node: 1, socket: 'in' }},
         });
 
-        whileLoop.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
+        whileLoop.processFlow = jest.fn<(flow: IInteractivityFlow) => Promise<void>>();
         await whileLoop.processNode();
 
-        expect(whileLoop.processFlow).toHaveBeenCalledWith({ id: 'completed', node: 1 });
+        expect(whileLoop.processFlow).toHaveBeenCalledWith({ socket: 'in', node: 1 });
         expect(whileLoop.processFlow).toHaveBeenCalledTimes(1);
     });
 
     it('variable/get', async () => {
         const variableGet: VariableGet = new VariableGet({
             ...defaultProps,
-            configuration: [{ id: 'variable', value: 0 }],
-            variables: [{ id: 'testVariable', value: [42], initialValue: [42] }],
+            configuration: {variable: { value: [0] }},
+            variables: [{ value: [42], type: 1 }],
         });
 
         const res = await variableGet.processNode()['value'];
-        expect(res.value[0]).toBe(42);
+        expect(res!.value![0]).toBe(42);
     });
 
     it('variable/set', async () => {
+        const variables: IInteractivityVariable[] = [{ value: [42], type: 1 }];
         const variableSet: VariableSet = new VariableSet({
             ...defaultProps,
-            configuration: [{ id: 'variable', value: 0 }],
-            variables: [{ id: 'testVariable', initialValue: 42 }],
-            values: [{ id: 'value', value: [10], type: 1 }],
+            configuration: {variable: { value: [0] }},
+            variables: variables,
+            values: {value: { value: [10], type: 1 }},
         });
 
         await variableSet.processNode('in');
-        expect(variableSet.variables[0].value).toBe(10);
+        expect(variables[0].value![0]).toBe(10);
     });
 
     it('pointer/get', async () => {
         const world = {nodes:[{ value: 1 }, { value: 2 }]};
         const pointerGet: PointerGet = new PointerGet({
             ...defaultProps,
-            configuration: [{ id: 'pointer', value: '/nodes/{index}/value' }],
-            values: [{ id: 'index', value: [1], type: 1 }],
+            configuration: {pointer: { value: ['/nodes/{index}/value'] }, type: { value: [1] }},
+            values: {index: { value: [1], type: 1 }},
         });
         graphEngine.registerJsonPointer(
             '/nodes/99/value',
@@ -494,7 +443,7 @@ describe('nodes', () => {
 
         const pointerGetCustomPtr: PointerGet = new PointerGet({
             ...defaultProps,
-            configuration: [{ id: 'pointer', value: '/nodes/0/value' }],
+            configuration: {pointer: { value: ['/nodes/0/value'] }, type: { value: [1] }},
         });
 
         const resCustom = await pointerGetCustomPtr.processNode();
@@ -513,60 +462,17 @@ describe('nodes', () => {
                 const parts: string[] = path.split('/');
                world.nodes[Number(parts[2])].value = value;
             },
-            "float", false
+            "int", false
         );
         const pointerSet: PointerSet = new PointerSet({
             ...defaultProps,
-            configuration: [
-                { id: 'pointer', value: '/nodes/{index}/value' },
-            ],
-            values: [
-                { id: 'index', value: [0], type: 1 },
-                { id: 'value', value: [42], type: 1 },
-            ],
+            configuration: {pointer: { value: ['/nodes/{index}/value'] }, type: { value: [1] }},
+            values: {index: { value: [0], type: 1 }, value: { value: [42], type: 1 }},
         });
 
         await pointerSet.processNode('in');
         const res = world.nodes[0].value;
         expect(res).toBe(42);
-    });
-
-    it('pointer/animateTo', async () => {
-        const world = {nodes:[{ value: 1 }, { value: 2 }]};
-        graphEngine.registerJsonPointer(
-            '/nodes/99/value',
-            (path) => {
-                const parts: string[] = path.split('/');
-                return world.nodes[Number(parts[2])].value;
-            },
-            (path, value) => {
-                const parts: string[] = path.split('/');
-                world.nodes[Number(parts[2])].value = value;
-            },
-            "float", false
-        );
-        const pointerAnimateTo: PointerAnimateTo = new PointerAnimateTo({
-            ...defaultProps,
-            configuration: [
-                { id: 'pointer', value: '/nodes/{index}/value' },
-                { id: "easingType", value: 0}
-            ],
-            values: [
-                { id: 'index', value: [0], type: 1 },
-                { id: "easingDuration", value: [0.5], type: 2},
-                { id: 'value', value: [42], type: 2 },
-                { id: 'cp1', value: [0], type: 2 },
-                { id: 'cp2', value: [42], type: 2}
-            ],
-        });
-
-        graphEngine.animateProperty = jest.fn(() => {
-            world.nodes[0].value = 42;
-        })
-        pointerAnimateTo.processNode('in');
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        expect(graphEngine.animateProperty).toHaveBeenCalledTimes(1);
-        expect(world.nodes[0].value).toBe(42);
     });
 
     it('pointer/interpolate', async () => {
@@ -585,16 +491,8 @@ describe('nodes', () => {
         );
         const pointerInterpolate: PointerInterpolate = new PointerInterpolate({
             ...defaultProps,
-            configuration: [
-                { id: 'pointer', value: '/nodes/{index}/value' },
-            ],
-            values: [
-                { id: 'index', value: [0], type: 1 },
-                { id: "duration", value: [0.5], type: 2},
-                { id: 'value', value: [42], type: 2 },
-                { id: 'p1', value: [0,0], type: 3 },
-                { id: 'p2', value: [1,1], type: 3}
-            ],
+            configuration: {pointer: { value: ['/nodes/{index}/value'] }, type: { value: [2] }},
+            values: {index: { value: [0], type: 1 }, duration: { value: [0.5], type: 2}, value: { value: [42], type: 2 }, p1: { value: [0,0], type: 3 }, p2: { value: [1,1], type: 3}},
         });
 
         graphEngine.animateCubicBezier = jest.fn(() => {
@@ -609,27 +507,23 @@ describe('nodes', () => {
     it('lifecycle/onStart', async () => {
         const onStart: OnStartNode = new OnStartNode({
             ...defaultProps,
-            flows: [
-                { id: 'out', node: 0 }
-            ],
+            flows: {out: { node: 0, socket: 'in' }},
         });
 
-        onStart.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
+        onStart.processFlow = jest.fn<(flow: IInteractivityFlow) => Promise<void>>();
         await onStart.processNode('in');
-        expect(onStart.processFlow).toHaveBeenCalledWith({ id: 'out', node: 0 });
+        expect(onStart.processFlow).toHaveBeenCalledWith({ socket: 'in', node: 0 });
     });
 
     it('lifecycle/onTick', async () => {
         const onTick: OnTickNode = new OnTickNode({
             ...defaultProps,
-            flows: [
-                { id: 'out', node: 0 }
-            ],
+            flows: {out: { node: 0, socket: 'in' }},
         });
 
-        onTick.processFlow = jest.fn<(flow: IFlow) => Promise<void>>();
+        onTick.processFlow = jest.fn<(flow: IInteractivityFlow) => Promise<void>>();
         await onTick.processNode('in');
-        expect(onTick.processFlow).toHaveBeenCalledWith({ id: 'out', node: 0 });
+        expect(onTick.processFlow).toHaveBeenCalledWith({ socket: 'in', node: 0 });
     });
 
     it("math/e", () => {
@@ -671,9 +565,7 @@ describe('nodes', () => {
     it("math/abs", () => {
         let abs: AbsoluteValue = new AbsoluteValue({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10], type: 1}
-            ]
+            values: {a: { value: [-10], type: 1}}
         });
 
         let val = abs.processNode();
@@ -681,9 +573,7 @@ describe('nodes', () => {
 
         abs = new AbsoluteValue({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10], type: 2}
-            ]
+            values: {a: { value: [-10], type: 2}}
         });
 
         val = abs.processNode();
@@ -691,9 +581,7 @@ describe('nodes', () => {
 
         abs = new AbsoluteValue({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10, 12, -20] , type: 4}
-            ]
+            values: {a: { value: [-10, 12, -20] , type: 4}}
         });
 
         val = abs.processNode();
@@ -705,9 +593,7 @@ describe('nodes', () => {
     it("math/sign", () => {
         let sign: Sign = new Sign({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10], type: 2}
-            ]
+            values: {a: { value: [-10], type: 2}}
         });
 
         let val = sign.processNode();
@@ -715,9 +601,7 @@ describe('nodes', () => {
 
         sign = new Sign({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10, 0, 10] , type: 4}
-            ]
+            values: {a: { value: [-10, 0, 10] , type: 4}}
         });
 
         val = sign.processNode();
@@ -729,9 +613,7 @@ describe('nodes', () => {
     it("math/trunc", () => {
         let trunc: Truncate = new Truncate({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10.1201223], type: 2}
-            ]
+            values: {a: { value: [-10.1201223], type: 2}}
         });
 
         let val = trunc.processNode();
@@ -739,9 +621,7 @@ describe('nodes', () => {
 
         trunc = new Truncate({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10.123, 0.493, 10.12] , type: 4}
-            ]
+            values: {a: { value: [-10.123, 0.493, 10.12] , type: 4}}
         });
 
         val = trunc.processNode();
@@ -753,9 +633,7 @@ describe('nodes', () => {
     it("math/floor", () => {
         let floor: Floor = new Floor({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10.1201223], type: 2}
-            ]
+            values: {a: { value: [-10.1201223], type: 2}}
         });
 
         let val = floor.processNode();
@@ -763,9 +641,7 @@ describe('nodes', () => {
 
         floor = new Floor({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10.123, 0.493, 10.12] , type: 4}
-            ]
+            values: {a: { value: [-10.123, 0.493, 10.12] , type: 4}}
         });
 
         val = floor.processNode();
@@ -777,9 +653,7 @@ describe('nodes', () => {
     it("math/ceil", () => {
         let ceil: Ceil = new Ceil({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10.1201223], type: 2}
-            ]
+            values: {a: { value: [-10.1201223], type: 2}}
         });
 
         let val = ceil.processNode();
@@ -787,9 +661,7 @@ describe('nodes', () => {
 
         ceil = new Ceil({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10.123, 0.493, 10.12] , type: 4}
-            ]
+            values: {a: { value: [-10.123, 0.493, 10.12] , type: 4}}
         });
 
         val = ceil.processNode();
@@ -801,10 +673,7 @@ describe('nodes', () => {
     it("math/add", () => {
         let add: Add = new Add({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10.5], type: 2},
-                {id: 'b', value: [5.5], type: 2}
-            ]
+            values: {a: { value: [-10.5], type: 2}, b: { value: [5.5], type: 2}}
         });
 
         let val = add.processNode();
@@ -812,10 +681,7 @@ describe('nodes', () => {
 
         add = new Add({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10.5, 0.5, 9] , type: 4},
-                {id: 'b', value: [4, -6, 10] , type: 4}
-            ]
+            values: {a: { value: [-10.5, 0.5, 9] , type: 4}, b: { value: [4, -6, 10] , type: 4}}
         });
 
         val = add.processNode();
@@ -827,9 +693,7 @@ describe('nodes', () => {
     it("math/extract2", () => {
         let extract2: Extract2 = new Extract2({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10.5, 5.5], type: 3},
-            ]
+            values: {a: { value: [-10.5, 5.5], type: 3}}
         });
 
         let val = extract2.processNode();
@@ -840,9 +704,7 @@ describe('nodes', () => {
     it("math/extract3", () => {
         let extract3: Extract3 = new Extract3({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10.5, 5.5, 4], type: 4},
-            ]
+            values: {a: { value: [-10.5, 5.5, 4], type: 4}}
         });
 
         let val = extract3.processNode();
@@ -854,9 +716,7 @@ describe('nodes', () => {
     it("math/extract4", () => {
         let extract4: Extract4 = new Extract4({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10.5, 5.5, 4, 6], type: 5},
-            ]
+            values: {a: { value: [-10.5, 5.5, 4, 6], type: 5}}
         });
 
         let val = extract4.processNode();
@@ -869,9 +729,7 @@ describe('nodes', () => {
     it("math/extract4x4", () => {
         let extract4x4: Extract4x4 = new Extract4x4({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [[-10.5, 5.5, 4, 6], [1,2,3,4], [5,6,7,8], [9, 10, 11, 12]], type: 6},
-            ]
+            values: {a: { value: [[-10.5, 5.5, 4, 6], [1,2,3,4], [5,6,7,8], [9, 10, 11, 12]], type: 6}}
         });
 
         let val = extract4x4.processNode();
@@ -896,10 +754,7 @@ describe('nodes', () => {
     it("math/combine2", () => {
         let combine2: Combine2 = new Combine2({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10.5], type: 2},
-                {id: 'b', value: [5.5], type: 2}
-            ]
+            values: {a: { value: [-10.5], type: 2}, b: { value: [5.5], type: 2}}
         });
 
         let val = combine2.processNode();
@@ -910,11 +765,7 @@ describe('nodes', () => {
     it("math/combine3", () => {
         let combine3: Combine3 = new Combine3({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10.5], type: 2},
-                {id: 'b', value: [5.5], type: 2},
-                {id: 'c', value: [0.5], type: 2}
-            ]
+            values: {a: { value: [-10.5], type: 2}, b: { value: [5.5], type: 2}, c: { value: [0.5], type: 2}}
         });
 
         let val = combine3.processNode();
@@ -926,12 +777,7 @@ describe('nodes', () => {
     it("math/combine4", () => {
         let combine4: Combine4 = new Combine4({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10.5], type: 2},
-                {id: 'b', value: [5.5], type: 2},
-                {id: 'c', value: [0.5], type: 2},
-                {id: 'd', value: [7.5], type: 2},
-            ]
+            values: {a: { value: [-10.5], type: 2}, b: { value: [5.5], type: 2}, c: { value: [0.5], type: 2}, d: { value: [7.5], type: 2}}
         });
 
         let val = combine4.processNode();
@@ -944,24 +790,7 @@ describe('nodes', () => {
     it("math/combine4x4", () => {
         let combine4x4: Combine4x4 = new Combine4x4({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10.5], type: 2},
-                {id: 'b', value: [5.5], type: 2},
-                {id: 'c', value: [0.5], type: 2},
-                {id: 'd', value: [7.5], type: 2},
-                {id: 'e', value: [-10], type: 2},
-                {id: 'f', value: [5], type: 2},
-                {id: 'g', value: [0], type: 2},
-                {id: 'h', value: [7], type: 2},
-                {id: 'i', value: [10.5], type: 2},
-                {id: 'j', value: [5.8], type: 2},
-                {id: 'k', value: [9.5], type: 2},
-                {id: 'l', value: [2.5], type: 2},
-                {id: 'm', value: [-1.5], type: 2},
-                {id: 'n', value: [5.7], type: 2},
-                {id: 'o', value: [6.5], type: 2},
-                {id: 'p', value: [7.7], type: 2},
-            ]
+            values: {a: { value: [-10.5], type: 2}, b: { value: [5.5], type: 2}, c: { value: [0.5], type: 2}, d: { value: [7.5], type: 2}, e: { value: [-10], type: 2}, f: { value: [5], type: 2}, g: { value: [0], type: 2}, h: { value: [7], type: 2}, i: { value: [10.5], type: 2}, j: { value: [5.8], type: 2}, k: { value: [9.5], type: 2}, l: { value: [2.5], type: 2}, m: { value: [-1.5], type: 2}, n: { value: [5.7], type: 2}, o: { value: [6.5], type: 2}, p: { value: [7.7], type: 2}}
         });
 
         let val = combine4x4.processNode();
@@ -986,11 +815,7 @@ describe('nodes', () => {
     it("math/select", () => {
         let select: Select = new Select({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10.5], type: 2},
-                {id: 'b', value: [5.5], type: 2},
-                {id: 'condition', value: [true], type: 0}
-            ]
+            values: {a: { value: [-10.5], type: 2}, b: { value: [5.5], type: 2}, condition: { value: [true], type: 0}}
         });
 
         let val = select.processNode();
@@ -998,11 +823,7 @@ describe('nodes', () => {
 
         select = new Select({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10.5, 0.5, 9] , type: 4},
-                {id: 'b', value: [4, -6, 10] , type: 4},
-                {id: 'condition', value: [false], type: 0}
-            ]
+            values: {a: { value: [-10.5, 0.5, 9] , type: 4}, b: { value: [4, -6, 10] , type: 4}, condition: { value: [false], type: 0}}
         });
 
         val = select.processNode();
@@ -1014,10 +835,7 @@ describe('nodes', () => {
     it("math/sub", () => {
         let sub: Subtract = new Subtract({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10.5], type: 2},
-                {id: 'b', value: [5.5], type: 2}
-            ]
+            values: {a: { value: [-10.5], type: 2}, b: { value: [5.5], type: 2}}
         });
 
         let val = sub.processNode();
@@ -1025,10 +843,7 @@ describe('nodes', () => {
 
         sub = new Subtract({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10.5, 0.5, 9] , type: 4},
-                {id: 'b', value: [4, -6, 10] , type: 4}
-            ]
+            values: {a: { value: [-10.5, 0.5, 9] , type: 4}, b: { value: [4, -6, 10] , type: 4}}
         });
 
         val = sub.processNode();
@@ -1040,10 +855,7 @@ describe('nodes', () => {
     it("math/mul", () => {
         let mul: Multiply = new Multiply({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10], type: 2},
-                {id: 'b', value: [5.5], type: 2}
-            ]
+            values: {a: { value: [-10], type: 2}, b: { value: [5.5], type: 2}}
         });
 
         let val = mul.processNode();
@@ -1051,10 +863,7 @@ describe('nodes', () => {
 
         mul = new Multiply({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10, -0.5, 9], type: 4},
-                {id: 'b', value: [5, -6, 10], type: 4}
-            ]
+            values: {a: { value: [-10, -0.5, 9], type: 4}, b: { value: [5, -6, 10], type: 4}}
         });
 
         val = mul.processNode();
@@ -1066,10 +875,7 @@ describe('nodes', () => {
     it("math/div", () => {
         let div: Divide = new Divide({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10], type: 2},
-                {id: 'b', value: [5], type: 2}
-            ]
+            values: {a: { value: [-10], type: 2}, b: { value: [5], type: 2}}
         });
 
         let val = div.processNode();
@@ -1077,10 +883,7 @@ describe('nodes', () => {
 
         div = new Divide({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [0, -6, 9] , type: 4},
-                {id: 'b', value: [-5, -0.5, 0] , type: 4}
-            ]
+            values: {a: { value: [0, -6, 9] , type: 4}, b: { value: [-5, -0.5, 0] , type: 4}}
         });
 
         val = div.processNode();
@@ -1092,10 +895,7 @@ describe('nodes', () => {
     it("math/rem", () => {
         let rem: Remainder = new Remainder({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10], type: 2},
-                {id: 'b', value: [5], type: 2}
-            ]
+            values: {a: { value: [-10], type: 2}, b: { value: [5], type: 2}}
         });
 
         let val = rem.processNode();
@@ -1103,10 +903,7 @@ describe('nodes', () => {
 
         rem = new Remainder({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10, 10, 9] , type: 4},
-                {id: 'b', value: [5, 6, 10] , type: 4}
-            ]
+            values: {a: { value: [-10, 10, 9] , type: 4}, b: { value: [5, 6, 10] , type: 4}}
         });
 
         val = rem.processNode();
@@ -1118,10 +915,7 @@ describe('nodes', () => {
     it("math/max", () => {
         let max: Max = new Max({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10], type: 2},
-                {id: 'b', value: [5], type: 2}
-            ]
+            values: {a: { value: [-10], type: 2}, b: { value: [5], type: 2}}
         });
 
         let val = max.processNode();
@@ -1129,10 +923,7 @@ describe('nodes', () => {
 
         max = new Max({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10, 10, -9] , type: 4},
-                {id: 'b', value: [5, 6, -10] , type: 4}
-            ]
+            values: {a: { value: [-10, 10, -9] , type: 4}, b: { value: [5, 6, -10] , type: 4}}
         });
 
         val = max.processNode();
@@ -1144,10 +935,7 @@ describe('nodes', () => {
     it("math/min", () => {
         let min: Min = new Min({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10], type: 2},
-                {id: 'b', value: [5], type: 2}
-            ]
+            values: {a: { value: [-10], type: 2}, b: { value: [5], type: 2}}
         });
 
         let val = min.processNode();
@@ -1155,10 +943,7 @@ describe('nodes', () => {
 
         min = new Min({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10, 10, -9] , type: 4},
-                {id: 'b', value: [5, 6, -10] , type: 4}
-            ]
+            values: {a: { value: [-10, 10, -9] , type: 4}, b: { value: [5, 6, -10] , type: 4}}
         });
 
         val = min.processNode();
@@ -1170,9 +955,7 @@ describe('nodes', () => {
     it("math/rad", () => {
         let rad: DegreeToRadians = new DegreeToRadians({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [180], type: 2},
-            ]
+            values: {a: { value: [180], type: 2}}
         });
 
         let val = rad.processNode();
@@ -1180,9 +963,7 @@ describe('nodes', () => {
 
         rad = new DegreeToRadians({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-180, 45, 270] , type: 4}
-            ]
+            values: {a: { value: [-180, 45, 270] , type: 4}}
         });
 
         val = rad.processNode();
@@ -1194,9 +975,7 @@ describe('nodes', () => {
     it("math/deg", () => {
         let deg: RadiansToDegrees = new RadiansToDegrees({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [Math.PI], type: 2},
-            ]
+            values: {a: { value: [Math.PI], type: 2}}
         });
 
         let val = deg.processNode();
@@ -1204,9 +983,7 @@ describe('nodes', () => {
 
         deg = new RadiansToDegrees({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [Math.PI * 2, -Math.PI, Math.PI * 4] , type: 4}
-            ]
+            values: {a: { value: [Math.PI * 2, -Math.PI, Math.PI * 4] , type: 4}}
         });
 
         val = deg.processNode();
@@ -1218,9 +995,7 @@ describe('nodes', () => {
     it("math/sin", () => {
         let sin: Sine = new Sine({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [Math.PI], type: 2},
-            ]
+            values: {a: { value: [Math.PI], type: 2}}
         });
 
         let val = sin.processNode();
@@ -1228,9 +1003,7 @@ describe('nodes', () => {
 
         sin = new Sine({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [Math.PI * 2, -Math.PI/2, Math.PI/2] , type: 4}
-            ]
+            values: {a: { value: [Math.PI * 2, -Math.PI/2, Math.PI/2] , type: 4}}
         });
 
         val = sin.processNode();
@@ -1242,9 +1015,7 @@ describe('nodes', () => {
     it("math/cos", () => {
         let cos: Cosine = new Cosine({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [Math.PI], type: 2},
-            ]
+            values: {a: { value: [Math.PI], type: 2}}
         });
 
         let val = cos.processNode();
@@ -1252,9 +1023,7 @@ describe('nodes', () => {
 
         cos = new Cosine({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [Math.PI * 2, -Math.PI/2, Math.PI/2], type: 4}
-            ]
+            values: {a: { value: [Math.PI * 2, -Math.PI/2, Math.PI/2], type: 4}}
         });
 
         val = cos.processNode();
@@ -1266,9 +1035,7 @@ describe('nodes', () => {
     it("math/tan", () => {
         let tan: Tangent = new Tangent({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [Math.PI / 4], type: 2},
-            ]
+            values: {a: { value: [Math.PI / 4], type: 2}}
         });
 
         let val = tan.processNode();
@@ -1276,9 +1043,7 @@ describe('nodes', () => {
 
         tan = new Tangent({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [Math.PI, Math.PI / 2, 3 * Math.PI / 4], type: 4}
-            ]
+            values: {a: { value: [Math.PI, Math.PI / 2, 3 * Math.PI / 4], type: 4}}
         });
 
         val = tan.processNode();
@@ -1291,9 +1056,7 @@ describe('nodes', () => {
     it("math/asin", () => {
         let asin: Arcsine = new Arcsine({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [0.5], type: 2 },
-            ]
+            values: {a: { value: [0.5], type: 2 }}
         });
 
         let val = asin.processNode();
@@ -1301,9 +1064,7 @@ describe('nodes', () => {
 
         asin = new Arcsine({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [0.86602540378, 0, -0.86602540378], type: 4 }
-            ]
+            values: {a: { value: [0.86602540378, 0, -0.86602540378], type: 4 }}
         });
 
         val = asin.processNode();
@@ -1315,9 +1076,7 @@ describe('nodes', () => {
     it("math/acos", () => {
         let acos: Arccosine = new Arccosine({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [0.5], type: 2 },
-            ]
+            values: {a: { value: [0.5], type: 2 }}
         });
 
         let val = acos.processNode();
@@ -1325,9 +1084,7 @@ describe('nodes', () => {
 
         acos = new Arccosine({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [0.86602540378, 1, -0.86602540378], type: 4 }
-            ]
+            values: {a: { value: [0.86602540378, 1, -0.86602540378], type: 4 }}
         });
 
         val = acos.processNode();
@@ -1339,9 +1096,7 @@ describe('nodes', () => {
     it("math/atan", () => {
         let atan: Arctangent = new Arctangent({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [0.5], type: 2 },
-            ]
+            values: {a: { value: [0.5], type: 2 }}
         });
 
         let val = atan.processNode();
@@ -1349,9 +1104,7 @@ describe('nodes', () => {
 
         atan = new Arctangent({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [0.57735026919, 0, -0.57735026919], type: 4 }
-            ]
+            values: {a: { value: [0.57735026919, 0, -0.57735026919], type: 4 }}
         });
 
         val = atan.processNode();
@@ -1363,10 +1116,7 @@ describe('nodes', () => {
     it("math/atan2", () => {
         let atan2: Arctangent2 = new Arctangent2({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [1.0], type: 2 },
-                { id: 'b', value: [1.0], type: 2 },
-            ]
+            values: {a: { value: [1.0], type: 2 }, b: { value: [1.0], type: 2 }}
         });
 
         let val = atan2.processNode();
@@ -1374,10 +1124,7 @@ describe('nodes', () => {
 
         atan2 = new Arctangent2({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [0.5, 0, -0.5], type: 4 },
-                { id: 'b', value: [0.86602540378, 1, -0.86602540378], type: 4 },
-            ]
+            values: {a: { value: [0.5, 0, -0.5], type: 4 }, b: { value: [0.86602540378, 1, -0.86602540378], type: 4 }}
         });
 
         val = atan2.processNode();
@@ -1389,9 +1136,7 @@ describe('nodes', () => {
     it("math/log", () => {
         let log: Log = new Log({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [2.0], type: 2 },
-            ]
+            values: {a: { value: [2.0], type: 2 }}
         });
 
         let val = log.processNode();
@@ -1399,9 +1144,7 @@ describe('nodes', () => {
 
         log = new Log({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [1, Math.E, 10], type: 4 }
-            ]
+            values: {a: { value: [1, Math.E, 10], type: 4 }}
         });
 
         val = log.processNode();
@@ -1413,9 +1156,7 @@ describe('nodes', () => {
     it("math/log2", () => {
         let log2: Log2 = new Log2({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [8.0], type: 2 },
-            ]
+            values: {a: { value: [8.0], type: 2 }}
         });
 
         let val = log2.processNode();
@@ -1423,9 +1164,7 @@ describe('nodes', () => {
 
         log2 = new Log2({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [1, 2, 16], type: 4 }
-            ]
+            values: {a: { value: [1, 2, 16], type: 4 }}
         });
 
         val = log2.processNode();
@@ -1437,9 +1176,7 @@ describe('nodes', () => {
     it("math/log10", () => {
         let log10: Log10 = new Log10({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [100.0], type: 2 },
-            ]
+            values: {a: { value: [100.0], type: 2 }}
         });
 
         let val = log10.processNode();
@@ -1447,9 +1184,7 @@ describe('nodes', () => {
 
         log10 = new Log10({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [1, 10, 1000], type: 4 }
-            ]
+            values: {a: { value: [1, 10, 1000], type: 4 }}
         });
 
         val = log10.processNode();
@@ -1461,9 +1196,7 @@ describe('nodes', () => {
     it("math/cbrt", () => {
         let cubeRoot: CubeRoot = new CubeRoot({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [8.0], type: 2 },
-            ]
+            values: {a: { value: [8.0], type: 2 }}
         });
 
         let val = cubeRoot.processNode();
@@ -1471,9 +1204,7 @@ describe('nodes', () => {
 
         cubeRoot = new CubeRoot({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [1, 27, 125], type: 4 }
-            ]
+            values: {a: { value: [1, 27, 125], type: 4 }}
         });
 
         val = cubeRoot.processNode();
@@ -1485,9 +1216,7 @@ describe('nodes', () => {
     it("math/sqrt", () => {
         let sqrt: SquareRoot = new SquareRoot({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [16.0], type: 2 },
-            ]
+            values: {a: { value: [16.0], type: 2 }}
         });
 
         let val = sqrt.processNode();
@@ -1495,9 +1224,7 @@ describe('nodes', () => {
 
         sqrt = new SquareRoot({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [1, 4, 9], type: 4}
-            ]
+            values: {a: { value: [1, 4, 9], type: 4}}
         });
 
         val = sqrt.processNode();
@@ -1509,10 +1236,7 @@ describe('nodes', () => {
     it("math/pow", () => {
         let pow: Power = new Power({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [2], type: 2},
-                {id: 'b', value: [3], type: 2}
-            ]
+            values: {a: { value: [2], type: 2}, b: { value: [3], type: 2}}
         });
 
         let val = pow.processNode();
@@ -1520,10 +1244,7 @@ describe('nodes', () => {
 
         pow = new Power({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [2, 0.5, 10] , type: 4},
-                {id: 'b', value: [-2, 3, 3] , type: 4}
-            ]
+            values: {a: { value: [2, 0.5, 10] , type: 4}, b: { value: [-2, 3, 3] , type: 4}}
         });
 
         val = pow.processNode();
@@ -1535,9 +1256,7 @@ describe('nodes', () => {
     it("math/exp", () => {
         let exp: Exponential = new Exponential({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [2], type: 2}
-            ]
+            values: {a: { value: [2], type: 2}}
         });
 
         let val = exp.processNode();
@@ -1545,9 +1264,7 @@ describe('nodes', () => {
 
         exp = new Exponential({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [2, 0.5, -1] , type: 4},
-            ]
+            values: {a: { value: [2, 0.5, -1] , type: 4}}
         });
 
         val = exp.processNode();
@@ -1559,11 +1276,7 @@ describe('nodes', () => {
     it("math/clamp", () => {
         let clamp: Clamp = new Clamp({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [2.5], type: 2},
-                {id: 'b', value: [0], type: 2},
-                {id: 'c', value: [1], type: 2}
-            ]
+            values: {a: { value: [2.5], type: 2}, b: { value: [0], type: 2}, c: { value: [1], type: 2}}
         });
 
         let val = clamp.processNode();
@@ -1571,11 +1284,7 @@ describe('nodes', () => {
 
         clamp = new Clamp({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-1, 0.5, 10] , type: 4},
-                {id: 'b', value: [0, 0, 3] , type: 4},
-                {id: 'c', value: [1, 1, 9] , type: 4},
-            ]
+            values: {a: { value: [-1, 0.5, 10] , type: 4}, b: { value: [0, 0, 3] , type: 4}, c: { value: [1, 1, 9] , type: 4}}
         });
 
         val = clamp.processNode();
@@ -1587,9 +1296,7 @@ describe('nodes', () => {
     it("math/saturate", () => {
         let saturate: Saturate = new Saturate({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [2.5], type: 2}
-            ]
+            values: {a: { value: [2.5], type: 2}}
         });
 
         let val = saturate.processNode();
@@ -1597,9 +1304,7 @@ describe('nodes', () => {
 
         saturate = new Saturate({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-1, 0.5, 10] , type: 4},
-            ]
+            values: {a: { value: [-1, 0.5, 10] , type: 4}}
         });
 
         val = saturate.processNode();
@@ -1611,11 +1316,7 @@ describe('nodes', () => {
     it("math/mix", () => {
         let mix: Mix = new Mix({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [2.5], type: 2},
-                {id: 'b', value: [0], type: 2},
-                {id: 'c', value: [0.2], type: 2}
-            ]
+            values: {a: { value: [2.5], type: 2}, b: { value: [0], type: 2}, c: { value: [0.2], type: 2}}
         });
 
         let val = mix.processNode();
@@ -1623,11 +1324,7 @@ describe('nodes', () => {
 
         mix = new Mix({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-1, 0.5, 10] , type: 4},
-                {id: 'b', value: [0, 0, 0] , type: 4},
-                {id: 'c', value: [0.75, 0, 2] , type: 4},
-            ]
+            values: {a: { value: [-1, 0.5, 10] , type: 4}, b: { value: [0, 0, 0] , type: 4}, c: { value: [0.75, 0, 2] , type: 4}}
         });
 
         val = mix.processNode();
@@ -1639,9 +1336,7 @@ describe('nodes', () => {
     it("math/negate", () => {
         let neg: Negate = new Negate({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [2.5], type: 2}
-            ]
+            values: {a: { value: [2.5], type: 2}}
         });
 
         let val = neg.processNode();
@@ -1649,9 +1344,7 @@ describe('nodes', () => {
 
         neg = new Negate({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-1, 0.5, 10] , type: 4},
-            ]
+            values: {a: { value: [-1, 0.5, 10] , type: 4}}
         });
 
         val = neg.processNode();
@@ -1663,9 +1356,7 @@ describe('nodes', () => {
     it("math/fract", () => {
         let fract: Fraction = new Fraction({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [2.5], type: 2}
-            ]
+            values: {a: { value: [2.5], type: 2}}
         });
 
         let val = fract.processNode();
@@ -1673,9 +1364,7 @@ describe('nodes', () => {
 
         fract = new Fraction({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-1, 0.5, 10.11] , type: 4},
-            ]
+            values: {a: { value: [-1, 0.5, 10.11] , type: 4}}
         });
 
         val = fract.processNode();
@@ -1687,9 +1376,7 @@ describe('nodes', () => {
     it("math/cosh", () => {
         let cosh: HyperbolicCosine = new HyperbolicCosine({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [2.0], type: 2 },
-            ]
+            values: {a: { value: [2.0], type: 2 }}
         });
 
         let val = cosh.processNode();
@@ -1697,9 +1384,7 @@ describe('nodes', () => {
 
         cosh = new HyperbolicCosine({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [1, 0, 0.5], type: 4 }
-            ]
+            values: {a: { value: [1, 0, 0.5], type: 4}}
         });
 
         val = cosh.processNode();
@@ -1711,9 +1396,7 @@ describe('nodes', () => {
     it("math/sinh", () => {
         let sinh: HyperbolicSine = new HyperbolicSine({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [2.0], type: 2 },
-            ]
+            values: {a: { value: [2.0], type: 2 }}
         });
 
         let val = sinh.processNode();
@@ -1721,9 +1404,7 @@ describe('nodes', () => {
 
         sinh = new HyperbolicSine({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [1, 0, 0.5], type: 4 }
-            ]
+            values: {a: { value: [1, 0, 0.5], type: 4}}
         });
 
         val = sinh.processNode();
@@ -1735,9 +1416,7 @@ describe('nodes', () => {
     it("math/tanh", () => {
         let tanh: HyperbolicTangent = new HyperbolicTangent({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [2.0], type: 2 },
-            ]
+            values: {a: { value: [2.0], type: 2 }}
         });
 
         let val = tanh.processNode();
@@ -1745,9 +1424,7 @@ describe('nodes', () => {
 
         tanh = new HyperbolicTangent({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [1, 0, 0.5], type: 4 }
-            ]
+            values: {a: { value: [1, 0, 0.5], type: 4}}
         });
 
         val = tanh.processNode();
@@ -1759,9 +1436,7 @@ describe('nodes', () => {
     it("math/acosh", () => {
         let acosh: InverseHyperbolicCosine = new InverseHyperbolicCosine({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [2.0], type: 2 },
-            ]
+            values: {a: { value: [2.0], type: 2 }}
         });
 
         let val = acosh.processNode();
@@ -1769,9 +1444,7 @@ describe('nodes', () => {
 
         acosh = new InverseHyperbolicCosine({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [1, 2, 3], type: 4 }
-            ]
+            values: {a: { value: [1, 2, 3], type: 4}}
         });
 
         val = acosh.processNode();
@@ -1783,9 +1456,7 @@ describe('nodes', () => {
     it("math/asinh", () => {
         let asinh: InverseHyperbolicSine = new InverseHyperbolicSine({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [2.0], type: 2 },
-            ]
+            values: {a: { value: [2.0], type: 2 }}
         });
 
         let val = asinh.processNode();
@@ -1793,9 +1464,7 @@ describe('nodes', () => {
 
         asinh = new InverseHyperbolicSine({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [1, 2, 3], type: 4 }
-            ]
+            values: {a: { value: [1, 2, 3], type: 4}}
         });
 
         val = asinh.processNode();
@@ -1807,9 +1476,7 @@ describe('nodes', () => {
     it("math/atanh", () => {
         let atanh: InverseHyperbolicTangent = new InverseHyperbolicTangent({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [0.5], type: 2 },
-            ]
+            values: {a: { value: [0.5], type: 2 }}
         });
 
         let val = atanh.processNode();
@@ -1817,9 +1484,7 @@ describe('nodes', () => {
 
         atanh = new InverseHyperbolicTangent({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [0.8, 0.2, 0.4], type: 4 }
-            ]
+            values: {a: { value: [0.8, 0.2, 0.4], type: 4}}
         });
 
         val = atanh.processNode();
@@ -1831,9 +1496,7 @@ describe('nodes', () => {
     it("math/normalize", () => {
         const normalize: Normalize = new Normalize({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [3.0, 4.0, 5.0], type: 4 },
-            ]
+            values: {a: { value: [3.0, 4.0, 5.0], type: 4}}
         });
 
         const normalizedVector = normalize.processNode();
@@ -1848,9 +1511,7 @@ describe('nodes', () => {
     it("math/length", () => {
         const vectorLen: VectorLength = new VectorLength({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [3.0, 4.0, 5.0], type: 4 },
-            ]
+            values: {a: { value: [3.0, 4.0, 5.0], type: 4}}
         });
 
         const val = vectorLen.processNode();
@@ -1863,11 +1524,7 @@ describe('nodes', () => {
     it("math/transform", () => {
         const transform: Transform = new Transform({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [1,2,3,4], type: 5 },
-                {
-                    id: 'b',
-                    value: [
+            values: {a: { value: [1,2,3,4], type: 5 }, b: { value: [
                         [1, 2, 3, 4],
                         [5, 6, 7, 8],
                         [9, 10, 11, 12],
@@ -1875,7 +1532,7 @@ describe('nodes', () => {
                     ],
                     type: 6
                 }
-            ]
+            }
         });
 
         const val = transform.processNode();
@@ -1889,10 +1546,7 @@ describe('nodes', () => {
     it("math/dot", () => {
         const dot = new Dot({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10.5, 0.5, 9] , type: 4},
-                {id: 'b', value: [4, -6, 10] , type: 4}
-            ]
+            values: {a: { value: [-10.5, 0.5, 9] , type: 4}, b: { value: [4, -6, 10] , type: 4}}
         });
 
         const val = dot.processNode();
@@ -1903,10 +1557,7 @@ describe('nodes', () => {
     it("math/cross", () => {
         const cross: Cross = new Cross({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [2.0, 1.0, 3.0], type: 4 },
-                { id: 'b', value: [4.0, -2.0, 1.0], type: 4 }
-            ]
+            values: {a: { value: [2.0, 1.0, 3.0], type: 4 }, b: { value: [4.0, -2.0, 1.0], type: 4 }}
         });
 
         const val = cross.processNode()['value'].value;
@@ -1925,10 +1576,7 @@ describe('nodes', () => {
     it("math/rotated2D", () => {
         const rotate2D: Rotate2D = new Rotate2D({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [1.0, 0.0], type: 3 },
-                { id: 'b', value: [Math.PI / 2], type: 2 },
-            ]
+            values: {a: { value: [1.0, 0.0], type: 3 }, b: { value: [Math.PI / 2], type: 2 }}
         });
 
         const val = rotate2D.processNode()['value'].value;
@@ -1942,11 +1590,7 @@ describe('nodes', () => {
     it("math/rotated3D", () => {
         const rotate3D: Rotate3D = new Rotate3D({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [1.0, 0.0, 0.0], type: 4 },
-                { id: 'b', value: [0.0, 1.0, 0.0], type: 4 },
-                { id: 'c', value: [Math.PI / 2], type: 2 },
-            ]
+            values: {a: { value: [1.0, 0.0, 0.0], type: 4 }, b: { value: [0.0, 1.0, 0.0], type: 4 }, c: { value: [Math.PI / 2], type: 2 }}
         });
 
         const val = rotate3D.processNode()['value'].value;
@@ -1983,10 +1627,7 @@ describe('nodes', () => {
     it("math/transpose", () => {
         const transpose: Transpose = new Transpose({
             ...defaultProps,
-            values: [
-                {
-                    id: 'a',
-                    value: [
+            values: {a: { value: [
                         [1, 2, 3, 4],
                         [5, 6, 7, 8],
                         [9, 10, 11, 12],
@@ -1994,7 +1635,7 @@ describe('nodes', () => {
                     ],
                     type: 6
                 }
-            ]
+            }
         });
 
         const val = transpose.processNode();
@@ -2008,10 +1649,7 @@ describe('nodes', () => {
     it("math/determinant", () => {
         const determinant: Determinant = new Determinant({
             ...defaultProps,
-            values: [
-                {
-                    id: 'a',
-                    value: [
+            values: {a: { value: [
                         [1, 3, 1, 4],
                         [3, 9, 5, 15],
                         [0, 2, 1, 1],
@@ -2019,7 +1657,7 @@ describe('nodes', () => {
                     ],
                     type: 6
                 }
-            ]
+            }
         });
 
         const val = determinant.processNode();
@@ -2030,10 +1668,7 @@ describe('nodes', () => {
     it("math/matmul", () => {
         const matmul: MatMul = new MatMul({
             ...defaultProps,
-            values: [
-                {
-                    id: 'a',
-                    value: [
+            values: {a: { value: [
                         [1, 2, 3, 4],
                         [5, 6, 7, 8],
                         [9, 10, 11, 12],
@@ -2041,9 +1676,7 @@ describe('nodes', () => {
                     ],
                     type: 6
                 },
-                {
-                    id: 'b',
-                    value: [
+                b: { value: [
                         [1, 2, 3, 4],
                         [5, 6, 7, 8],
                         [9, 10, 11, 12],
@@ -2051,7 +1684,7 @@ describe('nodes', () => {
                     ],
                     type: 6
                 }
-            ]
+            }
         });
 
         const val = matmul.processNode();
@@ -2065,9 +1698,7 @@ describe('nodes', () => {
     it("math/isInfNode", () => {
         let isInfNode: IsInfNode = new IsInfNode({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [1.0], type: 2 }
-            ]
+            values: {a: { value: [1.0], type: 2 }}
         });
 
         let val = isInfNode.processNode()['value'].value;
@@ -2075,9 +1706,7 @@ describe('nodes', () => {
 
         isInfNode = new IsInfNode({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [Infinity], type: 2 }
-            ]
+            values: {a: { value: [Infinity], type: 2 }}
         });
 
         val = isInfNode.processNode()['value'].value;
@@ -2087,9 +1716,7 @@ describe('nodes', () => {
     it("math/isNaNNode", () => {
         let isNaNNode: IsNaNNode = new IsNaNNode({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [1.0], type: 2 }
-            ]
+            values: {a: { value: [1.0], type: 2 }}
         });
 
         let val = isNaNNode.processNode()['value'].value;
@@ -2097,9 +1724,7 @@ describe('nodes', () => {
 
         isNaNNode = new IsNaNNode({
             ...defaultProps,
-            values: [
-                { id: 'a', value: [NaN], type: 2 }
-            ]
+            values: {a: { value: [NaN], type: 2 }}
         });
 
         val = isNaNNode.processNode()['value'].value;
@@ -2109,10 +1734,7 @@ describe('nodes', () => {
     it("math/eq", () => {
         let eq: Equality = new Equality({
             ...defaultProps,
-            values: [
-                {id: 'a', value: -10.5, type: 2},
-                {id: 'b', value: 5.5, type: 2}
-            ]
+            values: {a: { value: [-10.5], type: 2}, b: { value: [5.5], type: 2}}
         });
 
         let val = eq.processNode()['value'].value;
@@ -2120,20 +1742,14 @@ describe('nodes', () => {
 
         eq = new Equality({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [5.0], type: 2},
-                {id: 'b', value: [5.0], type: 2}
-            ]
+            values: {a: { value: [5.0], type: 2}, b: { value: [5.0], type: 2}}
         });
         val = eq.processNode()['value'].value;
         expect(val[0]).toBe(true);
 
         eq = new Equality({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10.5, 0.5, 9] , type: 4},
-                {id: 'b', value: [4, -6, 10] , type: 4}
-            ]
+            values: {a: { value: [-10.5, 0.5, 9] , type: 4}, b: { value: [4, -6, 10] , type: 4}}
         });
 
         val = eq.processNode()['value'].value;
@@ -2141,10 +1757,7 @@ describe('nodes', () => {
 
         eq = new Equality({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10.5, 0.5, 9] , type: 4},
-                {id: 'b', value: [-10.5, 0.5, 9] , type: 4}
-            ]
+            values: {a: { value: [-10.5, 0.5, 9] , type: 4}, b: { value: [-10.5, 0.5, 9] , type: 4}}
         });
 
         val = eq.processNode()['value'].value;
@@ -2154,10 +1767,7 @@ describe('nodes', () => {
     it("math/lt", () => {
         let lt: LessThan = new LessThan({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10.5], type: 2},
-                {id: 'b', value: [5.5], type: 2}
-            ]
+            values: {a: { value: [-10.5], type: 2}, b: { value: [5.5], type: 2}}
         });
 
         let val = lt.processNode()['value'].value;
@@ -2165,10 +1775,7 @@ describe('nodes', () => {
 
         lt = new LessThan({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [5.0], type: 2},
-                {id: 'b', value: [5.0], type: 2}
-            ]
+            values: {a: { value: [5.0], type: 2}, b: { value: [5.0], type: 2}}
         });
         val = lt.processNode()['value'].value;
         expect(val[0]).toBe(false);
@@ -2177,10 +1784,7 @@ describe('nodes', () => {
     it("math/le", () => {
         let le: LessThanOrEqualTo = new LessThanOrEqualTo({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [5.0], type: 2},
-                {id: 'b', value: [5.5], type: 2}
-            ]
+            values: {a: { value: [5.0], type: 2}, b: { value: [5.5], type: 2}}
         });
 
         let val = le.processNode()['value'].value;
@@ -2188,10 +1792,7 @@ describe('nodes', () => {
 
         le = new LessThanOrEqualTo({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [5.5], type: 2},
-                {id: 'b', value: [5.5], type: 2}
-            ]
+            values: {a: { value: [5.5], type: 2}, b: { value: [5.5], type: 2}}
         });
 
         val = le.processNode()['value'].value;
@@ -2199,10 +1800,7 @@ describe('nodes', () => {
 
         le = new LessThanOrEqualTo({
             ...defaultProps,
-            values: [
-                {id: 'a', value: 10.0, type: 2},
-                {id: 'b', value: 5.0, type: 2}
-            ]
+            values: {a: { value: [10.0], type: 2}, b: { value: [5.0], type: 2}}
         });
         val = le.processNode()['value'].value;
         expect(val[0]).toBe(false);
@@ -2211,10 +1809,7 @@ describe('nodes', () => {
     it("math/gt", () => {
         let gt: GreaterThan = new GreaterThan({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [10.5], type: 2},
-                {id: 'b', value: [5.5], type: 2}
-            ]
+            values: {a: { value: [10.5], type: 2}, b: { value: [5.5], type: 2}}
         });
 
         let val = gt.processNode()['value'].value;
@@ -2222,10 +1817,7 @@ describe('nodes', () => {
 
         gt = new GreaterThan({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [5.0], type: 2},
-                {id: 'b', value: [5.0], type: 2}
-            ]
+            values: {a: { value: [5.0], type: 2}, b: { value: [5.0], type: 2}}
         });
         val = gt.processNode()['value'].value;
         expect(val[0]).toBe(false);
@@ -2234,10 +1826,7 @@ describe('nodes', () => {
     it("math/ge", () => {
         let ge: GreaterThanOrEqualTo = new GreaterThanOrEqualTo({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [10.0], type: 2},
-                {id: 'b', value: [5.5], type: 2}
-            ]
+            values: {a: { value: [10.0], type: 2}, b: { value: [5.5], type: 2}}
         });
 
         let val = ge.processNode()['value'].value;
@@ -2245,10 +1834,7 @@ describe('nodes', () => {
 
         ge = new GreaterThanOrEqualTo({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [5.5], type: 2},
-                {id: 'b', value: [5.5], type: 2}
-            ]
+            values: {a: { value: [5.5], type: 2}, b: { value: [5.5], type: 2}}
         });
 
         val = ge.processNode()['value'].value;
@@ -2256,10 +1842,7 @@ describe('nodes', () => {
 
         ge = new GreaterThanOrEqualTo({
             ...defaultProps,
-            values: [
-                {id: 'a', value: [-10.0], type: 2},
-                {id: 'b', value: [5.0], type: 2}
-            ]
+            values: {a: { value: [-10.0], type: 2}, b: { value: [5.0], type: 2}}
         });
         val = ge.processNode()['value'].value;
         expect(val[0]).toBe(false);
@@ -2268,13 +1851,7 @@ describe('nodes', () => {
     it("type/boolToInt", () => {
         let boolToInt: BoolToInt = new BoolToInt({
             ...defaultProps,
-            values: [
-                {
-                    id: 'a',
-                    value: [true],
-                    type: 0
-                }
-            ]
+            values: {a: { value: [true], type: 0}}
         });
 
         let val = boolToInt.processNode();
@@ -2283,13 +1860,7 @@ describe('nodes', () => {
 
         boolToInt = new BoolToInt({
             ...defaultProps,
-            values: [
-                {
-                    id: 'a',
-                    value: [false],
-                    type: 0
-                }
-            ]
+            values: {a: { value: [false], type: 0}}
         });
 
         val = boolToInt.processNode();
@@ -2300,13 +1871,7 @@ describe('nodes', () => {
     it("type/boolToFloat", () => {
         let boolToFloat: BoolToFloat = new BoolToFloat({
             ...defaultProps,
-            values: [
-                {
-                    id: 'a',
-                    value: [true],
-                    type: 0
-                }
-            ]
+            values: {a: { value: [true], type: 0}}
         });
 
         let val = boolToFloat.processNode();
@@ -2315,13 +1880,7 @@ describe('nodes', () => {
 
         boolToFloat = new BoolToFloat({
             ...defaultProps,
-            values: [
-                {
-                    id: 'a',
-                    value: [false],
-                    type: 0
-                }
-            ]
+            values: {a: { value: [false], type: 0}}
         });
 
         val = boolToFloat.processNode();
@@ -2332,13 +1891,7 @@ describe('nodes', () => {
     it("type/intToBool", () => {
         let intToBool: IntToBool = new IntToBool({
             ...defaultProps,
-            values: [
-                {
-                    id: 'a',
-                    value: [0],
-                    type: 1
-                }
-            ]
+            values: {a: { value: [0], type: 1}}
         });
 
         let val = intToBool.processNode();
@@ -2347,13 +1900,7 @@ describe('nodes', () => {
 
         intToBool = new IntToBool({
             ...defaultProps,
-            values: [
-                {
-                    id: 'a',
-                    value: [10],
-                    type: 1
-                }
-            ]
+            values: {a: { value: [10], type: 1}}
         });
 
         val = intToBool.processNode();
@@ -2364,13 +1911,7 @@ describe('nodes', () => {
     it("type/intToFloat", () => {
         let intToFloat = new IntToFloat({
             ...defaultProps,
-            values: [
-                {
-                    id: 'a',
-                    value: [10],
-                    type: 1
-                }
-            ]
+            values: {a: { value: [10], type: 1}}
         });
 
         let val = intToFloat.processNode();
@@ -2381,13 +1922,7 @@ describe('nodes', () => {
     it("type/floatToBool", () => {
         let floatToBool: FloatToBool = new FloatToBool({
             ...defaultProps,
-            values: [
-                {
-                    id: 'a',
-                    value: [NaN],
-                    type: 2
-                }
-            ]
+            values: {a: { value: [NaN], type: 2}}
         });
 
         let val = floatToBool.processNode();
@@ -2396,13 +1931,7 @@ describe('nodes', () => {
 
         floatToBool = new FloatToBool({
             ...defaultProps,
-            values: [
-                {
-                    id: 'a',
-                    value: [10.0],
-                    type: 2
-                }
-            ]
+            values: {a: { value: [10.0], type: 2}}
         });
 
         val = floatToBool.processNode();
@@ -2413,13 +1942,7 @@ describe('nodes', () => {
     it("type/floatToInt", () => {
         let floatToInt: FloatToInt = new FloatToInt({
             ...defaultProps,
-            values: [
-                {
-                    id: 'a',
-                    value: [NaN],
-                    type: 2
-                }
-            ]
+            values: {a: { value: [NaN], type: 2}}
         });
 
         let val = floatToInt.processNode();
@@ -2428,13 +1951,7 @@ describe('nodes', () => {
 
         floatToInt = new FloatToInt({
             ...defaultProps,
-            values: [
-                {
-                    id: 'a',
-                    value: [10.7],
-                    type: 2
-                }
-            ]
+            values: {a: { value: [10.7], type: 2}}
         });
 
         val = floatToInt.processNode();
@@ -2445,13 +1962,7 @@ describe('nodes', () => {
     it("math/not", () => {
         let not: Not = new Not({
             ...defaultProps,
-            values: [
-                {
-                    id: 'a',
-                    value: [10],
-                    type: 1
-                }
-            ]
+            values: {a: { value: [10], type: 1}}
         });
 
         let val = not.processNode();
@@ -2460,13 +1971,7 @@ describe('nodes', () => {
 
         not = new Not({
             ...defaultProps,
-            values: [
-                {
-                    id: 'a',
-                    value: [true],
-                    type: 0
-                }
-            ]
+            values: {a: { value: [true], type: 0}}
         });
 
         val = not.processNode();
@@ -2477,38 +1982,16 @@ describe('nodes', () => {
     it("math/and", () => {
         let and: And = new And({
             ...defaultProps,
-            values: [
-                {
-                    id: 'a',
-                    value: [11],
-                    type: 1
-                },
-                {
-                    id: 'b',
-                    value: [7],
-                    type: 1
-                }
-            ]
+            values: {a: { value: [11], type: 1}, b: { value: [7], type: 1}}
         });
-
+        
         let val = and.processNode();
 
         expect(val['value'].value[0]).toBe(3);
 
         and = new And({
             ...defaultProps,
-            values: [
-                {
-                    id: 'a',
-                    value: false,
-                    type: 0
-                },
-                {
-                    id: 'b',
-                    value: true,
-                    type: 0
-                }
-            ]
+            values: {a: { value: [false], type: 0}, b: { value: [true], type: 0}}
         });
 
         val = and.processNode();
@@ -2519,18 +2002,7 @@ describe('nodes', () => {
     it("math/or", () => {
         let or: Or = new Or({
             ...defaultProps,
-            values: [
-                {
-                    id: 'a',
-                    value: [11],
-                    type: 1
-                },
-                {
-                    id: 'b',
-                    value: [7],
-                    type: 1
-                }
-            ]
+            values: {a: { value: [11], type: 1}, b: { value: [7], type: 1}}
         });
 
         let val = or.processNode();
@@ -2539,18 +2011,7 @@ describe('nodes', () => {
 
         or = new Or({
             ...defaultProps,
-            values: [
-                {
-                    id: 'a',
-                    value: [true],
-                    type: 0
-                },
-                {
-                    id: 'b',
-                    value: [false],
-                    type: 0
-                }
-            ]
+            values: {a: { value: [true], type: 0}, b: { value: [false], type: 0}}
         });
 
         val = or.processNode();
@@ -2561,18 +2022,7 @@ describe('nodes', () => {
     it("math/xor", () => {
         let xor: Xor = new Xor({
             ...defaultProps,
-            values: [
-                {
-                    id: 'a',
-                    value: [11],
-                    type: 1
-                },
-                {
-                    id: 'b',
-                    value: [7],
-                    type: 1
-                }
-            ]
+            values: {a: { value: [11], type: 1}, b: { value: [7], type: 1}}
         });
 
         let val = xor.processNode();
@@ -2581,18 +2031,7 @@ describe('nodes', () => {
 
         xor = new Xor({
             ...defaultProps,
-            values: [
-                {
-                    id: 'a',
-                    value: true,
-                    type: 0
-                },
-                {
-                    id: 'b',
-                    value: true,
-                    type: 0
-                }
-            ]
+            values: {a: { value: [true], type: 0}, b: { value: [true], type: 0}}
         });
 
         val = xor.processNode();
@@ -2603,18 +2042,7 @@ describe('nodes', () => {
     it("math/asr", () => {
         const rightShift: RightShift = new RightShift({
             ...defaultProps,
-            values: [
-                {
-                    id: 'a',
-                    value: [4],
-                    type: 1
-                },
-                {
-                    id: 'b',
-                    value: [2],
-                    type: 1
-                }
-            ]
+            values: {a: { value: [4], type: 1}, b: { value: [2], type: 1}}
         });
 
         const val = rightShift.processNode();
@@ -2625,18 +2053,7 @@ describe('nodes', () => {
     it("math/lsl", () => {
         const leftShift: LeftShift = new LeftShift({
             ...defaultProps,
-            values: [
-                {
-                    id: 'a',
-                    value: [4],
-                    type: 1
-                },
-                {
-                    id: 'b',
-                    value: [2],
-                    type: 1
-                }
-            ]
+            values: {a: { value: [4], type: 1}, b: { value: [2], type: 1}}
         });
 
         const val = leftShift.processNode();
@@ -2647,13 +2064,7 @@ describe('nodes', () => {
     it("math/clz", () => {
         const countLeadingZeros: CountLeadingZeros = new CountLeadingZeros({
             ...defaultProps,
-            values: [
-                {
-                    id: 'a',
-                    value: [4],
-                    type: 1
-                }
-            ]
+            values: {a: { value: [4], type: 1}}
         });
 
         const val = countLeadingZeros.processNode();
@@ -2664,13 +2075,7 @@ describe('nodes', () => {
     it("math/ctz", () => {
         const countTrailingZeros: CountTrailingZeros = new CountTrailingZeros({
             ...defaultProps,
-            values: [
-                {
-                    id: 'a',
-                    value: [4],
-                    type: 1
-                }
-            ]
+            values: {a: { value: [4], type: 1}}
         });
 
         const val = countTrailingZeros.processNode();
@@ -2681,13 +2086,7 @@ describe('nodes', () => {
     it("math/popcnt", () => {
         const countOneBits: CountOneBits = new CountOneBits({
             ...defaultProps,
-            values: [
-                {
-                    id: 'a',
-                    value: [11],
-                    type: 1
-                }
-            ]
+            values: {a: { value: [11], type: 1}}
         });
 
         const val = countOneBits.processNode();

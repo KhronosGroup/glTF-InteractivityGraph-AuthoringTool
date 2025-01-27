@@ -319,7 +319,6 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         graph.declarations = [...graphRef.current.declarations];
         for (const node of graphRef.current.nodes) {
 
-            // TODO: add metadta for position
             const behaveNode: any = {
                 id: node.uid,
                 declaration: graph.declarations.findIndex((declaration: IInteractivityDeclaration) => declaration.op === node.op),

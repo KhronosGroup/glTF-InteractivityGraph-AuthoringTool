@@ -43,7 +43,7 @@ export class VariableInterpolate extends BehaveEngineNode {
                 this.addEventToWorkQueue(this.flows.done)
             }
         }
-        const initialValue = this.variables[this._variable].value;
+        const initialValue = this.variables[this._variable].value!;
         const targetValue = value;
         const startTime = Date.now();
 
@@ -64,7 +64,7 @@ export class VariableInterpolate extends BehaveEngineNode {
                 }
             } else if (this._valueType === "float") {
                 const value = [linearFloat(p.y, initialValue[0], targetValue[0])]
-                this.variables[this._variable].value = value;
+                this.variables[this._variable].value = [value];
             } else if (this._valueType == "float2") {
                 const value = [linearFloat(p.y, initialValue[0], targetValue[0]), linearFloat(p.y, initialValue[1], targetValue[1])]
                 this.variables[this._variable].value = value;

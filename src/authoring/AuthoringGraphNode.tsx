@@ -31,7 +31,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     const [configuration, setConfiguration] = useState<Record<string, IInteractivityConfigurationValue>>({});
 
     const {graph, updateNode} = useContext(InteractivityGraphContext);
-    const uid = props.data.interactivityNode.uid;
+    const uid = props.data.uid;
     const [node, setNode] = useState<IInteractivityNode | null>(null);
 
     useEffect(() => {
@@ -93,7 +93,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         // TODO: how can I properly pares the value for config without knowing type
         setConfiguration({...configuration, [configurationId]: {value: [evt.target.value]}});
         evaluateConfigurationWhichChangeSockets();
-    }, [configuration]);
+    }, []);
 
     const parsePath = (path: string): string[] => {
         const regex = /{([^}]+)}/g;
@@ -114,7 +114,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
 
 
     const evaluateConfigurationWhichChangeSockets = useCallback(() => {
-        const nodeType = knownNodes[props.data.interactivityNode.decleration].op;
+        const nodeType = node?.op;
 
         const inputValuesToSet: Record<string, IInteractivityValue> = {};
         const outputValuesToSet: Record<string, IInteractivityValue> = {};
@@ -200,7 +200,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         }
         if (configuration.variable !== undefined) {
             const variableId = Number(configuration.variable.value?.[0] || 0);
-            const v: IInteractivityVariable = props.data.variables[variableId];
+            const v: IInteractivityVariable = graph.variables[variableId];
             const value: IInteractivityValue =  {typeOptions: [v.type], type: v.type, value: [undefined]}
 
             if (nodeType === "variable/set") {
@@ -220,7 +220,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         setInputFlows({...inputFlows, ...inputFlowsToSet});
         setInputValues({...inputValues, ...inputValuesToSet});
         setOutputValues({...outputValues, ...outputValuesToSet});
-    }, [inputValues, outputValues, inputFlows, outputFlows])
+    }, [inputValues, outputValues, inputFlows, outputFlows, node])
 
     const stringToListOfNumbers = (inputString: string) => {
         const numberStrings = inputString.split(',');

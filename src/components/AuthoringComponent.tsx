@@ -77,10 +77,9 @@ export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromG
     }
 
 
-    // useEffect(() => {
-    //     console.log("BAD")
-    //     props.behaveGraphRef.current = getBehaveGraph()
-    // }, [nodes, edges, events, variables])
+    useEffect(() => {
+        console.log(graph);
+    }, [graph])
 
     useEffect(() => {
         if (props.behaveGraphFromGlTF !== null) {
@@ -240,7 +239,7 @@ export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromG
                         <NodePickerComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)} onAddNode={onAddNode} mousePos={mousePosRef.current}/>
                     </RenderIf>
                     <RenderIf shouldShow={authoringComponentModal === AuthoringComponentModelType.UPLOAD_GRAPH}>
-                        <UploadGraphComponent setBehaveGraph={setBehaveGraph} closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)}/>
+                        <UploadGraphComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)}/>
                     </RenderIf>
                     <RenderIf shouldShow={authoringComponentModal === AuthoringComponentModelType.JSON_VIEW}>
                         <JSONViewComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)}/>
@@ -610,13 +609,13 @@ const AddCustomEventComponent = (props: {closeModal: any}) => {
     )
 }
 
-const UploadGraphComponent = (props: { setBehaveGraph: any, closeModal: any}) => {
+const UploadGraphComponent = (props: { closeModal: any}) => {
     const graphRef = useRef<HTMLTextAreaElement>(null);
-
+    const {loadGraphFromJson} = useContext(InteractivityGraphContext);
     const uploadGraph = () => {
         if (graphRef.current === null || graphRef.current.value === "") {return}
 
-        props.setBehaveGraph(graphRef.current.value);
+        loadGraphFromJson(JSON.parse(graphRef.current.value));
         props.closeModal();
     }
 

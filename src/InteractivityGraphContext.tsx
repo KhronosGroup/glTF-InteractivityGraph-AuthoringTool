@@ -1,10 +1,11 @@
 import { createContext, useRef } from 'react';
 import { IInteractivityDecleration, IInteractivityEvent, IInteractivityGraph, IInteractivityNode, IInteractivityVariable } from './types/InteractivityGraph';
-import { standardTypes } from './types/nodes';
-
+import { interactivityNodeSpecs, standardTypes } from './types/nodes';
+import { v4 as uuidv4 } from 'uuid';
 interface InteractivityGraphContextType {
     graph: IInteractivityGraph,
     getExecutableGraph: () => any,
+    loadGraphFromJson: (json: any) => void,
     addDecleration: (decleration: IInteractivityDecleration) => void,
     getDeclerationIndex: (op: string) => number,
     addEvent: (event: IInteractivityEvent) => void,
@@ -25,6 +26,7 @@ const initialGraph: IInteractivityGraph = {
 const initialContext: InteractivityGraphContextType = {
     graph: initialGraph,
     getExecutableGraph: () => {return null},
+    loadGraphFromJson: () => {return null},
     addDecleration: () => {return null},
     getDeclerationIndex: () => -1,
     addEvent: () => {return null},
@@ -40,19 +42,76 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
     const usedNodeDeclerationRef = useRef<Set<string>>(new Set());
     const graphRef = useRef<IInteractivityGraph>(initialGraph);
 
+    const loadGraphFromJson = (json: any) => {
+        const graph: IInteractivityGraph = {
+            declerations: json.declerations,
+            nodes: [],
+            variables: json.variables,
+            events: json.events,
+            types: json.types
+        };
+
+        const loadedNodes: IInteractivityNode[] = [];
+        const uuids = [];
+        for (let i = 0; i < json.nodes.length; i++) {
+            uuids.push(uuidv4());
+        }
+        for (let i = 0; i < json.nodes.length; i++) {
+            const node = json.nodes[i];
+            const nodeOp = json.declerations[node.decleration].op;
+            const templateNode:IInteractivityNode = interactivityNodeSpecs.find((schema: IInteractivityNode) => schema.op === nodeOp)!;
+            templateNode.uid = uuids[i];
+            templateNode.decleration = node.decleration;
+
+            if (node.values !== undefined) {
+                for (const key in node.values) {
+                    if (node.values[key].value !== undefined) {
+                        templateNode!.values!.input![key].value = node.values[key].value;
+                        templateNode!.values!.input![key].type = node.values[key].type;
+
+                    } else if (node.values[key].socket !== undefined && node.values[key].node !== null) {
+                        templateNode!.values!.input![key].socket = node.values[key].socket;
+                        templateNode!.values!.input![key].node = uuids[node.values[key].node];
+                    }
+                }
+            }
+
+            if (node.flows !== undefined) {
+                for (const key in node.flows) {
+                    templateNode!.flows!.output![key].socket = node.flows[key].socket;
+                    templateNode!.flows!.output![key].node = uuids[node.flows[key].node];
+                }
+            }
+
+            if (node.configuration !== undefined) {
+                for (const key in node.configuration) {
+                    templateNode!.configuration![key] = node.configuration[key];
+                }
+            }
+
+            loadedNodes.push(templateNode);
+        }
+
+
+
+        graph.nodes = loadedNodes;
+        graphRef.current = graph;
+    }
+
 
     const getExecutableGraph = () => {
-        const graph: any = { nodes: [], variables: [], events: [], types: standardTypes};
+        const graph: any = { declerations: [], nodes: [], variables: [], events: [], types: standardTypes, };
 
         graph.events = [...graphRef.current.events];
         graph.variables = [...graphRef.current.variables];
-
+        //TODO: declerations is mispelled
+        graph.declerations = [...graphRef.current.declerations];
         for (const node of graphRef.current.nodes) {
 
-            //TODO: add metadta for position
+            // TODO: add metadta for position
             const behaveNode: any = {
                 id: node.uid,
-                type: node.op,
+                decleration: graph.declerations.findIndex((decleration: IInteractivityDecleration) => decleration.op === node.op),
                 values: node.values?.input || {},
                 configuration: node.configuration || {},
                 flows: node.flows?.output || {},
@@ -99,8 +158,6 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
             }
     
         }
-
-        console.log(nodeIdToInDegree);
     
         //create queue
         const queue = nodes.filter(node => nodeIdToInDegree.get(node.id) === 0);
@@ -163,10 +220,8 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         // remove fake Links
         for (const node of nodes) {
             delete node.fakeLinks;
-            // delete node.id;
+            delete node.id;
         }
-
-        console.log(nodes);
     }
 
     const addDecleration = (decleration: IInteractivityDecleration) => {
@@ -203,6 +258,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
 
     const context: InteractivityGraphContextType = {
         graph: graphRef.current,
+        loadGraphFromJson: loadGraphFromJson,
         getExecutableGraph: getExecutableGraph,
         addDecleration: addDecleration,
         getDeclerationIndex: getDeclerationIndex,

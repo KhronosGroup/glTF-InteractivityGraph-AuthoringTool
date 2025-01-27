@@ -333,6 +333,28 @@ export const knownDeclarations: IInteractivityDeclaration[] = [
     },
     {
         op: "animation/stopAt"
+    },
+    {
+        op: "event/onSelect",
+        extension: "KHR_node_selectability",
+        outputValueSockets: {
+            selectedNodeIndex: {
+                type: 1,
+                value: [undefined]
+            },
+            controllerIndex: {
+                type: 1,
+                value: [undefined]
+            },
+            selectionPoint: {
+                type: 4,
+                value: [undefined]
+            },
+            selectionRayOrigin: {
+                type: 4,
+                value: [undefined]
+            }
+        }
     }
 ]
 
@@ -377,6 +399,54 @@ export const standardTypes: IInteractivityValueType[] = [
 const floatNTypes = [2,3,4,5,6];
 const floatVectorTypes = [3,4,5];
 const anyType = [0,1,2,3,4,5,6,7];
+
+const selectabilityNodeSpecs: IInteractivityNode[] = [
+    {
+        op: "event/onSelect",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "event/onSelect"),
+        description: "Event that is triggered when a node is selected",
+        configuration: {
+            nodeIndex: {
+                value: [undefined]
+            },
+            stopPropagation: {
+                value: [undefined]
+            }
+        },
+        flows: {
+            output: {
+                out: {
+                    node: undefined,
+                    socket: undefined
+                }
+            }
+        },
+        values: {
+            output: {
+                selectedNodeIndex: {
+                    typeOptions: [1],
+                    type: 1,
+                    value: [undefined]
+                },
+                controllerIndex: {
+                    typeOptions: [1],
+                    type: 1,
+                    value: [undefined]
+                },
+                selectionPoint: {
+                    typeOptions: [4],
+                    type: 4,
+                    value: [undefined]
+                },
+                selectionRayOrigin: {
+                    typeOptions: [4],
+                    type: 4,
+                    value: [undefined]
+                }
+            }
+        }
+    }
+]
 
 const animationNodeSpecs: IInteractivityNode[] = [
     {
@@ -3293,5 +3363,5 @@ export const interactivityNodeSpecs: IInteractivityNode[] = [
     ...mathConstantNodeSpecs, ...mathArithmeticNodeSpecs, ...mathComparisonNodeSpecs, ...mathTrigNodeSpecs,
     ...mathSpecialNodeSpecs,...lifecycleNodeSpecs, ...flowNodeSpecs, ...variableNodeSpecs, ...mathHyperbolicNodeSpecs,
     ...mathExponentialNodeSpecs, ...mathVectorNodeSpecs, ...mathMatrixNodeSpecs, ...mathSwizzleNodeSpecs, ...mathIntegerBitwiseNodeSpecs,
-    ...mathTypeConversionNodeSpecs, ...pointerNodeSpecs, ...animationNodeSpecs
+    ...mathTypeConversionNodeSpecs, ...pointerNodeSpecs, ...animationNodeSpecs, ...selectabilityNodeSpecs
 ];

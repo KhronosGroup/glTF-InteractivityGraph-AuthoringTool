@@ -1,64 +1,33 @@
+import { IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityFlow, IInteractivityValue, IInteractivityValueType, IInteractivityVariable } from "../types/InteractivityGraph";
 import {BasicBehaveEngine} from "./BasicBehaveEngine";
-
-export interface IFlow {
-    id: string,
-    value?: any
-    node?: number,
-    socket?: string
-}
-
-export interface IConfiguration {
-    id: string,
-    value?: any
-}
-
-export interface IVariable {
-    id: string,
-    value?: any,
-    initialValue: any
-}
-
-export interface IValue {
-    id: string;
-    value?: any
-    node?: number,
-    socket?: string,
-    type?: number
-}
-
-export interface ICustomEvent {
-    id: string,
-    values: IValue[]
-}
 
 export interface IBehaviourNodeProps {
     graphEngine: BasicBehaveEngine,
     idToBehaviourNodeMap: Map<number, BehaveEngineNode>
-    flows: IFlow[];
-    values: IValue[];
-    variables: IVariable[];
-    events: ICustomEvent[],
-    types: any[]
-    configuration: IConfiguration[];
+    flows: Record<string, IInteractivityFlow>;
+    values: Record<string, IInteractivityValue>;
+    variables: IInteractivityVariable[];
+    events: IInteractivityEvent[],
+    types:IInteractivityValueType[],
+    configuration: Record<string, IInteractivityConfigurationValue>,
     addEventToWorkQueue: any
 }
 
 export class BehaveEngineNode {
-    REQUIRED_VALUES: IValue[] = [];
-    REQUIRED_FLOWS: IFlow[] = [];
-    REQUIRED_CONFIGURATIONS: IConfiguration[] = [];
+    REQUIRED_VALUES: Record<string, IInteractivityValue> = {};
+    REQUIRED_CONFIGURATIONS: Record<string, IInteractivityConfigurationValue> = {};
 
     name: string | undefined;
     world: any;
     graphEngine: BasicBehaveEngine;
     idToBehaviourNodeMap: Map<number, BehaveEngineNode>
-    flows: Record<string, IFlow>;
-    values: Record<string, IValue>;
-    outValues: Record<string, any>
-    variables: IVariable[];
-    types: any[];
-    events: ICustomEvent[];
-    configuration: Record<string, IConfiguration>;
+    flows: Record<string, IInteractivityFlow>;
+    values: Record<string, IInteractivityValue>;
+    outValues: Record<string, IInteractivityValue>;
+    variables: IInteractivityVariable[];
+    types: IInteractivityValueType[];
+    events: IInteractivityEvent[];
+    configuration: Record<string, IInteractivityConfigurationValue>;
     addEventToWorkQueue: any;
 
     constructor(props: IBehaviourNodeProps) {
@@ -68,30 +37,11 @@ export class BehaveEngineNode {
         this.variables = variables;
         this.types = types;
         this.events = events;
-        this.values = {};
-        this.flows = {};
-        this.configuration = {};
+        this.values = values;
+        this.flows = flows;
+        this.configuration = configuration;
         this.outValues = {};
         this.addEventToWorkQueue = addEventToWorkQueue;
-
-        // turn array of values, flows and configurations into JSON objects for name based accessing
-        if (values) {
-            values.forEach((val: IValue) => {
-                this.values[val.id] = val;
-            })
-        }
-
-        if (flows) {
-            flows.forEach((flow: IFlow) => {
-                this.flows[flow.id] = flow;
-            })
-        }
-
-        if (configuration) {
-            configuration.forEach((configuration: IConfiguration) => {
-                this.configuration[configuration.id] = configuration
-            })
-        }
     }
 
     /**
@@ -117,9 +67,9 @@ export class BehaveEngineNode {
      * Processes a specific flow associated with this node.
      * @param flow - The flow object to be processed.
      */
-    public processFlow(flow: IFlow) {
+    public processFlow(flow: IInteractivityFlow) {
         if (flow === undefined || flow.node === undefined) {return}
-        const nextNode: BehaveEngineNode | undefined = this.idToBehaviourNodeMap.get(flow.node);
+        const nextNode: BehaveEngineNode | undefined = this.idToBehaviourNodeMap.get(Number(flow.node));
 
         if (nextNode === undefined) {return}
         this.graphEngine.processExecutingNextNode(flow);
@@ -132,10 +82,10 @@ export class BehaveEngineNode {
      * @param values - An object containing values to be validated.
      * @throws An error if a required value is missing.
      */
-    protected validateValues(values: any) {
-        this.REQUIRED_VALUES.forEach(requiredValue => {
-            if (values == null || values[requiredValue.id] == null) {
-                const err = `Required Value ${requiredValue.id} is missing for ${this.name}`
+    protected validateValues(values: Record<string, IInteractivityValue>) {
+        Object.keys(this.REQUIRED_VALUES).forEach(requiredValue => {
+            if (values == null || values[requiredValue] == null) {
+                const err = `Required Value ${requiredValue} is missing for ${this.name}`
                 console.error(err);
                 throw new Error(err);
             }
@@ -147,25 +97,10 @@ export class BehaveEngineNode {
      * @param configurations - An object containing configurations to be validated.
      * @throws An error if a required configuration is missing.
      */
-    protected validateConfigurations(configurations: any) {
-        this.REQUIRED_CONFIGURATIONS.forEach(requiredConfiguration => {
-            if (configurations == null || configurations[requiredConfiguration.id] == null) {
-                const err = `Required Configuration ${requiredConfiguration.id} is missing and no default value was provided for ${this.name}`;
-                console.error(err);
-                throw new Error(err);
-            }
-        });
-    }
-
-    /**
-     * Validates the presence of required flows.
-     * @param flows - An object containing flows to be validated.
-     * @throws An error if a required flow is missing.
-     */
-    protected validateFlows(flows: any) {
-        this.REQUIRED_FLOWS.forEach(requiredFlow => {
-            if (flows[requiredFlow.id] == null) {
-                const err = `Required Flow ${requiredFlow.id} is missing for ${this.name}`;
+    protected validateConfigurations(configurations: Record<string, IInteractivityConfigurationValue>) {
+        Object.keys(this.REQUIRED_CONFIGURATIONS).forEach(requiredConfiguration => {
+            if (configurations == null || configurations[requiredConfiguration] == null) {
+                const err = `Required Configuration ${requiredConfiguration} is missing and no default value was provided for ${this.name}`;
                 console.error(err);
                 throw new Error(err);
             }
@@ -180,7 +115,7 @@ export class BehaveEngineNode {
     protected evaluateAllValues(vals: string[]): Record<string, any> {
         const res: Record<string, any> = {};
         for (let i = 0; i < vals.length; i++) {
-            const val = this.evaluateValue(this.values[vals[i]]);
+            const val = this.evaluateValue(vals[i], this.values[vals[i]]);
             if (Array.isArray(val) && val.length === 1) {
                 console.error("This should not happen – an array with a single value was returned");
             }
@@ -189,7 +124,7 @@ export class BehaveEngineNode {
         return res;
     }
 
-    private evaluateValue(val: IValue): any {
+    private evaluateValue(key: string, val: IInteractivityValue): any {
         if (val.value != null) {
             const typeName = this.getType(val.type!);
             return this.parseType(typeName, val.value);
@@ -198,21 +133,21 @@ export class BehaveEngineNode {
             // short circuit if we have evaluated this node's socket already
             const cachedValue = this.graphEngine.getValueEvaluationCacheValue(`${val.node}-${val.socket}`);
             if (cachedValue !== undefined) {
-                this.values[val.id] = {...this.values[val.id], type: cachedValue.type};
+                this.values[key] = {...this.values[key], type: cachedValue.type};
                 const typeName = this.getType(cachedValue.type!);
                 return this.parseType(typeName, cachedValue.value);
             }
 
             // the value depends on the output of another node's socket, so we need to go and determine that
-            const dependentNode: BehaveEngineNode = this.idToBehaviourNodeMap.get(val.node)!;
+            const dependentNode: BehaveEngineNode = this.idToBehaviourNodeMap.get(Number(val.node))!;
 
             let valueToReturn: any;
             let typeIndex: number;
             if (dependentNode.outValues !== undefined && dependentNode.outValues[val.socket!] !== undefined) {
                 //socket has already been evaluated so return it
                 valueToReturn = dependentNode.outValues[val.socket!].value;
-                typeIndex = dependentNode.outValues[val.socket!].type;
-                this.values[val.id] = {...this.values[val.id], type: typeIndex};
+                typeIndex = dependentNode.outValues[val.socket!].type!;
+                this.values[key] = {...this.values[key], type: typeIndex};
             } else {
                 //this node has not been evaluated yet, so we need to process it in order to get the output
                 const dependentNodeValues = dependentNode.processNode();
@@ -220,9 +155,9 @@ export class BehaveEngineNode {
 
                 typeIndex = dependentValue.type
                 valueToReturn = dependentValue.value
-                this.values[val.id] = {...this.values[val.id], type: dependentValue.type};
+                this.values[key] = {...this.values[key], type: dependentValue.type};
             }
-            this.graphEngine.addEntryToValueEvaluationCache(`${val.node}-${val.socket}`, {id: val.socket!, value: valueToReturn, type: typeIndex});
+            this.graphEngine.addEntryToValueEvaluationCache(`${val.node}-${val.socket}`, {socket: val.socket!, value: valueToReturn, type: typeIndex});
             const typeName = this.getType(typeIndex);
             return this.parseType(typeName, valueToReturn);
         }
@@ -279,7 +214,7 @@ export class BehaveEngineNode {
         }
     }
 
-    private evaluateConfiguration(configuration: IConfiguration): any {
+    private evaluateConfiguration(configuration: IInteractivityConfigurationValue): any {
         return configuration.value;
     }
 }

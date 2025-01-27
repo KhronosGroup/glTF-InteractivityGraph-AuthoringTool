@@ -1,5 +1,5 @@
 import {ADecorator} from "./ADecorator";
-import {BehaveEngineNode, IFlow} from "../BehaveEngineNode";
+import {BehaveEngineNode} from "../BehaveEngineNode";
 import {IBehaveEngine} from "../IBehaveEngine";
 import {
     AbstractMesh,
@@ -23,6 +23,7 @@ import {AnimationStopAt} from "../nodes/animation/AnimationStopAt";
 import {Nullable} from "@babylonjs/core/types.js";
 import { OnHoverIn } from "../nodes/experimental/OnHoverIn";
 import { OnHoverOut } from "../nodes/experimental/OnHoverOut";
+import { IInteractivityFlow } from "../../types/InteractivityGraph";
 
 export class BabylonDecorator extends ADecorator {
     scene: Scene;
@@ -135,11 +136,11 @@ export class BabylonDecorator extends ADecorator {
         }
     }
 
-    processAddingNodeToQueue = (flow: IFlow) => {
+    processAddingNodeToQueue = (flow: IInteractivityFlow) => {
         //pass
     }
 
-    processExecutingNextNode = (flow: IFlow) => {
+    processExecutingNextNode = (flow: IInteractivityFlow) => {
         //pass
     }
 

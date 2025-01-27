@@ -1,18 +1,17 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class Branch extends BehaveEngineNode {
-    REQUIRED_VALUES = [{id:"condition"}];
+    REQUIRED_VALUES = {condition: {}};
 
     constructor(props: IBehaviourNodeProps) {
         super(props);
         this.name = "Branch";
         this.validateValues(this.values);
-        this.validateFlows(this.flows);
     }
 
     override processNode(flowSocket?: string) {
         this.graphEngine.clearValueEvaluationCache();
-        const {condition} = this.evaluateAllValues(this.REQUIRED_VALUES.map(val => val.id));
+        const {condition} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
         this.graphEngine.processNodeStarted(this);
 
         if (JSON.parse(condition)) {

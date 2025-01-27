@@ -15,7 +15,6 @@ interface InteractivityGraphContextType {
     addEvent: (event: IInteractivityEvent) => void,
     addVariable: (variable: IInteractivityVariable) => void,
     addNode: (node: IInteractivityNode) => void,
-    updateNode: (updatedNode: IInteractivityNode, uid: string) => void,
     removeNode: (uid: string) => void
 }
 
@@ -39,7 +38,6 @@ const initialContext: InteractivityGraphContextType = {
     addEvent: () => {return null},
     addVariable: () => {return null},
     addNode: () => {return null},
-    updateNode: () => {return null},
     removeNode: () => {return null}
 };
 
@@ -52,7 +50,6 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
     const [needsSyncingToAuthor, setNeedsSyncingToAuthor] = useState(false);
 
     const getAuthorGraph = (graph: IInteractivityGraph): [Node[], Edge[], IInteractivityEvent[], IInteractivityVariable[]] => {
-        console.log("graph", graph)
         // TODO: THIS IS NOT JSON WE SHOULD NOT ALLOW FOR NANS OR INFINITIES
         // const graphJson = JSON.parse(graph.replace(/":[ \t](Infinity|-IsNaN)/g, '":"{{$1}}"'), function(k, v) {
         //   if (v === '{{Infinity}}') return Infinity;
@@ -312,7 +309,6 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
 
 
     const getExecutableGraph = () => {
-        console.log("rawGraph", graphRef.current);
         const graph: any = { declerations: [], nodes: [], variables: [], events: [], types: standardTypes, };
 
         graph.events = [...graphRef.current.events];
@@ -461,10 +457,6 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         graphRef.current.nodes.push(node);
     };
 
-    const updateNode = (updatedNode: IInteractivityNode, uid: string) => {
-        graphRef.current.nodes = graphRef.current.nodes.map(node => node.uid === uid ? updatedNode : node);
-    };
-
     const removeNode = (uid: string) => {
         graphRef.current.nodes = graphRef.current.nodes.filter(node => node.uid !== uid);
     };
@@ -481,7 +473,6 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         addEvent: addEvent,
         addVariable: addVariable,
         addNode: addNode,
-        updateNode: updateNode,
         removeNode: removeNode
     };
 

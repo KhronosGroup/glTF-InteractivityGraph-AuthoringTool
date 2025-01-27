@@ -14,22 +14,24 @@ export const App = () => {
   const behaveGraphRef = useRef<any>({})
 
   return (
-      <div style={{width: "100vw", height: "100vh"}}>
-        <InteractivityGraphProvider>
-            <AuthoringComponent behaveGraphRef={behaveGraphRef} behaveGraphFromGlTF={behaveGraphFromGlTF}/>
-        </InteractivityGraphProvider>
-
+    <InteractivityGraphProvider>
+        <div style={{width: "100vw", height: "100vh"}}>
+ 
+        <AuthoringComponent behaveGraphRef={behaveGraphRef} behaveGraphFromGlTF={behaveGraphFromGlTF}/>
+    
         <EngineSelector setEngineType={setEngineType}/>
 
         <Spacer width={0} height={32}/>
 
         <RenderIf shouldShow={engineType === EngineType.LOGGING}>
-            <LoggingEngineComponent behaveGraphRef={behaveGraphRef}/>
+             <LoggingEngineComponent behaveGraphRef={behaveGraphRef}/>
         </RenderIf>
         <RenderIf shouldShow={engineType === EngineType.BABYLON}>
             <BabylonEngineComponent behaveGraphRef={behaveGraphRef} setBehaveGraphFromGlTF={setBehaveGraphFromGlTF}/>
         </RenderIf>
       </div>
+    </InteractivityGraphProvider>
+      
   );
 }
 

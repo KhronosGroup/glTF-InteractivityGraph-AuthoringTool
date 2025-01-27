@@ -1,5 +1,6 @@
 import {IBehaveEngine, ICancelable} from "../IBehaveEngine";
-import {BehaveEngineNode, IFlow, IValue} from "../BehaveEngineNode";
+import {BehaveEngineNode} from "../BehaveEngineNode";
+import {IInteractivityFlow, IInteractivityValue} from "../../types/InteractivityGraph";
 
 export abstract class ADecorator implements IBehaveEngine {
 
@@ -10,8 +11,8 @@ export abstract class ADecorator implements IBehaveEngine {
     }
 
     abstract processNodeStarted: (node: BehaveEngineNode) => void;
-    abstract processAddingNodeToQueue: (flow: IFlow) => void;
-    abstract processExecutingNextNode: (flow: IFlow) => void;
+    abstract processAddingNodeToQueue: (flow: IInteractivityFlow) => void;
+    abstract processExecutingNextNode: (flow: IInteractivityFlow) => void;
     abstract registerKnownPointers: () => void;
     abstract registerJsonPointer: (jsonPtr: string, getterCallback: (path: string) => any, setterCallback: (path: string, value: any) => void, typeName: string, readOnly: boolean) => void;
     abstract animateProperty: (path: string, easingParameters: any, callback: () => void) => void;
@@ -53,7 +54,7 @@ export abstract class ADecorator implements IBehaveEngine {
         this.behaveEngine.getPathtypeName(path);
     }
 
-    addEntryToValueEvaluationCache = (key: string, val: IValue): void  => {
+    addEntryToValueEvaluationCache = (key: string, val: IInteractivityValue): void  => {
         this.behaveEngine.addEntryToValueEvaluationCache(key, val);
     }
 
@@ -61,7 +62,7 @@ export abstract class ADecorator implements IBehaveEngine {
         this.behaveEngine.clearValueEvaluationCache();
     }
 
-    getValueEvaluationCacheValue = (key: string): IValue | undefined => {
+    getValueEvaluationCacheValue = (key: string): IInteractivityValue | undefined => {
         return this.behaveEngine.getValueEvaluationCacheValue(key);
     }
 

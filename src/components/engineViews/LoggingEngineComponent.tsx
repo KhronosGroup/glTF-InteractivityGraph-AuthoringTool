@@ -1,8 +1,9 @@
-import React, {useEffect, useRef, useState} from "react";
+import React, {useContext, useEffect, useRef, useState} from "react";
 import {Button, Col, Container, Form, Modal, Row, Tab, Tabs} from "react-bootstrap";
 import {Spacer} from "../Spacer";
 import {BasicBehaveEngine} from "../../BasicBehaveEngine/BasicBehaveEngine";
 import {LoggingDecorator} from "../../BasicBehaveEngine/decorators/LoggingDecorator";
+import { InteractivityGraphContext } from "../../InteractivityGraphContext";
 
 enum LoggingEngineModal {
     WORLD = "WORLD",
@@ -16,7 +17,9 @@ export const LoggingEngineComponent = (props: {behaveGraphRef: any}) => {
     const [activeKey, setActiveKey] = useState("1");
     const [graphRunning, setGraphRunning] = useState(false);
     const worldInputRef = useRef<HTMLTextAreaElement | null>(null);
-    const loggingEngineRef = useRef<LoggingDecorator | null>(null)
+    const loggingEngineRef = useRef<LoggingDecorator | null>(null);
+
+    const {getExecutableGraph} = useContext(InteractivityGraphContext);
 
     useEffect(() => {
         return () => {
@@ -27,6 +30,7 @@ export const LoggingEngineComponent = (props: {behaveGraphRef: any}) => {
 
 
     const runGraph = (behaveGraph: any, setExecutionLog: any, world: any) => {
+        console.log(behaveGraph);
         if (loggingEngineRef.current !== null) {
             loggingEngineRef.current?.clearCustomEventListeners()
         }
@@ -40,7 +44,7 @@ export const LoggingEngineComponent = (props: {behaveGraphRef: any}) => {
             <div style={{background: "#3d5987", padding: 16, borderTopLeftRadius: 16, borderTopRightRadius: 16}}>
                 <Button variant="outline-light" onClick={() => {
                     setExecutionLog("");
-                    runGraph(props.behaveGraphRef.current, setExecutionLog, JSON.parse(world));
+                    runGraph(getExecutableGraph(), setExecutionLog, JSON.parse(world));
                     setGraphRunning(true);
                 }}>
                     Play

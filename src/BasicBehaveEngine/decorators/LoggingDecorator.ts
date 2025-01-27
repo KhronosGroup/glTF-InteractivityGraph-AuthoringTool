@@ -1,7 +1,7 @@
 import {ADecorator} from "./ADecorator";
-import {BehaveEngineNode, IFlow} from "../BehaveEngineNode";
+import {BehaveEngineNode} from "../BehaveEngineNode";
 import {IBehaveEngine} from "../IBehaveEngine";
-
+import {IInteractivityFlow} from "../../types/InteractivityGraph";
 export class LoggingDecorator extends ADecorator {
     addToLog: (line: string) => void;
     world: any;
@@ -19,11 +19,11 @@ export class LoggingDecorator extends ADecorator {
         this.registerKnownPointers();
     }
 
-    processAddingNodeToQueue = (flow: IFlow) => {
+    processAddingNodeToQueue = (flow: IInteractivityFlow) => {
         this.addToLog(`Adding ${JSON.stringify(flow)} flow to queue`);
     }
 
-    processExecutingNextNode = (flow: IFlow) => {
+    processExecutingNextNode = (flow: IInteractivityFlow) => {
         this.addToLog(`Executing ${JSON.stringify(flow)} flow`);
     }
 

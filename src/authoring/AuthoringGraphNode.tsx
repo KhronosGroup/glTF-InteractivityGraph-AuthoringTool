@@ -4,7 +4,7 @@ import { Handle, Position} from "reactflow";
 
 import {RenderIf} from "../components/RenderIf";
 import { IInteractivityFlow, IInteractivityValue, IInteractivityNode, IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityVariable } from "../types/InteractivityGraph";
-import { knownNodes, standardTypes } from "../types/nodes";
+import { knownDeclerations, standardTypes } from "../types/nodes";
 import { InteractivityGraphContext } from "../InteractivityGraphContext";
 
 require("../css/flowNodes.css");
@@ -357,7 +357,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                     </div>
                                 )
                             })}
-                            <RenderIf shouldShow={knownNodes[props.data.interactivityNode.decleration].op === "flow/sequence" || knownNodes[props.data.interactivityNode.decleration].op === "flow/multiGate"}>
+                            <RenderIf shouldShow={knownDeclerations[props.data.interactivityNode.decleration].op === "flow/sequence" || knownDeclerations[props.data.interactivityNode.decleration].op === "flow/multiGate"}>
                                 <p onClick={() => {
                                     const outputFlow: IInteractivityFlow = {
                                         node: undefined,

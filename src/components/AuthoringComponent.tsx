@@ -13,12 +13,12 @@ import {RenderIf} from "./RenderIf";
 import {Button, Col, Container, Row, Form} from "react-bootstrap";
 import 'reactflow/dist/style.css';
 import {Spacer} from "./Spacer";
-import {interactivityNodeSpecs, knownNodes, standardTypes} from "../types/nodes";
+import {interactivityNodeSpecs, knownDeclerations, standardTypes} from "../types/nodes";
 import { IInteractivityDecleration, IInteractivityEvent, IInteractivityNode, IInteractivityVariable } from '../types/InteractivityGraph';
 import { InteractivityGraphContext } from '../InteractivityGraphContext';
 
 const nodeTypes = interactivityNodeSpecs.reduce((nodes, node) => {
-    nodes[knownNodes[node.decleration].op] = (props: any) => {
+    nodes[knownDeclerations[node.decleration].op] = (props: any) => {
         const nodeCopy = JSON.parse(JSON.stringify(node));
         
         if (props.data.values !== undefined) {
@@ -47,7 +47,7 @@ enum AuthoringComponentModelType {
     NONE
 }
 
-const nodesWithConfigurations = interactivityNodeSpecs.filter(node => node.configuration !== undefined).map(node => knownNodes[node.decleration].op);
+const nodesWithConfigurations = interactivityNodeSpecs.filter(node => node.configuration !== undefined).map(node => knownDeclerations[node.decleration].op);
 export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromGlTF: any}) => {
     const reactFlowRef = useRef<HTMLDivElement | null>(null);
     const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
@@ -153,7 +153,7 @@ export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromG
             data: {events: graph.events, variables: graph.variables, types: standardTypes, uid: uid}
         };
 
-        const decleration: IInteractivityDecleration = knownNodes.find(node => node.op === nodeType)!;
+        const decleration: IInteractivityDecleration = knownDeclerations.find(node => node.op === nodeType)!;
         addDecleration(decleration);
         const interactivityNode: IInteractivityNode = interactivityNodeSpecs.find(node => node.op === nodeType)!;
         interactivityNode.decleration = getDeclerationIndex(nodeType);

@@ -2,10 +2,11 @@ import ReactFlow, {
     addEdge, Background,
     Connection, Controls,
     Edge,
+    Node,
     NodeTypes, Panel, useEdgesState, useNodesState, useReactFlow, XYPosition
 } from 'reactflow';
 import {AuthoringGraphNode} from "../authoring/AuthoringGraphNode";
-import React, {useCallback, useEffect, useRef, useState} from "react";
+import React, {useCallback, useContext, useEffect, useRef, useState} from "react";
 import {v4 as uuidv4} from "uuid";
 import {useArray} from "../hooks/useArray";
 import {RenderIf} from "./RenderIf";
@@ -15,20 +16,22 @@ import {authorToBehave} from "../authoring/AuthorToBehave";
 import {behaveToAuthor} from "../authoring/BehaveToAuthor";
 import {Spacer} from "./Spacer";
 import {interactivityNodeSpecs, knownNodes, standardTypes} from "../types/nodes";
-import { IInteractivityEvent, IInteractivityVariable } from '../types/InteractivityGraph';
+import { IInteractivityDecleration, IInteractivityEvent, IInteractivityNode, IInteractivityVariable } from '../types/InteractivityGraph';
+import { InteractivityGraphContext } from '../InteractivityGraphContext';
 
 const nodeTypes = interactivityNodeSpecs.reduce((nodes, node) => {
     nodes[knownNodes[node.decleration].op] = (props: any) => {
-        console.log(props);
+        const nodeCopy = JSON.parse(JSON.stringify(node));
+        
         if (props.data.values !== undefined) {
-            node.values = node.values || {};
-            node.values.input = props.data.values;
+            nodeCopy.values = nodeCopy.values || {};
+            nodeCopy.values.input = props.data.values;
         }
         if (props.data.configuration !== undefined) {
-            node.configuration = props.data.configuration;
+            nodeCopy.configuration = props.data.configuration;
         }
-        props.data.interactivityNode = node;
-        return <AuthoringGraphNode node={node} {...props} />;
+        props.data.interactivityNode = nodeCopy;
+        return <AuthoringGraphNode {...props} />;
     };
     return nodes;
 }, {} as NodeTypes);
@@ -55,11 +58,11 @@ export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromG
     // to handle nodes and edges in graph
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-    const {array: events, setArray: setEvents, push: pushEvent} = useArray([]);
-    const {array: variables, setArray: setVariables, push: pushVariable} = useArray([]);
+    
+    const {graph, addDecleration, getDeclerationIndex, addNode, getExecutableGraph, removeNode} = useContext(InteractivityGraphContext);
 
     //to handle the node picker props
-    const [mousePos, setMousePos] = useState({x:0, y:0});
+    const mousePosRef = useRef({x:0, y:0});
 
     const hasIntersection = (arr1: any[], arr2: any[]): boolean => {
         const set1 = new Set(arr1);
@@ -73,9 +76,11 @@ export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromG
         return false;
     }
 
-    useEffect(() => {
-        props.behaveGraphRef.current = getBehaveGraph()
-    }, [nodes, edges, events, variables])
+
+    // useEffect(() => {
+    //     console.log("BAD")
+    //     props.behaveGraphRef.current = getBehaveGraph()
+    // }, [nodes, edges, events, variables])
 
     useEffect(() => {
         if (props.behaveGraphFromGlTF !== null) {
@@ -85,29 +90,26 @@ export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromG
 
     // handle creation and deletion of edges
     const onConnect = useCallback((vals: Edge<any> | Connection) => {
+        console.log("vals", vals)
         const sourceNodeId = vals.source;
-        const sourceNodeType = nodes.find(node => node.id === sourceNodeId)!.type;
-        const sourceNodeSpec = interactivityNodeSpecs.find(nodeSpec => knownNodes[nodeSpec.decleration].op === sourceNodeType);
-        if (sourceNodeSpec === undefined) {return}
+        const sourceNode: IInteractivityNode = graph.nodes.find(node => node.uid === sourceNodeId)!;
 
         const targetNodeId = vals.target;
-        const targetNodeType = nodes.find(node => node.id === targetNodeId)!.type;
-        const targetNodeSpec = interactivityNodeSpecs.find(nodeSpec => knownNodes[nodeSpec.decleration].op === targetNodeType);
-        if (targetNodeSpec === undefined) {return}
+        const targetNode: IInteractivityNode = graph.nodes.find(node => node.uid === targetNodeId)!;
 
         if (sourceNodeId === targetNodeId) {return}
 
-        const isConfigurableSocket = nodesWithConfigurations.includes(knownNodes[sourceNodeSpec.decleration].op) || nodesWithConfigurations.includes(knownNodes[targetNodeSpec.decleration].op) || sourceNodeType === "flow/sequence";
+        const isConfigurableSocket = nodesWithConfigurations.includes(sourceNode.op!) || nodesWithConfigurations.includes(targetNode.op!) || sourceNode.op === "flow/sequence";
        
         // if one is flow and one isn't then do not connect
-        const sourceIsFlow = sourceNodeSpec.flows?.output?.[vals.sourceHandle!] !== undefined;
-        const targetIsFlow = targetNodeSpec.flows?.input?.[vals.targetHandle!] !== undefined;
+        const sourceIsFlow = sourceNode.flows?.output?.[vals.sourceHandle!] !== undefined;
+        const targetIsFlow = targetNode.flows?.input?.[vals.targetHandle!] !== undefined;
         if (!isConfigurableSocket && targetIsFlow !== sourceIsFlow) {return}
 
         if (!sourceIsFlow && !targetIsFlow) {
             // make sure the valueTypes are compatible
-            const sourceValueTypes = sourceNodeSpec.values?.output?.[vals.sourceHandle!].typeOptions;
-            const targetValueTypes = targetNodeSpec.values?.input?.[vals.targetHandle!].typeOptions;
+            const sourceValueTypes = sourceNode.values?.output?.[vals.sourceHandle!].typeOptions;
+            const targetValueTypes = targetNode.values?.input?.[vals.targetHandle!].typeOptions;
             if (!isConfigurableSocket && (sourceValueTypes === undefined || targetValueTypes === undefined || !hasIntersection(sourceValueTypes, targetValueTypes))) {return}
         }
 
@@ -123,48 +125,68 @@ export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromG
             }
         }
 
+        sourceNode!.flows!.output![vals.sourceHandle!] = {node: targetNode.uid, socket: vals.targetHandle!}
+
         setEdges((eds: any) => addEdge(vals, eds));
     }, [nodes]);
 
     const onEdgesDelete = useCallback((edges: Edge[]) => {
         for (let i = 0; i < edges.length; i++) {
-            if (edges[0].targetHandle !== "flow") {
-                const targetNode = document.querySelectorAll(`[data-id='${edges[0].target}']`)[0];
-                const inputField = targetNode.querySelector(`#in-${edges[0].targetHandle}`) as HTMLInputElement;
+            const edge = edges[i];
+            if (edge.targetHandle !== "flow") {
+                const targetNode = document.querySelectorAll(`[data-id='${edge.target}']`)[0];
+                const inputField = targetNode.querySelector(`#in-${edge.targetHandle}`) as HTMLInputElement;
                 if (inputField !== null) {
                     inputField.style.display = "block";
                 }
-                const typeDropdown = targetNode.querySelector(`#${edges[0].targetHandle}-typeDropDown`) as HTMLInputElement;
+                const typeDropdown = targetNode.querySelector(`#${edge.targetHandle}-typeDropDown`) as HTMLInputElement;
                 if (typeDropdown !== null) {
                     typeDropdown.style.display = "block";
                 }
             }
+
+            const sourceNode: IInteractivityNode = graph.nodes.find(node => node.uid === edge.source)!;
+            sourceNode!.flows!.output![edge.sourceHandle!] = {};
+        }
+    }, []);
+
+    const onNodesDelete = useCallback((nodes: Node[]) => {
+        for (let i = 0; i < nodes.length; i++) {
+            const node = nodes[i];
+            removeNode(node.id);
         }
     }, []);
 
     // handle adding nodes and edges to the graph
     const onAddNode = useCallback((nodeType: string, position: XYPosition) => {
+        const uid = uuidv4();
         const nodeToAdd = {
-            id: uuidv4(),
+            id: uid,
             type: nodeType,
             position: position,
-            data: {events: events, variables: variables, types: standardTypes}
+            data: {events: graph.events, variables: graph.variables, types: standardTypes, uid: uid}
         };
 
-        onNodesChange([{type: "add", item: nodeToAdd}]);
-    }, [events, variables]);
+        const decleration: IInteractivityDecleration = knownNodes.find(node => node.op === nodeType)!;
+        addDecleration(decleration);
+        const interactivityNode: IInteractivityNode = interactivityNodeSpecs.find(node => node.op === nodeType)!;
+        interactivityNode.decleration = getDeclerationIndex(nodeType);
+        interactivityNode.uid = uid;
+        
+        addNode(interactivityNode);
 
-    const getBehaveGraph = () => {
-        return authorToBehave(nodes, edges, events, variables);
-    }
+        onNodesChange([{type: "add", item: nodeToAdd}]);
+    }, [graph]);
 
     const setBehaveGraph = (behaveGraph: string) => {
         const result = behaveToAuthor(behaveGraph);
         console.log(result);
         setNodes(result[0]);
         setEdges(result[1]);
-        setEvents(result[2]);
-        setVariables(result[3]);
+    
+        //TODO: ste events and variables from laoded grpah
+        // setEvents(result[2]);
+        // setVariables(result[3]);
 
         // Log all node types
         const allNodeTypes = result[0].map(node => node.type);
@@ -182,7 +204,7 @@ export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromG
             y: e.clientY - bounds.top
         });
 
-        setMousePos(position);
+        mousePosRef.current = position;
         setAuthoringComponentModal(AuthoringComponentModelType.NODE_PICKER)
     };
 
@@ -201,6 +223,7 @@ export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromG
                     onNodesChange={onNodesChange}
                     edges={edges}
                     onEdgesChange={onEdgesChange}
+                    onNodesDelete={onNodesDelete}
                     onInit={setReactFlowInstance}
                     onConnect={onConnect}
                     onEdgesDelete={onEdgesDelete}
@@ -214,28 +237,28 @@ export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromG
                     <Background />
 
                     <RenderIf shouldShow={authoringComponentModal === AuthoringComponentModelType.NODE_PICKER}>
-                        <NodePickerComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)} onAddNode={onAddNode} mousePos={mousePos}/>
+                        <NodePickerComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)} onAddNode={onAddNode} mousePos={mousePosRef.current}/>
                     </RenderIf>
                     <RenderIf shouldShow={authoringComponentModal === AuthoringComponentModelType.UPLOAD_GRAPH}>
                         <UploadGraphComponent setBehaveGraph={setBehaveGraph} closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)}/>
                     </RenderIf>
                     <RenderIf shouldShow={authoringComponentModal === AuthoringComponentModelType.JSON_VIEW}>
-                        <JSONViewComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)} getBehaviorGraph={getBehaveGraph}/>
+                        <JSONViewComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)}/>
                     </RenderIf>
                     <RenderIf shouldShow={authoringComponentModal === AuthoringComponentModelType.NODE_LIST}>
-                        <NodeListComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)} getBehaviorGraph={getBehaveGraph}/>
+                        <NodeListComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)}/>
                     </RenderIf>
                     <RenderIf shouldShow={authoringComponentModal === AuthoringComponentModelType.ADD_CUSTOM_EVENT}>
-                        <AddCustomEventComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)} pushCustomEvent={pushEvent}/>
+                        <AddCustomEventComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)}/>
                     </RenderIf>
                     <RenderIf shouldShow={authoringComponentModal === AuthoringComponentModelType.SHOW_CUSTOM_EVENTS}>
-                        <ShowCustomEventComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)} events={events}/>
+                        <ShowCustomEventComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)}/>
                     </RenderIf>
                     <RenderIf shouldShow={authoringComponentModal === AuthoringComponentModelType.ADD_VARIABLE}>
-                        <AddVariableComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)} pushVariable={pushVariable}/>
+                        <AddVariableComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)}/>
                     </RenderIf>
                     <RenderIf shouldShow={authoringComponentModal === AuthoringComponentModelType.SHOW_VARIABLES}>
-                        <ShowVariableComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)} variables={variables}/>
+                        <ShowVariableComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)}/>
                     </RenderIf>
 
                     <Panel position={"top-right"}>
@@ -308,13 +331,15 @@ const NodePickerComponent = (props: {onAddNode: any, closeModal: any, mousePos: 
     );
 }
 
-const ShowVariableComponent = (props: {closeModal: any, variables: any}) => {
+const ShowVariableComponent = (props: {closeModal: any}) => {
+    const {graph} = useContext(InteractivityGraphContext);
+
     return (
         <Panel id={"show-variable-panel"} position={"top-center"} style={{border:"1px solid gray", background: "white", height: 500}}>
            <Container style={{ padding: 16, flex: 1, display: 'flex', flexDirection: 'column', height: 500 }}>
                 <h3>Variables</h3>
                 <div style={{ flex: 1, overflowY: 'auto', textAlign: 'left', border: '1px solid #ccc', padding: 8, borderRadius: 4 }}>
-                    <pre>{JSON.stringify(props.variables, undefined, ' ')}</pre>
+                    <pre>{JSON.stringify(graph.variables, undefined, ' ')}</pre>
                 </div>
                 <hr style={{ borderTop: '1px solid #777', margin: '16px 0' }} />
                 <div style={{ textAlign: 'right' }}>
@@ -327,11 +352,11 @@ const ShowVariableComponent = (props: {closeModal: any, variables: any}) => {
     )
 }
 
-const JSONViewComponent = (props: {closeModal: any, getBehaviorGraph: any}) => {
+const JSONViewComponent = (props: {closeModal: any}) => {
     const [copied, setCopied] = useState(false);
-
+    const {getExecutableGraph} = useContext(InteractivityGraphContext);
     const copyToClipboard = async () => {
-        const jsonString = JSON.stringify(props.getBehaviorGraph(), undefined, '\t');
+        const jsonString = JSON.stringify(getExecutableGraph(), undefined, '\t');
         await navigator.clipboard.writeText(jsonString);
 
         setCopied(true)
@@ -344,7 +369,7 @@ const JSONViewComponent = (props: {closeModal: any, getBehaviorGraph: any}) => {
         <Panel id={"show-json-view-panel"} position={"top-center"} style={{border:"1px solid gray", background: "white"}}>
             <Container style={{padding: 16}}>
                 <h3>JSON View</h3>
-                <pre style={{textAlign: "left", overflow:"scroll", height: 400, width: 400}}>{JSON.stringify(props.getBehaviorGraph(), undefined, ' ')}</pre>
+                <pre style={{textAlign: "left", overflow:"scroll", height: 400, width: 400}}>{JSON.stringify(getExecutableGraph(), undefined, ' ')}</pre>
                 <Row style={{ marginTop: 16 }}>
                     <Col xs={12} md={6}>
                         <Button variant={"outline-primary"}  style={{width: "100%"}} onClick={copyToClipboard}>
@@ -363,11 +388,11 @@ const JSONViewComponent = (props: {closeModal: any, getBehaviorGraph: any}) => {
 }
 
 
-const NodeListComponent = (props: {closeModal: any, getBehaviorGraph: any}) => {
+const NodeListComponent = (props: {closeModal: any}) => {
     const [copied, setCopied] = useState(false);
-
+    const {getExecutableGraph} = useContext(InteractivityGraphContext);
     const getData = () => {
-        const graph = props.getBehaviorGraph();
+        const graph = getExecutableGraph();
         const nodes = graph.nodes;
         const nodeTypeSet = new Set(nodes.map((node: any) => node.type));
         const nodeTypes = Array.from(nodeTypeSet);
@@ -406,17 +431,19 @@ const NodeListComponent = (props: {closeModal: any, getBehaviorGraph: any}) => {
     )
 }
 
-const AddVariableComponent = (props: {closeModal: any, pushVariable: any}) => {
+const AddVariableComponent = (props: {closeModal: any}) => {
     const idRef = useRef<HTMLInputElement>(null);
     const initialValueRef = useRef<HTMLInputElement>(null);
     const typeRef = useRef<HTMLSelectElement>(null);
+
+    const {addVariable: addVariableToGraph} = useContext(InteractivityGraphContext);
 
     const addVariable = () => {
         if (idRef.current === null || initialValueRef.current === null || typeRef.current === null) {return}
         if (idRef.current.value === "" || initialValueRef.current.value === "" || typeRef.current.value === "") {return}
 
         const variable: IInteractivityVariable = {name: idRef.current.value, value: castParameter(initialValueRef.current.value, standardTypes[typeRef.current.selectedIndex].name!), type: typeRef.current.selectedIndex};
-        props.pushVariable(variable);
+        addVariableToGraph(variable);
         props.closeModal();
     }
 
@@ -471,13 +498,15 @@ const AddVariableComponent = (props: {closeModal: any, pushVariable: any}) => {
     )
 }
 
-const ShowCustomEventComponent = (props: {closeModal: any, events: any}) => {
+const ShowCustomEventComponent = (props: {closeModal: any}) => {
+    const {graph} = useContext(InteractivityGraphContext);
+
     return (
         <Panel id={"show-custom-event-panel"} position={"top-center"} style={{border:"1px solid gray", background: "white", height: 500}}>
             <Container style={{padding: 16, flex: 1, display: 'flex', flexDirection: 'column', height: 500}}>
                 <h3>Custom Events</h3>
                 <div style={{ flex: 1, overflowY: 'auto', textAlign: 'left', border: '1px solid #ccc', padding: 8, borderRadius: 4 }}>
-                    <pre>{JSON.stringify(props.events, undefined, ' ')}</pre>
+                    <pre>{JSON.stringify(graph.events, undefined, ' ')}</pre>
                 </div>
                 <hr style={{ borderTop: '1px solid #777', margin: '16px 0' }} />
              <div style={{ textAlign: 'right' }}>
@@ -490,10 +519,10 @@ const ShowCustomEventComponent = (props: {closeModal: any, events: any}) => {
     )
 }
 
-const AddCustomEventComponent = (props: {closeModal: any, pushCustomEvent: any}) => {
+const AddCustomEventComponent = (props: {closeModal: any}) => {
     const idRef = useRef<HTMLInputElement>(null);
     const {array: values, push: pushValue, remove: removeValue, set: setValue} = useArray([]);
-
+    const {addEvent: addEventToGraph} = useContext(InteractivityGraphContext);
     const handleInputChange = (index: number, updatedValue: any) => {
         setValue(index, updatedValue)
     }
@@ -506,7 +535,7 @@ const AddCustomEventComponent = (props: {closeModal: any, pushCustomEvent: any})
         });
 
         const customEvent: IInteractivityEvent = {id: idRef.current!.value, values: valuesObject}
-        props.pushCustomEvent(customEvent);
+        addEventToGraph(customEvent);
         props.closeModal();
     }
 

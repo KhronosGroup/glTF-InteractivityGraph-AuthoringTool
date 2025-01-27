@@ -54,7 +54,7 @@ export interface IInteractivityConfigurationValue {
 }
 
 export interface IInteractivityFlow {
-    node?: number,
+    node?: number | string,
     socket?: string
 }
 
@@ -62,12 +62,14 @@ export interface IInteractivityValue {
     typeOptions: number[],
     type: number,
     value?: any[],
-    node?: number,
+    node?: number | string,
     socket?: string
     description?: string
 }
 
 export interface IInteractivityNode {
+    uid?: string,
+    op?: string,
     decleration: number,
     description?: string,
     configuration?: Record<string, IInteractivityConfigurationValue>,

@@ -1,15 +1,15 @@
 import * as React from "react";
-import {useCallback, useEffect, useState} from "react";
+import {useCallback, useContext, useEffect, useState} from "react";
 import { Handle, Position} from "reactflow";
 
 import {RenderIf} from "../components/RenderIf";
 import { IInteractivityFlow, IInteractivityValue, IInteractivityNode, IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityVariable } from "../types/InteractivityGraph";
 import { knownNodes, standardTypes } from "../types/nodes";
+import { InteractivityGraphContext } from "../InteractivityGraphContext";
 
 require("../css/flowNodes.css");
 
 export interface IAuthoringGraphNodeProps {
-    node: IInteractivityNode,
     data: any
 }
 
@@ -18,10 +18,11 @@ export interface IAuthoringGraphNodeProps {
  *
  * @component
  * @param {IAuthoringGraphNodeProps} props - The props for the AuthoringGraphNode component.
- * @param {IAuthoringNode} props.node - The authoring node data.
  * @param {any} props.data - Additional data related to the node, including configuration, values, and more KHR_interactivity specific values.
  * @returns {JSX.Element} - A JSX element representing the AuthoringGraphNode.
  */
+
+//TODO: add a graph context and use it for maanging updates to the graph
 export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     const [inputFlows, setInputFlows] = useState<Record<string, IInteractivityFlow>>({});
     const [outputFlows, setOutputFlows] = useState<Record<string, IInteractivityFlow>>({});
@@ -29,31 +30,51 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     const [outputValues, setOutputValues] = useState<Record<string, IInteractivityValue>>({});
     const [configuration, setConfiguration] = useState<Record<string, IInteractivityConfigurationValue>>({});
 
-    useEffect(() => {
-        setInputFlows(props.node.flows?.input || {});
-        setOutputFlows(props.node.flows?.output || {});
-        setInputValues(props.node.values?.input || {});
-        setOutputValues(props.node.values?.output || {});
-        setConfiguration(props.node.configuration || {});
-    }, []);
+    const {graph, updateNode} = useContext(InteractivityGraphContext);
+    const uid = props.data.interactivityNode.uid;
+    const [node, setNode] = useState<IInteractivityNode | null>(null);
 
     useEffect(() => {
-        if (Object.keys(inputValues).length > 0) {
-            props.data.interactivityNode.values = props.node.values || {};
-            props.data.interactivityNode.values.input = inputValues;
+        const node: IInteractivityNode = graph.nodes.find(node => node.uid === uid)!;
+        setNode(node);
+    }, [graph, uid]);
+
+    useEffect(() => {
+        if (node) {
+            setInputFlows(node.flows?.input || {});
+            setOutputFlows(node.flows?.output || {});
+            setInputValues(node.values?.input || {});
+            setOutputValues(node.values?.output || {});
+            setConfiguration(node.configuration || {});
         }
-    }, [inputValues]);
+    }, [node]);
 
     useEffect(() => {
-        if (Object.keys(outputValues).length > 0) {
-            props.data.interactivityNode.values = props.node.values || {};
-            props.data.interactivityNode.values.output = outputValues;
+        if (Object.keys(inputValues).length > 0 && node) {
+            const nodeCopy = JSON.parse(JSON.stringify(node));
+
+            nodeCopy.values = nodeCopy.values || {};
+            nodeCopy.values.input = inputValues;
+            updateNode(nodeCopy, uid);
         }
-    }, [outputValues]);
+    }, [inputValues, node]);
 
     useEffect(() => {
-        props.data.interactivityNode.configuration = configuration;
-    }, [configuration])
+        if (Object.keys(outputValues).length > 0 && node) {
+            const nodeCopy = JSON.parse(JSON.stringify(node));
+            nodeCopy.values = nodeCopy.values || {};
+            nodeCopy.values.output = outputValues;
+            updateNode(nodeCopy, uid);
+        }
+    }, [outputValues, node]);
+
+    useEffect(() => {
+        if (Object.keys(configuration).length > 0 && node) {
+            const nodeCopy = JSON.parse(JSON.stringify(node));
+            nodeCopy.configuration = configuration;
+            updateNode(nodeCopy, uid);
+        }
+    }, [configuration, node]);
 
     const onChangeParameter = useCallback((evt: { target: { value: any; }; }) => {
         const socketId = (evt.target as HTMLInputElement).id.replace("in-", "");
@@ -92,8 +113,8 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     }
 
 
-    const evaluateConfigurationWhichChangeSockets = () => {
-        const nodeType = knownNodes[props.node.decleration].op;
+    const evaluateConfigurationWhichChangeSockets = useCallback(() => {
+        const nodeType = knownNodes[props.data.interactivityNode.decleration].op;
 
         const inputValuesToSet: Record<string, IInteractivityValue> = {};
         const outputValuesToSet: Record<string, IInteractivityValue> = {};
@@ -199,7 +220,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         setInputFlows({...inputFlows, ...inputFlowsToSet});
         setInputValues({...inputValues, ...inputValuesToSet});
         setOutputValues({...outputValues, ...outputValuesToSet});
-    }
+    }, [inputValues, outputValues, inputFlows, outputFlows])
 
     const stringToListOfNumbers = (inputString: string) => {
         const numberStrings = inputString.split(',');
@@ -249,9 +270,9 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
 
     return (
         <div className={"flow-node"}>
-            <div style={{background: getHeaderColor(knownNodes[props.node.decleration].op), padding: 16, marginBottom: 8}}>
+            <div style={{background: getHeaderColor(node?.op || ""), padding: 16, marginBottom: 8}}>
                 <h2>
-                    {knownNodes[props.node.decleration].op}
+                    {node?.op}
                 </h2>
             </div>
 
@@ -339,7 +360,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                     </div>
                                 )
                             })}
-                            <RenderIf shouldShow={knownNodes[props.node.decleration].op === "flow/sequence" || knownNodes[props.node.decleration].op === "flow/multiGate"}>
+                            <RenderIf shouldShow={knownNodes[props.data.interactivityNode.decleration].op === "flow/sequence" || knownNodes[props.data.interactivityNode.decleration].op === "flow/multiGate"}>
                                 <p onClick={() => {
                                     const outputFlow: IInteractivityFlow = {
                                         node: undefined,

@@ -64,6 +64,7 @@ export const standardTypes: IInteractivityValueType[] = [
 
 const variableNodeSpecs: IInteractivityNode[] = [
     {
+        op: "variable/set",
         decleration: 5,
         description: "Set a variable to a value",
         configuration: {
@@ -87,6 +88,7 @@ const variableNodeSpecs: IInteractivityNode[] = [
         }
     },
     {
+        op: "variable/get",
         decleration: 6,
         description: "Get a variable's value",
         configuration: {
@@ -99,6 +101,7 @@ const variableNodeSpecs: IInteractivityNode[] = [
 
 const lifecycleNodeSpecs: IInteractivityNode[] = [
     {
+        op: "event/onStart",
         decleration: 0,
         description: "This node will fire when the session starts.",
         flows: {
@@ -111,6 +114,7 @@ const lifecycleNodeSpecs: IInteractivityNode[] = [
         }
     },
     {
+        op: "event/onTick",
         decleration: 1,
         description: "This node will fire each tick.",
         flows: {
@@ -142,6 +146,7 @@ const lifecycleNodeSpecs: IInteractivityNode[] = [
 
 const flowNodeSpecs: IInteractivityNode[] = [
     {
+        op: "flow/branch",
         decleration: 2,
         description:"Branch the control flow based on a condition.",
         flows: {
@@ -173,6 +178,7 @@ const flowNodeSpecs: IInteractivityNode[] = [
         }
     },
     {
+        op: "flow/for",
         decleration: 3,
         description: "Execute the subgraph for flow loopBody from startIndex to endIndex (exclusive), then execute the subgraph completed",
         configuration: {
@@ -214,6 +220,7 @@ const flowNodeSpecs: IInteractivityNode[] = [
         }
     },
     {
+        op: "flow/sequence",
         decleration: 4,
         description: "Takes in a single in flow and executes the out flows in order",
         flows: {

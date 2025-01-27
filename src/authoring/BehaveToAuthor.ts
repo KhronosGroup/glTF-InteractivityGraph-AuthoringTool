@@ -9,6 +9,7 @@ import {ICustomEvent, IVariable} from "./AuthoringNodeSpecs";
  * @returns An array containing ReactFlow nodes, edges, custom events, and variables.
  */
 export const behaveToAuthor = (graph: string): [Node[], Edge[], ICustomEvent[], IVariable[]] => {
+  console.log("graph", graph)
   // Handle infinite and nan cases.
   const graphJson = JSON.parse(graph.replace(/":[ \t](Infinity|-IsNaN)/g, '":"{{$1}}"'), function(k, v) {
     if (v === '{{Infinity}}') return Infinity;

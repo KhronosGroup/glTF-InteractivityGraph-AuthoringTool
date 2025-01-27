@@ -6,7 +6,7 @@ import {
     IFlowSocketDescriptor,
     IVariable
 } from "./AuthoringNodeSpecs";
-import { IInteractivityFlow, IInteractivityNode } from "../types/InteractivityGraph";
+import { IInteractivityEvent, IInteractivityFlow, IInteractivityNode, IInteractivityVariable } from "../types/InteractivityGraph";
 import { standardTypes } from "../types/nodes";
 
 const validateGraphNodeNames = (nodes: Node[]) => {
@@ -30,7 +30,7 @@ const validateGraphNodeNames = (nodes: Node[]) => {
  * @param variables - An array of variable objects.
  * @returns The Behave graph representation of the provided data.
  */
-export const authorToBehave = (nodes: Node[], edges: Edge[], events: ICustomEvent[], variables: IVariable[]) => {
+export const authorToBehave = (nodes: Node[], edges: Edge[], events: IInteractivityEvent[], variables: IInteractivityVariable[]) => {
     const nodeTypeErrors = validateGraphNodeNames(nodes);
     if (nodeTypeErrors.length > 0) {
         throw new Error(`The graph has the following issues: ${nodeTypeErrors}`);
@@ -133,7 +133,6 @@ export const authorToBehave = (nodes: Node[], edges: Edge[], events: ICustomEven
 
         // get all edges that go out of our node which are flows
         const outVals = Object.keys(interactivityNode.values?.output || {});
-        console.log(interactivityNode)
         edges
             .filter((edge) => edge.source === node.id)
             .filter((edge) => !isNullish(edge.targetHandle) && !isNullish(edge.sourceHandle))

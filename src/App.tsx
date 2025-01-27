@@ -6,6 +6,7 @@ import {LoggingEngineComponent} from "./components/engineViews/LoggingEngineComp
 import {BabylonEngineComponent} from "./components/engineViews/BabylonEngineComponent";
 import {Tab, Tabs} from "react-bootstrap";
 import {Spacer} from "./components/Spacer";
+import { InteractivityGraphProvider } from './InteractivityGraphContext';
 
 export const App = () => {
   const [engineType, setEngineType] = useState<EngineType>(EngineType.BABYLON);
@@ -14,7 +15,9 @@ export const App = () => {
 
   return (
       <div style={{width: "100vw", height: "100vh"}}>
-        <AuthoringComponent behaveGraphRef={behaveGraphRef} behaveGraphFromGlTF={behaveGraphFromGlTF}/>
+        <InteractivityGraphProvider>
+            <AuthoringComponent behaveGraphRef={behaveGraphRef} behaveGraphFromGlTF={behaveGraphFromGlTF}/>
+        </InteractivityGraphProvider>
 
         <EngineSelector setEngineType={setEngineType}/>
 

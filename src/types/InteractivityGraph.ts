@@ -80,6 +80,10 @@ export interface IInteractivityNode {
     values?: {
         input?: Record<string, IInteractivityValue>,
         output?: Record<string, IInteractivityValue>
+    },
+    metadata?: {
+        positionX?: number,
+        positionY?: number
     }
 }
 

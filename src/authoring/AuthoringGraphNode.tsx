@@ -261,10 +261,6 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         }
     }
 
-    console.log(node?.op);
-    console.log(outputFlows);
-    console.log(inputFlows);
-
     return (
         <div className={"flow-node"}>
             <div style={{background: getHeaderColor(node?.op || ""), padding: 16, marginBottom: 8}}>

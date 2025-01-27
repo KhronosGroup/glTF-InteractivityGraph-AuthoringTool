@@ -69,17 +69,13 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
             id: interactivityNode.uid!,
             type: interactivityNode.op,
             position: {
-              x: 0,
-              y: 0
+              x: interactivityNode.metadata?.positionX
+                ? Number(interactivityNode.metadata?.positionX)
+                : 0,
+              y: interactivityNode.metadata?.positionY
+                ? Number(interactivityNode.metadata?.positionY)
+                : 0,
             },
-            // position: {
-            //   x: interactivityNode.metadata?.positionX
-            //     ? Number(interactivityNode.metadata?.positionX)
-            //     : 0,
-            //   y: nodeJSON.metadata?.positionY
-            //     ? Number(nodeJSON.metadata?.positionY)
-            //     : 0,
-            // },
             data: {} as { [key: string]: any },
           };
           nodes.push(node);
@@ -299,6 +295,13 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
                 }
             }
 
+            if (node.metadata !== undefined) {
+                templateNode.metadata = {
+                    positionX: node.metadata?.positionX,
+                    positionY: node.metadata?.positionY
+                }
+            }
+
             loadedNodes.push(templateNode);
         }
 
@@ -324,6 +327,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
                 values: node.values?.input || {},
                 configuration: node.configuration || {},
                 flows: node.flows?.output || {},
+                metadata: node.metadata
             };
 
             graph.nodes.push(JSON.parse(JSON.stringify(behaveNode)));

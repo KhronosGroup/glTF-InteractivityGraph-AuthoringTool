@@ -3,6 +3,7 @@ import ReactFlow, {
     Connection, Controls,
     Edge,
     Node,
+    NodeChange,
     NodeTypes, Panel, useEdgesState, useNodesState, useReactFlow, XYPosition
 } from 'reactflow';
 import {AuthoringGraphNode} from "../authoring/AuthoringGraphNode";
@@ -57,10 +58,21 @@ export const AuthoringComponent = () => {
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
     
-    const {graph, needsSyncingToAuthor, setNeedsSyncingToAuthor, getAuthorGraph, addDecleration, getDeclerationIndex, addNode, getExecutableGraph, removeNode} = useContext(InteractivityGraphContext);
+    const {graph, needsSyncingToAuthor, setNeedsSyncingToAuthor, getAuthorGraph, addDecleration, getDeclerationIndex, addNode, removeNode} = useContext(InteractivityGraphContext);
 
     //to handle the node picker props
     const mousePosRef = useRef({x:0, y:0});
+
+    useEffect(() => {
+        const updatePositions = setInterval(() => {
+            console.log(nodes)
+            for (const node of nodes) {
+                const graphNode = graph.nodes.find(graphNode => graphNode.uid === node.id)!;
+                graphNode.metadata = {positionX: node.position.x, positionY: node.position.y};
+            }
+        }, 5000);
+        return () => clearInterval(updatePositions);
+    }, [nodes, graph])
 
     const hasIntersection = (arr1: any[], arr2: any[]): boolean => {
         const set1 = new Set(arr1);

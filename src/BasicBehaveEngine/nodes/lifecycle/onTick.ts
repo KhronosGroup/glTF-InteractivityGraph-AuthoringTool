@@ -1,7 +1,6 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class OnTickNode extends BehaveEngineNode {
-
     _startTime = NaN;
     _lastTickTime = NaN;
     _floatTypeIndex = -1;
@@ -15,7 +14,7 @@ export class OnTickNode extends BehaveEngineNode {
 
     override processNode(flowSocket?: string) {
         this.graphEngine.processNodeStarted(this);
-        const tickTime = Date.now() / 1000;
+        const tickTime = this.graphEngine.lastTickTime;
         if (isNaN(this._startTime)) {
             this.outValues.timeSinceStart = { value: [0], type: this._floatTypeIndex };
             this.outValues.timeSinceLastTick = { value: [NaN], type: this._floatTypeIndex };

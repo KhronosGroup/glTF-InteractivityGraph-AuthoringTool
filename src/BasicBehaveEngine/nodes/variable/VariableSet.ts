@@ -1,8 +1,8 @@
-import { IInteractivityVariable } from "../../../types/InteractivityGraph";
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class VariableSet extends BehaveEngineNode {
     REQUIRED_CONFIGURATIONS = {variable: {}}
+    REQUIRED_VALUES = {value: {}}
 
     _variable: number;
 
@@ -18,10 +18,12 @@ export class VariableSet extends BehaveEngineNode {
 
     override processNode(flowSocket?:string) {
         this.graphEngine.clearValueEvaluationCache();
-        const vals = this.evaluateAllValues(["value"]);
+        const {value} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
         this.graphEngine.processNodeStarted(this);
 
-        this.variables[this._variable].value = vals["value"];
+        this.graphEngine.getVariableInterpolationCallback(this._variable)?.cancel();
+
+        this.variables[this._variable].value = value;
 
         super.processNode(flowSocket);
     }

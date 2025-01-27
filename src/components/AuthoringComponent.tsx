@@ -48,7 +48,7 @@ enum AuthoringComponentModelType {
 }
 
 const nodesWithConfigurations = interactivityNodeSpecs.filter(node => node.configuration !== undefined).map(node => knownDeclerations[node.decleration].op);
-export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromGlTF: any}) => {
+export const AuthoringComponent = () => {
     const reactFlowRef = useRef<HTMLDivElement | null>(null);
     const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
     const [authoringComponentModal, setAuthoringComponentModal] = useState<AuthoringComponentModelType>(AuthoringComponentModelType.NONE)
@@ -111,7 +111,12 @@ export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromG
             }
         }
 
-        sourceNode!.flows!.output![vals.sourceHandle!] = {node: targetNode.uid, socket: vals.targetHandle!}
+
+        if (sourceIsFlow || targetIsFlow) { 
+            sourceNode!.flows!.output![vals.sourceHandle!] = {node: targetNode.uid, socket: vals.targetHandle!}
+        } else {
+            targetNode!.values!.input![vals.targetHandle!] = {node: sourceNode.uid, socket: vals.sourceHandle!}
+        }
 
         setEdges((eds: any) => addEdge(vals, eds));
     }, [nodes]);

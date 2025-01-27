@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react";
+import React, {useEffect, useRef, useState, useContext} from "react";
 import {Button, Col, Container, Form, Modal, Row, Tab, Tabs} from "react-bootstrap";
 import {
     AbstractMesh,
@@ -21,6 +21,7 @@ import {GLTFLoader} from "@babylonjs/loaders/glTF/2.0";
 import {BabylonDecorator} from "../../BasicBehaveEngine/decorators/BabylonDecorator";
 import {BasicBehaveEngine} from "../../BasicBehaveEngine/BasicBehaveEngine";
 import {GLTFFileLoader, GLTFLoaderAnimationStartMode} from "@babylonjs/loaders";
+import { InteractivityGraphContext } from "../../InteractivityGraphContext";
 
 enum BabylonEngineModal {
     CUSTOM_EVENT = "CUSTOM_EVENT",
@@ -35,7 +36,7 @@ GLTFLoader.RegisterExtension(KHR_NODE_VISIBILITY_EXTENSION_NAME, (loader) => {
     return new KHR_node_visibility(loader);
 });
 
-export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGraphFromGlTF: any}) => {
+export const BabylonEngineComponent = () => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const engineRef = useRef<Engine | null>(null);
     const sceneRef = useRef<Scene>();
@@ -46,6 +47,8 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
     const babylonEngineRef = useRef<BabylonDecorator | null>(null)
     const [fileUploaded, setFileUploaded] = useState<string | null>(null);
     const [clickedHotSpot, setClickedHotSpot] = useState<string | null>(null);
+
+    const {getExecutableGraph, loadGraphFromJson} = useContext(InteractivityGraphContext);
 
     useEffect(() => {
         // Create the Babylon.js engines
@@ -75,7 +78,7 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
     const play = (shouldOverrideGraph: boolean) => {
         resetScene()
             .then((res: {nodes: Node[], materials: Material[], animations: AnimationGroup[], meshes: AbstractMesh[]}) => {
-                runGraph(babylonEngineRef, props.behaveGraphRef.current, sceneRef.current, res.nodes, res.materials, res.animations, res.meshes, shouldOverrideGraph);
+                runGraph(babylonEngineRef, getExecutableGraph(), sceneRef.current, res.nodes, res.materials, res.animations, res.meshes, shouldOverrideGraph);
                 setGraphRunning(true);
             })
     }
@@ -165,7 +168,7 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
 
         const extractedBehaveGraph = babylonEngineRef.current.extractBehaveGraphFromScene()
         if ((!behaveGraph.nodes || behaveGraph.nodes.length === 0 || shouldOverride) && extractedBehaveGraph) {
-            props.setBehaveGraphFromGlTF(extractedBehaveGraph);
+            loadGraphFromJson(extractedBehaveGraph);
             babylonEngineRef.current.loadBehaveGraph(extractedBehaveGraph);
         } else {
             babylonEngineRef.current.loadBehaveGraph(behaveGraph);
@@ -192,7 +195,9 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
 
             glTF['extensions'] = glTF['extensions'] || {};
             glTF['extensions']['KHR_interactivity'] = {
-                ...props.behaveGraphRef.current
+                graphs: [getExecutableGraph()],
+                graph: 0
+
             }
             glTF['extensionsUsed'] = glTF['extensionsUsed'] || []
             if (!glTF['extensionsUsed'].includes('KHR_interactivity')) {
@@ -287,7 +292,7 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
                         activeKey={activeKey}
                         onSelect={(key: any) => setActiveKey(key)}
                     >
-                        {props.behaveGraphRef.current.events?.map((customEvent: any, index: number) => {
+                        {getExecutableGraph().events?.map((customEvent: any, index: number) => {
                             return (
                                 <Tab title={customEvent.id} eventKey={index + 1}>
                                     <Row style={{textAlign: "left"}}>
@@ -335,3 +340,4 @@ export const BabylonEngineComponent = (props: {behaveGraphRef: any, setBehaveGra
         </div>
     )
 }
+

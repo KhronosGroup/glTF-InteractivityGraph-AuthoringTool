@@ -10,24 +10,23 @@ import { InteractivityGraphProvider } from './InteractivityGraphContext';
 
 export const App = () => {
   const [engineType, setEngineType] = useState<EngineType>(EngineType.BABYLON);
-  const [behaveGraphFromGlTF, setBehaveGraphFromGlTF] = useState<null | string>(null)
-  const behaveGraphRef = useRef<any>({})
+
 
   return (
     <InteractivityGraphProvider>
         <div style={{width: "100vw", height: "100vh"}}>
  
-        <AuthoringComponent behaveGraphRef={behaveGraphRef} behaveGraphFromGlTF={behaveGraphFromGlTF}/>
+        <AuthoringComponent/>
     
         <EngineSelector setEngineType={setEngineType}/>
 
         <Spacer width={0} height={32}/>
 
         <RenderIf shouldShow={engineType === EngineType.LOGGING}>
-             <LoggingEngineComponent behaveGraphRef={behaveGraphRef}/>
+             <LoggingEngineComponent/>
         </RenderIf>
         <RenderIf shouldShow={engineType === EngineType.BABYLON}>
-            <BabylonEngineComponent behaveGraphRef={behaveGraphRef} setBehaveGraphFromGlTF={setBehaveGraphFromGlTF}/>
+            <BabylonEngineComponent/>
         </RenderIf>
       </div>
     </InteractivityGraphProvider>

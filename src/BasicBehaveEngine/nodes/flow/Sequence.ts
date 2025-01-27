@@ -15,7 +15,7 @@ export class Sequence extends BehaveEngineNode {
     override processNode(flowSocket?: string) {
         this.graphEngine.processNodeStarted(this)
 
-        const flows = Object.keys(this.flows);
+        const flows = Object.keys(this.flows).sort();
         for (let i = 0; i < flows.length; i++) {
             const flow = this.flows[flows[i]];
             if (!flow) continue;

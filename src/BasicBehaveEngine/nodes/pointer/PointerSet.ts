@@ -1,21 +1,22 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class PointerSet extends BehaveEngineNode {
-    REQUIRED_CONFIGURATIONS = {pointer: {}}
+    REQUIRED_CONFIGURATIONS = {pointer: {}, type: {}}
     REQUIRED_VALUES = {value: {}}
 
     _pointer: string;
     _pointerVals: { id: string }[];
-
+    _typeIndex: number;
     constructor(props: IBehaviourNodeProps) {
         super(props);
         this.name = "PointerSet";
         this.validateValues(this.values);
         this.validateConfigurations(this.configuration);
 
-        const {pointer} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
-        this._pointer = pointer;
-        const valIds = this.parsePath(pointer);
+        const {pointer, type} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
+        this._pointer = pointer[0];
+        this._typeIndex = type;
+        const valIds = this.parsePath(this._pointer);
         const generatedVals = [];
         for (let i = 0; i < valIds.length; i++) {
             generatedVals.push({id: valIds[i]});
@@ -26,10 +27,10 @@ export class PointerSet extends BehaveEngineNode {
         for (let i = 0; i < valIds.length; i++) {
             readOnlyTestValues[valIds[i]] = 0;
         }
-        const readOnlyTestPath = this.populatePath(pointer, readOnlyTestValues);
+        const readOnlyTestPath = this.populatePath(this._pointer, readOnlyTestValues);
         const isReadOnly = this.graphEngine.isReadOnly(readOnlyTestPath);
         if (isReadOnly) {
-            throw new Error(`Path ${pointer} is read only but is included in a pointer/set configuration`);
+            throw new Error(`Path ${this._pointer} is read only but is included in a pointer/set configuration`);
         }
         
         this._pointerVals = generatedVals;
@@ -69,6 +70,15 @@ export class PointerSet extends BehaveEngineNode {
         this.graphEngine.processNodeStarted(this);
 
         if (this.graphEngine.isValidJsonPtr(populatedPath)) {
+            const typeName = this.getType(this._typeIndex);
+            const type = this.graphEngine.getPathtypeName(populatedPath);
+            if (type !== typeName) {
+                if (this.flows.err) {
+                    this.processFlow(this.flows.err);
+                }
+                return;
+            }
+            
             this.graphEngine.getWorldAnimationPathCallback(this._pointer)?.cancel();
             this.graphEngine.setPathValue(populatedPath, targetValue);
             super.processNode(flowSocket);

@@ -193,6 +193,25 @@ export class BehaveEngineNode {
         return typeNames.indexOf(name);
     }
 
+    protected getDefualtValueForType(type: string): any {
+        switch (type) {
+            case "bool":
+                return [false];
+            case "int":
+                return [0];
+            case "float":
+                return [NaN];
+            case "float2":
+                return [NaN, NaN];
+            case "float3":
+                return [NaN, NaN, NaN];
+            case "float4":
+                return [NaN, NaN, NaN, NaN];
+            case "float4x4":
+                return [NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN];
+        }
+    }
+
     protected parseType(type: string, val: any) {
         switch (type) {
             case "bool":

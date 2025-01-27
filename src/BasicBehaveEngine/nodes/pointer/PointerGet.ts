@@ -1,20 +1,21 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class PointerGet extends BehaveEngineNode {
-    REQUIRED_CONFIGURATIONS = {pointer: {}}
+    REQUIRED_CONFIGURATIONS = {pointer: {}, type: {}}
 
     _pointer: string;
     _pointerVals: { id: string }[];
-
+    _typeIndex: number;
     constructor(props: IBehaviourNodeProps) {
         super(props);
         this.name = "PointerGet";
         this.validateValues(this.values);
         this.validateConfigurations(this.configuration);
 
-        const {pointer} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
-        this._pointer = pointer;
-        const valIds = this.parsePath(pointer);
+        const {pointer, type} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
+        this._pointer = pointer[0];
+        this._typeIndex = type;
+        const valIds = this.parsePath(this._pointer);
         const generatedParams = [];
         for (let i = 0; i < valIds.length; i++) {
             generatedParams.push({id: valIds[i]});
@@ -59,12 +60,14 @@ export class PointerGet extends BehaveEngineNode {
             const typeIndex = this.getTypeIndex(typeName!);
 
             return {
-                'value':{id: "value", value: this.graphEngine.getPathValue(populatedPath), type: typeIndex},
-                'isValid':{id: "isValid", value: [true], type: this.getTypeIndex('bool')}
+                'value':{value: this.graphEngine.getPathValue(populatedPath), type: typeIndex},
+                'isValid':{value: [true], type: this.getTypeIndex('bool')}
             };
         } else {
+            const typeName = this.getType(this._typeIndex);
             return {
-                'isValid':{id: "isValid", value: [false], type: this.getTypeIndex('bool')}
+                'value':{value: this.getDefualtValueForType(typeName), type: this._typeIndex},
+                'isValid':{value: [false], type: this.getTypeIndex('bool')}
             };
         }
     }

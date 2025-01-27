@@ -10,7 +10,7 @@ enum LoggingEngineModal {
     CUSTOM_EVENT = "CUSTOM_EVENT",
     NONE = "NONE"
 }
-export const LoggingEngineComponent = (props: {behaveGraphRef: any}) => {
+export const LoggingEngineComponent = () => {
     const [executionLog, setExecutionLog] = useState("");
     const [openModal, setOpenModal] = useState<LoggingEngineModal>(LoggingEngineModal.NONE);
     const [world, setWorld] = useState("{}");
@@ -97,7 +97,7 @@ export const LoggingEngineComponent = (props: {behaveGraphRef: any}) => {
                         activeKey={activeKey}
                         onSelect={(key: any) => setActiveKey(key)}
                     >
-                        {props.behaveGraphRef.current.events?.map((customEvent: any, index: number) => {
+                        {getExecutableGraph().events?.map((customEvent: any, index: number) => {
                             return (
                                 <Tab title={customEvent.id} eventKey={index + 1}>
                                     <Row style={{textAlign: "left"}}>

@@ -3030,8 +3030,8 @@ const flowNodeSpecs: IInteractivityNode[] = [
         }
     },
     {
-        op: "flow/mulitgate",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "flow/mulitgate"),
+        op: "flow/multiGate",
+        decleration: knownDeclerations.findIndex(decleration => decleration.op === "flow/multiGate"),
         description: "Multiplex the control flow based on a selection",
         flows: {
             input: {
@@ -3294,9 +3294,9 @@ const flowNodeSpecs: IInteractivityNode[] = [
     }
 ];
 
-export const interactivityNodeSpecs = [
+export const interactivityNodeSpecs: IInteractivityNode[] = [
     ...mathConstantNodeSpecs, ...mathArithmeticNodeSpecs, ...mathComparisonNodeSpecs, ...mathTrigNodeSpecs,
     ...mathSpecialNodeSpecs,...lifecycleNodeSpecs, ...flowNodeSpecs, ...variableNodeSpecs, ...mathHyperbolicNodeSpecs,
-    ...mathExponentialNodeSpecs, ...mathVectorNodeSpecs, ...mathMatrixNodeSpecs, ...mathSwizzleNodeSpecs, mathIntegerBitwiseNodeSpecs,
+    ...mathExponentialNodeSpecs, ...mathVectorNodeSpecs, ...mathMatrixNodeSpecs, ...mathSwizzleNodeSpecs, ...mathIntegerBitwiseNodeSpecs,
     ...mathTypeConversionNodeSpecs, ...pointerNodeSpecs
 ];

@@ -1,21 +1,22 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class PointerInterpolate extends BehaveEngineNode {
-    REQUIRED_CONFIGURATIONS = {pointer: {}}
+    REQUIRED_CONFIGURATIONS = {pointer: {}, type: {}}
     REQUIRED_VALUES = {value: {}, duration: {}, p1: {}, p2: {}}
 
     _pointer: string;
     _pointerVals: { id: string }[];
-
+    _typeIndex: number;
     constructor(props: IBehaviourNodeProps) {
         super(props);
         this.name = "PointerInterpolate";
         this.validateValues(this.values);
         this.validateConfigurations(this.configuration);
 
-        const {pointer} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
-        this._pointer = pointer;
-        const valIds = this.parsePath(pointer);
+        const {pointer, type} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
+        this._pointer = pointer[0];
+        this._typeIndex = type;
+        const valIds = this.parsePath(this._pointer);
         const generatedVals = [];
         for (let i = 0; i < valIds.length; i++) {
             generatedVals.push({id: valIds[i]});
@@ -27,10 +28,10 @@ export class PointerInterpolate extends BehaveEngineNode {
          for (let i = 0; i < valIds.length; i++) {
              readOnlyTestValues[valIds[i]] = 0;
          }
-         const readOnlyTestPath = this.populatePath(pointer, readOnlyTestValues);
+         const readOnlyTestPath = this.populatePath(this._pointer, readOnlyTestValues);
          const isReadOnly = this.graphEngine.isReadOnly(readOnlyTestPath);
          if (isReadOnly) {
-             throw new Error(`Path ${pointer} is read only but is included in a pointer/interpolate configuration`);
+             throw new Error(`Path ${this._pointer} is read only but is included in a pointer/interpolate configuration`);
          }
 
         this._pointerVals = generatedVals;
@@ -74,6 +75,14 @@ export class PointerInterpolate extends BehaveEngineNode {
 
         if (this.graphEngine.isValidJsonPtr(populatedPath)) {
             const valueType = this.graphEngine.getPathtypeName(populatedPath)!;
+            const typeName = this.getType(this._typeIndex);
+            if (valueType !== typeName) {
+                if (this.flows.err) {
+                    this.processFlow(this.flows.err);
+                }
+                return;
+            }
+            
             const initialValue = this.graphEngine.getPathValue(populatedPath);
 
             this.graphEngine.animateCubicBezier(populatedPath, p1, p2, initialValue, targetValue, duration, valueType, () => {

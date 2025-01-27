@@ -196,7 +196,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
             const v: IInteractivityVariable = graph.variables[variableId];
             const value: IInteractivityValue =  {typeOptions: [v.type], type: v.type, value: [undefined]}
 
-            if (nodeType === "variable/set") {
+            if (nodeType === "variable/set" || nodeType === "variable/interpolate") {
                 inputValuesToSet["value"] = value;
             } else if (nodeType === "variable/get") {
                 outputValuesToSet["value"] = value;
@@ -313,8 +313,28 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                             </div>
                         }
                         {
+                            (configuration.type !== undefined) &&
+                            <div>
+                                <label htmlFor="type">type</label>
+                                <select id="type" name="type" onChange={(event) => {
+                                    if (Number(event.target.value) === -1) {
+                                        return
+                                    }
+                                    onChangeConfiguration(event)
+                                }}>
+                                    <option key={-1} value={-1} selected={configuration.type.value === undefined}>--NO SELECTION--</option>
+                                    {
+
+                                        props.data.types.map((t: any, index: number) => (
+                                            <option key={index} value={index} selected={configuration.type.value?.[0] == index}>{t.name}</option>
+                                        ))
+                                    }
+                                </select>
+                            </div>
+                        }
+                        {
                             Object.keys(configuration)
-                            .filter((configurationId) => configurationId !== "event" && configurationId !== "variable")
+                            .filter((configurationId) => configurationId !== "event" && configurationId !== "variable" && configurationId !== "type")
                             .map((configurationId) => {
                                 return (
                                     <div key={configurationId}>

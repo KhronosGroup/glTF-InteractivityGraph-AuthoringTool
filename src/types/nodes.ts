@@ -2683,11 +2683,6 @@ const variableNodeSpecs: IInteractivityNode[] = [
         },
         values: {
             input: {
-                value: {
-                    typeOptions: anyType,
-                    type: 0,
-                    value: [undefined]
-                },
                 duration: {
                     typeOptions: [2],
                     type: 2,

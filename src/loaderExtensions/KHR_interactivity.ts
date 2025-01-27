@@ -26,7 +26,8 @@ export class KHR_interactivity implements IGLTFLoaderExtension {
             if (scene.extensions && scene.extensions.KHR_interactivity && scene.extensions.KHR_interactivity) {
                 const p = async () => {
                     this._loader.babylonScene.extras = this._loader.babylonScene.extras || {};
-                    this._loader.babylonScene.extras.behaveGraph = scene.extensions!.KHR_interactivity;
+                    const graphIndex = scene.extensions!.KHR_interactivity.graph;
+                    this._loader.babylonScene.extras.behaveGraph = scene.extensions!.KHR_interactivity.graphs[graphIndex];
                 };
                 promises.push(p());
             }

@@ -59,8 +59,8 @@ export interface IInteractivityFlow {
 }
 
 export interface IInteractivityValue {
-    typeOptions: number[],
-    type: number,
+    typeOptions?: number[],
+    type?: number,
     value?: any[],
     node?: number | string,
     socket?: string

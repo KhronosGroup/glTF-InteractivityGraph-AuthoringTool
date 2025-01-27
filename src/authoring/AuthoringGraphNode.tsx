@@ -30,7 +30,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     const [outputValues, setOutputValues] = useState<Record<string, IInteractivityValue>>({});
     const [configuration, setConfiguration] = useState<Record<string, IInteractivityConfigurationValue>>({});
 
-    const {graph, updateNode} = useContext(InteractivityGraphContext);
+    const {graph} = useContext(InteractivityGraphContext);
     const uid = props.data.uid;
     const [node, setNode] = useState<IInteractivityNode | null>(null);
 
@@ -51,35 +51,28 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
 
     useEffect(() => {
         if (Object.keys(inputValues).length > 0 && node) {
-            const nodeCopy = JSON.parse(JSON.stringify(node));
-
-            nodeCopy.values = nodeCopy.values || {};
-            nodeCopy.values.input = inputValues;
-            updateNode(nodeCopy, uid);
+            node.values = node.values || {};
+            node.values.input = inputValues;
         }
     }, [inputValues, node]);
 
     useEffect(() => {
         if (Object.keys(outputValues).length > 0 && node) {
-            const nodeCopy = JSON.parse(JSON.stringify(node));
-            nodeCopy.values = nodeCopy.values || {};
-            nodeCopy.values.output = outputValues;
-            updateNode(nodeCopy, uid);
+            node.values = node.values || {};
+            node.values.output = outputValues;
         }
     }, [outputValues, node]);
 
     useEffect(() => {
         if (Object.keys(configuration).length > 0 && node) {
-            const nodeCopy = JSON.parse(JSON.stringify(node));
-            nodeCopy.configuration = configuration;
-            updateNode(nodeCopy, uid);
+            node.configuration = configuration;
         }
     }, [configuration, node]);
 
     const onChangeParameter = useCallback((evt: { target: { value: any; }; }) => {
         const socketId = (evt.target as HTMLInputElement).id.replace("in-", "");
         const curParam = inputValues[socketId];
-        setInputValues({...inputValues, [socketId]: {value: castParameter(evt.target.value, standardTypes[curParam.type]!.name!), typeOptions:curParam.typeOptions, type:curParam.type}});
+        setInputValues({...inputValues, [socketId]: {value: castParameter(evt.target.value, standardTypes[curParam.type!]!.name!), typeOptions:curParam.typeOptions, type:curParam.type}});
     }, [inputValues]);
 
     const onChangeType = useCallback((evt: { target: { value: any; }; }) => {
@@ -93,7 +86,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         // TODO: how can I properly pares the value for config without knowing type
         setConfiguration({...configuration, [configurationId]: {value: [evt.target.value]}});
         evaluateConfigurationWhichChangeSockets();
-    }, []);
+    }, [inputValues, outputValues, inputFlows, outputFlows, node]);
 
     const parsePath = (path: string): string[] => {
         const regex = /{([^}]+)}/g;
@@ -267,6 +260,10 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                 return "#868484"
         }
     }
+
+    console.log(node?.op);
+    console.log(outputFlows);
+    console.log(inputFlows);
 
     return (
         <div className={"flow-node"}>

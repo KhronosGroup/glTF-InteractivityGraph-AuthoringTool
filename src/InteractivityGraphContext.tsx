@@ -275,26 +275,30 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
             if (node.values !== undefined) {
                 for (const key in node.values) {
                     if (node.values[key].value !== undefined) {
-                        templateNode!.values!.input![key].value = node.values[key].value;
-                        templateNode!.values!.input![key].type = node.values[key].type;
-
+                        templateNode.values = templateNode.values || {};
+                        templateNode.values.input = templateNode.values.input || {};
+                        templateNode.values.input[key] = {value: node.values[key].value, type: node.values[key].type, typeOptions: templateNode.values.input[key]?.typeOptions || [node.values[key].type]};
                     } else if (node.values[key].socket !== undefined && node.values[key].node !== null) {
-                        templateNode!.values!.input![key].socket = node.values[key].socket;
-                        templateNode!.values!.input![key].node = uuids[node.values[key].node];
+                        templateNode.values = templateNode.values || {};
+                        templateNode.values.input = templateNode.values.input || {};
+                        templateNode.values.input[key] = {socket: node.values[key].socket, node: uuids[node.values[key].node]};
                     }
                 }
             }
 
             if (node.flows !== undefined) {
                 for (const key in node.flows) {
-                    templateNode!.flows!.output![key].socket = node.flows[key].socket;
-                    templateNode!.flows!.output![key].node = uuids[node.flows[key].node];
+                    templateNode.flows = templateNode.flows || {};
+                    templateNode.flows.output = templateNode.flows.output || {};
+                    templateNode.flows.output[key].socket = node.flows[key].socket;
+                    templateNode.flows.output[key].node = uuids[node.flows[key].node];
                 }
             }
 
             if (node.configuration !== undefined) {
                 for (const key in node.configuration) {
-                    templateNode!.configuration![key] = node.configuration[key];
+                    templateNode.configuration = templateNode.configuration || {};
+                    templateNode.configuration[key] = node.configuration[key];
                 }
             }
 
@@ -308,6 +312,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
 
 
     const getExecutableGraph = () => {
+        console.log("rawGraph", graphRef.current);
         const graph: any = { declerations: [], nodes: [], variables: [], events: [], types: standardTypes, };
 
         graph.events = [...graphRef.current.events];

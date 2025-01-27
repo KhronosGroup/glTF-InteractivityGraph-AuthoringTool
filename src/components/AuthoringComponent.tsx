@@ -12,8 +12,6 @@ import {useArray} from "../hooks/useArray";
 import {RenderIf} from "./RenderIf";
 import {Button, Col, Container, Row, Form} from "react-bootstrap";
 import 'reactflow/dist/style.css';
-import {authorToBehave} from "../authoring/AuthorToBehave";
-import {behaveToAuthor} from "../authoring/BehaveToAuthor";
 import {Spacer} from "./Spacer";
 import {interactivityNodeSpecs, knownNodes, standardTypes} from "../types/nodes";
 import { IInteractivityDecleration, IInteractivityEvent, IInteractivityNode, IInteractivityVariable } from '../types/InteractivityGraph';
@@ -59,7 +57,7 @@ export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromG
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
     
-    const {graph, addDecleration, getDeclerationIndex, addNode, getExecutableGraph, removeNode} = useContext(InteractivityGraphContext);
+    const {graph, needsSyncingToAuthor, setNeedsSyncingToAuthor, getAuthorGraph, addDecleration, getDeclerationIndex, addNode, getExecutableGraph, removeNode} = useContext(InteractivityGraphContext);
 
     //to handle the node picker props
     const mousePosRef = useRef({x:0, y:0});
@@ -75,17 +73,6 @@ export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromG
 
         return false;
     }
-
-
-    useEffect(() => {
-        console.log(graph);
-    }, [graph])
-
-    useEffect(() => {
-        if (props.behaveGraphFromGlTF !== null) {
-            setBehaveGraph(JSON.stringify(props.behaveGraphFromGlTF));
-        }
-    }, [props.behaveGraphFromGlTF])
 
     // handle creation and deletion of edges
     const onConnect = useCallback((vals: Edge<any> | Connection) => {
@@ -177,21 +164,14 @@ export const AuthoringComponent = (props: {behaveGraphRef: any, behaveGraphFromG
         onNodesChange([{type: "add", item: nodeToAdd}]);
     }, [graph]);
 
-    const setBehaveGraph = (behaveGraph: string) => {
-        const result = behaveToAuthor(behaveGraph);
-        console.log(result);
-        setNodes(result[0]);
-        setEdges(result[1]);
-    
-        //TODO: ste events and variables from laoded grpah
-        // setEvents(result[2]);
-        // setVariables(result[3]);
-
-        // Log all node types
-        const allNodeTypes = result[0].map(node => node.type);
-        const uniqueNodeTypes = new Set(allNodeTypes);
-        console.log(JSON.stringify(Array.from(uniqueNodeTypes)));
-    }
+    useEffect(() => {
+        if (needsSyncingToAuthor) {
+            const result = getAuthorGraph(graph);
+            setNodes(result[0]);
+            setEdges(result[1]);
+            setNeedsSyncingToAuthor(false);
+        }
+    }, [needsSyncingToAuthor]);
 
     // handle clicking on the react flow pane
     const handleRightClick = (e: React.MouseEvent) => {

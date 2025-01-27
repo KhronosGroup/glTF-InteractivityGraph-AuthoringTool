@@ -1,9 +1,13 @@
-import { createContext, useRef } from 'react';
+import { createContext, useRef, useState } from 'react';
 import { IInteractivityDecleration, IInteractivityEvent, IInteractivityGraph, IInteractivityNode, IInteractivityVariable } from './types/InteractivityGraph';
 import { interactivityNodeSpecs, standardTypes } from './types/nodes';
 import { v4 as uuidv4 } from 'uuid';
+import { Edge, Node } from 'reactflow';
 interface InteractivityGraphContextType {
     graph: IInteractivityGraph,
+    needsSyncingToAuthor: boolean,
+    setNeedsSyncingToAuthor: (needsSyncing: boolean) => void,
+    getAuthorGraph: (graph: IInteractivityGraph) => [Node[], Edge[], IInteractivityEvent[], IInteractivityVariable[]],
     getExecutableGraph: () => any,
     loadGraphFromJson: (json: any) => void,
     addDecleration: (decleration: IInteractivityDecleration) => void,
@@ -25,6 +29,9 @@ const initialGraph: IInteractivityGraph = {
 
 const initialContext: InteractivityGraphContextType = {
     graph: initialGraph,
+    needsSyncingToAuthor: false,
+    setNeedsSyncingToAuthor: () => {return null},
+    getAuthorGraph: (graph: IInteractivityGraph) => {return [[], [], [], []]},
     getExecutableGraph: () => {return null},
     loadGraphFromJson: () => {return null},
     addDecleration: () => {return null},
@@ -41,6 +48,208 @@ export const InteractivityGraphContext = createContext<InteractivityGraphContext
 export const InteractivityGraphProvider = ({ children }: { children: React.ReactNode }) => {
     const usedNodeDeclerationRef = useRef<Set<string>>(new Set());
     const graphRef = useRef<IInteractivityGraph>(initialGraph);
+
+    const [needsSyncingToAuthor, setNeedsSyncingToAuthor] = useState(false);
+
+    const getAuthorGraph = (graph: IInteractivityGraph): [Node[], Edge[], IInteractivityEvent[], IInteractivityVariable[]] => {
+        console.log("graph", graph)
+        // TODO: THIS IS NOT JSON WE SHOULD NOT ALLOW FOR NANS OR INFINITIES
+        // const graphJson = JSON.parse(graph.replace(/":[ \t](Infinity|-IsNaN)/g, '":"{{$1}}"'), function(k, v) {
+        //   if (v === '{{Infinity}}') return Infinity;
+        //   else if (v === '{{-Infinity}}') return -Infinity;
+        //   else if (v === '{{NaN}}') return NaN;
+        //   return v;
+        // });  
+        const nodes: Node[] = [];
+        const edges: Edge[] = [];
+        const events: IInteractivityEvent[] = graph.events;
+        const variables: IInteractivityVariable[] = graph.variables;
+      
+        // loop through all the nodes in our behave graph to extract nodes and edges
+        graph.nodes.forEach((interactivityNode: IInteractivityNode) => {
+          // construct and add the node to the nodes list
+          const node: Node = {
+            id: interactivityNode.uid!,
+            type: interactivityNode.op,
+            position: {
+              x: 0,
+              y: 0
+            },
+            // position: {
+            //   x: interactivityNode.metadata?.positionX
+            //     ? Number(interactivityNode.metadata?.positionX)
+            //     : 0,
+            //   y: nodeJSON.metadata?.positionY
+            //     ? Number(nodeJSON.metadata?.positionY)
+            //     : 0,
+            // },
+            data: {} as { [key: string]: any },
+          };
+          nodes.push(node);
+          node.data.uid = interactivityNode.uid;
+      
+          // add configuration
+          node.data.configuration = {}
+          if (interactivityNode.configuration) {
+            for (const [key, value] of Object.entries(interactivityNode.configuration)) {
+              node.data.configuration[key] = value;
+            }
+          }
+      
+          //add custom events and variables
+          node.data.events = graph.events;
+          node.data.variables = graph.variables;
+          node.data.types = graph.types;
+      
+          // to keep track of if there is a link for this value
+          node.data.linked = {}
+          node.data.values = {}
+          if (interactivityNode.values) {
+            for (const [key, value] of Object.entries(interactivityNode.values.input || {})) {
+              if (value.node !== undefined) {
+                // if the value is derived from the output of another node, create an edge linking to that node
+                edges.push({
+                  id: uuidv4(),
+                  source: String(value.node),
+                  sourceHandle: value.socket,
+                  target: String(interactivityNode.uid!),
+                  targetHandle: key,
+                });
+                node.data.linked[key] = true;
+              } else if (value.value !== undefined) {
+                // if the value is a value, we can just get it from the node json
+                node.data.values[key] = {value: value.value, type: value.type};
+              }
+            }
+          }
+      
+          // flows will always be references to other nodes output flows, so for each flow create a backreference edge
+          node.data.flowIds = [];
+          if (interactivityNode.flows) {
+            for (const [key, value] of Object.entries(interactivityNode.flows?.output || {})) {
+              if (value.node !== undefined) {
+              edges.push({
+                id: uuidv4(),
+                source: String(interactivityNode.uid!),
+                sourceHandle: key,
+                target: String(value.node),
+                  targetHandle: value.socket,
+                });
+              }
+            }
+          }
+        });
+      
+        // set up structure for nodes if one does not exist
+        if (!nodes.some(node => node.position.y !== 0 || node.position.x !== 0)) {
+      
+          // Build adjacency list
+          const adjacencyList: Record<string, string[]> = {};
+          edges.forEach((edge) => {
+            const { source, target } = edge;
+            if (!adjacencyList[source]) {
+              adjacencyList[source] = [];
+            }
+            if (!adjacencyList[target]) {
+              adjacencyList[target] = [];
+            }
+            adjacencyList[source].push(target);
+            adjacencyList[target].push(source);
+          });
+      
+          const visited: Record<string, boolean> = {};
+          const disjointGraphs: string[][] = [];
+          const queue: string[] = [];
+      
+          // Traverse graph and assign disjointGraphs
+          nodes.forEach((node) => {
+            const { id } = node;
+            if (!visited[id]) {
+              visited[id] = true;
+              const disjointGraph: string[] = [];
+              queue.push(id);
+      
+              while (queue.length > 0) {
+                const currentNode = queue.shift() as string;
+                disjointGraph.push(currentNode);
+      
+                if (adjacencyList[currentNode]) {
+                  adjacencyList[currentNode].forEach((neighbor) => {
+                    if (!visited[neighbor]) {
+                      visited[neighbor] = true;
+                      queue.push(neighbor);
+                    }
+                  });
+                }
+              }
+      
+              disjointGraphs.push(disjointGraph);
+            }
+          });
+      
+            // Y layer additive reflects the Y to start each new graph at. Should start with 0, and then on a subsequent disjoint graph, add some padding + the last max y.
+            let layerYAdditive = 0;
+            let lastMaxY = 0;
+      
+            disjointGraphs.forEach((disjointGraph) => {
+              const nodeNumbers: number[] = [];
+              disjointGraph.forEach((nodeId) => {
+                const i = nodes.findIndex((n) => n.id === nodeId);
+                if (i < 0) {
+                  console.error(`Node with id ${nodeId} not found in nodes list. This is likely an issue with the graph data.`);
+                }
+                else {
+                  nodeNumbers.push(i);
+                }
+              });
+      
+              // Each layer is a vertical column of a disjoint graph. Since we start at the leftmost column where x = -500 (starting point).
+              let lastLayer: number[] = nodeNumbers.filter(num => !edges.some(edge => Number(edge.target) === num));
+              let y = 0;
+              for (let i = 0; i < lastLayer.length; i++) {
+                nodes[lastLayer[i]].position.x = -500;
+                y = 500 * i + layerYAdditive;
+                nodes[lastLayer[i]].position.y = y;
+                if (y > lastMaxY) {
+                  lastMaxY = y;
+                }
+              }
+      
+              let nextLayer: number[] = [];
+              for (const nodeIndex of lastLayer) {
+                const nodeOutEdges: Edge[] = edges.filter(edge => Number(edge.source) === nodeIndex);
+                nextLayer.push(...nodeOutEdges.map(edge => Number(edge.target)));
+              }
+              nextLayer = [...new Set(nextLayer.filter(num => Number.isFinite(num)))];
+      
+              let xOffset = 0;
+              while (nextLayer.length > 0) {
+                lastLayer = nextLayer;
+                for (let i = 0; i < lastLayer.length; i++) {
+                  nodes[lastLayer[i]].position.x = xOffset;
+                  y = 500 * i + layerYAdditive;
+                  nodes[lastLayer[i]].position.y = y;
+                  if (y > lastMaxY) {
+                    lastMaxY = y;
+                  }
+                }
+      
+                nextLayer = [];
+                for (const nodeIndex of lastLayer) {
+                  const nodeOutEdges: Edge[] = edges.filter(edge => Number(edge.source) === nodeIndex);
+                  nextLayer.push(...nodeOutEdges.map(edge => Number(edge.target)));
+                }
+                nextLayer = [...new Set(nextLayer.filter(num => Number.isFinite(num)))];
+                xOffset += 500;
+              }
+              layerYAdditive = 800 + lastMaxY;
+          });
+      
+      
+        }
+      
+        return [nodes, edges, events, variables];
+      };
 
     const loadGraphFromJson = (json: any) => {
         const graph: IInteractivityGraph = {
@@ -92,10 +301,9 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
             loadedNodes.push(templateNode);
         }
 
-
-
         graph.nodes = loadedNodes;
         graphRef.current = graph;
+        setNeedsSyncingToAuthor(true);
     }
 
 
@@ -258,6 +466,9 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
 
     const context: InteractivityGraphContextType = {
         graph: graphRef.current,
+        needsSyncingToAuthor: needsSyncingToAuthor,
+        setNeedsSyncingToAuthor: setNeedsSyncingToAuthor,
+        getAuthorGraph: getAuthorGraph,
         loadGraphFromJson: loadGraphFromJson,
         getExecutableGraph: getExecutableGraph,
         addDecleration: addDecleration,

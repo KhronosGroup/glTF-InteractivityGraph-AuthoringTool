@@ -121,6 +121,11 @@ describe('nodes', () => {
         graphEngine = new BasicBehaveEngine(1);
 
         defaultProps = {
+            declaration: {
+                op: "NoOp",
+                inputValueSockets: {},
+                outputValueSockets: {},
+            },
             idToBehaviourNodeMap: new Map<number, BehaveEngineNode>(),
             graphEngine: graphEngine,
             variables: [],

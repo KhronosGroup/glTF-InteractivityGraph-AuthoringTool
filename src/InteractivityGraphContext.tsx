@@ -1,6 +1,6 @@
 import { createContext, useRef, useState } from 'react';
 import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityGraph, IInteractivityNode, IInteractivityVariable } from './types/InteractivityGraph';
-import { interactivityNodeSpecs, standardTypes } from './types/nodes';
+import { createNoOpNode, interactivityNodeSpecs, standardTypes } from './types/nodes';
 import { v4 as uuidv4 } from 'uuid';
 import { Edge, Node } from 'reactflow';
 interface InteractivityGraphContextType {
@@ -261,7 +261,13 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         for (let i = 0; i < json.nodes.length; i++) {
             const node = json.nodes[i];
             const nodeOp = json.declarations[node.declaration].op;
-            const templateNode:IInteractivityNode = interactivityNodeSpecs.find((schema: IInteractivityNode) => schema.op === nodeOp)!;
+            let isNoOp = false;
+            let templateNode: IInteractivityNode | undefined = interactivityNodeSpecs.find((schema: IInteractivityNode) => schema.op === nodeOp);
+            if (templateNode === undefined) {
+                templateNode = createNoOpNode(json.declarations[node.declaration]);
+                isNoOp = true;
+            }
+
             templateNode.uid = uuids[i];
             templateNode.declaration = node.declaration;
 
@@ -279,7 +285,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
                 }
             }
 
-            if (node.flows !== undefined) {
+            if (node.flows !== undefined && !isNoOp) {
                 for (const key in node.flows) {
                     templateNode.flows = templateNode.flows || {};
                     templateNode.flows.output = templateNode.flows.output || {};
@@ -288,7 +294,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
                 }
             }
 
-            if (node.configuration !== undefined) {
+            if (node.configuration !== undefined && !isNoOp) {
                 for (const key in node.configuration) {
                     templateNode.configuration = templateNode.configuration || {};
                     templateNode.configuration[key] = node.configuration[key];

@@ -103,8 +103,9 @@ import { InverseHyperbolicTangent } from "./nodes/math/hyperbolic/InverseHyperbo
 import { Exponential } from "./nodes/math/exponential/Exponential";
 import { HyperbolicCosine } from "./nodes/math/hyperbolic/HyperbolicCosine";
 import { HyperbolicTangent } from "./nodes/math/hyperbolic/HyperbolicTangent";
-import { IInteractivityVariable, IInteractivityEvent, IInteractivityValue, IInteractivityFlow, IInteractivityGraph, IInteractivityNode, IInteractivityValueType } from "../types/InteractivityGraph";
+import { IInteractivityVariable, IInteractivityEvent, IInteractivityValue, IInteractivityFlow, IInteractivityGraph, IInteractivityNode, IInteractivityValueType, IInteractivityDeclaration } from "../types/InteractivityGraph";
 import { VariableInterpolate } from "./nodes/variable/VariableInterpolate";
+import { NoOpNode } from "./nodes/experimental/NoOp";
 
 export interface ICustomEventListener {
     type: string,
@@ -269,6 +270,10 @@ export class BasicBehaveEngine implements IBehaveEngine {
 
         let index = 0;
         this.nodes.forEach(node => {
+            const nodeDeclaration: IInteractivityDeclaration | undefined = behaveGraph.declarations[node.declaration];
+            if (nodeDeclaration === undefined) {
+                throw Error(`Unrecognized node declaration ${node.declaration} but declerations has ${Object.keys(behaveGraph.declarations).length} keys`);
+            }
             const behaviourNodeProps: IBehaviourNodeProps = {
                 ...defaultProps,
                 flows:node.flows || {},
@@ -277,13 +282,16 @@ export class BasicBehaveEngine implements IBehaveEngine {
                 variables: behaveGraph.variables,
                 types: behaveGraph.types,
                 graphEngine: this,
+                declaration: nodeDeclaration,
                 addEventToWorkQueue: this.addEventToWorkQueue
             };
-            const nodeType = behaveGraph.declarations[node.declaration].op;
+            const nodeType = nodeDeclaration.op;
+            let behaviourNode: BehaveEngineNode;
             if (this.registry.get(nodeType) === undefined) {
-                throw Error(`Unrecognized node type ${nodeType}`);
+                behaviourNode = new NoOpNode(behaviourNodeProps);
+            } else {
+                behaviourNode = this.registry.get(nodeType).init(behaviourNodeProps);
             }
-            const behaviourNode: BehaveEngineNode = this.registry.get(nodeType).init(behaviourNodeProps);
             this.idToBehaviourNodeMap.set(index, behaviourNode);
             index++;
         });

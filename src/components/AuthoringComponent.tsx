@@ -20,20 +20,15 @@ import { InteractivityGraphContext } from '../InteractivityGraphContext';
 
 const nodeTypes = interactivityNodeSpecs.reduce((nodes, node) => {
     nodes[knownDeclarations[node.declaration].op] = (props: any) => {
-        const nodeCopy = JSON.parse(JSON.stringify(node));
-        
-        if (props.data.values !== undefined) {
-            nodeCopy.values = nodeCopy.values || {};
-            nodeCopy.values.input = props.data.values;
-        }
-        if (props.data.configuration !== undefined) {
-            nodeCopy.configuration = props.data.configuration;
-        }
-        props.data.interactivityNode = nodeCopy;
         return <AuthoringGraphNode {...props} />;
     };
     return nodes;
 }, {} as NodeTypes);
+
+nodeTypes["NoOp"] = (props: any) => {
+    props.data.isNoOp = true;
+    return <AuthoringGraphNode {...props} />;
+};  
 
 
 enum AuthoringComponentModelType {
@@ -58,7 +53,7 @@ export const AuthoringComponent = () => {
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
     
-    const {graph, needsSyncingToAuthor, setNeedsSyncingToAuthor, getAuthorGraph, addDeclaration: addDeclaration, getDeclarationIndex: getDeclarationIndex, addNode, removeNode} = useContext(InteractivityGraphContext);
+    const {graph, needsSyncingToAuthor, setNeedsSyncingToAuthor, getAuthorGraph, addDeclaration, getDeclarationIndex, addNode, removeNode} = useContext(InteractivityGraphContext);
 
     //to handle the node picker props
     const mousePosRef = useRef({x:0, y:0});
@@ -166,7 +161,7 @@ export const AuthoringComponent = () => {
             id: uid,
             type: nodeType,
             position: position,
-            data: {events: graph.events, variables: graph.variables, types: standardTypes, uid: uid}
+            data: {events: graph.events, variables: graph.variables, types: standardTypes, uid: uid, op: nodeType}
         };
 
         const declaration: IInteractivityDeclaration = knownDeclarations.find(node => node.op === nodeType)!;
@@ -183,7 +178,17 @@ export const AuthoringComponent = () => {
     useEffect(() => {
         if (needsSyncingToAuthor) {
             const result = getAuthorGraph(graph);
-            setNodes(result[0]);
+            const loadedNodes: Node[] = result[0];
+            for (const node of loadedNodes) {
+                node.data.op = node.type;
+                const declarationIndex = knownDeclarations.findIndex(declaration => declaration.op === node.data.op);
+                if (declarationIndex === -1) {
+                    node.type = "NoOp";
+                }
+            }
+            console.log(loadedNodes)
+            console.log(result[1])
+            setNodes(loadedNodes);
             setEdges(result[1]);
             setNeedsSyncingToAuthor(false);
         }

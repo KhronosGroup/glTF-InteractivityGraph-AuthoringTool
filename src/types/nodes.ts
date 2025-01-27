@@ -1,4 +1,4 @@
-import { IInteractivityDeclaration, IInteractivityNode, IInteractivityValueType, InteractivityValueType } from "./InteractivityGraph";
+import { IInteractivityDeclaration, IInteractivityNode, IInteractivityValue, IInteractivityValueType, InteractivityValueType } from "./InteractivityGraph";
 
 export const knownDeclarations: IInteractivityDeclaration[] = [
     {
@@ -3502,3 +3502,26 @@ export const interactivityNodeSpecs: IInteractivityNode[] = [
     ...mathExponentialNodeSpecs, ...mathVectorNodeSpecs, ...mathMatrixNodeSpecs, ...mathSwizzleNodeSpecs, ...mathIntegerBitwiseNodeSpecs,
     ...mathTypeConversionNodeSpecs, ...pointerNodeSpecs, ...animationNodeSpecs, ...selectabilityNodeSpecs, ...customNodeSpecs, ...hoverabilityNodeSpecs
 ];
+
+export const createNoOpNode = (declaration: IInteractivityDeclaration): IInteractivityNode => {
+    const outValues: Record<string, IInteractivityValue> = {};
+    Object.entries(declaration.outputValueSockets || {}).forEach(([key, value]) => {
+        outValues[key] = { value: [undefined], type: value.type };
+    });
+
+    const inValues: Record<string, IInteractivityValue> = {};
+    Object.entries(declaration.inputValueSockets || {}).forEach(([key, value]) => {
+        inValues[key] = { value: [undefined], type: value.type };
+    });
+
+    const noOpNode: IInteractivityNode = {
+        op: declaration.op,
+        declaration: knownDeclarations.findIndex(knownDeclaration => knownDeclaration.op === declaration.op),
+        description: "NoOp",
+        values: {
+            output: outValues,
+            input: inValues
+        }
+    };
+    return noOpNode;
+};

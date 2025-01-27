@@ -380,7 +380,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                     </div>
                                 )
                             })}
-                            <RenderIf shouldShow={knownDeclarations[props.data.interactivityNode.declaration].op === "flow/sequence" || knownDeclarations[props.data.interactivityNode.declaration].op === "flow/multiGate"}>
+                            <RenderIf shouldShow={props.data.op === "flow/sequence" || props.data.op === "flow/multiGate"}>
                                 <p onClick={() => {
                                     const outputFlow: IInteractivityFlow = {
                                         node: undefined,
@@ -392,6 +392,11 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                             </RenderIf>
                         </div>
                     </div>
+                </RenderIf>
+
+                <RenderIf shouldShow={props.data.isNoOp === true}>
+                    <Handle type="target" position={Position.Left} id={"in"} style={{left:4}} />
+                    <p>NoOp</p>
                 </RenderIf>
 
                 <RenderIf shouldShow={Object.keys(inputValues).length > 0 || Object.keys(outputValues).length > 0}>

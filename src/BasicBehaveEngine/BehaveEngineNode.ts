@@ -1,9 +1,10 @@
-import { IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityFlow, IInteractivityValue, IInteractivityValueType, IInteractivityVariable } from "../types/InteractivityGraph";
+import { IInteractivityConfigurationValue, IInteractivityDeclaration, IInteractivityEvent, IInteractivityFlow, IInteractivityValue, IInteractivityValueType, IInteractivityVariable } from "../types/InteractivityGraph";
 import {BasicBehaveEngine} from "./BasicBehaveEngine";
 
 export interface IBehaviourNodeProps {
     graphEngine: BasicBehaveEngine,
     idToBehaviourNodeMap: Map<number, BehaveEngineNode>
+    declaration: IInteractivityDeclaration,
     flows: Record<string, IInteractivityFlow>;
     values: Record<string, IInteractivityValue>;
     variables: IInteractivityVariable[];
@@ -24,6 +25,7 @@ export class BehaveEngineNode {
     flows: Record<string, IInteractivityFlow>;
     values: Record<string, IInteractivityValue>;
     outValues: Record<string, IInteractivityValue>;
+    declaration: IInteractivityDeclaration;
     variables: IInteractivityVariable[];
     types: IInteractivityValueType[];
     events: IInteractivityEvent[];
@@ -31,7 +33,7 @@ export class BehaveEngineNode {
     addEventToWorkQueue: any;
 
     constructor(props: IBehaviourNodeProps) {
-        const {flows, values, idToBehaviourNodeMap, graphEngine, variables, events, types, configuration, addEventToWorkQueue} = props;
+        const {flows, values, idToBehaviourNodeMap, graphEngine, variables, events, types, configuration, addEventToWorkQueue, declaration} = props;
         this.idToBehaviourNodeMap = idToBehaviourNodeMap;
         this.graphEngine = graphEngine;
         this.variables = variables;
@@ -42,6 +44,7 @@ export class BehaveEngineNode {
         this.configuration = configuration;
         this.outValues = {};
         this.addEventToWorkQueue = addEventToWorkQueue;
+        this.declaration = declaration;
     }
 
     /**

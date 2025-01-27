@@ -1,7 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../../BehaveEngineNode";
 
 export class VectorLength extends BehaveEngineNode {
-    REQUIRED_VALUES = [{id:"a"}]
+    REQUIRED_VALUES = {a: {}}
 
     constructor(props: IBehaviourNodeProps) {
         super(props);
@@ -10,7 +10,7 @@ export class VectorLength extends BehaveEngineNode {
     }
 
     override processNode(flowSocket?: string) {
-        const {a} = this.evaluateAllValues(this.REQUIRED_VALUES.map(val => val.id));
+        const {a} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
         this.graphEngine.processNodeStarted(this);
         const typeIndex = this.values['a'].type!
         const type: string = this.getType(typeIndex);
@@ -30,6 +30,6 @@ export class VectorLength extends BehaveEngineNode {
                 throw Error("Invalid type")
         }
 
-        return {'value': {id: "value", value: [val], type: this.getTypeIndex('float')}}
+        return {'value': {value: [val], type: this.getTypeIndex('float')}}
     }
 }

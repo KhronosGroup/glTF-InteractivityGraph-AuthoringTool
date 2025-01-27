@@ -10,6 +10,6 @@ export class NotANumber extends BehaveEngineNode {
     override processNode(flowSocket?: string) {
         this.graphEngine.processNodeStarted(this);
 
-        return {'value': {id: "value", value: [NaN], type: this.getTypeIndex('float')}}
+        return {'value': {value: [NaN], type: this.getTypeIndex('float')}}
     }
 }

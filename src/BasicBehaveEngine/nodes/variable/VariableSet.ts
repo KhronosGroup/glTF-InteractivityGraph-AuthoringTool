@@ -1,7 +1,8 @@
-import {BehaveEngineNode, IBehaviourNodeProps, IVariable} from "../../BehaveEngineNode";
+import { IInteractivityVariable } from "../../../types/InteractivityGraph";
+import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class VariableSet extends BehaveEngineNode {
-    REQUIRED_CONFIGURATIONS = [{id: "variable"}]
+    REQUIRED_CONFIGURATIONS = {variable: {}}
 
     _variable: number;
 
@@ -9,15 +10,13 @@ export class VariableSet extends BehaveEngineNode {
         super(props);
         this.name = "VariableSet";
         this.validateValues(this.values);
-        this.validateFlows(this.flows);
         this.validateConfigurations(this.configuration);
 
-        const {variable} = this.evaluateAllConfigurations(this.REQUIRED_CONFIGURATIONS.map(config => config.id));
+        const {variable} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
         this._variable = variable;
     }
 
     override processNode(flowSocket?:string) {
-        const variable: IVariable = this.variables[this._variable];
         this.graphEngine.clearValueEvaluationCache();
         const vals = this.evaluateAllValues(["value"]);
         this.graphEngine.processNodeStarted(this);

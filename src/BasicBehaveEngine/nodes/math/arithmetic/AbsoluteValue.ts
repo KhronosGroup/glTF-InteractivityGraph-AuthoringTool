@@ -1,7 +1,8 @@
-import {BehaveEngineNode, IBehaviourNodeProps, IValue} from "../../../BehaveEngineNode";
+import { IInteractivityValue } from "../../../../types/InteractivityGraph";
+import {BehaveEngineNode, IBehaviourNodeProps} from "../../../BehaveEngineNode";
 
 export class AbsoluteValue extends BehaveEngineNode {
-    REQUIRED_VALUES = [{id:"a"}]
+    REQUIRED_VALUES = {a: {}}
 
     constructor(props: IBehaviourNodeProps) {
         super(props);
@@ -9,8 +10,8 @@ export class AbsoluteValue extends BehaveEngineNode {
         this.validateValues(this.values);
     }
 
-    override processNode(flowSocket?: string): Record<string, IValue> {
-        const {a} = this.evaluateAllValues(this.REQUIRED_VALUES.map(val => val.id));
+    override processNode(flowSocket?: string) {
+        const {a} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
         this.graphEngine.processNodeStarted(this);
 
         const typeIndex = this.values['a'].type!
@@ -49,6 +50,6 @@ export class AbsoluteValue extends BehaveEngineNode {
                 throw Error("Invalid type")
         }
 
-        return {'value': {id: "value", value: val, type: typeIndex}}
+        return {'value': {value: val, type: typeIndex}}
     }
 }

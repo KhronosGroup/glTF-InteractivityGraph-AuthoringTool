@@ -1,10 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../../BehaveEngineNode";
 
 export class Combine4x4 extends BehaveEngineNode {
-    REQUIRED_VALUES = [{id:"a"}, {id: "b"}, {id: "c"}, {id: "d"},
-        {id:"e"}, {id: "f"}, {id: "g"}, {id: "h"},
-        {id:"i"}, {id: "j"}, {id: "k"}, {id: "l"},
-        {id:"m"}, {id: "n"}, {id: "o"}, {id: "p"}];
+    REQUIRED_VALUES = {a: {}, b: {}, c: {}, d: {}, e: {}, f: {}, g: {}, h: {}, i: {}, j: {}, k: {}, l: {}, m: {}, n: {}, o: {}, p: {}}
 
     constructor(props: IBehaviourNodeProps) {
         super(props);
@@ -13,7 +10,7 @@ export class Combine4x4 extends BehaveEngineNode {
     }
 
     override processNode(flowSocket?: string) {
-        const {a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p} = this.evaluateAllValues(this.REQUIRED_VALUES.map(val => val.id));
+        const {a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
         this.graphEngine.processNodeStarted(this);
         const characters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p'];
         for (let i = 0; i < characters.length; i++) {
@@ -24,6 +21,6 @@ export class Combine4x4 extends BehaveEngineNode {
             }
         }
 
-        return {'value': {id: "value", value: [[a, b, c, d], [e, f, g, h], [i, j, k, l], [m, n, o, p]], type: this.getTypeIndex("float4x4")}};
+        return {'value': {value: [[a, b, c, d], [e, f, g, h], [i, j, k, l], [m, n, o, p]], type: this.getTypeIndex("float4x4")}};
     }
 }

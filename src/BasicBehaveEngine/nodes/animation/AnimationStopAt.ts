@@ -1,7 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class AnimationStopAt extends BehaveEngineNode {
-    REQUIRED_VALUES = [{id:"animation"}, {id: "stopTime"}]
+    REQUIRED_VALUES = {animation: {}, stopTime: {}}
 
     constructor(props: IBehaviourNodeProps) {
         super(props);
@@ -10,7 +10,7 @@ export class AnimationStopAt extends BehaveEngineNode {
     }
 
     override processNode(flowSocket?: string): void {
-        const {animation, stopTime} = this.evaluateAllValues(this.REQUIRED_VALUES.map(val => val.id));
+        const {animation, stopTime} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
         this.graphEngine.processNodeStarted(this);
 
         if (this.graphEngine.getWorld().length <= animation || animation < 0) {

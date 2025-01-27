@@ -9,20 +9,20 @@ export class OnTickNode extends BehaveEngineNode {
         super(props);
         this.name = "OnTick";
         this._floatTypeIndex = this.getTypeIndex('float');
-        this.outValues.timeSinceStart = { id: "timeSinceStart", value: [NaN], type: this._floatTypeIndex };
-        this.outValues.timeSinceLastTick = { id: "timeSinceLastTick", value: [NaN], type: this._floatTypeIndex };
+        this.outValues.timeSinceStart = { value: [NaN], type: this._floatTypeIndex };
+        this.outValues.timeSinceLastTick = { value: [NaN], type: this._floatTypeIndex };
     }
 
     override processNode(flowSocket?: string) {
         this.graphEngine.processNodeStarted(this);
         const tickTime = Date.now() / 1000;
         if (isNaN(this._startTime)) {
-            this.outValues.timeSinceStart = { id: "timeSinceStart", value: [0], type: this._floatTypeIndex };
-            this.outValues.timeSinceLastTick = { id: "timeSinceLastTick", value: [NaN], type: this._floatTypeIndex };
+            this.outValues.timeSinceStart = { value: [0], type: this._floatTypeIndex };
+            this.outValues.timeSinceLastTick = { value: [NaN], type: this._floatTypeIndex };
             this._startTime = tickTime;
         } else {
-            this.outValues.timeSinceStart = { id: "timeSinceStart", value: [tickTime - this._startTime], type: this._floatTypeIndex };
-            this.outValues.timeSinceLastTick = { id: "timeSinceLastTick", value: [tickTime - this._lastTickTime], type: this._floatTypeIndex };
+            this.outValues.timeSinceStart = { value: [tickTime - this._startTime], type: this._floatTypeIndex };
+            this.outValues.timeSinceLastTick = { value: [tickTime - this._lastTickTime], type: this._floatTypeIndex };
         }
         this._lastTickTime = tickTime;
         return super.processNode(flowSocket);

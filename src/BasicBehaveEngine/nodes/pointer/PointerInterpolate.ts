@@ -1,8 +1,8 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class PointerInterpolate extends BehaveEngineNode {
-    REQUIRED_CONFIGURATIONS = [{id: "pointer"}]
-    REQUIRED_VALUES = [{id: "value"}, {id: "duration"}, {id: "p1"}, {id: "p2"}]
+    REQUIRED_CONFIGURATIONS = {pointer: {}}
+    REQUIRED_VALUES = {value: {}, duration: {}, p1: {}, p2: {}}
 
     _pointer: string;
     _pointerVals: { id: string }[];
@@ -11,10 +11,9 @@ export class PointerInterpolate extends BehaveEngineNode {
         super(props);
         this.name = "PointerInterpolate";
         this.validateValues(this.values);
-        this.validateFlows(this.flows);
         this.validateConfigurations(this.configuration);
 
-        const {pointer} = this.evaluateAllConfigurations(this.REQUIRED_CONFIGURATIONS.map(config => config.id));
+        const {pointer} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
         this._pointer = pointer;
         const valIds = this.parsePath(pointer);
         const generatedVals = [];
@@ -64,8 +63,8 @@ export class PointerInterpolate extends BehaveEngineNode {
 
     override processNode(flowSocket: string) {
         this.graphEngine.clearValueEvaluationCache();
-        const configVals = this.evaluateAllValues([...this._pointerVals].map(val => val.id));
-        const requiredVals = this.evaluateAllValues([...this.REQUIRED_VALUES].map(val => val.id));
+        const configVals = this.evaluateAllValues(Object.keys(this._pointerVals));
+        const requiredVals = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
         const populatedPath = this.populatePath(this._pointer, configVals)
         const {p1, p2} = this.evaluateAllValues(["p1", "p2"]);
         const targetValue = requiredVals.value;

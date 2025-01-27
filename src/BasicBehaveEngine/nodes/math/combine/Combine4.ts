@@ -1,7 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../../BehaveEngineNode";
 
 export class Combine4 extends BehaveEngineNode {
-    REQUIRED_VALUES = [{id:"a"}, {id: "b"}, {id: "c"}, {id: "d"}]
+    REQUIRED_VALUES = {a: {}, b: {}, c: {}, d: {}}
 
     constructor(props: IBehaviourNodeProps) {
         super(props);
@@ -10,7 +10,7 @@ export class Combine4 extends BehaveEngineNode {
     }
 
     override processNode(flowSocket?: string) {
-        const {a, b, c, d} = this.evaluateAllValues(this.REQUIRED_VALUES.map(val => val.id));
+        const {a, b, c, d} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
         this.graphEngine.processNodeStarted(this);
         const typeIndexA = this.values['a'].type!
         const typeA: string = this.getType(typeIndexA);
@@ -24,6 +24,6 @@ export class Combine4 extends BehaveEngineNode {
             throw Error("invalid input types")
         }
 
-        return {'value': {id: "value", value: [a, b, c, d], type: this.getTypeIndex("float4")}};
+        return {'value': {value: [a, b, c, d], type: this.getTypeIndex("float4")}};
     }
 }

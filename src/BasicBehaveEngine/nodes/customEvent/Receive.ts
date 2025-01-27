@@ -1,43 +1,41 @@
-import {BehaveEngineNode, IBehaviourNodeProps, ICustomEvent} from "../../BehaveEngineNode";
+import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
+import {IInteractivityEvent} from "../../../types/InteractivityGraph";
 
 export class Receive extends BehaveEngineNode {
-    REQUIRED_CONFIGURATIONS = [{id: "event"}]
+    REQUIRED_CONFIGURATIONS = {event: {}}
 
     constructor(props: IBehaviourNodeProps) {
         super(props);
         this.name = "CustomEventReceiveNode";
         this.validateValues(this.values);
-        this.validateFlows(this.flows);
         this.validateConfigurations(this.configuration);
         this.setUpEventListener();
     }
 
     setUpEventListener() {
-        const {event} = this.evaluateAllConfigurations(this.REQUIRED_CONFIGURATIONS.map(config => config.id));
+        const {event} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
 
-        const customEventDesc: ICustomEvent = this.events[event];
+        const customEventDesc: IInteractivityEvent = this.events[event];
 
-        customEventDesc.values.forEach((key) => {
+        Object.entries(customEventDesc.values).forEach(([key, value]) => {
             // TODO Probably should be the default value based on type
             // TODO Spec says that the default for float is NaN, not sure why
             const defaultValue = 0;
-            this.outValues[key.id] = {
-                id: key.id,
-                value: defaultValue,
-                type: key.type,
+            this.outValues[key] = {
+                value: [defaultValue],
+                type: value.type,
             }
         });
 
         this.graphEngine.addCustomEventListener(`KHR_INTERACTIVITY:${customEventDesc.id}`, (e: any) => {
             this.graphEngine.processNodeStarted(this);
             const ce = (e as CustomEvent).detail as { [key: string]: any };
-            Object.keys(ce).forEach((key) => {
-                const typeIndex = customEventDesc.values.find(val => val.id === key)!.type!
-                const typeName: string = this.getType(typeIndex);
-                const rawVal = ce[key];
+            Object.keys(ce).forEach((ceKey) => {
+                const typeIndex = Object.entries(customEventDesc.values).find(([key, _]) => key === ceKey)?.[1]?.type;
+                const typeName: string = this.getType(Number(typeIndex));
+                const rawVal = ce[ceKey];
                 const val = this.parseType(typeName, [rawVal]);
-                this.outValues[key] = {
-                    id: key,
+                this.outValues[ceKey] = {
                     value: val,
                     type: typeIndex
                 }

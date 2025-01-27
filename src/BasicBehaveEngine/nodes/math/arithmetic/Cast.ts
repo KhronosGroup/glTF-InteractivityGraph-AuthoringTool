@@ -1,8 +1,8 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../../BehaveEngineNode";
 
 export class Cast extends BehaveEngineNode {
-    REQUIRED_VALUES = [{id:"a"}]
-    REQUIRED_CONFIGURATIONS = [{id: "castType"}]
+    REQUIRED_VALUES = {a: {}}
+    REQUIRED_CONFIGURATIONS = {castType: {}}
 
 
     constructor(props: IBehaviourNodeProps) {
@@ -12,11 +12,11 @@ export class Cast extends BehaveEngineNode {
     }
 
     override processNode(flowSocket?: string) {
-        const {a} = this.evaluateAllValues(this.REQUIRED_VALUES.map(val => val.id));
+        const {a} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
         this.graphEngine.processNodeStarted(this);
-        const castType = this.configuration['castType'].value!
+        const castType = this.configuration['castType'].value![0]
 
         const typeIndex = this.getTypeIndex(castType!);
-        return {id: "value", value: a, type: typeIndex}
+        return {'value': {value: a, type: typeIndex}};
     }
 }

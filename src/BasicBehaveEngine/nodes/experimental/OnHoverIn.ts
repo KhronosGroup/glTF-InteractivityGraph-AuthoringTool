@@ -2,27 +2,24 @@ import '@babylonjs/core/Culling/ray';
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class OnHoverIn extends BehaveEngineNode {
-    REQUIRED_CONFIGURATIONS = [{id: "stopPropagation"}, {id: "nodeIndex"}]
+    REQUIRED_CONFIGURATIONS = {stopPropagation: {}, nodeIndex: {}}
     _nodeIndex: number;
     _stopPropagation: boolean;
     constructor(props: IBehaviourNodeProps) {
         super(props);
         this.name = 'OnHoverIn';
         this.validateValues(this.values);
-        this.validateFlows(this.flows);
         this.validateConfigurations(this.configuration);
 
-        const {nodeIndex, stopPropagation} = this.evaluateAllConfigurations(this.REQUIRED_CONFIGURATIONS.map(config => config.id));
+        const {nodeIndex, stopPropagation} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
         this._nodeIndex = nodeIndex;
         this._stopPropagation = stopPropagation;
 
         this.outValues.selectedNodeIndex = {
-            id: 'selectedNodeIndex',
             type: this.getTypeIndex('int'),
             value: [-1],
         };
         this.outValues.controllerIndex = {
-            id: 'controllerIndex',
             type: this.getTypeIndex('int'),
             value: [-1],
         };
@@ -35,12 +32,10 @@ export class OnHoverIn extends BehaveEngineNode {
             if (this.graphEngine.getWorld().glTFNodes[this._nodeIndex].metadata.shouldExecuteHoverIn) {
                 this.graphEngine.getWorld().glTFNodes[this._nodeIndex].metadata.shouldExecuteHoverIn = false;
                 this.outValues.selectedNodeIndex = {
-                    id: 'selectedNodeIndex',
                     type: this.getTypeIndex('int'),
                     value: [selectedNodeIndex],
                 };
                 this.outValues.controllerIndex = {
-                    id: 'controllerIndex',
                     type: this.getTypeIndex('int'),
                     value: [controllerIndex],
                 };

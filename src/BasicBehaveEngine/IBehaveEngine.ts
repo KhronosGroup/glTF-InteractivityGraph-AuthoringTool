@@ -1,5 +1,5 @@
-import { read } from "fs";
-import {BehaveEngineNode, IFlow, IValue} from "./BehaveEngineNode";
+import { IInteractivityFlow, IInteractivityValue } from "../types/InteractivityGraph";
+import {BehaveEngineNode} from "./BehaveEngineNode";
 import {IEasingParameters} from "./easingUtils";
 
 /**
@@ -18,13 +18,13 @@ export interface IBehaveEngine {
      * Callback function to process the addition of a node to the execution queue.
      * @param flow - The flow representing the node being added to the queue.
      */
-    processAddingNodeToQueue: (flow: IFlow) => void;
+    processAddingNodeToQueue: (flow: IInteractivityFlow) => void;
 
     /**
      * Callback function to process the execution of the next node in the queue.
      * @param flow - The flow representing the node being executed.
      */
-    processExecutingNextNode: (flow: IFlow) => void;
+    processExecutingNextNode: (flow: IInteractivityFlow) => void;
 
     /**
      * Register known pointers to be used within the Behave Engine.
@@ -141,7 +141,7 @@ export interface IBehaveEngine {
      * @param {string} key - The cache key for the entry.
      * @param {IValue} val - The value to be cached.
      */
-    addEntryToValueEvaluationCache: (key: string, val: IValue) => void;
+    addEntryToValueEvaluationCache: (key: string, val: IInteractivityValue) => void;
 
     /**
      * Retrieves the cached value associated with a specific key from the value evaluation cache.
@@ -149,7 +149,7 @@ export interface IBehaveEngine {
      * @param {string} key - The cache key for the desired value.
      * @returns {IValue | undefined} The cached value or undefined if not found.
      */
-    getValueEvaluationCacheValue: (key: string) => IValue | undefined;
+    getValueEvaluationCacheValue: (key: string) => IInteractivityValue | undefined;
 
     setWorldAnimationPathCallback: (path: string, cancelable: ICancelable | undefined) => void;
 

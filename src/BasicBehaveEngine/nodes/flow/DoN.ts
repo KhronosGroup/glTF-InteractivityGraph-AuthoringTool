@@ -1,7 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class DoN extends BehaveEngineNode {
-    REQUIRED_VALUES = [{id:"n"}];
+    REQUIRED_VALUES = {n: {}};
 
     _currentCount: number;
 
@@ -9,20 +9,18 @@ export class DoN extends BehaveEngineNode {
         super(props);
         this.name = "DoN";
         this.validateValues(this.values);
-        this.validateFlows(this.flows);
-        this.validateConfigurations(this.configuration);
 
         this._currentCount = 0;
-        this.outValues.currentCount = {id: "currentCount", value: [this._currentCount], type: this.getTypeIndex('int')};
+        this.outValues.currentCount = { value: [this._currentCount], type: this.getTypeIndex('int')};
     }
 
     override processNode(flowSocket?: string) {
-        const {n} = this.evaluateAllValues(this.REQUIRED_VALUES.map(val => val.id));
+        const {n} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
         this.graphEngine.processNodeStarted(this);
 
         if (flowSocket === "reset") {
             this._currentCount = 0;
-            this.outValues.currentCount = {id: "currentCount", value: [this._currentCount], type: this.getTypeIndex('int')};
+            this.outValues.currentCount = { value: [this._currentCount], type: this.getTypeIndex('int')};
             return;
         }
         if (this._currentCount >= Number(n)) {
@@ -30,7 +28,7 @@ export class DoN extends BehaveEngineNode {
         }
 
         this._currentCount++;
-        this.outValues.currentCount = {id: "currentCount", value: [this._currentCount], type: this.getTypeIndex('int')};
+        this.outValues.currentCount = { value: [this._currentCount], type: this.getTypeIndex('int')};
         super.processNode(flowSocket);
     }
 }

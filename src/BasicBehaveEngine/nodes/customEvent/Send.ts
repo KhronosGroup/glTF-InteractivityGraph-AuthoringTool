@@ -1,24 +1,23 @@
-import {BehaveEngineNode, IBehaviourNodeProps, ICustomEvent} from "../../BehaveEngineNode";
-
+import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
+import {IInteractivityEvent} from "../../../types/InteractivityGraph";
 export class Send extends BehaveEngineNode {
-    REQUIRED_CONFIGURATIONS = [{id: "event"}]
+    REQUIRED_CONFIGURATIONS = {event: {}}
     _event: number;
 
     constructor(props: IBehaviourNodeProps) {
         super(props);
         this.name = "Send";
         this.validateValues(this.values);
-        this.validateFlows(this.flows);
         this.validateConfigurations(this.configuration);
 
-        const {event} = this.evaluateAllConfigurations(this.REQUIRED_CONFIGURATIONS.map(config => config.id));
+        const {event} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
         this._event = event;
     }
 
     override processNode(flowSocket?: string) {
-        const customEventDesc: ICustomEvent = this.events[this._event];
+        const customEventDesc: IInteractivityEvent = this.events[this._event];
         this.graphEngine.clearValueEvaluationCache();
-        const vals = this.evaluateAllValues([...customEventDesc.values].map(val => val.id));
+        const vals = this.evaluateAllValues(Object.keys(customEventDesc.values));
         this.graphEngine.processNodeStarted(this);
 
         const e = new CustomEvent(`KHR_INTERACTIVITY:${customEventDesc.id}`, {detail: vals});

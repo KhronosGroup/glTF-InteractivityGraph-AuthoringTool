@@ -1,7 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class WaitAll extends BehaveEngineNode {
-    REQUIRED_CONFIGURATIONS = [{id: "inputFlows"}]
+    REQUIRED_CONFIGURATIONS = {inputFlows: {}}
 
     _lockedFlows: number[];
     _numberInputFlows: number;
@@ -10,20 +10,19 @@ export class WaitAll extends BehaveEngineNode {
         super(props);
         this.name = "WaitAll";
         this.validateValues(this.values);
-        this.validateFlows(this.flows);
         this.validateConfigurations(this.configuration);
 
-        const {inputFlows} = this.evaluateAllConfigurations(this.REQUIRED_CONFIGURATIONS.map(config => config.id));
+        const {inputFlows} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
         this._numberInputFlows = Number(inputFlows);
         this._lockedFlows = [...Array(this._numberInputFlows).keys()];
-        this.outValues.remainingInputs = {id: "remainingInputs", value: [this._lockedFlows.length], type: this.getTypeIndex('int')};
+        this.outValues.remainingInputs = { value: [this._lockedFlows.length], type: this.getTypeIndex('int')};
     }
 
     override processNode(flowSocket?: string) {
         this.graphEngine.processNodeStarted(this)
         if (flowSocket === "reset") {
             this._lockedFlows = [...Array(this._numberInputFlows).keys()];
-            this.outValues.remainingInputs = {id: "remainingInputs", value: [this._lockedFlows.length], type: this.getTypeIndex('int')};
+            this.outValues.remainingInputs = { value: [this._lockedFlows.length], type: this.getTypeIndex('int')};
             return;
         }
 
@@ -31,7 +30,7 @@ export class WaitAll extends BehaveEngineNode {
         if (flowIndexToRemove !== -1) {
             this._lockedFlows.splice(flowIndexToRemove, 1);
         }
-        this.outValues.remainingInputs = {id: "remainingInputs", value: [this._lockedFlows.length], type: this.getTypeIndex('int')};
+        this.outValues.remainingInputs = { value: [this._lockedFlows.length], type: this.getTypeIndex('int')};
 
         if (this._lockedFlows.length === 0) {
             if (this.flows.completed != null) {

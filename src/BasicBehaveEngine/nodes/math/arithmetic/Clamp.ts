@@ -1,7 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../../BehaveEngineNode";
 
 export class Clamp extends BehaveEngineNode {
-    REQUIRED_VALUES = [{id:"a"}, {id: "b"}, {id: "c"}]
+    REQUIRED_VALUES = {a: {}, b: {}, c: {}}
 
     constructor(props: IBehaviourNodeProps) {
         super(props);
@@ -10,7 +10,7 @@ export class Clamp extends BehaveEngineNode {
     }
 
     override processNode(flowSocket?: string) {
-        const {a, b, c} = this.evaluateAllValues(this.REQUIRED_VALUES.map(val => val.id));
+        const {a, b, c} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
         this.graphEngine.processNodeStarted(this);
         const typeIndexA = this.values['a'].type!
         const typeA: string = this.getType(typeIndexA);
@@ -53,6 +53,6 @@ export class Clamp extends BehaveEngineNode {
                 throw Error("Invalid type")
         }
 
-        return {'value': {id: "value", value: val, type: typeIndexA}}
+        return {'value': {value: val, type: typeIndexA}}
     }
 }

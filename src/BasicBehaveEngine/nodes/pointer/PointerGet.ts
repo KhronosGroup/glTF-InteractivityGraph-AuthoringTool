@@ -1,7 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class PointerGet extends BehaveEngineNode {
-    REQUIRED_CONFIGURATIONS = [{id: "pointer"}]
+    REQUIRED_CONFIGURATIONS = {pointer: {}}
 
     _pointer: string;
     _pointerVals: { id: string }[];
@@ -10,10 +10,9 @@ export class PointerGet extends BehaveEngineNode {
         super(props);
         this.name = "PointerGet";
         this.validateValues(this.values);
-        this.validateFlows(this.flows);
         this.validateConfigurations(this.configuration);
 
-        const {pointer} = this.evaluateAllConfigurations(this.REQUIRED_CONFIGURATIONS.map(config => config.id));
+        const {pointer} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
         this._pointer = pointer;
         const valIds = this.parsePath(pointer);
         const generatedParams = [];

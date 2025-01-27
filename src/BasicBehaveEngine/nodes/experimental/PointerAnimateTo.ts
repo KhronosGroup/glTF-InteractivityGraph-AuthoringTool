@@ -1,8 +1,8 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class PointerAnimateTo extends BehaveEngineNode {
-    REQUIRED_CONFIGURATIONS = [{id: "pointer"}, {id: "easingType"}]
-    REQUIRED_VALUES = [{id: "value"}, {id: "easingDuration"}]
+    REQUIRED_CONFIGURATIONS = {pointer: {}, easingType: {}}
+    REQUIRED_VALUES = {value: {}, easingDuration: {}}
 
     _pointer: string;
     _easingType: number;
@@ -12,10 +12,9 @@ export class PointerAnimateTo extends BehaveEngineNode {
         super(props);
         this.name = "PointerAnimateTo";
         this.validateValues(this.values);
-        this.validateFlows(this.flows);
         this.validateConfigurations(this.configuration);
 
-        const {pointer, easingType} = this.evaluateAllConfigurations(this.REQUIRED_CONFIGURATIONS.map(config => config.id));
+        const {pointer, easingType} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
         this._easingType = easingType;
         this._pointer = pointer;
         const valIds = this.parsePath(pointer);
@@ -53,8 +52,8 @@ export class PointerAnimateTo extends BehaveEngineNode {
 
     override processNode(flowSocket: string) {
         this.graphEngine.clearValueEvaluationCache();
-        const configVals = this.evaluateAllValues([...this._pointerVals].map(val => val.id));
-        const requiredVals = this.evaluateAllValues([...this.REQUIRED_VALUES].map(val => val.id));
+        const configVals = this.evaluateAllValues(Object.keys(this._pointerVals));
+        const requiredVals = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
         const populatedPath = this.populatePath(this._pointer, configVals)
         const targetValue = requiredVals.value;
         const easingDuration = requiredVals.easingDuration;

@@ -3,7 +3,7 @@ import {Vector2 } from '@babylonjs/core/Maths/math.vector';
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class OnSelect extends BehaveEngineNode {
-    REQUIRED_CONFIGURATIONS = [{id: "stopPropagation"}, {id: "nodeIndex"}]
+    REQUIRED_CONFIGURATIONS = {stopPropagation: {}, nodeIndex: {}}
     _nodeIndex: number;
     _stopPropagation: boolean;
     pointer: Vector2;
@@ -12,30 +12,25 @@ export class OnSelect extends BehaveEngineNode {
         this.name = 'OnSelect';
         this.pointer = new Vector2();
         this.validateValues(this.values);
-        this.validateFlows(this.flows);
         this.validateConfigurations(this.configuration);
 
-        const {nodeIndex, stopPropagation} = this.evaluateAllConfigurations(this.REQUIRED_CONFIGURATIONS.map(config => config.id));
+        const {nodeIndex, stopPropagation} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
         this._nodeIndex = nodeIndex;
         this._stopPropagation = stopPropagation;
 
         this.outValues.selectionPoint = {
-            id: 'selectionPoint',
             type: this.getTypeIndex('float3'),
             value: [NaN, NaN, NaN],
         };
         this.outValues.selectionRayOrigin = {
-            id: 'selectionRayOrigin',
             type: this.getTypeIndex('float3'),
             value: [NaN, NaN, NaN],
         };
         this.outValues.selectedNodeIndex = {
-            id: 'selectedNodeIndex',
             type: this.getTypeIndex('int'),
             value: [-1],
         };
         this.outValues.controllerIndex = {
-            id: 'controllerIndex',
             type: this.getTypeIndex('int'),
             value: [-1],
         };
@@ -46,22 +41,18 @@ export class OnSelect extends BehaveEngineNode {
     setUpOnSelect() {
         const callback = (selectionPoint: number[], selectedNodeIndex: number, controllerIndex: number, selectionRayOrigin: number[]) => {
             this.outValues.selectionPoint = {
-                id: 'selectionPoint',
                 type: this.getTypeIndex('float3'),
                 value: selectionPoint,
             };
             this.outValues.selectionRayOrigin = {
-                id: 'selectionRayOrigin',
                 type: this.getTypeIndex('float3'),
                 value: selectionRayOrigin,
             };
             this.outValues.selectedNodeIndex = {
-                id: 'selectedNodeIndex',
                 type: this.getTypeIndex('int'),
                 value: [selectedNodeIndex],
             };
             this.outValues.controllerIndex = {
-                id: 'controllerIndex',
                 type: this.getTypeIndex('int'),
                 value: [controllerIndex],
             };

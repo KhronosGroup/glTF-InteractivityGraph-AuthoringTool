@@ -1,8 +1,8 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class Switch extends BehaveEngineNode {
-    REQUIRED_CONFIGURATIONS = [{id: "cases"}]
-    REQUIRED_VALUES = [{id:"selection"}];
+    REQUIRED_CONFIGURATIONS = {cases: {}};
+    REQUIRED_VALUES = {selection: {}};
 
     _cases: number[];
 
@@ -10,17 +10,16 @@ export class Switch extends BehaveEngineNode {
         super(props);
         this.name = "Switch";
         this.validateValues(this.values);
-        this.validateFlows(this.flows);
         this.validateConfigurations(this.configuration);
 
-        const {cases} = this.evaluateAllConfigurations(this.REQUIRED_CONFIGURATIONS.map(config => config.id));
+        const {cases} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
         this._cases = cases;
     }
 
     override processNode(flowSocket?: string) {
         this.graphEngine.processNodeStarted(this);
         this.graphEngine.clearValueEvaluationCache();
-        const {selection} = this.evaluateAllValues(this.REQUIRED_VALUES.map(val => val.id));
+        const {selection} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
         const selected = this.flows[selection]
 
         if (selected === undefined) {

@@ -10,6 +10,6 @@ export class Euler extends BehaveEngineNode {
     override processNode(flowSocket?: string) {
         this.graphEngine.processNodeStarted(this);
 
-        return {'value': {id: "value", value: [Math.E], type: this.getTypeIndex('float')}}
+        return {'value': {value: [Math.E], type: this.getTypeIndex('float')}}
     }
 }

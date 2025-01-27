@@ -7,7 +7,6 @@ export class Sequence extends BehaveEngineNode {
         super(props);
         this.name = "Sequence";
         this.validateValues(this.values);
-        this.validateFlows(this.flows);
         this.validateConfigurations(this.configuration);
 
         this._numberOutputFlows = Object.keys(this.flows).length;

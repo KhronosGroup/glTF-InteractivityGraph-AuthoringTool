@@ -280,7 +280,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
                 graphEngine: this,
                 addEventToWorkQueue: this.addEventToWorkQueue
             };
-            const nodeType = behaveGraph.declerations[node.decleration].op;
+            const nodeType = behaveGraph.declarations[node.declaration].op;
             if (this.registry.get(nodeType) === undefined) {
                 throw Error(`Unrecognized node type ${nodeType}`);
             }
@@ -291,11 +291,11 @@ export class BasicBehaveEngine implements IBehaveEngine {
         console.log(this.nodes);
 
         this.onTickNodeIndices = this.nodes
-            .map((node, idx) => behaveGraph.declerations[node.decleration].op === "event/onTick" ? idx : -1)
+            .map((node, idx) => behaveGraph.declarations[node.declaration].op === "event/onTick" ? idx : -1)
             .filter(idx => idx !== -1);
 
         const onStartIndices = this.nodes
-            .map((node, idx) => behaveGraph.declerations[node.decleration].op=== "event/onStart" ? idx : -1)
+            .map((node, idx) => behaveGraph.declarations[node.declaration].op=== "event/onStart" ? idx : -1)
             .filter(idx => idx !== -1);
 
         for (const startNodeIndex of onStartIndices) {            

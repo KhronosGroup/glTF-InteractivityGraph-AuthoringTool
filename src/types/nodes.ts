@@ -1,6 +1,6 @@
-import { IInteractivityDecleration, IInteractivityNode, IInteractivityValueType, InteractivityValueType } from "./InteractivityGraph";
+import { IInteractivityDeclaration, IInteractivityNode, IInteractivityValueType, InteractivityValueType } from "./InteractivityGraph";
 
-export const knownDeclerations: IInteractivityDecleration[] = [
+export const knownDeclarations: IInteractivityDeclaration[] = [
     {
         op: "math/e"
     },
@@ -381,7 +381,7 @@ const anyType = [0,1,2,3,4,5,6,7];
 const animationNodeSpecs: IInteractivityNode[] = [
     {
         op: "animation/start",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "animation/start"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "animation/start"),
         description: "Start an animation",
         flows: {
             input: {
@@ -432,7 +432,7 @@ const animationNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "animation/stop",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "animation/stop"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "animation/stop"),
         description: "Stop an animation",
         flows: {
             input: {
@@ -464,7 +464,7 @@ const animationNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "animation/stopAt",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "animation/stopAt"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "animation/stopAt"),
         description: "Stop an animation at a specific time",
         flows: {
             input: {
@@ -508,7 +508,7 @@ const animationNodeSpecs: IInteractivityNode[] = [
 const mathTypeConversionNodeSpecs: IInteractivityNode[] = [
     {
         op: "type/boolToInt",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "type/boolToInt"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "type/boolToInt"),
         description: "Convert boolean to integer",
         values: {
             input: {
@@ -529,7 +529,7 @@ const mathTypeConversionNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "type/boolToFloat",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "type/boolToFloat"), 
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "type/boolToFloat"), 
         description: "Convert boolean to float",
         values: {
             input: {
@@ -550,7 +550,7 @@ const mathTypeConversionNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "type/intToBool",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "type/intToBool"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "type/intToBool"),
         description: "Convert integer to boolean",
         values: {
             input: {
@@ -571,7 +571,7 @@ const mathTypeConversionNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "type/intToFloat",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "type/intToFloat"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "type/intToFloat"),
         description: "Convert integer to float",
         values: {
             input: {
@@ -592,7 +592,7 @@ const mathTypeConversionNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "type/floatToBool",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "type/floatToBool"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "type/floatToBool"),
         description: "Convert float to boolean",
         values: {
             input: {
@@ -613,7 +613,7 @@ const mathTypeConversionNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "type/floatToInt",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "type/floatToInt"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "type/floatToInt"),
         description: "Convert float to integer",
         values: {
             input: {
@@ -637,7 +637,7 @@ const mathTypeConversionNodeSpecs: IInteractivityNode[] = [
 const mathIntegerBitwiseNodeSpecs: IInteractivityNode[] = [
     {
         op: "math/not",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/not"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/not"),
         description: "NOT operation",
         values: {
             input: {
@@ -658,7 +658,7 @@ const mathIntegerBitwiseNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/and",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/and"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/and"),
         description: "AND operation",
         values: {
             input: {
@@ -684,7 +684,7 @@ const mathIntegerBitwiseNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/or",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/or"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/or"),
         description: "OR operation",
         values: {
             input: {
@@ -710,7 +710,7 @@ const mathIntegerBitwiseNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/xor",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/xor"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/xor"),
         description: "XOR operation",
         values: {
             input: {
@@ -736,7 +736,7 @@ const mathIntegerBitwiseNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/asr",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/asr"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/asr"),
         description: "Arithmetic shift right",
         values: {
             input: {
@@ -762,7 +762,7 @@ const mathIntegerBitwiseNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/lsl",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/lsl"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/lsl"),
         description: "Logical shift left",
         values: {
             input: {
@@ -788,7 +788,7 @@ const mathIntegerBitwiseNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/clz",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/clz"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/clz"),
         description: "Count leading zeros",
         values: {
             input: {
@@ -809,7 +809,7 @@ const mathIntegerBitwiseNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/ctz",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/ctz"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/ctz"),
         description: "Count trailing zeros",
         values: {
             input: {
@@ -830,7 +830,7 @@ const mathIntegerBitwiseNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/popcnt",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/popcnt"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/popcnt"),
         description: "Count number of set bits",
         values: {
             input: {
@@ -854,7 +854,7 @@ const mathIntegerBitwiseNodeSpecs: IInteractivityNode[] = [
 const mathSwizzleNodeSpecs: IInteractivityNode[] = [
     {
         op: "math/combine2",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/combine2"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/combine2"),
         description: "Combine two floats into a float2",
         values: {
             input: {
@@ -880,7 +880,7 @@ const mathSwizzleNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/combine3",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/combine3"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/combine3"),
         description: "Combine three floats into a float3",
         values: {
             input: {
@@ -911,7 +911,7 @@ const mathSwizzleNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/combine4",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/combine4"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/combine4"),
         description: "Combine four floats into a float4",
         values: {
             input: {
@@ -947,7 +947,7 @@ const mathSwizzleNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/combine4x4",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/combine4x4"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/combine4x4"),
         description: "Combine 16 floats into a float4x4",
         values: {
             input: {
@@ -982,7 +982,7 @@ const mathSwizzleNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/extract2",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/extract2"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/extract2"),
         description: "Extract components from a float2",
         values: {
             input: {
@@ -1008,7 +1008,7 @@ const mathSwizzleNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/extract3",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/extract3"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/extract3"),
         description: "Extract components from a float3",
         values: {
             input: {
@@ -1039,7 +1039,7 @@ const mathSwizzleNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/extract4",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/extract4"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/extract4"),
         description: "Extract components from a float4",
         values: {
             input: {
@@ -1075,7 +1075,7 @@ const mathSwizzleNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/extract4x4",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/extract4x4"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/extract4x4"),
         description: "Extract components from a float4x4",
         values: {
             input: {
@@ -1114,7 +1114,7 @@ const mathMatrixNodeSpecs: IInteractivityNode[] = [
     //TODO: work with 2x2 and 3x3
     {
         op: "math/transpose",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/transpose"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/transpose"),
         description: "Transpose of a matrix",
         values: {
             input: {
@@ -1141,7 +1141,7 @@ const mathMatrixNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/determinant",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/determinant"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/determinant"),
         description: "Determinant of a matrix",
         values: {
             input: {
@@ -1165,7 +1165,7 @@ const mathMatrixNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/inverse",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/inverse"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/inverse"),
         description: "Inverse of a matrix",
         values: {
             input: {
@@ -1192,7 +1192,7 @@ const mathMatrixNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/matmul",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/matmul"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/matmul"),
         description: "Multiply two matrices",
         values: {
             input: {
@@ -1230,7 +1230,7 @@ const mathMatrixNodeSpecs: IInteractivityNode[] = [
 const mathVectorNodeSpecs: IInteractivityNode[] = [
     {
         op: "math/length",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/length"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/length"),
         description: "Length of a vector",
         values: {
             input: {
@@ -1251,7 +1251,7 @@ const mathVectorNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/normalize",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/normalize"), 
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/normalize"), 
         description: "Normalize a vector to length 1",
         values: {
             input: {
@@ -1272,7 +1272,7 @@ const mathVectorNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/dot",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/dot"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/dot"),
         description: "Dot product of two vectors",
         values: {
             input: {
@@ -1298,7 +1298,7 @@ const mathVectorNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/cross",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/cross"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/cross"),
         description: "Cross product of two 3D vectors",
         values: {
             input: {
@@ -1324,7 +1324,7 @@ const mathVectorNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/rotate2d",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/rotate2d"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/rotate2d"),
         description: "Rotate a 2D vector by an angle in radians",
         values: {
             input: {
@@ -1350,7 +1350,7 @@ const mathVectorNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/rotate3d",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/rotate3d"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/rotate3d"),
         description: "Rotate a 3D vector around an axis by an angle in radians",
         values: {
             input: {
@@ -1382,7 +1382,7 @@ const mathVectorNodeSpecs: IInteractivityNode[] = [
     {
         //TODO add other transform types for 2x2 3x3
         op: "math/transform",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/transform"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/transform"),
         description: "Transform a vector by a 4x4 matrix",
         values: {
             input: {
@@ -1414,7 +1414,7 @@ const mathVectorNodeSpecs: IInteractivityNode[] = [
 const mathExponentialNodeSpecs: IInteractivityNode[] = [
     {
         op: "math/exp",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/exp"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/exp"),
         description: "Returns e raised to the power of x",
         values: {
             input: {
@@ -1435,7 +1435,7 @@ const mathExponentialNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/log",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/log"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/log"),
         description: "Natural logarithm (base e) of x",
         values: {
             input: {
@@ -1456,7 +1456,7 @@ const mathExponentialNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/log2",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/log2"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/log2"),
         description: "Base 2 logarithm of x",
         values: {
             input: {
@@ -1477,7 +1477,7 @@ const mathExponentialNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/log10",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/log10"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/log10"),
         description: "Base 10 logarithm of x",
         values: {
             input: {
@@ -1498,7 +1498,7 @@ const mathExponentialNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/sqrt",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/sqrt"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/sqrt"),
         description: "Square root of x",
         values: {
             input: {
@@ -1519,7 +1519,7 @@ const mathExponentialNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/cbrt",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/cbrt"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/cbrt"),
         description: "Cube root of x",
         values: {
             input: {
@@ -1540,7 +1540,7 @@ const mathExponentialNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/pow",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/pow"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/pow"),
         description: "x raised to the power of y",
         values: {
             input: {
@@ -1569,7 +1569,7 @@ const mathExponentialNodeSpecs: IInteractivityNode[] = [
 const mathHyperbolicNodeSpecs: IInteractivityNode[] = [
     {
         op: "math/sinh",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/sinh"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/sinh"),
         description: "Hyperbolic sine of an angle in radians",
         values: {
             input: {
@@ -1590,7 +1590,7 @@ const mathHyperbolicNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/cosh", 
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/cosh"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/cosh"),
         description: "Hyperbolic cosine of an angle in radians",
         values: {
             input: {
@@ -1611,7 +1611,7 @@ const mathHyperbolicNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/tanh",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/tanh"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/tanh"),
         description: "Hyperbolic tangent of an angle in radians",
         values: {
             input: {
@@ -1632,7 +1632,7 @@ const mathHyperbolicNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/asinh",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/asinh"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/asinh"),
         description: "Inverse hyperbolic sine in radians",
         values: {
             input: {
@@ -1653,7 +1653,7 @@ const mathHyperbolicNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/acosh",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/acosh"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/acosh"),
         description: "Inverse hyperbolic cosine in radians",
         values: {
             input: {
@@ -1674,7 +1674,7 @@ const mathHyperbolicNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/atanh",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/atanh"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/atanh"),
         description: "Inverse hyperbolic tangent in radians",
         values: {
             input: {
@@ -1698,7 +1698,7 @@ const mathHyperbolicNodeSpecs: IInteractivityNode[] = [
 const mathTrigNodeSpecs: IInteractivityNode[] = [
     {
         op: "math/rad",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/rad"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/rad"),
         description: "Convert degrees to radians",
         values: {
             input: {
@@ -1719,7 +1719,7 @@ const mathTrigNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/deg",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/deg"), 
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/deg"), 
         description: "Convert radians to degrees",
         values: {
             input: {
@@ -1740,7 +1740,7 @@ const mathTrigNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/sin",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/sin"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/sin"),
         description: "Sine of an angle in radians",
         values: {
             input: {
@@ -1761,7 +1761,7 @@ const mathTrigNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/cos",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/cos"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/cos"),
         description: "Cosine of an angle in radians",
         values: {
             input: {
@@ -1782,7 +1782,7 @@ const mathTrigNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/tan",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/tan"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/tan"),
         description: "Tangent of an angle in radians",
         values: {
             input: {
@@ -1803,7 +1803,7 @@ const mathTrigNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/asin",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/asin"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/asin"),
         description: "Arc sine in radians",
         values: {
             input: {
@@ -1824,7 +1824,7 @@ const mathTrigNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/acos",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/acos"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/acos"),
         description: "Arc cosine in radians",
         values: {
             input: {
@@ -1845,7 +1845,7 @@ const mathTrigNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/atan",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/atan"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/atan"),
         description: "Arc tangent in radians",
         values: {
             input: {
@@ -1866,7 +1866,7 @@ const mathTrigNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/atan2",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/atan2"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/atan2"),
         description: "Arc tangent of y/x in radians",
         values: {
             input: {
@@ -1895,7 +1895,7 @@ const mathTrigNodeSpecs: IInteractivityNode[] = [
 const mathSpecialNodeSpecs: IInteractivityNode[] = [
     {
         op: "math/isnan",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/isnan"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/isnan"),
         description: "Check if a number is NaN",
         values: {
             input: {
@@ -1916,7 +1916,7 @@ const mathSpecialNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/isinf",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/isinf"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/isinf"),
         description: "Check if a number is infinite",
         values: {
             input: {
@@ -1937,7 +1937,7 @@ const mathSpecialNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/select",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/select"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/select"),
         description: "Select a value based on a condition",
         values: {
             input: {
@@ -1968,7 +1968,7 @@ const mathSpecialNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/random",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/random"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/random"),
         description: "Generate a random number",
         values: {
             output: {
@@ -1985,7 +1985,7 @@ const mathSpecialNodeSpecs: IInteractivityNode[] = [
 const mathComparisonNodeSpecs: IInteractivityNode[] = [
     {
         op: "math/eq",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/eq"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/eq"),
         description: "Check if two numbers are equal",
         values: {
             input: {
@@ -2011,7 +2011,7 @@ const mathComparisonNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/lt",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/lt"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/lt"),
         description: "Check if a number is less than another number",
         values: {
             input: {
@@ -2037,7 +2037,7 @@ const mathComparisonNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/le",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/le"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/le"),
         description: "Check if a number is less than or equal to another number",
         values: {
             input: {
@@ -2063,7 +2063,7 @@ const mathComparisonNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/gt",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/gt"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/gt"),
         description: "Check if a number is greater than another number",
         values: {
             input: {
@@ -2089,7 +2089,7 @@ const mathComparisonNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/ge",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/ge"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/ge"),
         description: "Check if a number is greater than or equal to another number",
         values: {
             input: {
@@ -2118,7 +2118,7 @@ const mathComparisonNodeSpecs: IInteractivityNode[] = [
 const mathArithmeticNodeSpecs: IInteractivityNode[] = [
     {
         op: "math/abs",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/abs"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/abs"),
         description: "Absolute value of a number",
         values: {
             input: {
@@ -2139,7 +2139,7 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/sign",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/sign"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/sign"),
         description: "Sign of a number",
         values: {
             input: {
@@ -2160,7 +2160,7 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/trunc",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/trunc"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/trunc"),
         description: "Truncate a number",
         values: {
             input: {
@@ -2181,7 +2181,7 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/floor",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/floor"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/floor"),
         description: "Floor a number",
         values: {
             input: {
@@ -2202,7 +2202,7 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/ceil",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/ceil"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/ceil"),
         description: "Ceil a number",
         values: {
             input: {
@@ -2223,7 +2223,7 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/round",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/round"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/round"),
         description: "Round a number",
         values: {
             input: {
@@ -2244,7 +2244,7 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/fract",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/fract"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/fract"),
         description: "Fractional part of a number",
         values: {
             input: {
@@ -2265,7 +2265,7 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/neg",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/neg"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/neg"),
         description: "Negate a number",
         values: {
             input: {
@@ -2286,7 +2286,7 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/add",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/add"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/add"),
         description: "Add two numbers",
         values: {
             input: {
@@ -2312,7 +2312,7 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/sub",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/sub"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/sub"),
         description: "Subtract two numbers",
         values: {
             input: {
@@ -2338,7 +2338,7 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/mul",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/mul"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/mul"),
         description: "Multiply two numbers",
         values: {
             input: {
@@ -2364,7 +2364,7 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/div",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/div"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/div"),
         description: "Divide two numbers",
         values: {
             input: {
@@ -2390,7 +2390,7 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/rem",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/rem"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/rem"),
         description: "Remainder of two numbers",
         values: {
             input: {
@@ -2416,7 +2416,7 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/min",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/min"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/min"),
         description: "Minimum of two numbers",
         values: {
             input: {
@@ -2442,7 +2442,7 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/max",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/max"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/max"),
         description: "Maximum of two numbers",
         values: {
             input: {
@@ -2468,7 +2468,7 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/clamp",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/clamp"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/clamp"),
         description: "Clamp a number between two numbers",
         values: {
             input: {
@@ -2499,7 +2499,7 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/saturate",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/saturate"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/saturate"),
         description: "Saturate a number",
         values: {
             input: {
@@ -2520,7 +2520,7 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/mix",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/mix"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/mix"),
         description: "Mix two numbers",
         values: {
             input: {
@@ -2554,7 +2554,7 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
 const mathConstantNodeSpecs: IInteractivityNode[] = [
     {
         op: "math/e",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/e"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/e"),
         description: "The mathematical constant e",
         values: {
             output: {
@@ -2568,7 +2568,7 @@ const mathConstantNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/pi",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/pi"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/pi"),
         description: "The mathematical constant pi",
         values: {
             output: {
@@ -2582,7 +2582,7 @@ const mathConstantNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/inf",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/inf"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/inf"),
         description: "The mathematical constant infinity",
         values: {
             output: {
@@ -2596,7 +2596,7 @@ const mathConstantNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "math/nan",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "math/nan"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/nan"),
         description: "The mathematical constant NaN",
         values: {
             output: {
@@ -2615,7 +2615,7 @@ const mathConstantNodeSpecs: IInteractivityNode[] = [
 const variableNodeSpecs: IInteractivityNode[] = [
     {
         op: "variable/set",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "variable/set"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "variable/set"),
         description: "Set a variable to a value",
         configuration: {
             variable: {
@@ -2639,7 +2639,7 @@ const variableNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "variable/get",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "variable/get"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "variable/get"),
         description: "Get a variable's value",
         configuration: {
             variable: {
@@ -2649,7 +2649,7 @@ const variableNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "variable/interpolate",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "variable/interpolate"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "variable/interpolate"),
         description: "Interpolate a variable between two values",
         configuration: {
             variable: {
@@ -2706,7 +2706,7 @@ const variableNodeSpecs: IInteractivityNode[] = [
 const pointerNodeSpecs: IInteractivityNode[] = [
     {
         op: "pointer/set",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "pointer/set"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "pointer/set"),
         description: "Set a pointer to a value",
         configuration: {
             pointer: {
@@ -2746,7 +2746,7 @@ const pointerNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "pointer/get",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "pointer/get"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "pointer/get"),
         description: "Get a pointer's value",
         configuration: {
             pointer: {
@@ -2773,7 +2773,7 @@ const pointerNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "pointer/interpolate",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "pointer/interpolate"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "pointer/interpolate"),
         description: "Interpolate a pointer between two values",
         configuration: {
             pointer: {
@@ -2835,7 +2835,7 @@ const pointerNodeSpecs: IInteractivityNode[] = [
 const lifecycleNodeSpecs: IInteractivityNode[] = [
     {
         op: "event/onStart",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "event/onStart"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "event/onStart"),
         description: "This node will fire when the session starts.",
         flows: {
             output: {
@@ -2848,7 +2848,7 @@ const lifecycleNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "event/onTick",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "event/onTick"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "event/onTick"),
         description: "This node will fire each tick.",
         flows: {
             output: {
@@ -2877,7 +2877,7 @@ const lifecycleNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "event/receive",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "event/receive"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "event/receive"),
         description: "This node will fire when an event is received",
         configuration: {
             event: {
@@ -2895,7 +2895,7 @@ const lifecycleNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "event/send",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "event/send"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "event/send"),
         description: "This node will send an event",
         configuration: {
             event: {
@@ -2922,7 +2922,7 @@ const lifecycleNodeSpecs: IInteractivityNode[] = [
 const flowNodeSpecs: IInteractivityNode[] = [
     {
         op: "flow/switch",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "flow/switch"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "flow/switch"),
         description: "Switch the control flow based on a condition.",
         configuration: {
             cases: {
@@ -2955,7 +2955,7 @@ const flowNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "flow/while",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "flow/while"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "flow/while"),
         description: "While a condition is true, execute the subgraph",
         flows: {
             input: {
@@ -2987,7 +2987,7 @@ const flowNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "flow/doN",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "flow/doN"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "flow/doN"),
         description: "Execute the subgraph N times",
         flows: {
             input: {
@@ -3026,7 +3026,7 @@ const flowNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "flow/multiGate",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "flow/multiGate"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "flow/multiGate"),
         description: "Multiplex the control flow based on a selection",
         flows: {
             input: {
@@ -3052,7 +3052,7 @@ const flowNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "flow/waitAll",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "flow/waitAll"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "flow/waitAll"),
         description: "Wait for all the subgraphs to complete",
         flows: {
             input: {
@@ -3084,7 +3084,7 @@ const flowNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "flow/throttle",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "flow/throttle"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "flow/throttle"),
         description: "Throttle the control flow based on a condition",
         flows: {
             input: {
@@ -3127,7 +3127,7 @@ const flowNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "flow/setDelay",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "flow/setDelay"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "flow/setDelay"),
         description: "Set the delay for the control flow",
         flows: {
             input: {
@@ -3174,7 +3174,7 @@ const flowNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "flow/cancelDelay",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "flow/cancelDelay"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "flow/cancelDelay"),
         description: "Cancel the delay for the control flow",
         flows: {
             input: {
@@ -3202,7 +3202,7 @@ const flowNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "flow/branch",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "flow/branch"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "flow/branch"),
         description:"Branch the control flow based on a condition.",
         flows: {
             input: {
@@ -3234,7 +3234,7 @@ const flowNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "flow/for",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "flow/for"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "flow/for"),
         description: "Execute the subgraph for flow loopBody from startIndex to endIndex (exclusive), then execute the subgraph completed",
         configuration: {
             initialIndex: {
@@ -3276,7 +3276,7 @@ const flowNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "flow/sequence",
-        decleration: knownDeclerations.findIndex(decleration => decleration.op === "flow/sequence"),
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "flow/sequence"),
         description: "Takes in a single in flow and executes the out flows in order",
         flows: {
             input: {
@@ -3293,5 +3293,5 @@ export const interactivityNodeSpecs: IInteractivityNode[] = [
     ...mathConstantNodeSpecs, ...mathArithmeticNodeSpecs, ...mathComparisonNodeSpecs, ...mathTrigNodeSpecs,
     ...mathSpecialNodeSpecs,...lifecycleNodeSpecs, ...flowNodeSpecs, ...variableNodeSpecs, ...mathHyperbolicNodeSpecs,
     ...mathExponentialNodeSpecs, ...mathVectorNodeSpecs, ...mathMatrixNodeSpecs, ...mathSwizzleNodeSpecs, ...mathIntegerBitwiseNodeSpecs,
-    ...mathTypeConversionNodeSpecs, ...pointerNodeSpecs
+    ...mathTypeConversionNodeSpecs, ...pointerNodeSpecs, ...animationNodeSpecs
 ];

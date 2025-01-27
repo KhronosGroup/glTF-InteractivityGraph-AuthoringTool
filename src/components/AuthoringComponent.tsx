@@ -14,12 +14,12 @@ import {RenderIf} from "./RenderIf";
 import {Button, Col, Container, Row, Form} from "react-bootstrap";
 import 'reactflow/dist/style.css';
 import {Spacer} from "./Spacer";
-import {interactivityNodeSpecs, knownDeclerations, standardTypes} from "../types/nodes";
-import { IInteractivityDecleration, IInteractivityEvent, IInteractivityNode, IInteractivityVariable } from '../types/InteractivityGraph';
+import {interactivityNodeSpecs, knownDeclarations, standardTypes} from "../types/nodes";
+import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityNode, IInteractivityVariable } from '../types/InteractivityGraph';
 import { InteractivityGraphContext } from '../InteractivityGraphContext';
 
 const nodeTypes = interactivityNodeSpecs.reduce((nodes, node) => {
-    nodes[knownDeclerations[node.decleration].op] = (props: any) => {
+    nodes[knownDeclarations[node.declaration].op] = (props: any) => {
         const nodeCopy = JSON.parse(JSON.stringify(node));
         
         if (props.data.values !== undefined) {
@@ -48,7 +48,7 @@ enum AuthoringComponentModelType {
     NONE
 }
 
-const nodesWithConfigurations = interactivityNodeSpecs.filter(node => node.configuration !== undefined).map(node => knownDeclerations[node.decleration].op);
+const nodesWithConfigurations = interactivityNodeSpecs.filter(node => node.configuration !== undefined).map(node => knownDeclarations[node.declaration].op);
 export const AuthoringComponent = () => {
     const reactFlowRef = useRef<HTMLDivElement | null>(null);
     const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
@@ -58,7 +58,7 @@ export const AuthoringComponent = () => {
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
     
-    const {graph, needsSyncingToAuthor, setNeedsSyncingToAuthor, getAuthorGraph, addDecleration, getDeclerationIndex, addNode, removeNode} = useContext(InteractivityGraphContext);
+    const {graph, needsSyncingToAuthor, setNeedsSyncingToAuthor, getAuthorGraph, addDeclaration: addDeclaration, getDeclarationIndex: getDeclarationIndex, addNode, removeNode} = useContext(InteractivityGraphContext);
 
     //to handle the node picker props
     const mousePosRef = useRef({x:0, y:0});
@@ -169,10 +169,10 @@ export const AuthoringComponent = () => {
             data: {events: graph.events, variables: graph.variables, types: standardTypes, uid: uid}
         };
 
-        const decleration: IInteractivityDecleration = knownDeclerations.find(node => node.op === nodeType)!;
-        addDecleration(decleration);
+        const declaration: IInteractivityDeclaration = knownDeclarations.find(node => node.op === nodeType)!;
+        addDeclaration(declaration);
         const interactivityNode: IInteractivityNode = interactivityNodeSpecs.find(node => node.op === nodeType)!;
-        interactivityNode.decleration = getDeclerationIndex(nodeType);
+        interactivityNode.declaration = getDeclarationIndex(nodeType);
         interactivityNode.uid = uid;
         
         addNode(interactivityNode);

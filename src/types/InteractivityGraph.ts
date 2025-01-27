@@ -15,7 +15,7 @@ export interface IInteractivityValueType {
     extensions?: any
 }
 
-export interface IInteractivityDecleration {
+export interface IInteractivityDeclaration {
     op: string
     extension?: string
     inputValueSockets?: Record<string, {
@@ -70,7 +70,7 @@ export interface IInteractivityValue {
 export interface IInteractivityNode {
     uid?: string,
     op?: string,
-    decleration: number,
+    declaration: number,
     description?: string,
     configuration?: Record<string, IInteractivityConfigurationValue>,
     flows?: {
@@ -88,7 +88,7 @@ export interface IInteractivityNode {
 }
 
 export interface IInteractivityGraph {
-    declerations: IInteractivityDecleration[],
+    declarations: IInteractivityDeclaration[],
     nodes: IInteractivityNode[],
     types: IInteractivityValueType[],
     events: IInteractivityEvent[],

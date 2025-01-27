@@ -1,5 +1,5 @@
 import { createContext, useRef, useState } from 'react';
-import { IInteractivityDecleration, IInteractivityEvent, IInteractivityGraph, IInteractivityNode, IInteractivityVariable } from './types/InteractivityGraph';
+import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityGraph, IInteractivityNode, IInteractivityVariable } from './types/InteractivityGraph';
 import { interactivityNodeSpecs, standardTypes } from './types/nodes';
 import { v4 as uuidv4 } from 'uuid';
 import { Edge, Node } from 'reactflow';
@@ -10,8 +10,8 @@ interface InteractivityGraphContextType {
     getAuthorGraph: (graph: IInteractivityGraph) => [Node[], Edge[], IInteractivityEvent[], IInteractivityVariable[]],
     getExecutableGraph: () => any,
     loadGraphFromJson: (json: any) => void,
-    addDecleration: (decleration: IInteractivityDecleration) => void,
-    getDeclerationIndex: (op: string) => number,
+    addDeclaration: (declaration: IInteractivityDeclaration) => void,
+    getDeclarationIndex: (op: string) => number,
     addEvent: (event: IInteractivityEvent) => void,
     addVariable: (variable: IInteractivityVariable) => void,
     addNode: (node: IInteractivityNode) => void,
@@ -19,7 +19,7 @@ interface InteractivityGraphContextType {
 }
 
 const initialGraph: IInteractivityGraph = {
-    declerations: [],
+    declarations: [],
     nodes: [],
     events: [],
     variables: [],
@@ -33,8 +33,8 @@ const initialContext: InteractivityGraphContextType = {
     getAuthorGraph: (graph: IInteractivityGraph) => {return [[], [], [], []]},
     getExecutableGraph: () => {return null},
     loadGraphFromJson: () => {return null},
-    addDecleration: () => {return null},
-    getDeclerationIndex: () => -1,
+    addDeclaration: () => {return null},
+    getDeclarationIndex: () => -1,
     addEvent: () => {return null},
     addVariable: () => {return null},
     addNode: () => {return null},
@@ -44,7 +44,7 @@ const initialContext: InteractivityGraphContextType = {
 export const InteractivityGraphContext = createContext<InteractivityGraphContextType>(initialContext);
 
 export const InteractivityGraphProvider = ({ children }: { children: React.ReactNode }) => {
-    const usedNodeDeclerationRef = useRef<Set<string>>(new Set());
+    const usedNodeDeclarationRef = useRef<Set<string>>(new Set());
     const graphRef = useRef<IInteractivityGraph>(initialGraph);
 
     const [needsSyncingToAuthor, setNeedsSyncingToAuthor] = useState(false);
@@ -246,7 +246,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
 
     const loadGraphFromJson = (json: any) => {
         const graph: IInteractivityGraph = {
-            declerations: json.declerations,
+            declarations: json.declarations,
             nodes: [],
             variables: json.variables,
             events: json.events,
@@ -260,10 +260,10 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         }
         for (let i = 0; i < json.nodes.length; i++) {
             const node = json.nodes[i];
-            const nodeOp = json.declerations[node.decleration].op;
+            const nodeOp = json.declarations[node.declaration].op;
             const templateNode:IInteractivityNode = interactivityNodeSpecs.find((schema: IInteractivityNode) => schema.op === nodeOp)!;
             templateNode.uid = uuids[i];
-            templateNode.decleration = node.decleration;
+            templateNode.declaration = node.declaration;
 
             if (node.values !== undefined) {
                 for (const key in node.values) {
@@ -312,18 +312,17 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
 
 
     const getExecutableGraph = () => {
-        const graph: any = { declerations: [], nodes: [], variables: [], events: [], types: standardTypes, };
+        const graph: any = { declarations: [], nodes: [], variables: [], events: [], types: standardTypes, };
 
         graph.events = [...graphRef.current.events];
         graph.variables = [...graphRef.current.variables];
-        //TODO: declerations is mispelled
-        graph.declerations = [...graphRef.current.declerations];
+        graph.declarations = [...graphRef.current.declarations];
         for (const node of graphRef.current.nodes) {
 
             // TODO: add metadta for position
             const behaveNode: any = {
                 id: node.uid,
-                decleration: graph.declerations.findIndex((decleration: IInteractivityDecleration) => decleration.op === node.op),
+                declaration: graph.declarations.findIndex((declaration: IInteractivityDeclaration) => declaration.op === node.op),
                 values: node.values?.input || {},
                 configuration: node.configuration || {},
                 flows: node.flows?.output || {},
@@ -437,16 +436,16 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         }
     }
 
-    const addDecleration = (decleration: IInteractivityDecleration) => {
-        if (usedNodeDeclerationRef.current.has(decleration.op)) {
+    const addDeclaration = (declaration: IInteractivityDeclaration) => {
+        if (usedNodeDeclarationRef.current.has(declaration.op)) {
             return;
         }
-        graphRef.current.declerations.push(decleration);
-        usedNodeDeclerationRef.current.add(decleration.op);
+        graphRef.current.declarations.push(declaration);
+        usedNodeDeclarationRef.current.add(declaration.op);
     };
 
-    const getDeclerationIndex = (op: string): number => {
-        return graphRef.current.declerations.findIndex(decleration => decleration.op === op);
+    const getDeclarationIndex = (op: string): number => {
+        return graphRef.current.declarations.findIndex(declaration => declaration.op === op);
     };
 
     const addEvent = (event: IInteractivityEvent) => {
@@ -472,8 +471,8 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         getAuthorGraph: getAuthorGraph,
         loadGraphFromJson: loadGraphFromJson,
         getExecutableGraph: getExecutableGraph,
-        addDecleration: addDecleration,
-        getDeclerationIndex: getDeclerationIndex,
+        addDeclaration: addDeclaration,
+        getDeclarationIndex: getDeclarationIndex,
         addEvent: addEvent,
         addVariable: addVariable,
         addNode: addNode,

@@ -3,7 +3,7 @@ import {useCallback, useContext, useEffect, useState} from "react";
 import { Handle, Position} from "reactflow";
 
 import {RenderIf} from "../components/RenderIf";
-import { IInteractivityFlow, IInteractivityValue, IInteractivityNode, IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityVariable } from "../types/InteractivityGraph";
+import { IInteractivityFlow, IInteractivityValue, IInteractivityNode, IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityVariable, IInteractivityValueType } from "../types/InteractivityGraph";
 import { knownDeclerations, standardTypes } from "../types/nodes";
 import { InteractivityGraphContext } from "../InteractivityGraphContext";
 
@@ -85,7 +85,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         const configurationId = (evt.target as HTMLInputElement).id;
         // TODO: how can I properly pares the value for config without knowing type
         setConfiguration({...configuration, [configurationId]: {value: [evt.target.value]}});
-        evaluateConfigurationWhichChangeSockets();
+        evaluateConfigurationWhichChangeSockets({...configuration, [configurationId]: {value: [evt.target.value]}});
     }, [inputValues, outputValues, inputFlows, outputFlows, node]);
 
     const parsePath = (path: string): string[] => {
@@ -106,7 +106,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     }
 
 
-    const evaluateConfigurationWhichChangeSockets = useCallback(() => {
+    const evaluateConfigurationWhichChangeSockets = useCallback((updatedConfiguration: Record<string, IInteractivityConfigurationValue>) => {
         const nodeType = node?.op;
 
         const inputValuesToSet: Record<string, IInteractivityValue> = {};
@@ -114,8 +114,8 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         const inputFlowsToSet: Record<string, IInteractivityFlow> = {};
         const outputFlowsToSet: Record<string, IInteractivityFlow> = {};
 
-        if (configuration.inputFlows !== undefined) {
-            const numberInputFlows = Number(configuration.inputFlows.value?.[0] || 0);
+        if (updatedConfiguration.inputFlows !== undefined) {
+            const numberInputFlows = Number(updatedConfiguration.inputFlows.value?.[0] || 0);
             for (let i = 0; i < numberInputFlows; i++) {
                 const inputFlow: IInteractivityFlow = {
                     node: undefined,
@@ -124,8 +124,8 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                 inputFlowsToSet[`${i}`] = inputFlow;
             }
         }
-        if (configuration.cases !== undefined) {
-            let cases = configuration.cases.value?.[0] || "";
+        if (updatedConfiguration.cases !== undefined) {
+            let cases = updatedConfiguration.cases.value?.[0] || "";
             // Allow input formats in the UI, such as:
             // - 0,1, (while typing)
             // - [0,1,2 (while typing)
@@ -152,8 +152,8 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                 outputFlowsToSet[`${i}`] = outputFlow;
             }
         }
-        if (configuration.event !== undefined) {
-            const customEventId: number = JSON.parse(configuration.event.value?.[0] || "");
+        if (updatedConfiguration.event !== undefined) {
+            const customEventId: number = JSON.parse(updatedConfiguration.event.value?.[0] || "");
             const ce: IInteractivityEvent = props.data.events[customEventId];
 
             if (ce.values === undefined) {return}
@@ -177,22 +177,22 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
 
             
         }
-        if (configuration.pointer !== undefined) {
-            const vals = parsePath(configuration.pointer.value?.[0] || "");
+        if (updatedConfiguration.pointer !== undefined) {
+            const vals = parsePath(updatedConfiguration.pointer.value?.[0] || "");
             for (let i = 0; i < vals.length; i++) {
                 const value: IInteractivityValue = {value: [undefined], typeOptions: [2], type: 2}
                 inputValuesToSet[vals[i]] = value;
             }
         }
-        if (configuration.easingType !== undefined) {
-            if (configuration.easingType.value?.[0] === "0") {
+        if (updatedConfiguration.easingType !== undefined) {
+            if (updatedConfiguration.easingType.value?.[0] === "0") {
                 // CUBIC BEZIER
                 inputValuesToSet["cp1"] = {value: [NaN, NaN], typeOptions: [2], type: 2};
                 inputValuesToSet["cp2"] = {value: [NaN, NaN], typeOptions: [2], type: 2};
             }
         }
-        if (configuration.variable !== undefined) {
-            const variableId = Number(configuration.variable.value?.[0] || 0);
+        if (updatedConfiguration.variable !== undefined) {
+            const variableId = Number(updatedConfiguration.variable.value?.[0] || 0);
             const v: IInteractivityVariable = graph.variables[variableId];
             const value: IInteractivityValue =  {typeOptions: [v.type], type: v.type, value: [undefined]}
 
@@ -202,8 +202,15 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                 outputValuesToSet["value"] = value;
             }
         }
-        if (configuration.stopMode !== undefined) {
-            if (configuration.stopMode.value?.[0] === "1") {
+        if (updatedConfiguration.type !== undefined) {
+            console.log(updatedConfiguration.type)
+            const typeId = Number(updatedConfiguration.type.value?.[0] || 0);
+            const value: IInteractivityValue =  {typeOptions: [typeId], type: typeId, value: [undefined]}
+            console.log(value)
+            inputValuesToSet["value"] = value;
+        }
+        if (updatedConfiguration.stopMode !== undefined) {
+            if (updatedConfiguration.stopMode.value?.[0] === "1") {
                 // EXACT FRAME TIME
                 inputValuesToSet["stopTime"] = {value: [NaN], typeOptions: [2], type: 2};
             }
@@ -213,7 +220,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         setInputFlows({...inputFlows, ...inputFlowsToSet});
         setInputValues({...inputValues, ...inputValuesToSet});
         setOutputValues({...outputValues, ...outputValuesToSet});
-    }, [inputValues, outputValues, inputFlows, outputFlows, node])
+    }, [inputValues, outputValues, inputFlows, outputFlows, node, configuration])
 
     const stringToListOfNumbers = (inputString: string) => {
         const numberStrings = inputString.split(',');
@@ -320,6 +327,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                     if (Number(event.target.value) === -1) {
                                         return
                                     }
+                                    
                                     onChangeConfiguration(event)
                                 }}>
                                     <option key={-1} value={-1} selected={configuration.type.value === undefined}>--NO SELECTION--</option>

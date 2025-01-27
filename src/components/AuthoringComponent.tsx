@@ -65,7 +65,6 @@ export const AuthoringComponent = () => {
 
     useEffect(() => {
         const updatePositions = setInterval(() => {
-            console.log(nodes)
             for (const node of nodes) {
                 const graphNode = graph.nodes.find(graphNode => graphNode.uid === node.id)!;
                 graphNode.metadata = {positionX: node.position.x, positionY: node.position.y};
@@ -151,7 +150,7 @@ export const AuthoringComponent = () => {
             const sourceNode: IInteractivityNode = graph.nodes.find(node => node.uid === edge.source)!;
             sourceNode!.flows!.output![edge.sourceHandle!] = {};
         }
-    }, []);
+    }, [graph]);
 
     const onNodesDelete = useCallback((nodes: Node[]) => {
         for (let i = 0; i < nodes.length; i++) {

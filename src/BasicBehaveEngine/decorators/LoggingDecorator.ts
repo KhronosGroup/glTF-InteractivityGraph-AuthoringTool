@@ -1,6 +1,6 @@
 import {ADecorator} from "./ADecorator";
 import {BehaveEngineNode} from "../BehaveEngineNode";
-import {IBehaveEngine} from "../IBehaveEngine";
+import {IBehaveEngine, IEventQueueItem} from "../IBehaveEngine";
 import {IInteractivityFlow} from "../../types/InteractivityGraph";
 import { cubicBezier, linearFloat, slerpFloat4 } from "../easingUtils";
 export class LoggingDecorator extends ADecorator {

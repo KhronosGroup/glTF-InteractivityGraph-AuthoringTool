@@ -7,7 +7,6 @@ import {IEasingParameters} from "./easingUtils";
  */
 export interface IBehaveEngine {
     get fps():number;
-
     /**
      * Callback function to process the start of a Behave Engine node.
      * @param node - The Behave Engine node that has started.
@@ -90,9 +89,9 @@ export interface IBehaveEngine {
     /**
      * Add a custom event listener with a specified name and callback function.
      * @param name - The name of the custom event.
-     * @param func - The callback function to be executed when the custom event is triggered.
+     * @param behaveNode - The Behave Engine node that will be triggered when the custom event is triggered.
      */
-    addCustomEventListener: (name: string, func: any) => void;
+    addCustomEventListener: (name: string, func: (event: CustomEvent) => void) => void;
 
     /**
      * Load a Behave graph into the Behave Engine.
@@ -105,7 +104,7 @@ export interface IBehaveEngine {
      * @param name - The name of the custom event to emit.
      * @param params - The values to be passed to the custom event callback functions.
      */
-    emitCustomEvent: (name: string, vals: any) => void;
+    dispatchCustomEvent: (name: string, vals: Record<string, any>) => void;
 
     /**
      * Set the value of a specified path.
@@ -156,6 +155,26 @@ export interface IBehaveEngine {
     getWorldAnimationPathCallback: (path: string) => ICancelable | undefined;
 
     getWorld: () => any;
+
+    getEventList: () => IEventQueueItem[];
+    clearEventList: () => void;
+    addEvent: (event: IEventQueueItem) => void;
+}
+
+export interface IEventQueueItem {
+    behaveNode?: BehaveEngineNode,
+    func?: () => void,
+    inSocketId?: string
+}
+export interface IEventBus {
+    getEventList: () => IEventQueueItem[];
+    clearEventList: () => void;
+    addEvent: (event: IEventQueueItem) => void;
+
+    addCustomEventListener: (name: string, func: (event: CustomEvent) => void) => void;
+    clearCustomEventListeners: () => void;
+    dispatchCustomEvent: (name: string, vals: Record<string, any>) => void;
+    getCustomEventsNames: () => string[];
 }
 
 export interface ICancelable {

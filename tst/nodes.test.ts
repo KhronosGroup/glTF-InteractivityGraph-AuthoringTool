@@ -108,7 +108,7 @@ import {Extract4} from "../src/BasicBehaveEngine/nodes/math/extract/Extract4";
 import {Extract4x4} from "../src/BasicBehaveEngine/nodes/math/extract/Extract4x4";
 import {PointerInterpolate} from "../src/BasicBehaveEngine/nodes/pointer/PointerInterpolate";
 import { IInteractivityFlow, IInteractivityVariable } from '../src/types/InteractivityGraph';
-
+import { DOMEventBus } from "../src/BasicBehaveEngine/eventBuses/DOMEventBus";
 
 describe('nodes', () => {
     let executionLog: string;
@@ -119,7 +119,8 @@ describe('nodes', () => {
     beforeAll(() => {
         executionLog = "";
         world = {};
-        graphEngine = new BasicBehaveEngine(1);
+        const eventBus = new DOMEventBus();
+        graphEngine = new BasicBehaveEngine(60, eventBus);
 
         defaultProps = {
             declaration: {
@@ -146,11 +147,12 @@ describe('nodes', () => {
             events: [{ id: 'testCustomEvent', values: {text: { type: 7 }} }],
             flows: {out: { }},
         });
-        await new Promise((resolve) => setTimeout(resolve, 500));
 
-        graphEngine.emitCustomEvent('KHR_INTERACTIVITY:testCustomEvent', { text: 'test' });
+        graphEngine.dispatchCustomEvent('KHR_INTERACTIVITY:testCustomEvent', { text: 'test' });
         //wait for graph to emit
         await new Promise((resolve) => setTimeout(resolve, 1000));
+        expect(graphEngine.getEventList().length).toBe(1);
+        graphEngine.getEventList()[0].func?.();
         expect(receive.outValues.text.value).toStrictEqual(['test']);
     }, 3000);
 

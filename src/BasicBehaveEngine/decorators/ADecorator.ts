@@ -1,4 +1,4 @@
-import {IBehaveEngine, ICancelable} from "../IBehaveEngine";
+import {IBehaveEngine, ICancelable, IEventQueueItem} from "../IBehaveEngine";
 import {BehaveEngineNode} from "../BehaveEngineNode";
 import {IInteractivityFlow, IInteractivityValue} from "../../types/InteractivityGraph";
 
@@ -19,6 +19,18 @@ export abstract class ADecorator implements IBehaveEngine {
     abstract animateCubicBezier: (path: string, p1: number[], p2: number[], initialValue: any, targetValue: any, duration: number, valueType: string, callback: () => void) => void;
     abstract getWorld: () => any;
 
+    getEventList = () => {
+        return this.behaveEngine.getEventList();
+    }
+
+    clearEventList = () => {
+        this.behaveEngine.clearEventList();
+    }
+
+    addEvent = (event: IEventQueueItem) => {
+        this.behaveEngine.addEvent(event);
+    }
+
     addCustomEventListener = (name: string, func: any) => {
         this.behaveEngine.addCustomEventListener(name, func);
     }
@@ -38,8 +50,8 @@ export abstract class ADecorator implements IBehaveEngine {
         this.behaveEngine.loadBehaveGraph(behaveGraph);
     }
 
-    emitCustomEvent = (name: string, vals: any) => {
-        this.behaveEngine.emitCustomEvent(name, vals);
+    dispatchCustomEvent = (name: string, vals: any) => {
+        this.behaveEngine.dispatchCustomEvent(name, vals);
     }
 
     setPathValue = (path: string, targetValue: any) => {

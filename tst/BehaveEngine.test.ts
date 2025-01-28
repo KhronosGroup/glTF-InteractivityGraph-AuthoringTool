@@ -1,5 +1,6 @@
 import {BasicBehaveEngine} from "../src/BasicBehaveEngine/BasicBehaveEngine";
 import {LoggingDecorator} from "../src/BasicBehaveEngine/decorators/LoggingDecorator";
+import { DOMEventBus } from "../src/BasicBehaveEngine/eventBuses/DOMEventBus";
 import {IBehaveEngine} from "../src/BasicBehaveEngine/IBehaveEngine";
 import fs from "fs";
 
@@ -19,7 +20,8 @@ describe('BehaveEngine', () => {
         const behaviorGraph = JSON.parse(fs.readFileSync("./tst/testGraphs/randomTest.json", "utf8"));
 
         let executionLog = "";
-        const engine = new BasicBehaveEngine(1);
+        const eventBus = new DOMEventBus();
+        const engine = new BasicBehaveEngine(1, eventBus);
         loggingBehaveEngine = new LoggingDecorator(engine, (line:string) => executionLog += line, {});
         loggingBehaveEngine.loadBehaveGraph(behaviorGraph);
 
@@ -35,7 +37,8 @@ describe('BehaveEngine', () => {
          * 2) math/eq compares the pointer/get value to [2,3,4] and sets the variable to true if they are equal
          */
         const behaviorGraph = JSON.parse(fs.readFileSync("./tst/testGraphs/pointerGetSet.json", "utf8"));
-        const engine = new BasicBehaveEngine(1);
+        const eventBus = new DOMEventBus();
+        const engine = new BasicBehaveEngine(1, eventBus);
         let executionLog = "";
         const world = {nodes:[{translation:[1,1,1]}]}
         loggingBehaveEngine = new LoggingDecorator(engine, (line:string) => executionLog += line, world);
@@ -54,7 +57,8 @@ describe('BehaveEngine', () => {
          * 3) a delay of another second is activated (to ensure the interpolation is cancelled) and when it is done, we compare the length of the pointer to 0.5 and set the test variable to true if it is within 0.01
          */
         const behaviorGraph = JSON.parse(fs.readFileSync("./tst/testGraphs/pointerInterpolateSet.json", "utf8"));
-        const engine = new BasicBehaveEngine(30);
+        const eventBus = new DOMEventBus();
+        const engine = new BasicBehaveEngine(30, eventBus);
         let executionLog = "";
         const world = {nodes:[{translation:[0,0,0]}]}
         loggingBehaveEngine = new LoggingDecorator(engine, (line:string) => executionLog += line, world);
@@ -72,7 +76,8 @@ describe('BehaveEngine', () => {
          * 2) delay 2 run un-cancelled, while delay 1 is immediately cnacelled
          */
         const behaviorGraph = JSON.parse(fs.readFileSync("./tst/testGraphs/setCancelDelay.json", "utf8"));
-        const engine = new BasicBehaveEngine(30);
+        const eventBus = new DOMEventBus();
+        const engine = new BasicBehaveEngine(30, eventBus);
         let executionLog = "";
         loggingBehaveEngine = new LoggingDecorator(engine, (line:string) => executionLog += line, {});
         loggingBehaveEngine.loadBehaveGraph(behaviorGraph);
@@ -91,7 +96,8 @@ describe('BehaveEngine', () => {
          * 3) when doN's currentCount is 5, the loop condition is set to false and the loop is exited
          */
         const behaviorGraph = JSON.parse(fs.readFileSync("./tst/testGraphs/loopReEvaulation.json", "utf8"));
-        const engine = new BasicBehaveEngine(1);
+        const eventBus = new DOMEventBus();
+        const engine = new BasicBehaveEngine(1, eventBus);
         let executionLog = "";
         loggingBehaveEngine = new LoggingDecorator(engine, (line:string) => executionLog += line, {});
         loggingBehaveEngine.loadBehaveGraph(behaviorGraph);
@@ -109,7 +115,8 @@ describe('BehaveEngine', () => {
      * 3) when the interpolation is done, compare the driver and copied varible to see if they are close to equal (since the final update of the driver will execute the test set before the next onTick we cannot assert perfect equality)
      */
     const behaviorGraph = JSON.parse(fs.readFileSync("./tst/testGraphs/variableSetGetInterpolate.json", "utf8"));
-    const engine = new BasicBehaveEngine(60);
+    const eventBus = new DOMEventBus();
+    const engine = new BasicBehaveEngine(60, eventBus);
     let executionLog = "";
     loggingBehaveEngine = new LoggingDecorator(engine, (line:string) => executionLog += line, {});
     loggingBehaveEngine.loadBehaveGraph(behaviorGraph);
@@ -117,7 +124,6 @@ describe('BehaveEngine', () => {
     expect(engine.variables![0].value![0]).toEqual(true);
    });
 
-   //TODO: CE send/receive is not respecting tick rate
    it("should correctly evaluate custom events", async () => {
     /**
      * This test ensures that the custom event node evaluates correctly
@@ -126,11 +132,12 @@ describe('BehaveEngine', () => {
      */
 
     const behaviorGraph = JSON.parse(fs.readFileSync("./tst/testGraphs/customEventsLoop.json", "utf8"));
-    const engine = new BasicBehaveEngine(1);
+    const eventBus = new DOMEventBus();
+    const engine = new BasicBehaveEngine(60, eventBus);
     let executionLog = "";
     loggingBehaveEngine = new LoggingDecorator(engine, (line:string) => executionLog += line, {});
     loggingBehaveEngine.loadBehaveGraph(behaviorGraph);
-    loggingBehaveEngine.emitCustomEvent("KHR_INTERACTIVITY:async_loop", {count: 0});
+    loggingBehaveEngine.dispatchCustomEvent("KHR_INTERACTIVITY:async_loop", {count: 0});
     await new Promise((resolve) => setTimeout(resolve, 500));
     expect(engine.variables![0].value![0]).toEqual(5);
    });

@@ -4,11 +4,16 @@ import {IInteractivityEvent} from "../../../types/InteractivityGraph";
 export class Receive extends BehaveEngineNode {
     REQUIRED_CONFIGURATIONS = {event: {}}
 
+    _event: number;
     constructor(props: IBehaviourNodeProps) {
         super(props);
         this.name = "CustomEventReceiveNode";
         this.validateValues(this.values);
         this.validateConfigurations(this.configuration);
+
+        const {event} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
+        this._event = event;
+
         this.setUpEventListener();
     }
 

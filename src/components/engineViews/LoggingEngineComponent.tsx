@@ -4,6 +4,7 @@ import {Spacer} from "../Spacer";
 import {BasicBehaveEngine} from "../../BasicBehaveEngine/BasicBehaveEngine";
 import {LoggingDecorator} from "../../BasicBehaveEngine/decorators/LoggingDecorator";
 import { InteractivityGraphContext } from "../../InteractivityGraphContext";
+import { DOMEventBus } from "../../BasicBehaveEngine/eventBuses/DOMEventBus";
 
 enum LoggingEngineModal {
     WORLD = "WORLD",
@@ -35,7 +36,8 @@ export const LoggingEngineComponent = () => {
             loggingEngineRef.current?.clearCustomEventListeners()
         }
 
-        loggingEngineRef.current = new LoggingDecorator(new BasicBehaveEngine(1), (line: string) => setExecutionLog((prev: string) => prev + "\n" + line), world)
+        const eventBus = new DOMEventBus();
+        loggingEngineRef.current = new LoggingDecorator(new BasicBehaveEngine(1, eventBus), (line: string) => setExecutionLog((prev: string) => prev + "\n" + line), world)
         loggingEngineRef.current?.loadBehaveGraph(behaveGraph);
     }
 
@@ -117,7 +119,7 @@ export const LoggingEngineComponent = () => {
                                             for (const val of Object.keys(customEvent.values)) {
                                                 payload[val] = (document.getElementById(val) as HTMLInputElement).value;
                                             }
-                                            loggingEngineRef.current?.emitCustomEvent(`KHR_INTERACTIVITY:${customEvent.id}`, payload)
+                                            loggingEngineRef.current?.dispatchCustomEvent(`KHR_INTERACTIVITY:${customEvent.id}`, payload)
                                             setOpenModal(LoggingEngineModal.NONE);
                                         }}>Send</Button>
                                     </Row>

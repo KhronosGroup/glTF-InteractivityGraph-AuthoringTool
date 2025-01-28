@@ -1,4 +1,4 @@
-import {IBehaveEngine, ICancelable} from "./IBehaveEngine";
+import {IBehaveEngine, ICancelable, IEventBus, IEventQueueItem} from "./IBehaveEngine";
 import {JsonPtrTrie} from "./JsonPtrTrie";
 import {BehaveEngineNode, IBehaviourNodeProps} from "./BehaveEngineNode";
 import {OnStartNode} from "./nodes/lifecycle/onStart";
@@ -106,20 +106,11 @@ import { IInteractivityVariable, IInteractivityEvent, IInteractivityValue, IInte
 import { VariableInterpolate } from "./nodes/variable/VariableInterpolate";
 import { NoOpNode } from "./nodes/experimental/NoOp";
 
-export interface ICustomEventListener {
-    type: string,
-    callback: any
-}
-
-export interface IEventQueueItem {
-    behaveNode: BehaveEngineNode,
-    inSocketId?: string
-}
 
 export class BasicBehaveEngine implements IBehaveEngine {
     protected registry: Map<string, any>;
     protected idToBehaviourNodeMap: Map<number, BehaveEngineNode>;
-    private eventQueue: IEventQueueItem[];
+    private eventBus: IEventBus;
     protected onTickNodeIndices: number[];
     private _lastTickTime: number;
     private _scheduledDelays: NodeJS.Timeout[];
@@ -129,13 +120,12 @@ export class BasicBehaveEngine implements IBehaveEngine {
 
     protected types: IInteractivityValueType[];
     private jsonPtrTrie: JsonPtrTrie;
-    private customEventListeners: ICustomEventListener[]
     private _fps: number;
     private valueEvaluationCache: Map<string, IInteractivityValue>;
     private pathToWorldAnimationCallback: Map<string, ICancelable>;
     private variableInterpolationCallback: Map<number, ICancelable>;
 
-    constructor(fps: number) {
+    constructor(fps: number, eventBus: IEventBus) {
         this.registry = new Map<string, any>();
         this.idToBehaviourNodeMap = new Map<number, BehaveEngineNode>();
         this.jsonPtrTrie = new JsonPtrTrie();
@@ -145,13 +135,12 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.variableInterpolationCallback = new Map<number, ICancelable>();
         this.onTickNodeIndices = [];
         this._lastTickTime = NaN;
-        this.eventQueue = [];
+        this.eventBus = eventBus;
         this._variables = [];
         this.events = [];
         this._scheduledDelays = [];
         this.nodes = [];
         this.types = [];
-        this.customEventListeners = []
 
         this.registerKnownBehaviorNodes();
     }
@@ -186,6 +175,18 @@ export class BasicBehaveEngine implements IBehaveEngine {
         }
 
         return this._scheduledDelays[index];
+    }
+
+    public getEventList = (): IEventQueueItem[] => {
+        return this.eventBus.getEventList();
+    }
+
+    public clearEventList = (): void => {
+        this.eventBus.clearEventList();
+    }
+
+    public addEvent = (event: IEventQueueItem): void => {
+        this.eventBus.addEvent(event);
     }
 
     public clearValueEvaluationCache = (): void => {
@@ -224,20 +225,16 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.jsonPtrTrie.setPathValue(path, value);
     }
 
-    public addCustomEventListener = (name: string, func: any) => {
-        document.addEventListener(name, func)
-        this.customEventListeners.push({type: name, callback: func})
+    public addCustomEventListener = (name: string, func: (event: CustomEvent) => void) => {
+        this.eventBus.addCustomEventListener(name, func);
     }
 
-    public emitCustomEvent = (name: string, vals: any) => {
-        const ev = new CustomEvent(name, {detail: vals});
-        document.dispatchEvent(ev);
+    public dispatchCustomEvent = (name: string, vals: any) => {
+        this.eventBus.dispatchCustomEvent(name, vals);
     }
 
     public clearCustomEventListeners = () => {
-        for (const customEventListener of this.customEventListeners) {
-            document.removeEventListener(customEventListener.type, customEventListener.callback);
-        }
+        this.eventBus.clearCustomEventListeners();
     }
 
     public loadBehaveGraph = (behaveGraph: any) => {
@@ -490,15 +487,19 @@ export class BasicBehaveEngine implements IBehaveEngine {
         const nodeToPush = this.idToBehaviourNodeMap.get(Number(flow.node))!;
 
         this.processAddingNodeToQueue(flow);
-        this.eventQueue.push({behaveNode: nodeToPush, inSocketId: flow.socket});
+        this.eventBus.addEvent({behaveNode: nodeToPush, inSocketId: flow.socket});
     }
 
     private executeEventQueue = () => {
-        const eventQueueCopy = [...this.eventQueue];
-        this.eventQueue = [];
+        const eventQueueCopy = [...this.eventBus.getEventList()];
+        this.eventBus.clearEventList();
         while (eventQueueCopy.length > 0) {
             const eventToStart = eventQueueCopy[0];
-            eventToStart.behaveNode.processNode(eventToStart.inSocketId);
+            if (eventToStart.behaveNode) {
+                eventToStart.behaveNode.processNode(eventToStart.inSocketId);
+            } else if (eventToStart.func) {
+                eventToStart.func();
+            }
             eventQueueCopy.splice(0, 1);
         }
 

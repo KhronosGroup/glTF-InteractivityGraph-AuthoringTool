@@ -22,6 +22,7 @@ import {BabylonDecorator} from "../../BasicBehaveEngine/decorators/BabylonDecora
 import {BasicBehaveEngine} from "../../BasicBehaveEngine/BasicBehaveEngine";
 import {GLTFFileLoader, GLTFLoaderAnimationStartMode} from "@babylonjs/loaders";
 import { InteractivityGraphContext } from "../../InteractivityGraphContext";
+import { DOMEventBus } from "../../BasicBehaveEngine/eventBuses/DOMEventBus";
 
 enum BabylonEngineModal {
     CUSTOM_EVENT = "CUSTOM_EVENT",
@@ -164,7 +165,8 @@ export const BabylonEngineComponent = () => {
         }
 
         const world = {glTFNodes: nodes, animations: animations, materials: materials, meshes: meshes};
-        babylonEngineRef.current = new BabylonDecorator(new BasicBehaveEngine(60), world, scene)
+        const eventBus = new DOMEventBus();
+        babylonEngineRef.current = new BabylonDecorator(new BasicBehaveEngine(60, eventBus), world, scene)
 
         const extractedBehaveGraph = babylonEngineRef.current.extractBehaveGraphFromScene()
         if ((!behaveGraph.nodes || behaveGraph.nodes.length === 0 || shouldOverride) && extractedBehaveGraph) {
@@ -312,7 +314,7 @@ export const BabylonEngineComponent = () => {
                                             for (const val of Object.keys(customEvent.values)) {
                                                 payload[val] = (document.getElementById(val) as HTMLInputElement).value;
                                             }
-                                            babylonEngineRef.current?.emitCustomEvent(`KHR_INTERACTIVITY:${customEvent.id}`, payload)
+                                            babylonEngineRef.current?.dispatchCustomEvent(`KHR_INTERACTIVITY:${customEvent.id}`, payload)
                                             setOpenModal(BabylonEngineModal.NONE);
                                         }}>Send</Button>
                                     </Row>

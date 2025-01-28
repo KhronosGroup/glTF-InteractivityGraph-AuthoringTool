@@ -2,6 +2,7 @@ import {ADecorator} from "./ADecorator";
 import {BehaveEngineNode} from "../BehaveEngineNode";
 import {IBehaveEngine} from "../IBehaveEngine";
 import {IInteractivityFlow} from "../../types/InteractivityGraph";
+import { cubicBezier, linearFloat, slerpFloat4 } from "../easingUtils";
 export class LoggingDecorator extends ADecorator {
     addToLog: (line: string) => void;
     world: any;
@@ -14,6 +15,7 @@ export class LoggingDecorator extends ADecorator {
         this.behaveEngine.processExecutingNextNode = this.processExecutingNextNode;
         this.behaveEngine.processNodeStarted = this.processNodeStarted;
         this.behaveEngine.animateProperty = this.animateProperty;
+        this.behaveEngine.animateCubicBezier = this.animateCubicBezier;
         this.behaveEngine.getWorld = this.getWorld;
 
         this.registerKnownPointers();
@@ -43,14 +45,35 @@ export class LoggingDecorator extends ADecorator {
     animateCubicBezier = (path: string, p1: number[], p2: number[], initialValue: any, targetValue: any, duration: number, valueType: string, callback: () => void): void => {
         this.behaveEngine.getWorldAnimationPathCallback(path)?.cancel();
 
-        const animatePropertyCallback = setTimeout(() => {
-            this.behaveEngine.setPathValue(path, targetValue);
-            callback();
-            this.behaveEngine.setWorldAnimationPathCallback(path, undefined);
-        }, duration * 1000);
+        const startTime = Date.now();
+        const interpolationInterval = setInterval(() => {
+            const elapsedDuration = (Date.now() - startTime) / 1000;
+            const t = Math.min(elapsedDuration / duration, 1);
+            const p = cubicBezier(t, {x: 0, y:0}, {x: p1[0], y:p1[1]}, {x: p2[0], y:p2[1]}, {x: 1, y:1});
+            if (valueType === "float3") {
+                const value = [linearFloat(p.y, initialValue[0], targetValue[0]), linearFloat(p.y, initialValue[1], targetValue[1]), linearFloat(p.y, initialValue[2], targetValue[2])]
+                this.behaveEngine.setPathValue(path, value);
+            } else if (valueType === "float4") {
+                const value = slerpFloat4(t, initialValue, targetValue);
+                this.behaveEngine.setPathValue(path, value);
+            } else if (valueType === "float") {
+                const value = [linearFloat(p.y, initialValue[0], targetValue[0])]
+                this.behaveEngine.setPathValue(path, value);
+            } else if (valueType == "float2") {
+                const value = [linearFloat(p.y, initialValue[0], targetValue[0]), linearFloat(p.y, initialValue[1], targetValue[1])]
+                this.behaveEngine.setPathValue(path, value);
+            }
+
+            if (elapsedDuration >= duration) {
+                this.behaveEngine.setPathValue(path, targetValue);
+                clearInterval(interpolationInterval);
+                callback()
+            }
+        }, 1000 / this.behaveEngine.fps);
+    
 
         const cancel = () => {
-            clearTimeout(animatePropertyCallback);
+            clearInterval(interpolationInterval);
             this.behaveEngine.setWorldAnimationPathCallback(path, undefined);
         }
         this.setWorldAnimationPathCallback(path, {cancel: cancel} );

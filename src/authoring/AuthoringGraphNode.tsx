@@ -45,6 +45,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
             setInputValues(node.values?.input || {});
             setOutputValues(node.values?.output || {});
             setConfiguration(node.configuration || {});
+            evaluateConfigurationWhichChangeSockets(node.configuration || {}, node.values?.input || {}, node.values?.output || {}, node.flows?.input || {}, node.flows?.output || {});
         }
     }, [node]);
 
@@ -84,7 +85,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         const configurationId = (evt.target as HTMLInputElement).id;
         // TODO: how can I properly pares the value for config without knowing type
         setConfiguration({...configuration, [configurationId]: {value: [evt.target.value]}});
-        evaluateConfigurationWhichChangeSockets({...configuration, [configurationId]: {value: [evt.target.value]}});
+        evaluateConfigurationWhichChangeSockets({...configuration, [configurationId]: {value: [evt.target.value]}}, inputValues, outputValues, inputFlows, outputFlows);
     }, [inputValues, outputValues, inputFlows, outputFlows, node]);
 
     const parsePath = (path: string): string[] => {
@@ -105,7 +106,11 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     }
 
 
-    const evaluateConfigurationWhichChangeSockets = useCallback((updatedConfiguration: Record<string, IInteractivityConfigurationValue>) => {
+    const evaluateConfigurationWhichChangeSockets = useCallback((updatedConfiguration: Record<string, IInteractivityConfigurationValue>, 
+        inputValues: Record<string, IInteractivityValue>,
+        outputValues: Record<string, IInteractivityValue>, 
+        inputFlows: Record<string, IInteractivityFlow>, 
+        outputFlows: Record<string, IInteractivityFlow>) => {
         const nodeType = node?.op;
 
         const inputValuesToSet: Record<string, IInteractivityValue> = {};
@@ -151,13 +156,16 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                 outputFlowsToSet[`${i}`] = outputFlow;
             }
         }
-        if (updatedConfiguration.event !== undefined) {
-            const customEventId: number = JSON.parse(updatedConfiguration.event.value?.[0] || "");
+        if (updatedConfiguration.event !== undefined && updatedConfiguration.event.value?.[0] != null) {
+            const customEventId = Number(updatedConfiguration.event.value?.[0]);
             const ce: IInteractivityEvent = props.data.events[customEventId];
 
             if (ce.values === undefined) {return}
 
             for (const key of Object.keys(ce.values)) {
+                if (inputValues[key] !== undefined) {
+                    continue;
+                }
                 const type = ce.values[key].type;
                 
                 const value: IInteractivityValue = {
@@ -165,7 +173,6 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                     typeOptions: [type],
                     type: type
                 }
-                inputValuesToSet[key] = value;
 
                 if (nodeType === "event/send") {
                     inputValuesToSet[key] = value;
@@ -193,20 +200,25 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         if (updatedConfiguration.variable !== undefined) {
             const variableId = Number(updatedConfiguration.variable.value?.[0] || 0);
             const v: IInteractivityVariable = graph.variables[variableId];
+            const currentValue: IInteractivityValue = inputValues["value"];
             const value: IInteractivityValue =  {typeOptions: [v.type], type: v.type, value: [undefined]}
 
-            if (nodeType === "variable/set" || nodeType === "variable/interpolate") {
-                inputValuesToSet["value"] = value;
-            } else if (nodeType === "variable/get") {
-                outputValuesToSet["value"] = value;
+            if (currentValue === undefined) {
+                // if there is not a value here already, you can wipe it
+                if (nodeType === "variable/set" || nodeType === "variable/interpolate") {
+                    inputValuesToSet["value"] = value;
+                } else if (nodeType === "variable/get") {
+                    outputValuesToSet["value"] = value;
+                }
             }
         }
         if (updatedConfiguration.type !== undefined) {
             console.log(updatedConfiguration.type)
             const typeId = Number(updatedConfiguration.type.value?.[0] || 0);
-            const value: IInteractivityValue =  {typeOptions: [typeId], type: typeId, value: [undefined]}
-            console.log(value)
-            inputValuesToSet["value"] = value;
+            if (inputValues["value"] !== undefined) {
+                const value: IInteractivityValue =  {typeOptions: [typeId], type: typeId, value: [undefined]}
+                inputValuesToSet["value"] = value;
+            }
         }
         if (updatedConfiguration.stopMode !== undefined) {
             if (updatedConfiguration.stopMode.value?.[0] === "1") {

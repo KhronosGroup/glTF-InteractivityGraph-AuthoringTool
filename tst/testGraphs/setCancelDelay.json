@@ -1,0 +1,235 @@
+{
+	"declarations": [
+		{
+			"op": "flow/setDelay"
+		},
+		{
+			"op": "flow/cancelDelay"
+		},
+		{
+			"op": "variable/set"
+		},
+		{
+			"op": "flow/sequence"
+		},
+		{
+			"op": "event/onStart"
+		}
+	],
+	"nodes": [
+		{
+			"declaration": 4,
+			"values": {},
+			"configuration": {},
+			"flows": {
+				"out": {
+					"node": 1,
+					"socket": "in"
+				}
+			}
+		},
+		{
+			"declaration": 3,
+			"values": {},
+			"configuration": {},
+			"flows": {
+				"0": {
+					"node": 4,
+					"socket": "in"
+				},
+				"1": {
+					"node": 2,
+					"socket": "in"
+				}
+			},
+			"metadata": {
+				"positionX": -211.32909147532465,
+				"positionY": 410.71248006747214
+			}
+		},
+		{
+			"declaration": 0,
+			"values": {
+				"duration": {
+					"value": [
+						1
+					],
+					"typeOptions": [
+						2
+					],
+					"type": 2
+				}
+			},
+			"configuration": {},
+			"flows": {
+				"out": {},
+				"err": {},
+				"done": {
+					"node": 3,
+					"socket": "in"
+				}
+			},
+			"metadata": {
+				"positionX": 370.9869228759002,
+				"positionY": 546.256218681931
+			}
+		},
+		{
+			"declaration": 2,
+			"values": {
+				"value": {
+					"value": [
+						true
+					],
+					"typeOptions": [
+						0
+					],
+					"type": 0
+				}
+			},
+			"configuration": {
+				"variable": {
+					"value": [
+						"1"
+					]
+				}
+			},
+			"flows": {
+				"out": {}
+			},
+			"metadata": {
+				"positionX": 1025.0953225580981,
+				"positionY": 582.7862925274231
+			}
+		},
+		{
+			"declaration": 0,
+			"values": {
+				"duration": {
+					"value": [
+						1
+					],
+					"typeOptions": [
+						2
+					],
+					"type": 2
+				}
+			},
+			"configuration": {},
+			"flows": {
+				"out": {
+					"node": 6,
+					"socket": "in"
+				},
+				"err": {},
+				"done": {
+					"node": 5,
+					"socket": "in"
+				}
+			},
+			"metadata": {
+				"positionX": 358.59375,
+				"positionY": 178.609375
+			}
+		},
+		{
+			"declaration": 2,
+			"values": {
+				"value": {
+					"value": [
+						true
+					],
+					"typeOptions": [
+						0
+					],
+					"type": 0
+				}
+			},
+			"configuration": {
+				"variable": {
+					"value": [
+						"0"
+					]
+				}
+			},
+			"flows": {
+				"out": {}
+			},
+			"metadata": {
+				"positionX": 1080.9338444821883,
+				"positionY": 212.3646488093109
+			}
+		},
+		{
+			"declaration": 1,
+			"values": {
+				"delayIndex": {
+					"node": 4,
+					"socket": "lastDelayIndex"
+				}
+			},
+			"configuration": {},
+			"flows": {
+				"out": {}
+			},
+			"metadata": {
+				"positionX": 1072.650264296718,
+				"positionY": -56.82765732562268
+			}
+		}
+	],
+	"variables": [
+		{
+			"name": "delayOneFired",
+			"value": [
+				false
+			],
+			"type": 0
+		},
+		{
+			"name": "delayTwoFired",
+			"value": [
+				false
+			],
+			"type": 0
+		}
+	],
+	"events": [],
+	"types": [
+		{
+			"name": "bool",
+			"signature": "bool"
+		},
+		{
+			"name": "int",
+			"signature": "int"
+		},
+		{
+			"name": "float",
+			"signature": "float"
+		},
+		{
+			"name": "float2",
+			"signature": "float2"
+		},
+		{
+			"name": "float3",
+			"signature": "float3"
+		},
+		{
+			"name": "float4",
+			"signature": "float4"
+		},
+		{
+			"name": "float4x4",
+			"signature": "float4x4"
+		},
+		{
+			"name": "AMZN_interactivity_string",
+			"signature": "custom",
+			"extensions": {
+				"AMZN_interactivity_string": {}
+			}
+		}
+	]
+}

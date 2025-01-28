@@ -14,7 +14,6 @@ import {WaitAll} from "./nodes/flow/WaitAll";
 import {WhileLoop} from "./nodes/flow/WhileLoop";
 import {PointerGet} from "./nodes/pointer/PointerGet";
 import {PointerSet} from "./nodes/pointer/PointerSet";
-import {PointerAnimateTo} from "./nodes/experimental/PointerAnimateTo";
 import {Receive} from "./nodes/customEvent/Receive";
 import {Send} from "./nodes/customEvent/Send";
 import {VariableGet} from "./nodes/variable/VariableGet";
@@ -125,7 +124,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
     private _lastTickTime: number;
     private _scheduledDelays: NodeJS.Timeout[];
     protected nodes: IInteractivityNode[];
-    protected variables: IInteractivityVariable[];
+    protected _variables: IInteractivityVariable[];
     protected events: IInteractivityEvent[];
 
     protected types: IInteractivityValueType[];
@@ -147,7 +146,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.onTickNodeIndices = [];
         this._lastTickTime = NaN;
         this.eventQueue = [];
-        this.variables = [];
+        this._variables = [];
         this.events = [];
         this._scheduledDelays = [];
         this.nodes = [];
@@ -163,6 +162,10 @@ export class BasicBehaveEngine implements IBehaveEngine {
 
     public get fps() {
         return this._fps;
+    }
+
+    public get variables() {
+        return this._variables;
     }
 
     public clearScheduledDelays() {
@@ -244,20 +247,18 @@ export class BasicBehaveEngine implements IBehaveEngine {
             throw new Error(`The graph is invalid ${e}`)
         }
 
-        console.log(behaveGraph);
-
         this.nodes = behaveGraph.nodes;
-        this.variables = behaveGraph.variables;
+        this._variables = behaveGraph.variables;
         this.events = behaveGraph.events;
         this.types = behaveGraph.types;
 
         const defaultProps = {
             idToBehaviourNodeMap: this.idToBehaviourNodeMap,
-            variables: this.variables,
+            variables: this._variables,
             events: this.events,
         };
 
-        this.variables.forEach(variable => {
+        this._variables.forEach(variable => {
             if (variable.value === undefined) {
                 // TODO get the default value from the type
                 variable.value = [0];
@@ -295,7 +296,6 @@ export class BasicBehaveEngine implements IBehaveEngine {
             this.idToBehaviourNodeMap.set(index, behaviourNode);
             index++;
         });
-        console.log(this.nodes);
 
         this.onTickNodeIndices = this.nodes
             .map((node, idx) => behaveGraph.declarations[node.declaration].op === "event/onTick" ? idx : -1)
@@ -366,7 +366,6 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("flow/while", WhileLoop);
         this.registerBehaveEngineNode("pointer/get", PointerGet);
         this.registerBehaveEngineNode("pointer/set", PointerSet);
-        this.registerBehaveEngineNode("pointer/animateTo", PointerAnimateTo);
         this.registerBehaveEngineNode("pointer/interpolate", PointerInterpolate)
         this.registerBehaveEngineNode("ADBE/output_console_node", OutputConsole);
         this.registerBehaveEngineNode("math/abs", AbsoluteValue);

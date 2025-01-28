@@ -267,48 +267,49 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
                 templateNode = createNoOpNode(json.declarations[node.declaration]);
                 isNoOp = true;
             }
+            
+            const copyOfTemplateNode: IInteractivityNode = JSON.parse(JSON.stringify(templateNode));
 
-            templateNode.uid = uuids[i];
-            templateNode.declaration = node.declaration;
+            copyOfTemplateNode.uid = uuids[i];
+            copyOfTemplateNode.declaration = node.declaration;
 
             if (node.values !== undefined) {
                 for (const key in node.values) {
                     if (node.values[key].value !== undefined) {
-                        templateNode.values = templateNode.values || {};
-                        templateNode.values.input = templateNode.values.input || {};
-                        templateNode.values.input[key] = {value: node.values[key].value, type: node.values[key].type, typeOptions: templateNode.values.input[key]?.typeOptions || [node.values[key].type]};
+                        copyOfTemplateNode.values = copyOfTemplateNode.values || {};
+                        copyOfTemplateNode.values.input = copyOfTemplateNode.values.input || {};
+                        copyOfTemplateNode.values.input[key] = {value: node.values[key].value, type: node.values[key].type, typeOptions: copyOfTemplateNode.values.input[key]?.typeOptions || [node.values[key].type]};
                     } else if (node.values[key].socket !== undefined && node.values[key].node !== null) {
-                        templateNode.values = templateNode.values || {};
-                        templateNode.values.input = templateNode.values.input || {};
-                        templateNode.values.input[key] = {socket: node.values[key].socket, node: uuids[node.values[key].node]};
+                        copyOfTemplateNode.values = copyOfTemplateNode.values || {};
+                        copyOfTemplateNode.values.input = copyOfTemplateNode.values.input || {};
+                        copyOfTemplateNode.values.input[key] = {socket: node.values[key].socket, node: uuids[node.values[key].node]};
                     }
                 }
             }
 
             if (node.flows !== undefined && !isNoOp) {
                 for (const key in node.flows) {
-                    templateNode.flows = templateNode.flows || {};
-                    templateNode.flows.output = templateNode.flows.output || {};
-                    templateNode.flows.output[key].socket = node.flows[key].socket;
-                    templateNode.flows.output[key].node = uuids[node.flows[key].node];
+                    copyOfTemplateNode.flows = copyOfTemplateNode.flows || {};
+                    copyOfTemplateNode.flows.output = copyOfTemplateNode.flows.output || {};
+                    copyOfTemplateNode.flows.output[key] = {socket: node.flows[key].socket, node: uuids[node.flows[key].node]};
                 }
             }
 
             if (node.configuration !== undefined && !isNoOp) {
                 for (const key in node.configuration) {
-                    templateNode.configuration = templateNode.configuration || {};
-                    templateNode.configuration[key] = node.configuration[key];
+                    copyOfTemplateNode.configuration = copyOfTemplateNode.configuration || {};
+                    copyOfTemplateNode.configuration[key] = node.configuration[key];
                 }
             }
 
             if (node.metadata !== undefined) {
-                templateNode.metadata = {
+                copyOfTemplateNode.metadata = {
                     positionX: node.metadata?.positionX,
                     positionY: node.metadata?.positionY
                 }
             }
 
-            loadedNodes.push(templateNode);
+            loadedNodes.push(copyOfTemplateNode);
         }
 
         graph.nodes = loadedNodes;

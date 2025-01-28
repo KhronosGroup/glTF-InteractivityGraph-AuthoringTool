@@ -21,6 +21,8 @@ export class VariableGet extends BehaveEngineNode {
 
         const result: Record<string, IInteractivityValue> = {};
         const res = this.variables[this._variable];
+        // console.log(this._variable)
+        // console.log(JSON.stringify(res, null, 2))
         // TODO It's unclear when the value needs to be a glTF value (always an array)
         // or when it needs to be the actual value. Since the result of this node is always parsed
         // with parseType, it currently needs to be an array.

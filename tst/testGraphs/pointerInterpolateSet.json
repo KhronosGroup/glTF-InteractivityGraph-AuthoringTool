@@ -1,0 +1,395 @@
+{
+	"declarations": [
+		{
+			"op": "pointer/interpolate"
+		},
+		{
+			"op": "flow/setDelay"
+		},
+		{
+			"op": "pointer/set"
+		},
+		{
+			"op": "pointer/get"
+		},
+		{
+			"op": "math/length"
+		},
+		{
+			"op": "math/sub"
+		},
+		{
+			"op": "math/abs"
+		},
+		{
+			"op": "math/lt"
+		},
+		{
+			"op": "event/onStart"
+		},
+		{
+			"op": "variable/set"
+		},
+		{
+			"op": "flow/setDelay"
+		}
+	],
+	"nodes": [
+		{
+			"declaration": 3,
+			"values": {},
+			"configuration": {
+				"pointer": {
+					"value": [
+						"/nodes/0/translation"
+					]
+				},
+				"type": {
+					"value": [
+						"4"
+					]
+				}
+			},
+			"flows": {},
+			"metadata": {
+				"positionX": 909.3675147116091,
+				"positionY": -375.0814889850158
+			}
+		},
+		{
+			"declaration": 4,
+			"values": {
+				"a": {
+					"socket": "value",
+					"node": 0
+				}
+			},
+			"configuration": {},
+			"flows": {},
+			"metadata": {
+				"positionX": 1912.072622698372,
+				"positionY": -244.92265285211877
+			}
+		},
+		{
+			"declaration": 5,
+			"values": {
+				"a": {
+					"socket": "value",
+					"node": 1
+				},
+				"b": {
+					"value": [
+						0.5
+					],
+					"type": "2",
+					"typeOptions": [
+						1,
+						2,
+						3,
+						4,
+						5,
+						6
+					]
+				}
+			},
+			"configuration": {},
+			"flows": {},
+			"metadata": {
+				"positionX": 2319.4215728179947,
+				"positionY": -177.43288596839432
+			}
+		},
+		{
+			"declaration": 6,
+			"values": {
+				"a": {
+					"socket": "value",
+					"node": 2
+				}
+			},
+			"configuration": {},
+			"flows": {},
+			"metadata": {
+				"positionX": 2720.7446508944277,
+				"positionY": -109.9431190846699
+			}
+		},
+		{
+			"declaration": 7,
+			"values": {
+				"a": {
+					"socket": "value",
+					"node": 3
+				},
+				"b": {
+					"value": [
+						0.01
+					],
+					"type": "2",
+					"typeOptions": [
+						1,
+						2,
+						3,
+						4,
+						5,
+						6
+					]
+				}
+			},
+			"configuration": {},
+			"flows": {},
+			"metadata": {
+				"positionX": 3042.526218000756,
+				"positionY": -67.7620147823421
+			}
+		},
+		{
+			"declaration": 8,
+			"values": {},
+			"configuration": {},
+			"flows": {
+				"out": {
+					"node": 6,
+					"socket": "in"
+				}
+			},
+			"metadata": {
+				"positionX": -99.72259099115894,
+				"positionY": -143.80701498421865
+			}
+		},
+		{
+			"declaration": 0,
+			"values": {
+				"value": {
+					"value": [
+						1,
+						0,
+						0
+					],
+					"type": 4,
+					"typeOptions": [
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7
+					]
+				},
+				"duration": {
+					"value": [
+						2
+					],
+					"type": 2,
+					"typeOptions": [
+						2
+					]
+				},
+				"p1": {
+					"value": [
+						0,
+						0
+					],
+					"type": 3,
+					"typeOptions": [
+						3
+					]
+				},
+				"p2": {
+					"value": [
+						1,
+						1
+					],
+					"type": 3,
+					"typeOptions": [
+						3
+					]
+				}
+			},
+			"configuration": {
+				"pointer": {
+					"value": [
+						"/nodes/0/translation"
+					]
+				},
+				"type": {
+					"value": [
+						"4"
+					]
+				}
+			},
+			"flows": {
+				"out": {
+					"node": 7,
+					"socket": "in"
+				},
+				"err": {},
+				"done": {}
+			},
+			"metadata": {
+				"positionX": 381.7802291499188,
+				"positionY": -276.49781359866995
+			}
+		},
+		{
+			"declaration": 1,
+			"values": {
+				"duration": {
+					"value": [
+						1
+					],
+					"type": 2,
+					"typeOptions": [
+						2
+					]
+				}
+			},
+			"configuration": {},
+			"flows": {
+				"out": {},
+				"err": {},
+				"done": {
+					"node": 8,
+					"socket": "in"
+				}
+			},
+			"metadata": {
+				"positionX": 908.1623403029711,
+				"positionY": -27.991259297290256
+			}
+		},
+		{
+			"declaration": 2,
+			"values": {
+				"value": {
+					"socket": "value",
+					"node": 0
+				}
+			},
+			"configuration": {
+				"pointer": {
+					"value": [
+						"/nodes/0/translation"
+					]
+				},
+				"type": {
+					"value": [
+						"4"
+					]
+				}
+			},
+			"flows": {
+				"out": {
+					"node": 9,
+					"socket": "in"
+				},
+				"err": {}
+			},
+			"metadata": {
+				"positionX": 2608.1891415647997,
+				"positionY": 229.04984903980375
+			}
+		},
+		{
+			"declaration": 1,
+			"values": {
+				"duration": {
+					"value": [
+						1
+					],
+					"type": 2,
+					"typeOptions": [
+						2
+					]
+				}
+			},
+			"configuration": {},
+			"flows": {
+				"out": {},
+				"err": {},
+				"done": {
+					"node": 10,
+					"socket": "in"
+				}
+			},
+			"metadata": {
+				"positionX": 3001.9115221335514,
+				"positionY": 242.51948804677124
+			}
+		},
+		{
+			"declaration": 9,
+			"values": {
+				"value": {
+					"socket": "value",
+					"node": 4
+				}
+			},
+			"configuration": {
+				"variable": {
+					"value": [
+						"0"
+					]
+				}
+			},
+			"flows": {
+				"out": {}
+			},
+			"metadata": {
+				"positionX": 3724.5087159747663,
+				"positionY": 152.1093868213565
+			}
+		}
+	],
+	"variables": [
+		{
+			"name": "TestPassed",
+			"value": [
+				false
+			],
+			"type": 0
+		}
+	],
+	"events": [],
+	"types": [
+		{
+			"name": "bool",
+			"signature": "bool"
+		},
+		{
+			"name": "int",
+			"signature": "int"
+		},
+		{
+			"name": "float",
+			"signature": "float"
+		},
+		{
+			"name": "float2",
+			"signature": "float2"
+		},
+		{
+			"name": "float3",
+			"signature": "float3"
+		},
+		{
+			"name": "float4",
+			"signature": "float4"
+		},
+		{
+			"name": "float4x4",
+			"signature": "float4x4"
+		},
+		{
+			"name": "AMZN_interactivity_string",
+			"signature": "custom",
+			"extensions": {
+				"AMZN_interactivity_string": {}
+			}
+		}
+	]
+}

@@ -37,13 +37,13 @@ export class VariableInterpolate extends BehaveEngineNode {
         this.graphEngine.getVariableInterpolationCallback(this._variable)?.cancel();
 
         //set of interpolation
-        const callback = () => () => {
+        const callback = () => {
             this.graphEngine.setVariableInterpolationCallback(this._variable, undefined);
             if (this.flows.done) {
                 this.addEventToWorkQueue(this.flows.done)
             }
         }
-        const initialValue = this.variables[this._variable].value!;
+        const initialValue = this.variables[this._variable].value![0]!;
         const targetValue = value;
         const startTime = Date.now();
 
@@ -51,6 +51,7 @@ export class VariableInterpolate extends BehaveEngineNode {
             const elapsedDuration = (Date.now() - startTime) / 1000;
             const t = Math.min(elapsedDuration / duration, 1);
             const p = cubicBezier(t, {x: 0, y:0}, {x: p1[0], y:p1[1]}, {x: p2[0], y:p2[1]}, {x: 1, y:1});
+
             if (this._valueType === "float3") {
                 const value = [linearFloat(p.y, initialValue[0], targetValue[0]), linearFloat(p.y, initialValue[1], targetValue[1]), linearFloat(p.y, initialValue[2], targetValue[2])]
                 this.variables[this._variable].value = value;
@@ -63,16 +64,15 @@ export class VariableInterpolate extends BehaveEngineNode {
                     this.variables[this._variable].value = value;
                 }
             } else if (this._valueType === "float") {
-                const value = [linearFloat(p.y, initialValue[0], targetValue[0])]
+                const value = [linearFloat(p.y, initialValue, targetValue)]
                 this.variables[this._variable].value = [value];
             } else if (this._valueType == "float2") {
                 const value = [linearFloat(p.y, initialValue[0], targetValue[0]), linearFloat(p.y, initialValue[1], targetValue[1])]
                 this.variables[this._variable].value = value;
             }
 
-            console.log(elapsedDuration, duration)
             if (elapsedDuration >= duration) {
-                this.variables[this._variable].value = targetValue;
+                this.variables[this._variable].value = [targetValue];
                 clearInterval(interpolationInterval);
                 callback()
             }

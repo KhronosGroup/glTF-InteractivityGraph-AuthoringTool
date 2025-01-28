@@ -24,6 +24,7 @@ import {AbsoluteValue} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Abso
 import {Sign} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Sign";
 import {Truncate} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Truncate";
 import {Floor} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Floor";
+import {Inverse} from "../src/BasicBehaveEngine/nodes/math/matrix/Inverse";
 import {Ceil} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Ceil";
 import {Add} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Add";
 import {Subtract} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Subtract";
@@ -815,6 +816,19 @@ describe('nodes', () => {
         expect(val['value'].value[3][1]).toBe(5.7);
         expect(val['value'].value[3][2]).toBe(6.5);
         expect(val['value'].value[3][3]).toBe(7.7);
+    });
+
+    it("math/inverse", () => {
+        let inverse: Inverse = new Inverse({
+            ...defaultProps,
+            values: {a: { value: [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]], type: 6}}
+        });
+
+        let val = inverse.processNode();
+        expect(val['value'].value[0][0]).toBe(1);
+        expect(val['value'].value[1][1]).toBe(1);
+        expect(val['value'].value[2][2]).toBe(1);
+        expect(val['value'].value[3][3]).toBe(1);
     });
 
     it("math/select", () => {

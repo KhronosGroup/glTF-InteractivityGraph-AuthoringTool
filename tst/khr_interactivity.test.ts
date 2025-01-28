@@ -89,7 +89,7 @@ describe('Extensions', () => {
         expect(scene.extras.behaveGraph).not.toBeUndefined();
         const behavior = scene.extras.behaveGraph;
         expect(behavior.nodes.length).toBe(1);
-        expect(behavior.customEvents.length).toBe(0);
+        expect(behavior.events.length).toBe(0);
         expect(behavior.variables.length).toBe(0);
     });
 });

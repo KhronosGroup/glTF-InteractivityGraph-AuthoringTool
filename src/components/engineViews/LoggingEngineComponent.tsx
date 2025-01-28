@@ -101,12 +101,12 @@ export const LoggingEngineComponent = () => {
                             return (
                                 <Tab title={customEvent.id} eventKey={index + 1}>
                                     <Row style={{textAlign: "left"}}>
-                                        {customEvent.values.map((val: any) => {
+                                        {Object.keys(customEvent.values).map((val: any) => {
                                             return (
                                                 <Col md={12}>
                                                     <Form.Group>
-                                                        <Form.Label>{val.id}</Form.Label>
-                                                        <Form.Control id={val.id} type="text"/>
+                                                        <Form.Label>{val}</Form.Label>
+                                                        <Form.Control id={val} type="text"/>
                                                     </Form.Group>
                                                 </Col>
                                             )
@@ -114,8 +114,8 @@ export const LoggingEngineComponent = () => {
                                         <hr style={{ borderTop: '1px solid #777', margin: '16px 0' }} />
                                         <Button variant={"outline-primary"} onClick={() => {
                                             const payload: any = {};
-                                            for (const val of customEvent.values) {
-                                                payload[val.id] = (document.getElementById(val.id) as HTMLInputElement).value;
+                                            for (const val of Object.keys(customEvent.values)) {
+                                                payload[val] = (document.getElementById(val) as HTMLInputElement).value;
                                             }
                                             loggingEngineRef.current?.emitCustomEvent(`KHR_INTERACTIVITY:${customEvent.id}`, payload)
                                             setOpenModal(LoggingEngineModal.NONE);

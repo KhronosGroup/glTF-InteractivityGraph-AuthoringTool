@@ -1,0 +1,232 @@
+{
+	"declarations": [
+		{
+			"op": "event/send"
+		},
+		{
+			"op": "event/receive"
+		},
+		{
+			"op": "event/onStart"
+		},
+		{
+			"op": "flow/branch"
+		},
+		{
+			"op": "math/lt"
+		},
+		{
+			"op": "variable/set"
+		},
+		{
+			"op": "math/add"
+		}
+	],
+	"nodes": [
+		{
+			"declaration": 1,
+			"values": {},
+			"configuration": {
+				"event": {
+					"value": [
+						"0"
+					]
+				}
+			},
+			"flows": {
+				"out": {
+					"socket": "in",
+					"node": 3
+				}
+			},
+			"metadata": {
+				"positionX": 1020.2882509858484,
+				"positionY": -261.1084608212602
+			}
+		},
+		{
+			"declaration": 6,
+			"values": {
+				"a": {
+					"socket": "count",
+					"node": 0
+				},
+				"b": {
+					"value": [
+						1
+					],
+					"type": 1,
+					"typeOptions": [
+						1,
+						2,
+						3,
+						4,
+						5,
+						6
+					]
+				}
+			},
+			"configuration": {},
+			"flows": {},
+			"metadata": {
+				"positionX": 0,
+				"positionY": 0
+			}
+		},
+		{
+			"declaration": 4,
+			"values": {
+				"a": {
+					"socket": "count",
+					"node": 0
+				},
+				"b": {
+					"value": [
+						5
+					],
+					"type": 1,
+					"typeOptions": [
+						1,
+						2,
+						3,
+						4,
+						5,
+						6
+					]
+				}
+			},
+			"configuration": {},
+			"flows": {},
+			"metadata": {
+				"positionX": 1583.635487028622,
+				"positionY": 69.51673373747977
+			}
+		},
+		{
+			"declaration": 3,
+			"values": {
+				"condition": {
+					"socket": "value",
+					"node": 2
+				}
+			},
+			"configuration": {},
+			"flows": {
+				"true": {
+					"socket": "in",
+					"node": 5
+				},
+				"false": {
+					"socket": "in",
+					"node": 4
+				}
+			},
+			"metadata": {
+				"positionX": 1995.373059167315,
+				"positionY": -145.46474005558412
+			}
+		},
+		{
+			"declaration": 5,
+			"values": {
+				"value": {
+					"socket": "count",
+					"node": 0
+				}
+			},
+			"configuration": {
+				"variable": {
+					"value": [
+						"0"
+					]
+				}
+			},
+			"flows": {
+				"out": {}
+			},
+			"metadata": {
+				"positionX": 2545.8720076902064,
+				"positionY": 118.93421505617741
+			}
+		},
+		{
+			"declaration": 0,
+			"values": {
+				"count": {
+					"socket": "value",
+					"node": 1
+				}
+			},
+			"configuration": {
+				"event": {
+					"value": [
+						"0"
+					]
+				}
+			},
+			"flows": {
+				"out": {}
+			},
+			"metadata": {
+				"positionX": 2335.911303105286,
+				"positionY": -401.78462930837327
+			}
+		}
+	],
+	"variables": [
+		{
+			"name": "count",
+			"value": [
+				0
+			],
+			"type": 1
+		}
+	],
+	"events": [
+		{
+			"id": "async_loop",
+			"values": {
+				"count": {
+					"type": 1
+				}
+			}
+		}
+	],
+	"types": [
+		{
+			"name": "bool",
+			"signature": "bool"
+		},
+		{
+			"name": "int",
+			"signature": "int"
+		},
+		{
+			"name": "float",
+			"signature": "float"
+		},
+		{
+			"name": "float2",
+			"signature": "float2"
+		},
+		{
+			"name": "float3",
+			"signature": "float3"
+		},
+		{
+			"name": "float4",
+			"signature": "float4"
+		},
+		{
+			"name": "float4x4",
+			"signature": "float4x4"
+		},
+		{
+			"name": "AMZN_interactivity_string",
+			"signature": "custom",
+			"extensions": {
+				"AMZN_interactivity_string": {}
+			}
+		}
+	]
+}

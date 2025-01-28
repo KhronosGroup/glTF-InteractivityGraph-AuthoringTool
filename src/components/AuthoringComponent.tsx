@@ -61,8 +61,10 @@ export const AuthoringComponent = () => {
     useEffect(() => {
         const updatePositions = setInterval(() => {
             for (const node of nodes) {
-                const graphNode = graph.nodes.find(graphNode => graphNode.uid === node.id)!;
-                graphNode.metadata = {positionX: node.position.x, positionY: node.position.y};
+                const graphNode = graph.nodes.find(graphNode => graphNode.uid === node.id);
+                if (graphNode !== undefined) {
+                    graphNode.metadata = {positionX: node.position.x, positionY: node.position.y};
+                }
             }
         }, 5000);
         return () => clearInterval(updatePositions);
@@ -83,6 +85,7 @@ export const AuthoringComponent = () => {
     // handle creation and deletion of edges
     const onConnect = useCallback((vals: Edge<any> | Connection) => {
         console.log("vals", vals)
+        console.log("graph", graph)
         const sourceNodeId = vals.source;
         const sourceNode: IInteractivityNode = graph.nodes.find(node => node.uid === sourceNodeId)!;
 
@@ -90,6 +93,8 @@ export const AuthoringComponent = () => {
         const targetNode: IInteractivityNode = graph.nodes.find(node => node.uid === targetNodeId)!;
 
         if (sourceNodeId === targetNodeId) {return}
+        console.log("sourceNode", sourceNode)
+        console.log("targetNode", targetNode)
 
         const isConfigurableSocket = nodesWithConfigurations.includes(sourceNode.op!) || nodesWithConfigurations.includes(targetNode.op!) || sourceNode.op === "flow/sequence";
        
@@ -119,13 +124,18 @@ export const AuthoringComponent = () => {
 
 
         if (sourceIsFlow || targetIsFlow) { 
+            if (sourceNode.op === "flow/sequence") {
+                // if the source node is a flow/sequence, we need to dyanmically add outflows since they are not defined in the template
+                sourceNode.flows = sourceNode.flows || {};
+                sourceNode.flows.output = sourceNode.flows.output || {};
+            }
             sourceNode!.flows!.output![vals.sourceHandle!] = {node: targetNode.uid, socket: vals.targetHandle!}
         } else {
             targetNode!.values!.input![vals.targetHandle!] = {node: sourceNode.uid, socket: vals.sourceHandle!}
         }
 
         setEdges((eds: any) => addEdge(vals, eds));
-    }, [nodes]);
+    }, [nodes, graph]);
 
     const onEdgesDelete = useCallback((edges: Edge[]) => {
         for (let i = 0; i < edges.length; i++) {
@@ -141,9 +151,14 @@ export const AuthoringComponent = () => {
                     typeDropdown.style.display = "block";
                 }
             }
-
-            const sourceNode: IInteractivityNode = graph.nodes.find(node => node.uid === edge.source)!;
-            sourceNode!.flows!.output![edge.sourceHandle!] = {};
+            
+            if (edge.sourceHandle === "flow") {
+                const sourceNode: IInteractivityNode = graph.nodes.find(node => node.uid === edge.source)!;
+                sourceNode!.flows!.output![edge.sourceHandle!] = {};
+            } else {
+                const targetNode: IInteractivityNode = graph.nodes.find(node => node.uid === edge.target)!;
+                targetNode!.values!.input![edge.targetHandle!] = {};
+            }
         }
     }, [graph]);
 
@@ -166,7 +181,7 @@ export const AuthoringComponent = () => {
 
         const declaration: IInteractivityDeclaration = knownDeclarations.find(node => node.op === nodeType)!;
         addDeclaration(declaration);
-        const interactivityNode: IInteractivityNode = interactivityNodeSpecs.find(node => node.op === nodeType)!;
+        const interactivityNode: IInteractivityNode = JSON.parse(JSON.stringify(interactivityNodeSpecs.find(node => node.op === nodeType)!));
         interactivityNode.declaration = getDeclarationIndex(nodeType);
         interactivityNode.uid = uid;
         

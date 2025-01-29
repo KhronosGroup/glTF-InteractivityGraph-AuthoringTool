@@ -57,6 +57,39 @@ export class Inverse extends BehaveEngineNode {
         return result;
     }
 
+    static invert3x3(matrix: number[][]): number[][] {
+        const [[m11, m21, m31], [m12, m22, m32], [m13, m23, m33]] = matrix;
+        const cofactor11 = m22 * m33 - m23 * m32;
+        const cofactor12 = -(m21 * m33 - m23 * m31);
+        const cofactor13 = m21 * m32 - m22 * m31;
+        const determinant = m11 * cofactor11 + m12 * cofactor12 + m13 * cofactor13;
+        if (determinant === 0) {
+            console.error("Matrix is not invertible.");
+            return this.createIdentityMatrix(); // Assuming createIdentityMatrix is a valid function in your context
+        }
+        const inverseDeterminant = 1 / determinant;
+        const result: number[][] = [
+            [cofactor11 * inverseDeterminant, cofactor12 * inverseDeterminant, cofactor13 * inverseDeterminant],
+            [-(m12 * (m23 * m33 - m23 * m33) - m22 * (m13 * m33 - m13 * m33) + m32 * (m13 * m23 - m13 * m23)) * inverseDeterminant,
+            m11 * (m23 * m33 - m23 * m33) - m21 * (m13 * m33 - m13 * m33) + m31 * (m13 * m23 - m13 * m23) * inverseDeterminant,
+            -(m11 * (m22 * m33 - m23 * m32) - m21 * (m12 * m33 - m13 * m32) + m31 * (m12 * m23 - m13 * m22)) * inverseDeterminant,
+            m11 * (m22 * m33 - m23 * m32) - m21 * (m12 * m33 - m13 * m32) + m31 * (m12 * m23 - m13 * m22) * inverseDeterminant]
+        ];
+        return result;
+    }
+
+    static invert2x2(matrix: number[][]): number[][] {
+        const [[m11, m21], [m12, m22]] = matrix;
+        const determinant = m11 * m22 - m12 * m21;
+        if (determinant === 0) {
+            console.error("Matrix is not invertible.");
+            return this.createIdentityMatrix();
+        }
+        const inverseDeterminant = 1 / determinant;
+        const result: number[][] = [[m22 * inverseDeterminant, -m12 * inverseDeterminant], [-m21 * inverseDeterminant, m11 * inverseDeterminant]];
+        return result;
+    }
+
     override processNode(flowSocket?: string) {
         const {a} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
         this.graphEngine.processNodeStarted(this);
@@ -67,6 +100,12 @@ export class Inverse extends BehaveEngineNode {
         switch (type) {
             case "float4x4":
                 val = Inverse.invert4x4(a);
+                break;
+            case "float3x3":
+                val = Inverse.invert3x3(a);
+                break;
+            case "float2x2":
+                val = Inverse.invert2x2(a);
                 break;
             default:
                 throw Error("Invalid type")

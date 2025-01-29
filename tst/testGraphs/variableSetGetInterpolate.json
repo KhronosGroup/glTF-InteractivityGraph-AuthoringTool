@@ -275,7 +275,9 @@
 		},
 		{
 			"name": "driver",
-			"value": 0,
+			"value": [
+				0
+			],
 			"type": 2
 		},
 		{

@@ -330,6 +330,14 @@ export class BasicBehaveEngine implements IBehaveEngine {
         //pass
     }
 
+    public isSlerpPath = (path: string): boolean => {
+        if (path.endsWith("rotation")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     public animateProperty = (path: string, easingParameters: any, callback: () => void) => {
         //pass
     }

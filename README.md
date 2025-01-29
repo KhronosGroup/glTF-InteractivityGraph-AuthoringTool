@@ -97,12 +97,17 @@ The KHR_interactivity spec allows for setting and getting properties of an objec
 To add your own pointer, simply add the logic for your getter and setter to the registerKnownPointers function in the respective Decorators.
 
 
-## W.I.P
-1. [Author Types] Currently, the types used during authoring is a set array the tool should generate the types array based on the nodes currently in use
-2. [Test Graphs] There are currently very few unit tests for entire test graphs asserting output and no JSON files of example test graphs to load and experiment with
-3. [Continued New Node Support] The Spec is not finalized and there will be new nodes and updates to current nodes as it progresses
-4. [Refactor Node Inheritance Tree] Currently, all nodes extend the base [BehaveEngineNode](./src/BasicBehaveEngine/BehaveEngineNode.ts), as the node library progresses there may be the opportunity to split the inheritance tree (e.x. a pure functional node group vs. a side effect node group)
-5. [Subgraph Support] Subgraph support is currently being talked about, depending on if this will be done as a core piece or as an extension, the tool will need to be updated to allow authoring of subgraphs and the engine updated to support reading & running subgraphs.
+## TODO
+- ensure math node properly deal with NaN, inf and 0 inputs
+- negation and abs integer min case
+- complex flow nodes with edge cases tested: switch, multigate, for, doN, waitAll, throttle, setDelay
+- variable and pointer interpolation take action on tick instead of own event loop
+- animations thuroughly tested
+- camera and animation json pointers
+- customEvent default values for event values
+- configuration default values and validation
+- decleration validation
+- read through validation steps in spec and add any missing
 
 ### Non normative implementations
 - writing mesh material with pointer path (will be replaced in the future when KHR_materials_variants is specified) > "/meshes/${nodeIndex}/primitives/${primitiveIndex}/material""

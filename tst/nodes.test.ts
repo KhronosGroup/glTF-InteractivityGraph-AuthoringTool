@@ -26,6 +26,7 @@ import {Truncate} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Truncate"
 import {Floor} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Floor";
 import {Inverse} from "../src/BasicBehaveEngine/nodes/math/matrix/Inverse";
 import {Ceil} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Ceil";
+import {Round} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Round";
 import {Add} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Add";
 import {Subtract} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Subtract";
 import {Multiply} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Multiply";
@@ -101,10 +102,14 @@ import {IntToFloat} from "../src/BasicBehaveEngine/nodes/math/typeConversion/Int
 import {Combine2} from "../src/BasicBehaveEngine/nodes/math/combine/Combine2";
 import {Combine3} from "../src/BasicBehaveEngine/nodes/math/combine/Combine3";
 import {Combine4} from "../src/BasicBehaveEngine/nodes/math/combine/Combine4";
+import {Combine2x2} from "../src/BasicBehaveEngine/nodes/math/combine/Combine2x2";
+import {Combine3x3} from "../src/BasicBehaveEngine/nodes/math/combine/Combine3x3";
 import {Combine4x4} from "../src/BasicBehaveEngine/nodes/math/combine/Combine4x4";
 import {Extract2} from "../src/BasicBehaveEngine/nodes/math/extract/Extract2";
 import {Extract3} from "../src/BasicBehaveEngine/nodes/math/extract/Extract3";
 import {Extract4} from "../src/BasicBehaveEngine/nodes/math/extract/Extract4";
+import {Extract2x2} from "../src/BasicBehaveEngine/nodes/math/extract/Extract2x2";
+import {Extract3x3} from "../src/BasicBehaveEngine/nodes/math/extract/Extract3x3";
 import {Extract4x4} from "../src/BasicBehaveEngine/nodes/math/extract/Extract4x4";
 import {PointerInterpolate} from "../src/BasicBehaveEngine/nodes/pointer/PointerInterpolate";
 import { IInteractivityFlow, IInteractivityVariable } from '../src/types/InteractivityGraph';
@@ -658,6 +663,26 @@ describe('nodes', () => {
         expect(val['value'].value[2]).toBe(10);
     });
 
+    it("math/round", () => {
+        let round: Round = new Round({
+            ...defaultProps,
+            values: {a: { value: [-10.1201223], type: 2}}
+        });
+
+        let val = round.processNode();
+        expect(val['value'].value[0]).toBe(-10);
+
+        round = new Round({
+            ...defaultProps,
+            values: {a: { value: [-10.123, 0.493, 10.12] , type: 4}}
+        });
+
+        val = round.processNode();
+        expect(val['value'].value[0]).toBe(-10);
+        expect(val['value'].value[1]).toBe(0);
+        expect(val['value'].value[2]).toBe(10);
+    });
+
     it("math/ceil", () => {
         let ceil: Ceil = new Ceil({
             ...defaultProps,
@@ -734,10 +759,41 @@ describe('nodes', () => {
         expect(val['3'].value[0]).toBe(6);
     });
 
+    it("math/extract2x2", () => {
+        let extract2x2: Extract2x2 = new Extract2x2({
+            ...defaultProps,
+            values: {a: { value: [[-10.5, 5.5], [1, 2]], type: 6}}
+        });
+
+        let val = extract2x2.processNode();
+        expect(val['0'].value[0]).toBe(-10.5);
+        expect(val['1'].value[0]).toBe(5.5);
+        expect(val['2'].value[0]).toBe(1);
+        expect(val['3'].value[0]).toBe(2);
+    });
+
+    it("math/extract3x3", () => {
+        let extract3x3: Extract3x3 = new Extract3x3({
+            ...defaultProps,
+            values: {a: { value: [[-10.5, 5.5, 0.5], [1, 2, 3], [4, 5, 6]], type: 7}}
+        });
+
+        let val = extract3x3.processNode();
+        expect(val['0'].value[0]).toBe(-10.5);
+        expect(val['1'].value[0]).toBe(5.5);
+        expect(val['2'].value[0]).toBe(0.5);
+        expect(val['3'].value[0]).toBe(1);
+        expect(val['4'].value[0]).toBe(2);
+        expect(val['5'].value[0]).toBe(3);
+        expect(val['6'].value[0]).toBe(4);
+        expect(val['7'].value[0]).toBe(5);
+        expect(val['8'].value[0]).toBe(6);
+    });
+
     it("math/extract4x4", () => {
         let extract4x4: Extract4x4 = new Extract4x4({
             ...defaultProps,
-            values: {a: { value: [[-10.5, 5.5, 4, 6], [1,2,3,4], [5,6,7,8], [9, 10, 11, 12]], type: 6}}
+            values: {a: { value: [[-10.5, 5.5, 4, 6], [1,2,3,4], [5,6,7,8], [9, 10, 11, 12]], type: 8}}
         });
 
         let val = extract4x4.processNode();
@@ -795,6 +851,37 @@ describe('nodes', () => {
         expect(val['value'].value[3]).toBe(7.5);
     });
 
+    it("math/combine2x2", () => {
+        let combine2x2: Combine2x2 = new Combine2x2({
+            ...defaultProps,
+            values: {a: { value: [-10.5], type: 2}, b: { value: [5.5], type: 2}, c: { value: [0.5], type: 2}, d: { value: [7.5], type: 2}}
+        });
+
+        let val = combine2x2.processNode();
+        expect(val['value'].value[0][0]).toBe(-10.5);
+        expect(val['value'].value[0][1]).toBe(5.5);
+        expect(val['value'].value[1][0]).toBe(0.5);
+        expect(val['value'].value[1][1]).toBe(7.5);
+    });
+
+    it("math/combine3x3", () => {
+        let combine3x3: Combine3x3 = new Combine3x3({
+            ...defaultProps,
+            values: {a: { value: [-10.5], type: 2}, b: { value: [5.5], type: 2}, c: { value: [0.5], type: 2}, d: { value: [7.5], type: 2}, e: { value: [-10], type: 2}, f: { value: [5], type: 2}, g: { value: [0], type: 2}, h: { value: [7], type: 2}, i: { value: [10.5], type: 2}}
+        });
+
+        let val = combine3x3.processNode();
+        expect(val['value'].value[0][0]).toBe(-10.5);
+        expect(val['value'].value[0][1]).toBe(5.5);
+        expect(val['value'].value[0][2]).toBe(0.5);
+        expect(val['value'].value[1][0]).toBe(7.5);
+        expect(val['value'].value[1][1]).toBe(-10);
+        expect(val['value'].value[1][2]).toBe(5);
+        expect(val['value'].value[2][0]).toBe(0);
+        expect(val['value'].value[2][1]).toBe(7);
+        expect(val['value'].value[2][2]).toBe(10.5);
+    });
+
     it("math/combine4x4", () => {
         let combine4x4: Combine4x4 = new Combine4x4({
             ...defaultProps,
@@ -823,7 +910,7 @@ describe('nodes', () => {
     it("math/inverse", () => {
         let inverse: Inverse = new Inverse({
             ...defaultProps,
-            values: {a: { value: [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]], type: 6}}
+            values: {a: { value: [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]], type: 8}}
         });
 
         let val = inverse.processNode();
@@ -1551,7 +1638,7 @@ describe('nodes', () => {
                         [9, 10, 11, 12],
                         [13, 14, 15, 16],
                     ],
-                    type: 6
+                    type: 8
                 }
             }
         });
@@ -1654,7 +1741,7 @@ describe('nodes', () => {
                         [9, 10, 11, 12],
                         [13, 14, 15, 16],
                     ],
-                    type: 6
+                    type: 8
                 }
             }
         });
@@ -1676,7 +1763,7 @@ describe('nodes', () => {
                         [0, 2, 1, 1],
                         [0, 4, 2, 3],
                     ],
-                    type: 6
+                    type: 8
                 }
             }
         });

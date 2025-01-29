@@ -43,6 +43,10 @@ export abstract class ADecorator implements IBehaveEngine {
         this.behaveEngine.registerBehaveEngineNode(type, behaveEngineNode);
     }
 
+    isSlerpPath = (path: string): boolean => {
+        return this.behaveEngine.isSlerpPath(path);
+    }
+
     public get fps () {
         return 1;
     }

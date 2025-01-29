@@ -54,8 +54,13 @@ export class LoggingDecorator extends ADecorator {
                 const value = [linearFloat(p.y, initialValue[0], targetValue[0]), linearFloat(p.y, initialValue[1], targetValue[1]), linearFloat(p.y, initialValue[2], targetValue[2])]
                 this.behaveEngine.setPathValue(path, value);
             } else if (valueType === "float4") {
-                const value = slerpFloat4(t, initialValue, targetValue);
-                this.behaveEngine.setPathValue(path, value);
+                if (this.isSlerpPath(path)) {
+                    const value = slerpFloat4(p.y, initialValue, targetValue);
+                    this.behaveEngine.setPathValue(path, value);
+                } else {
+                    const value = [linearFloat(p.y, initialValue[0], targetValue[0]), linearFloat(p.y, initialValue[1], targetValue[1]), linearFloat(p.y, initialValue[2], targetValue[2]), linearFloat(p.y, initialValue[3], targetValue[3])]
+                    this.behaveEngine.setPathValue(path, value);
+                }
             } else if (valueType === "float") {
                 const value = [linearFloat(p.y, initialValue[0], targetValue[0])]
                 this.behaveEngine.setPathValue(path, value);

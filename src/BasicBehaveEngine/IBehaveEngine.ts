@@ -30,6 +30,8 @@ export interface IBehaveEngine {
      */
     registerKnownPointers: () => void;
 
+    isSlerpPath: (path: string) => boolean;
+
     /**
      * Register a JSON pointer along with callback functions for getting and setting its value.
      * @param jsonPtr - The JSON pointer string.

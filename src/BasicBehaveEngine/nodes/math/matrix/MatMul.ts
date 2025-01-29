@@ -17,12 +17,11 @@ export class MatMul extends BehaveEngineNode {
         const typeIndexB = this.values['b'].type!
         const typeB: string = this.getType(typeIndexB);
 
-        if (typeA !== "float4x4") {
-            throw Error("input types not equivalent")
+        const validTypePairings = (typeA === "float4x4" && typeB === "float4x4") || (typeA === "float3x3" && typeB === "float3x3") || (typeA === "float2x2" && typeB === "float2x2")
+        if (!validTypePairings) {
+            throw Error("Invalid type pairings")
         }
-        if (typeB !== "float4x4") {
-            throw Error("Invalid type")
-        }
+
 
         const val: number[][] = a.map((rowA: any[], i: string | number) =>
             rowA.map((_, j) =>

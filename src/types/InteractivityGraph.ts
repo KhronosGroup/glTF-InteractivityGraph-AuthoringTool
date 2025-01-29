@@ -5,6 +5,8 @@ export enum InteractivityValueType {
     FLOAT2 = "float2",
     FLOAT3 = "float3",
     FLOAT4 = "float4",
+    FLOAT2X2 = "float2x2",
+    FLOAT3X3 = "float3x3",
     FLOAT4X4 = "float4x4",
     CUSTOM = "custom"
 }

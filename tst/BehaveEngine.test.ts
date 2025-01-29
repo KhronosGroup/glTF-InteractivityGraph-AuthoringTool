@@ -128,7 +128,10 @@ describe('BehaveEngine', () => {
     /**
      * This test ensures that the custom event node evaluates correctly
      * 
-     * The graph has a 
+     * The graph has is triggered by a custom event and loops 5 times via a custom event send/recieve loop
+     * 1) a custom event is dispatched to the graph
+     * 2) the custom event sis recieved and the value of count  + 1 is re-sent to custom event/send
+     * 3) this continues 5 times and the variable count is set to the last result recieved from the custom event receive node
      */
 
     const behaviorGraph = JSON.parse(fs.readFileSync("./tst/testGraphs/customEventsLoop.json", "utf8"));

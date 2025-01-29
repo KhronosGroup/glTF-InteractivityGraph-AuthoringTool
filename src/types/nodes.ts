@@ -206,6 +206,12 @@ export const knownDeclarations: IInteractivityDeclaration[] = [
         op: "math/combine4x4"
     },
     {
+        op: "math/combine2x2"
+    },
+    {
+        op: "math/combine3x3"
+    },
+    {
         op: "math/extract2"
     },
     {
@@ -216,6 +222,12 @@ export const knownDeclarations: IInteractivityDeclaration[] = [
     },
     {
         op: "math/extract4x4"
+    },
+    {
+        op: "math/extract2x2"
+    },
+    {
+        op: "math/extract3x3"
     },
     {
         op: "math/not"
@@ -422,6 +434,14 @@ export const standardTypes: IInteractivityValueType[] = [
         signature: InteractivityValueType.FLOAT4
     },
     {
+        name: "float2x2",
+        signature: InteractivityValueType.FLOAT2X2
+    },
+    {
+        name: "float3x3",
+        signature: InteractivityValueType.FLOAT3X3
+    },
+    {
         name: "float4x4",
         signature: InteractivityValueType.FLOAT4X4
     },
@@ -434,9 +454,10 @@ export const standardTypes: IInteractivityValueType[] = [
     }
 ]
 
-const floatNTypes = [2,3,4,5,6];
+const floatNTypes = [2,3,4,5,6,8];
+const floatNxNTypes = [6,7,8];
 const floatVectorTypes = [3,4,5];
-const anyType = [0,1,2,3,4,5,6,7];
+const anyType = [0,1,2,3,4,5,6,7,8,9];
 
 const customNodeSpecs: IInteractivityNode[] = [
     {
@@ -1153,6 +1174,54 @@ const mathSwizzleNodeSpecs: IInteractivityNode[] = [
         }
     },
     {
+        op: "math/combine2x2",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/combine2x2"),
+        description: "Combine 4 floats into a float2x2",
+        values: {
+            input: {
+                a: { typeOptions: [2], type: 2, value: [undefined] },
+                b: { typeOptions: [2], type: 2, value: [undefined] },
+                c: { typeOptions: [2], type: 2, value: [undefined] },
+                d: { typeOptions: [2], type: 2, value: [undefined] }
+            },
+            output: {
+                value: {
+                    typeOptions: [6],
+                    type: 6,
+                    value: [undefined, undefined, 
+                            undefined, undefined]
+                }
+            }
+        }
+    },
+    {
+        op: "math/combine3x3",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/combine3x3"),
+        description: "Combine 9 floats into a float3x3",
+        values: {
+            input: {
+                a: { typeOptions: [2], type: 2, value: [undefined] },
+                b: { typeOptions: [2], type: 2, value: [undefined] },
+                c: { typeOptions: [2], type: 2, value: [undefined] },
+                d: { typeOptions: [2], type: 2, value: [undefined] },
+                e: { typeOptions: [2], type: 2, value: [undefined] },
+                f: { typeOptions: [2], type: 2, value: [undefined] },
+                g: { typeOptions: [2], type: 2, value: [undefined] },
+                h: { typeOptions: [2], type: 2, value: [undefined] },
+                i: { typeOptions: [2], type: 2, value: [undefined] }
+            },
+            output: {
+                value: {
+                    typeOptions: [7],
+                    type: 7,
+                    value: [undefined, undefined, undefined, 
+                        undefined, undefined, undefined, 
+                        undefined, undefined, undefined]
+                }
+            }
+        }
+    },
+    {
         op: "math/combine4x4",
         declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/combine4x4"),
         description: "Combine 16 floats into a float4x4",
@@ -1177,8 +1246,8 @@ const mathSwizzleNodeSpecs: IInteractivityNode[] = [
             },
             output: {
                 value: {
-                    typeOptions: [6],
-                    type: 6,
+                    typeOptions: [8],
+                    type: 8,
                     value: [undefined, undefined, undefined, undefined,
                            undefined, undefined, undefined, undefined,
                            undefined, undefined, undefined, undefined,
@@ -1281,14 +1350,62 @@ const mathSwizzleNodeSpecs: IInteractivityNode[] = [
         }
     },
     {
+        op: "math/extract2x2",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/extract2x2"),
+        description: "Extract components from a float2x2",
+        values: {
+            input: {
+                value: {
+                    typeOptions: [6],
+                    type: 6,
+                    value: [undefined, undefined,
+                           undefined, undefined]
+                }
+            },
+            output: {
+                0: { typeOptions: [2], type: 2, value: [undefined] },
+                1: { typeOptions: [2], type: 2, value: [undefined] },
+                2: { typeOptions: [2], type: 2, value: [undefined] },
+                3: { typeOptions: [2], type: 2, value: [undefined] }
+            }
+        }
+    },
+    {
+        op: "math/extract3x3",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/extract3x3"),
+        description: "Extract components from a float3x3",
+        values: {
+            input: {
+                value: {
+                    typeOptions: [7],
+                    type: 7,
+                    value: [undefined, undefined, undefined,
+                           undefined, undefined, undefined,
+                           undefined, undefined, undefined]
+                }
+            },
+            output: {
+                0: { typeOptions: [2], type: 2, value: [undefined] },
+                1: { typeOptions: [2], type: 2, value: [undefined] },
+                2: { typeOptions: [2], type: 2, value: [undefined] },
+                3: { typeOptions: [2], type: 2, value: [undefined] },
+                4: { typeOptions: [2], type: 2, value: [undefined] },
+                5: { typeOptions: [2], type: 2, value: [undefined] },
+                6: { typeOptions: [2], type: 2, value: [undefined] },
+                7: { typeOptions: [2], type: 2, value: [undefined] },
+                8: { typeOptions: [2], type: 2, value: [undefined] }
+            }
+        }
+    },
+    {
         op: "math/extract4x4",
         declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/extract4x4"),
         description: "Extract components from a float4x4",
         values: {
             input: {
                 value: {
-                    typeOptions: [6],
-                    type: 6,
+                    typeOptions: [8],
+                    type: 8,
                     value: [undefined, undefined, undefined, undefined,
                            undefined, undefined, undefined, undefined,
                            undefined, undefined, undefined, undefined,
@@ -1318,7 +1435,6 @@ const mathSwizzleNodeSpecs: IInteractivityNode[] = [
 ]
 
 const mathMatrixNodeSpecs: IInteractivityNode[] = [
-    //TODO: work with 2x2 and 3x3
     {
         op: "math/transpose",
         declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/transpose"),
@@ -1326,22 +1442,18 @@ const mathMatrixNodeSpecs: IInteractivityNode[] = [
         values: {
             input: {
                 a: {
-                    typeOptions: [6],
+                    typeOptions: floatNxNTypes,
                     type: 6,
-                    value: [undefined, undefined, undefined, undefined,
-                           undefined, undefined, undefined, undefined,
-                           undefined, undefined, undefined, undefined,
-                           undefined, undefined, undefined, undefined]
+                    value: [undefined, undefined,
+                           undefined, undefined]
                 }
             },
             output: {
                 value: {
-                    typeOptions: [6], 
+                    typeOptions: floatNxNTypes, 
                     type: 6,
-                    value: [undefined, undefined, undefined, undefined,
-                           undefined, undefined, undefined, undefined,
-                           undefined, undefined, undefined, undefined,
-                           undefined, undefined, undefined, undefined]
+                    value: [undefined, undefined,
+                        undefined, undefined]
                 }
             }
         }
@@ -1353,12 +1465,10 @@ const mathMatrixNodeSpecs: IInteractivityNode[] = [
         values: {
             input: {
                 a: {
-                    typeOptions: [6],
+                    typeOptions: floatNxNTypes,
                     type: 6,
-                    value: [undefined, undefined, undefined, undefined,
-                           undefined, undefined, undefined, undefined,
-                           undefined, undefined, undefined, undefined,
-                           undefined, undefined, undefined, undefined]
+                    value: [undefined, undefined,
+                           undefined, undefined]
                 }
             },
             output: {
@@ -1377,22 +1487,18 @@ const mathMatrixNodeSpecs: IInteractivityNode[] = [
         values: {
             input: {
                 a: {
-                    typeOptions: [6],
+                    typeOptions: floatNxNTypes,
                     type: 6,
-                    value: [undefined, undefined, undefined, undefined,
-                           undefined, undefined, undefined, undefined,
-                           undefined, undefined, undefined, undefined,
-                           undefined, undefined, undefined, undefined]
+                    value: [undefined, undefined,
+                           undefined, undefined]
                 }
             },
             output: {
                 value: {
-                    typeOptions: [6],
+                    typeOptions: floatNxNTypes,
                     type: 6,
-                    value: [undefined, undefined, undefined, undefined,
-                           undefined, undefined, undefined, undefined,
-                           undefined, undefined, undefined, undefined,
-                           undefined, undefined, undefined, undefined]
+                    value: [undefined, undefined,
+                           undefined, undefined]
                 }
             }
         }
@@ -1404,30 +1510,24 @@ const mathMatrixNodeSpecs: IInteractivityNode[] = [
         values: {
             input: {
                 a: {
-                    typeOptions: [6],
+                    typeOptions: floatNxNTypes,
                     type: 6,
-                    value: [undefined, undefined, undefined, undefined,
-                           undefined, undefined, undefined, undefined,
-                           undefined, undefined, undefined, undefined,
-                           undefined, undefined, undefined, undefined]
+                    value: [undefined, undefined,
+                           undefined, undefined]
                 },
                 b: {
-                    typeOptions: [6],
+                    typeOptions: floatNxNTypes,
                     type: 6,
-                    value: [undefined, undefined, undefined, undefined,
-                           undefined, undefined, undefined, undefined,
-                           undefined, undefined, undefined, undefined,
-                           undefined, undefined, undefined, undefined]
+                    value: [undefined, undefined,
+                           undefined, undefined]
                 }
             },
             output: {
                 value: {
-                    typeOptions: [6],
+                    typeOptions: floatNxNTypes,
                     type: 6,
-                    value: [undefined, undefined, undefined, undefined,
-                           undefined, undefined, undefined, undefined,
-                           undefined, undefined, undefined, undefined,
-                           undefined, undefined, undefined, undefined]
+                    value: [undefined, undefined,
+                           undefined, undefined]
                 }
             }
         }
@@ -1587,31 +1687,28 @@ const mathVectorNodeSpecs: IInteractivityNode[] = [
         }
     },
     {
-        //TODO add other transform types for 2x2 3x3
         op: "math/transform",
         declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/transform"),
         description: "Transform a vector by a 4x4 matrix",
         values: {
             input: {
                 vector: {
-                    typeOptions: [5],
-                    type: 5,
-                    value: [undefined, undefined, undefined, undefined]
+                    typeOptions: [3,4,5],
+                    type: 3,
+                    value: [undefined, undefined]
                 },
                 matrix: {
-                    typeOptions: [6],
+                    typeOptions: floatNxNTypes,
                     type: 6,
-                    value: [undefined, undefined, undefined, undefined,
-                           undefined, undefined, undefined, undefined,
-                           undefined, undefined, undefined, undefined,
-                           undefined, undefined, undefined, undefined]
+                    value: [undefined, undefined,
+                           undefined, undefined]
                 }
             },
             output: {
                 value: {
-                    typeOptions: [5],
-                    type: 5,
-                    value: [undefined, undefined, undefined, undefined]
+                    typeOptions: [3,4,5],
+                    type: 3,
+                    value: [undefined, undefined]
                 }
             }
         }

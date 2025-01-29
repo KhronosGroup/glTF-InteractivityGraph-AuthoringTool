@@ -1,0 +1,251 @@
+{
+	"declarations": [
+		{
+			"op": "fake/getNode",
+            "extension": "KHR_fakity_fake_fake",
+            "outputValueSockets": {
+                "value": {
+                    "type": 1
+                }
+            },
+            "inputValueSockets": {
+                "a": {
+                    "type": 1
+                },
+                "b": {
+                    "type": 1
+                }
+            }
+		},
+		{
+			"op": "event/onStart"
+		},
+		{
+			"op": "flow/sequence"
+		},
+		{
+			"op": "fake/flowNode",
+            "extension": "KHR_fakity_fake_fake",
+            "inputValueSockets": {
+                "condition": {
+                    "type": 0
+                }
+            }
+		},
+		{
+			"op": "math/eq"
+		},
+		{
+			"op": "variable/set"
+		}
+	],
+	"nodes": [
+		{
+			"declaration": 1,
+			"values": {},
+			"configuration": {},
+			"flows": {
+				"out": {
+					"node": 1,
+					"socket": "in"
+				}
+			},
+			"metadata": {
+				"positionX": 337.1314343061291,
+				"positionY": 278.3608089929592
+			}
+		},
+		{
+			"declaration": 2,
+			"values": {},
+			"configuration": {},
+			"flows": {
+				"0": {
+					"node": 2,
+					"socket": "in"
+				},
+				"1": {
+					"node": 5,
+					"socket": "in"
+				}
+			},
+			"metadata": {
+				"positionX": 790.2139108890169,
+				"positionY": 244.75899852867803
+			}
+		},
+		{
+			"declaration": 3,
+			"values": {
+				"condition": {
+					"value": [
+						true
+					],
+					"typeOptions": [
+						0
+					],
+					"type": 0
+				}
+			},
+			"configuration": {},
+			"flows": {
+				"true": {},
+				"false": {}
+			},
+			"metadata": {
+				"positionX": 1582.566280224163,
+				"positionY": -161.71451515214235
+			}
+		},
+		{
+			"declaration": 0,
+			"values": {
+				"a": {
+					"value": [
+						1
+					],
+					"typeOptions": [
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						8
+					],
+					"type": 1
+				},
+				"b": {
+					"value": [
+						2
+					],
+					"typeOptions": [
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						8
+					],
+					"type": 1
+				}
+			},
+			"configuration": {},
+			"flows": {},
+			"metadata": {
+				"positionX": 592.0305479349048,
+				"positionY": -189.50016572760333
+			}
+		},
+		{
+			"declaration": 4,
+			"values": {
+				"a": {
+					"node": 3,
+					"socket": "value"
+				},
+				"b": {
+					"value": [
+						0
+					],
+					"typeOptions": [
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						8
+					],
+					"type": "1"
+				}
+			},
+			"configuration": {},
+			"flows": {},
+			"metadata": {
+				"positionX": 1034.0980190975092,
+				"positionY": -144.37164523509404
+			}
+		},
+		{
+			"declaration": 5,
+			"values": {
+				"value": {
+					"node": 4,
+					"socket": "value"
+				}
+			},
+			"configuration": {
+				"variable": {
+					"value": [
+						"0"
+					]
+				}
+			},
+			"flows": {
+				"out": {}
+			},
+			"metadata": {
+				"positionX": 2268.6935713173875,
+				"positionY": 285.94831458166783
+			}
+		}
+	],
+	"variables": [
+		{
+			"name": "TestPassed",
+			"value": [
+				false
+			],
+			"type": 0
+		}
+	],
+	"events": [],
+	"types": [
+		{
+			"name": "bool",
+			"signature": "bool"
+		},
+		{
+			"name": "int",
+			"signature": "int"
+		},
+		{
+			"name": "float",
+			"signature": "float"
+		},
+		{
+			"name": "float2",
+			"signature": "float2"
+		},
+		{
+			"name": "float3",
+			"signature": "float3"
+		},
+		{
+			"name": "float4",
+			"signature": "float4"
+		},
+		{
+			"name": "float2x2",
+			"signature": "float2x2"
+		},
+		{
+			"name": "float3x3",
+			"signature": "float3x3"
+		},
+		{
+			"name": "float4x4",
+			"signature": "float4x4"
+		},
+		{
+			"name": "AMZN_interactivity_string",
+			"signature": "custom",
+			"extensions": {
+				"AMZN_interactivity_string": {}
+			}
+		}
+	]
+}

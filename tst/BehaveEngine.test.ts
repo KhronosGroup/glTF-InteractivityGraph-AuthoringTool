@@ -144,4 +144,23 @@ describe('BehaveEngine', () => {
     await new Promise((resolve) => setTimeout(resolve, 500));
     expect(engine.variables![0].value![0]).toEqual(5);
    });
+
+   it("should correctly evaluate unknown nodes", async () => {
+    /**
+     * This test ensures that the unknown nodes evaluate correctly
+     * 
+     * The graph has a fake/flowNode that is not known to the engine and should be ignored and a fake/getNode that is known and should be evaluated with default output values
+     * 1) lifecycle starts and hits a sequence which first triggers a fake/flowNode which is not known and is ignored
+     * 2) the sequence then triggers a variable/set which is known and should be evaluated with default output values (int= 0 ) which
+     * 3) the variable set sets the test variable to true if the value from the fake/getNode is 0
+     */
+
+    const behaviorGraph = JSON.parse(fs.readFileSync("./tst/testGraphs/unkownNodes.json", "utf8"));
+    const eventBus = new DOMEventBus();
+    const engine = new BasicBehaveEngine(1, eventBus);
+    let executionLog = "";
+    loggingBehaveEngine = new LoggingDecorator(engine, (line:string) => executionLog += line, {});
+    loggingBehaveEngine.loadBehaveGraph(behaviorGraph);
+    expect(engine.variables![0].value![0]).toEqual(true);
+   });
 });

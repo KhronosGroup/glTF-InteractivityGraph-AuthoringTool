@@ -215,7 +215,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         if (updatedConfiguration.type !== undefined) {
             console.log(updatedConfiguration.type)
             const typeId = Number(updatedConfiguration.type.value?.[0] || 0);
-            if (inputValues["value"] !== undefined) {
+            if (inputValues["value"] !== undefined && inputValues["value"].type !== typeId) {
                 const value: IInteractivityValue =  {typeOptions: [typeId], type: typeId, value: [undefined]}
                 inputValuesToSet["value"] = value;
             }

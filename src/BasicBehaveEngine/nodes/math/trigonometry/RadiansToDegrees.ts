@@ -9,6 +9,10 @@ export class RadiansToDegrees extends BehaveEngineNode {
         this.validateValues(this.values);
     }
 
+    radiansToDegrees(a: number) {
+        return a * 180 / Math.PI;
+    }
+
     override processNode(flowSocket?: string) {
         const {a} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
         this.graphEngine.processNodeStarted(this);
@@ -18,27 +22,48 @@ export class RadiansToDegrees extends BehaveEngineNode {
 
         switch (type) {
             case "float":
-                val = [(a * 180) / Math.PI];
+                val = [this.radiansToDegrees(a)];
                 break;
             case "float2":
                 val = [
-                    (a[0] * 180) / Math.PI,
-                    (a[1] * 180) / Math.PI
+                    this.radiansToDegrees(a[0]),
+                    this.radiansToDegrees(a[1])
                 ]
                 break;
             case "float3":
                 val = [
-                    (a[0] * 180) / Math.PI,
-                    (a[1] * 180) / Math.PI,
-                    (a[2] * 180) / Math.PI,
+                    this.radiansToDegrees(a[0]),
+                    this.radiansToDegrees(a[1]),
+                    this.radiansToDegrees(a[2]),
                 ]
                 break;
             case "float4":
                 val = [
-                    (a[0] * 180) / Math.PI,
-                    (a[1] * 180) / Math.PI,
-                    (a[2] * 180) / Math.PI,
-                    (a[3] * 180) / Math.PI,
+                    this.radiansToDegrees(a[0]),
+                    this.radiansToDegrees(a[1]),
+                    this.radiansToDegrees(a[2]),
+                    this.radiansToDegrees(a[3]),
+                ]
+                break
+            case "float2x2":
+                val = [
+                    [this.radiansToDegrees(a[0][0]), this.radiansToDegrees(a[0][1])],
+                    [this.radiansToDegrees(a[1][0]), this.radiansToDegrees(a[1][1])],
+                ]
+                break
+            case "float3x3":
+                val = [
+                    [this.radiansToDegrees(a[0][0]), this.radiansToDegrees(a[0][1]), this.radiansToDegrees(a[0][2])],
+                    [this.radiansToDegrees(a[1][0]), this.radiansToDegrees(a[1][1]), this.radiansToDegrees(a[1][2])],
+                    [this.radiansToDegrees(a[2][0]), this.radiansToDegrees(a[2][1]), this.radiansToDegrees(a[2][2])],
+                ]
+                break
+            case "float4x4":
+                val = [
+                    [this.radiansToDegrees(a[0][0]), this.radiansToDegrees(a[0][1]), this.radiansToDegrees(a[0][2]), this.radiansToDegrees(a[0][3])],
+                    [this.radiansToDegrees(a[1][0]), this.radiansToDegrees(a[1][1]), this.radiansToDegrees(a[1][2]), this.radiansToDegrees(a[1][3])],
+                    [this.radiansToDegrees(a[2][0]), this.radiansToDegrees(a[2][1]), this.radiansToDegrees(a[2][2]), this.radiansToDegrees(a[2][3])],
+                    [this.radiansToDegrees(a[3][0]), this.radiansToDegrees(a[3][1]), this.radiansToDegrees(a[3][2]), this.radiansToDegrees(a[3][3])],
                 ]
                 break
             default:

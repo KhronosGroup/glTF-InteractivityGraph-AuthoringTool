@@ -18,31 +18,56 @@ export class Round extends BehaveEngineNode {
 
         switch (type) {
             case "float":
-                val = [a < 0 ? -Math.round(-a) : Math.round(a)];
+                val = [round(a)];
                 break;
             case "float2":
                 val = [
-                    a[0] < 0 ? -Math.round(-a[0]) : Math.round(a[0]),
-                    a[1] < 0 ? -Math.round(-a[1]) : Math.round(a[1])
+                    round(a[0]),
+                    round(a[1])
                 ]
                 break;
             case "float3":
                 val = [
-                    a[0] < 0 ? -Math.round(-a[0]) : Math.round(a[0]),
-                    a[1] < 0 ? -Math.round(-a[1]) : Math.round(a[1]),
-                    a[2] < 0 ? -Math.round(-a[2]) : Math.round(a[2]),
+                    round(a[0]),
+                    round(a[1]),
+                    round(a[2]),
                 ]
                 break;
             case "float4":
                 val = [
-                    a[0] < 0 ? -Math.round(-a[0]) : Math.round(a[0]),
-                    a[1] < 0 ? -Math.round(-a[1]) : Math.round(a[1]),
-                    a[2] < 0 ? -Math.round(-a[2]) : Math.round(a[2]),
-                    a[3] < 0 ? -Math.round(-a[3]) : Math.round(a[3]),
+                    round(a[0]),
+                    round(a[1]),
+                    round(a[2]),
+                    round(a[3]),
+                ]
+                break;
+            case "float2x2":
+                val = [
+                    [round(a[0][0]), round(a[0][1])],
+                    [round(a[1][0]), round(a[1][1])],
+                ]
+                break;
+            case "float3x3":
+                val = [
+                    [round(a[0][0]), round(a[0][1]), round(a[0][2])],
+                    [round(a[1][0]), round(a[1][1]), round(a[1][2])],
+                    [round(a[2][0]), round(a[2][1]), round(a[2][2])],
+                ]
+                break;
+            case "float4x4":
+                val = [
+                    [round(a[0][0]), round(a[0][1]), round(a[0][2]), round(a[0][3])],
+                    [round(a[1][0]), round(a[1][1]), round(a[1][2]), round(a[1][3])],
+                    [round(a[2][0]), round(a[2][1]), round(a[2][2]), round(a[2][3])],
+                    [round(a[3][0]), round(a[3][1]), round(a[3][2]), round(a[3][3])],
                 ]
                 break;
             default:
                 throw Error("Invalid type")
+        }
+
+        function round(a: number) {
+            return a < 0 ? -Math.round(-a) : Math.round(a);
         }
 
         return {'value': {value: val, type: typeIndex}}

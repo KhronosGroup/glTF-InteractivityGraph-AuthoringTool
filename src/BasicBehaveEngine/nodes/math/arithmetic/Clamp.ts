@@ -49,6 +49,27 @@ export class Clamp extends BehaveEngineNode {
                     Math.min(Math.max(a[3],Math.min(b[3],c[3])), Math.max(b[3],c[3]))
                 ]
                 break
+            case "float2x2":
+                val = [
+                    [Math.min(Math.max(a[0][0],Math.min(b[0][0],c[0][0])), Math.max(b[0][0],c[0][0]))],
+                    [Math.min(Math.max(a[1][0],Math.min(b[1][0],c[1][0])), Math.max(b[1][0],c[1][0]))],
+                ]
+                break
+            case "float3x3":
+                val = [
+                    [Math.min(Math.max(a[0][0],Math.min(b[0][0],c[0][0])), Math.max(b[0][0],c[0][0]))],
+                    [Math.min(Math.max(a[1][0],Math.min(b[1][0],c[1][0])), Math.max(b[1][0],c[1][0]))],
+                    [Math.min(Math.max(a[2][0],Math.min(b[2][0],c[2][0])), Math.max(b[2][0],c[2][0]))],
+                ]
+                break
+            case "float4x4":
+                val = [
+                    [Math.min(Math.max(a[0][0],Math.min(b[0][0],c[0][0])), Math.max(b[0][0],c[0][0]))],
+                    [Math.min(Math.max(a[1][0],Math.min(b[1][0],c[1][0])), Math.max(b[1][0],c[1][0]))],
+                    [Math.min(Math.max(a[2][0],Math.min(b[2][0],c[2][0])), Math.max(b[2][0],c[2][0]))],
+                    [Math.min(Math.max(a[3][0],Math.min(b[3][0],c[3][0])), Math.max(b[3][0],c[3][0]))],
+                ]
+                break
             default:
                 throw Error("Invalid type")
         }

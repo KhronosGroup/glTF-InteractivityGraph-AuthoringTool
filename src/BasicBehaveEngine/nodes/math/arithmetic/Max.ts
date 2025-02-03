@@ -47,6 +47,27 @@ export class Max extends BehaveEngineNode {
                     Math.max(a[3], b[3]),
                 ]
                 break
+            case "float2x2":
+                val = [
+                    [Math.max(a[0][0], b[0][0]), Math.max(a[0][1], b[0][1])],
+                    [Math.max(a[1][0], b[1][0]), Math.max(a[1][1], b[1][1])],
+                ]
+                break
+            case "float3x3":
+                val = [
+                    [Math.max(a[0][0], b[0][0]), Math.max(a[0][1], b[0][1]), Math.max(a[0][2], b[0][2])],
+                    [Math.max(a[1][0], b[1][0]), Math.max(a[1][1], b[1][1]), Math.max(a[1][2], b[1][2])],
+                    [Math.max(a[2][0], b[2][0]), Math.max(a[2][1], b[2][1]), Math.max(a[2][2], b[2][2])],
+                ]
+                break
+            case "float4x4":
+                val = [
+                    [Math.max(a[0][0], b[0][0]), Math.max(a[0][1], b[0][1]), Math.max(a[0][2], b[0][2]), Math.max(a[0][3], b[0][3])],
+                    [Math.max(a[1][0], b[1][0]), Math.max(a[1][1], b[1][1]), Math.max(a[1][2], b[1][2]), Math.max(a[1][3], b[1][3])],
+                    [Math.max(a[2][0], b[2][0]), Math.max(a[2][1], b[2][1]), Math.max(a[2][2], b[2][2]), Math.max(a[2][3], b[2][3])],
+                    [Math.max(a[3][0], b[3][0]), Math.max(a[3][1], b[3][1]), Math.max(a[3][2], b[3][2]), Math.max(a[3][3], b[3][3])],
+                ]
+                break
             default:
                 throw Error("Invalid type")
         }

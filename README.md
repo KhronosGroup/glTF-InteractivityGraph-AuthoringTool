@@ -98,9 +98,6 @@ To add your own pointer, simply add the logic for your getter and setter to the 
 
 
 ## TODO
-- ensure math node properly deal with NaN, inf and 0 inputs
-- negation and abs integer min case
-- complex flow nodes with edge cases tested: switch, multigate, for, doN, waitAll, throttle, setDelay
 - variable and pointer interpolation take action on tick instead of own event loop
 - animations thuroughly tested
 - camera and animation json pointers

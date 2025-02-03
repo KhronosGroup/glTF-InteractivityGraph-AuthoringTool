@@ -9,6 +9,10 @@ export class Negate extends BehaveEngineNode {
         this.validateValues(this.values);
     }
 
+    negate(a: number) {
+        return (-a) | 0;
+    }
+
     override processNode(flowSocket?: string) {
         const {a} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
         this.graphEngine.processNodeStarted(this);

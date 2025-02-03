@@ -41,6 +41,27 @@ export class Saturate extends BehaveEngineNode {
                     Math.min(Math.max(a[3], 0.0), 1.0),
                 ]
                 break
+            case "float2x2":
+                val = [
+                    [Math.min(Math.max(a[0][0], 0.0), 1.0), Math.min(Math.max(a[0][1], 0.0), 1.0)],
+                    [Math.min(Math.max(a[1][0], 0.0), 1.0), Math.min(Math.max(a[1][1], 0.0), 1.0)],
+                ]
+                break
+            case "float3x3":
+                val = [
+                    [Math.min(Math.max(a[0][0], 0.0), 1.0), Math.min(Math.max(a[0][1], 0.0), 1.0), Math.min(Math.max(a[0][2], 0.0), 1.0)],
+                    [Math.min(Math.max(a[1][0], 0.0), 1.0), Math.min(Math.max(a[1][1], 0.0), 1.0), Math.min(Math.max(a[1][2], 0.0), 1.0)],
+                    [Math.min(Math.max(a[2][0], 0.0), 1.0), Math.min(Math.max(a[2][1], 0.0), 1.0), Math.min(Math.max(a[2][2], 0.0), 1.0)],
+                ]
+                break
+            case "float4x4":
+                val = [
+                    [Math.min(Math.max(a[0][0], 0.0), 1.0), Math.min(Math.max(a[0][1], 0.0), 1.0), Math.min(Math.max(a[0][2], 0.0), 1.0), Math.min(Math.max(a[0][3], 0.0), 1.0)],
+                    [Math.min(Math.max(a[1][0], 0.0), 1.0), Math.min(Math.max(a[1][1], 0.0), 1.0), Math.min(Math.max(a[1][2], 0.0), 1.0), Math.min(Math.max(a[1][3], 0.0), 1.0)],
+                    [Math.min(Math.max(a[2][0], 0.0), 1.0), Math.min(Math.max(a[2][1], 0.0), 1.0), Math.min(Math.max(a[2][2], 0.0), 1.0), Math.min(Math.max(a[2][3], 0.0), 1.0)],
+                    [Math.min(Math.max(a[3][0], 0.0), 1.0), Math.min(Math.max(a[3][1], 0.0), 1.0), Math.min(Math.max(a[3][2], 0.0), 1.0), Math.min(Math.max(a[3][3], 0.0), 1.0)],
+                ]
+                break
             default:
                 throw Error("Invalid type")
         }

@@ -135,6 +135,9 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
       
         // set up structure for nodes if one does not exist
         if (!nodes.some(node => node.position.y !== 0 || node.position.x !== 0)) {
+          console.log("SETTING UP POSITIONS");
+          console.log(edges);
+          console.log(nodes);
       
           // Build adjacency list
           const adjacencyList: Record<string, string[]> = {};
@@ -184,55 +187,48 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
             let layerYAdditive = 0;
             let lastMaxY = 0;
       
-            disjointGraphs.forEach((disjointGraph) => {
-              const nodeNumbers: number[] = [];
-              disjointGraph.forEach((nodeId) => {
-                const i = nodes.findIndex((n) => n.id === nodeId);
-                if (i < 0) {
-                  console.error(`Node with id ${nodeId} not found in nodes list. This is likely an issue with the graph data.`);
-                }
-                else {
-                  nodeNumbers.push(i);
-                }
-              });
-      
+            console.log("DISJOINT GRAPHS");
+            console.log(disjointGraphs);
+            disjointGraphs.forEach((disjointGraph) => {  
               // Each layer is a vertical column of a disjoint graph. Since we start at the leftmost column where x = -500 (starting point).
-              let lastLayer: number[] = nodeNumbers.filter(num => !edges.some(edge => Number(edge.target) === num));
+              let lastLayer: string[] = disjointGraph.filter(nodeId => !edges.some(edge => edge.target === nodeId));
               let y = 0;
               for (let i = 0; i < lastLayer.length; i++) {
-                nodes[lastLayer[i]].position.x = -500;
+                const node = nodes.find(node => node.id === lastLayer[i])!;
+                node.position.x = -500;
                 y = 500 * i + layerYAdditive;
-                nodes[lastLayer[i]].position.y = y;
+                node.position.y = y;
                 if (y > lastMaxY) {
                   lastMaxY = y;
                 }
               }
       
-              let nextLayer: number[] = [];
-              for (const nodeIndex of lastLayer) {
-                const nodeOutEdges: Edge[] = edges.filter(edge => Number(edge.source) === nodeIndex);
-                nextLayer.push(...nodeOutEdges.map(edge => Number(edge.target)));
+              let nextLayer: string[] = [];
+              for (const nodeId of lastLayer) {
+                const nodeOutEdges: Edge[] = edges.filter(edge => edge.source === nodeId);
+                nextLayer.push(...nodeOutEdges.map(edge => edge.target));
               }
-              nextLayer = [...new Set(nextLayer.filter(num => Number.isFinite(num)))];
+              nextLayer = [...new Set(nextLayer)];
       
               let xOffset = 0;
               while (nextLayer.length > 0) {
                 lastLayer = nextLayer;
                 for (let i = 0; i < lastLayer.length; i++) {
-                  nodes[lastLayer[i]].position.x = xOffset;
+                  const node = nodes.find(node => node.id === lastLayer[i])!;
+                  node.position.x = xOffset;
                   y = 500 * i + layerYAdditive;
-                  nodes[lastLayer[i]].position.y = y;
+                  node.position.y = y;
                   if (y > lastMaxY) {
                     lastMaxY = y;
                   }
                 }
       
                 nextLayer = [];
-                for (const nodeIndex of lastLayer) {
-                  const nodeOutEdges: Edge[] = edges.filter(edge => Number(edge.source) === nodeIndex);
-                  nextLayer.push(...nodeOutEdges.map(edge => Number(edge.target)));
+                for (const nodeId of lastLayer) {
+                  const nodeOutEdges: Edge[] = edges.filter(edge => edge.source === nodeId);
+                  nextLayer.push(...nodeOutEdges.map(edge => edge.target));
                 }
-                nextLayer = [...new Set(nextLayer.filter(num => Number.isFinite(num)))];
+                nextLayer = [...new Set(nextLayer)];
                 xOffset += 500;
               }
               layerYAdditive = 800 + lastMaxY;

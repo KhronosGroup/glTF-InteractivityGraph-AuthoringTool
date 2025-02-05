@@ -275,7 +275,7 @@ export class BabylonDecorator extends ADecorator {
             (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).rotationQuaternion = new Quaternion(value[0], value[1], value[2], value[3]);
         }, "float4", false);
 
-        this.registerJsonPointer(`/activeCamera/rotation`, (path) => {
+        this.registerJsonPointer(`/extensions/KHR_interactivity/activeCamera/rotation`, (path) => {
             const activeCamera: Nullable<Camera> = this.scene.activeCamera;
             if (activeCamera === null || !(activeCamera instanceof TargetCamera)) {
                 return [NaN, NaN, NaN, NaN]
@@ -286,7 +286,7 @@ export class BabylonDecorator extends ADecorator {
             //no-op
         }, "float4", true)
 
-        this.registerJsonPointer(`/activeCamera/position`, (path) => {
+        this.registerJsonPointer(`/extensions/KHR_interactivity/activeCamera/position`, (path) => {
             const activeCamera: Nullable<Camera> = this.scene.activeCamera;
             if (activeCamera === null) {
                 return [NaN, NaN, NaN]
@@ -739,7 +739,13 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/nodes/${maxGltfNode}/globalMatrix`, (path) => {
             const parts: string[] = path.split("/");
             const node = this.world.glTFNodes[Number(parts[2])];
-            return (node as AbstractMesh).getWorldMatrix().asArray();
+            const globalMatrix = (node as AbstractMesh).getWorldMatrix().asArray();
+            return [
+                [globalMatrix[0], globalMatrix[1], globalMatrix[2], globalMatrix[3]],
+                [globalMatrix[4], globalMatrix[5], globalMatrix[6], globalMatrix[7]], 
+                [globalMatrix[8], globalMatrix[9], globalMatrix[10], globalMatrix[11]],
+                [globalMatrix[12], globalMatrix[13], globalMatrix[14], globalMatrix[15]]
+            ];
         }, (path, value) => {
             //no-op
         }, "float4x4", true);

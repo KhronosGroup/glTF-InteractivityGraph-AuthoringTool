@@ -19,15 +19,8 @@ export class VariableGet extends BehaveEngineNode {
     override processNode(flowSocket?: string) {
         this.graphEngine.processNodeStarted(this);
 
-        const result: Record<string, IInteractivityValue> = {};
-        const res = this.variables[this._variable];
-        // console.log(this._variable)
-        // console.log(JSON.stringify(res, null, 2))
-        // TODO It's unclear when the value needs to be a glTF value (always an array)
-        // or when it needs to be the actual value. Since the result of this node is always parsed
-        // with parseType, it currently needs to be an array.
-        if (!Array.isArray(res.value)) res.value = [res.value];
-        result["value"] = res;
-        return result;
+        const variable = this.variables[this._variable];
+
+        return {value: {value: variable.value!, type: variable.type}};
     }
 }

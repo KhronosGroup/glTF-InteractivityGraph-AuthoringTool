@@ -100,7 +100,7 @@ To add your own pointer, simply add the logic for your getter and setter to the 
 ## TODO
 - variable and pointer interpolation take action on tick instead of own event loop
 - animations thuroughly tested
-- camera and animation json pointers
+- animation json pointers
 - customEvent default values for event values
 - configuration default values and validation
 - decleration validation

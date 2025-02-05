@@ -23,7 +23,11 @@ export class VariableSet extends BehaveEngineNode {
 
         this.graphEngine.getVariableInterpolationCallback(this._variable)?.cancel();
 
-        this.variables[this._variable].value = [value];
+        if (Array.isArray(value)) {
+            this.variables[this._variable].value = value;
+        } else {
+            this.variables[this._variable].value = [value];
+        }
 
         super.processNode(flowSocket);
     }

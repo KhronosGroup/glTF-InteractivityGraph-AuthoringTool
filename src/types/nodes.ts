@@ -1262,7 +1262,7 @@ const mathSwizzleNodeSpecs: IInteractivityNode[] = [
         description: "Extract components from a float2",
         values: {
             input: {
-                value: {
+                a: {
                     typeOptions: [3],
                     type: 3,
                     value: [undefined, undefined]
@@ -1288,7 +1288,7 @@ const mathSwizzleNodeSpecs: IInteractivityNode[] = [
         description: "Extract components from a float3",
         values: {
             input: {
-                value: {
+                a: {
                     typeOptions: [4],
                     type: 4,
                     value: [undefined, undefined, undefined]
@@ -1319,7 +1319,7 @@ const mathSwizzleNodeSpecs: IInteractivityNode[] = [
         description: "Extract components from a float4",
         values: {
             input: {
-                value: {
+                a: {
                     typeOptions: [5],
                     type: 5,
                     value: [undefined, undefined, undefined, undefined]
@@ -1355,7 +1355,7 @@ const mathSwizzleNodeSpecs: IInteractivityNode[] = [
         description: "Extract components from a float2x2",
         values: {
             input: {
-                value: {
+                a: {
                     typeOptions: [6],
                     type: 6,
                     value: [undefined, undefined,
@@ -1376,7 +1376,7 @@ const mathSwizzleNodeSpecs: IInteractivityNode[] = [
         description: "Extract components from a float3x3",
         values: {
             input: {
-                value: {
+                a: {
                     typeOptions: [7],
                     type: 7,
                     value: [undefined, undefined, undefined,
@@ -1403,7 +1403,7 @@ const mathSwizzleNodeSpecs: IInteractivityNode[] = [
         description: "Extract components from a float4x4",
         values: {
             input: {
-                value: {
+                a: {
                     typeOptions: [8],
                     type: 8,
                     value: [undefined, undefined, undefined, undefined,

@@ -215,7 +215,12 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         if (updatedConfiguration.type !== undefined) {
             console.log(updatedConfiguration.type)
             const typeId = Number(updatedConfiguration.type.value?.[0] || 0);
-            if (inputValues["value"] !== undefined && inputValues["value"].type !== typeId) {
+
+            const noValuePresent = inputValues["value"] === undefined;
+            const inlineValuePresent = inputValues["value"] !== undefined && inputValues["value"].node === undefined;
+
+            // only wipe if the value is undefined or the value is inlined but the types are different
+            if (noValuePresent || (inlineValuePresent && inputValues["value"].type !== typeId)) {
                 const value: IInteractivityValue =  {typeOptions: [typeId], type: typeId, value: [undefined]}
                 inputValuesToSet["value"] = value;
             }

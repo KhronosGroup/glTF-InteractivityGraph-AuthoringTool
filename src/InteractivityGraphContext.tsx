@@ -135,10 +135,6 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
       
         // set up structure for nodes if one does not exist
         if (!nodes.some(node => node.position.y !== 0 || node.position.x !== 0)) {
-          console.log("SETTING UP POSITIONS");
-          console.log(edges);
-          console.log(nodes);
-      
           // Build adjacency list
           const adjacencyList: Record<string, string[]> = {};
           edges.forEach((edge) => {

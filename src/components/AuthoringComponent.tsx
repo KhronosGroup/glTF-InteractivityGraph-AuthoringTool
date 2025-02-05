@@ -138,9 +138,16 @@ export const AuthoringComponent = () => {
     }, [nodes, graph]);
 
     const onEdgesDelete = useCallback((edges: Edge[]) => {
+        console.log("edges", edges);
         for (let i = 0; i < edges.length; i++) {
             const edge = edges[i];
-            if (edge.targetHandle !== "flow") {
+
+            const sourceNode = graph.nodes.find(node => node.uid === edge.source)!;
+            const targetNode = graph.nodes.find(node => node.uid === edge.target)!;
+            const isFlowConnection = sourceNode.flows?.output?.[edge.sourceHandle!] !== undefined;
+        
+            if (!isFlowConnection) {
+                // flow so we need to show the input field now
                 const targetNode = document.querySelectorAll(`[data-id='${edge.target}']`)[0];
                 const inputField = targetNode.querySelector(`#in-${edge.targetHandle}`) as HTMLInputElement;
                 if (inputField !== null) {
@@ -152,11 +159,11 @@ export const AuthoringComponent = () => {
                 }
             }
             
-            if (edge.sourceHandle === "flow") {
-                const sourceNode: IInteractivityNode = graph.nodes.find(node => node.uid === edge.source)!;
+            if (isFlowConnection) {
+                // flow so we should remove the flow value from the node
                 sourceNode!.flows!.output![edge.sourceHandle!] = {};
             } else {
-                const targetNode: IInteractivityNode = graph.nodes.find(node => node.uid === edge.target)!;
+                // value so we should remove the value from the target node
                 targetNode!.values!.input![edge.targetHandle!] = {};
             }
         }

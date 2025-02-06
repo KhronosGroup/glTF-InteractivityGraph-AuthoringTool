@@ -111,6 +111,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         outputValues: Record<string, IInteractivityValue>, 
         inputFlows: Record<string, IInteractivityFlow>, 
         outputFlows: Record<string, IInteractivityFlow>) => {
+        //TODO: this function is quite a mess with lots of branches and has often been the root cause of the bugs in the authroing tool overwriting sockets, think of a better way to do this
         const nodeType = node?.op;
 
         const inputValuesToSet: Record<string, IInteractivityValue> = {};
@@ -213,16 +214,18 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
             }
         }
         if (updatedConfiguration.type !== undefined) {
-            console.log(updatedConfiguration.type)
             const typeId = Number(updatedConfiguration.type.value?.[0] || 0);
+            if (nodeType === "pointer/get") {
+                outputValuesToSet["value"] = {typeOptions: [typeId], type: typeId, value: [undefined]};
+            } else {
+                const noValuePresent = inputValues["value"] === undefined;
+                const inlineValuePresent = inputValues["value"] !== undefined && inputValues["value"].node === undefined;
 
-            const noValuePresent = inputValues["value"] === undefined;
-            const inlineValuePresent = inputValues["value"] !== undefined && inputValues["value"].node === undefined;
-
-            // only wipe if the value is undefined or the value is inlined but the types are different
-            if (noValuePresent || (inlineValuePresent && inputValues["value"].type !== typeId)) {
-                const value: IInteractivityValue =  {typeOptions: [typeId], type: typeId, value: [undefined]}
-                inputValuesToSet["value"] = value;
+                // only wipe if the value is undefined or the value is inlined but the types are different
+                if (noValuePresent || (inlineValuePresent && inputValues["value"].type !== typeId)) {
+                    const value: IInteractivityValue =  {typeOptions: [typeId], type: typeId, value: [undefined]}
+                    inputValuesToSet["value"] = value;
+                }
             }
         }
         if (updatedConfiguration.stopMode !== undefined) {

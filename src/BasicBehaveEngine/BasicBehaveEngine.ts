@@ -85,6 +85,8 @@ import {Combine3} from "./nodes/math/combine/Combine3";
 import {Combine4} from "./nodes/math/combine/Combine4";
 import {Combine4x4} from "./nodes/math/combine/Combine4x4";
 import {PointerInterpolate} from "./nodes/pointer/PointerInterpolate";
+import {QuatApply} from "./nodes/math/quaternion/QuatApply";
+import {QuatMul} from "./nodes/math/quaternion/QuatMul";
 import {Not} from "./nodes/math/bitwise/Not";
 import {Xor} from "./nodes/math/bitwise/Xor";
 import {Or} from "./nodes/math/bitwise/Or";
@@ -458,6 +460,8 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/clz", CountLeadingZeros);
         this.registerBehaveEngineNode("math/ctz", CountTrailingZeros);
         this.registerBehaveEngineNode("math/popcnt", CountOneBits);
+        this.registerBehaveEngineNode("math/quatApply", QuatApply);
+        this.registerBehaveEngineNode("math/quatMul", QuatMul);
     }
 
     protected validateGraph = (behaviorGraph: any) => {

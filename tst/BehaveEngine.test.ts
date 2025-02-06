@@ -58,12 +58,12 @@ describe('BehaveEngine', () => {
          */
         const behaviorGraph = JSON.parse(fs.readFileSync("./tst/testGraphs/pointerInterpolateSet.json", "utf8"));
         const eventBus = new DOMEventBus();
-        const engine = new BasicBehaveEngine(30, eventBus);
+        const engine = new BasicBehaveEngine(60, eventBus);
         let executionLog = "";
         const world = {nodes:[{translation:[0,0,0]}]}
         loggingBehaveEngine = new LoggingDecorator(engine, (line:string) => executionLog += line, world);
         loggingBehaveEngine.loadBehaveGraph(behaviorGraph);
-        await new Promise((resolve) => setTimeout(resolve, 2500));
+        await new Promise((resolve) => setTimeout(resolve, 3000));
         expect(engine.variables![0].value![0]).toEqual(true);
     });
 

@@ -114,6 +114,8 @@ import {Extract4x4} from "../src/BasicBehaveEngine/nodes/math/extract/Extract4x4
 import {PointerInterpolate} from "../src/BasicBehaveEngine/nodes/pointer/PointerInterpolate";
 import { IInteractivityFlow, IInteractivityVariable } from '../src/types/InteractivityGraph';
 import { DOMEventBus } from "../src/BasicBehaveEngine/eventBuses/DOMEventBus";
+import { QuatApply } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatApply';
+import { QuatMul } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatMul';
 
 describe('nodes', () => {
     let executionLog: string;
@@ -2200,6 +2202,33 @@ describe('nodes', () => {
         const val = countOneBits.processNode();
 
         expect(val['value'].value[0]).toBe(3);
+    });
+
+    it("math/quatApply", () => {
+        const quatApply: QuatApply = new QuatApply({
+            ...defaultProps,
+            values: {a: { value: [0, 0, 1], type: 4}, b: { value: [0, 0.7071068, 0, 0.7071068], type: 5}}
+        });
+
+        const val = quatApply.processNode();
+
+        expect(isCloseToVal(val['value'].value[0], 1)).toBe(true);
+        expect(isCloseToVal(val['value'].value[1], 0)).toBe(true);
+        expect(isCloseToVal(val['value'].value[2], 0)).toBe(true);
+    });
+
+    it("math/quatMul", () => {
+        const quatMul: QuatMul = new QuatMul({
+            ...defaultProps,
+            values: {a: { value: [0, 0.7071068, 0, 0.7071068], type: 5}, b: { value: [0, 0, 0.7071068, 0.7071068], type: 5}}
+        });
+
+        const val = quatMul.processNode();
+
+        expect(isCloseToVal(val['value'].value[0], 0.5)).toBe(true);
+        expect(isCloseToVal(val['value'].value[1], 0.5)).toBe(true);
+        expect(isCloseToVal(val['value'].value[2], 0.5)).toBe(true);
+        expect(isCloseToVal(val['value'].value[3], 0.5)).toBe(true);
     });
 });
 

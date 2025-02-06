@@ -24,6 +24,7 @@ import {Nullable} from "@babylonjs/core/types.js";
 import { OnHoverIn } from "../nodes/experimental/OnHoverIn";
 import { OnHoverOut } from "../nodes/experimental/OnHoverOut";
 import { IInteractivityFlow } from "../../types/InteractivityGraph";
+import * as glMatrix from "gl-matrix";
 
 export class BabylonDecorator extends ADecorator {
     scene: Scene;
@@ -281,7 +282,8 @@ export class BabylonDecorator extends ADecorator {
                 return [NaN, NaN, NaN, NaN]
             }
 
-            return [activeCamera.absoluteRotation.x, activeCamera.absoluteRotation.y, activeCamera.absoluteRotation.z, activeCamera.absoluteRotation.w]
+            console.log(`Camera rotation: ${activeCamera.absoluteRotation.x}, ${activeCamera.absoluteRotation.y}, ${activeCamera.absoluteRotation.z}, ${activeCamera.absoluteRotation.w}`)
+            return [activeCamera.absoluteRotation.x, -1 *activeCamera.absoluteRotation.y, activeCamera.absoluteRotation.z, activeCamera.absoluteRotation.w]
         }, (path, value) => {
             //no-op
         }, "float4", true)
@@ -292,7 +294,8 @@ export class BabylonDecorator extends ADecorator {
                 return [NaN, NaN, NaN]
             }
 
-            return [activeCamera.position.x, activeCamera.position.y, activeCamera.position.z]
+            console.log(`Camera position: ${activeCamera.position.x}, ${activeCamera.position.y}, ${activeCamera.position.z}`)
+            return [-1 * activeCamera.position.x, activeCamera.position.y, activeCamera.position.z]
         }, (path, value) => {
             //no-op
         }, "float3", true)

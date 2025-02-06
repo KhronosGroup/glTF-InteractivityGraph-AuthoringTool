@@ -405,6 +405,12 @@ export const knownDeclarations: IInteractivityDeclaration[] = [
                 value: [undefined]
             }
         }
+    },
+    {
+        op: "math/quatApply"
+    },
+    {
+        op: "math/quatMul"
     }
 ]
 
@@ -483,6 +489,63 @@ const customNodeSpecs: IInteractivityNode[] = [
                 message: {
                     typeOptions: anyType,
                     type: 0,
+                    value: [undefined]
+                }
+            }
+        }
+    }
+]
+
+const mathQuaternionNodeSpecs: IInteractivityNode[] = [
+    {
+        op: "math/quatApply",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/quatApply"),
+        description: "Apply a quaternion to a float3",
+        values: {
+            input: {
+                a: {
+                    typeOptions: [4],
+                    description: "The vec3 to have a quaternion rotation applied on it",
+                    type: 4,
+                    value: [undefined]
+                },
+                b: {
+                    typeOptions: [5],
+                    description: "The quaternion to apply to the vec3",
+                    type: 5,
+                    value: [undefined]
+                }
+            },
+            output: {
+                value: {
+                    typeOptions: [4],
+                    type: 4,
+                    value: [undefined]
+                }
+            }
+        }
+    },
+    {
+        op: "math/quatMul",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/quatMul"),
+        description: "Multiply two quaternions",
+        values: {
+            input: {
+                a: {
+                    typeOptions: [5],
+                    type: 5,
+                    value: [undefined]
+                },
+                b: {
+                    typeOptions: [5],
+                    type: 5,
+                    value: [undefined]
+                }
+            },
+            output: {
+                value: {
+                    typeOptions: [5],
+                    type: 5,
                     value: [undefined]
                 }
             }
@@ -3597,7 +3660,8 @@ export const interactivityNodeSpecs: IInteractivityNode[] = [
     ...mathConstantNodeSpecs, ...mathArithmeticNodeSpecs, ...mathComparisonNodeSpecs, ...mathTrigNodeSpecs,
     ...mathSpecialNodeSpecs,...lifecycleNodeSpecs, ...flowNodeSpecs, ...variableNodeSpecs, ...mathHyperbolicNodeSpecs,
     ...mathExponentialNodeSpecs, ...mathVectorNodeSpecs, ...mathMatrixNodeSpecs, ...mathSwizzleNodeSpecs, ...mathIntegerBitwiseNodeSpecs,
-    ...mathTypeConversionNodeSpecs, ...pointerNodeSpecs, ...animationNodeSpecs, ...selectabilityNodeSpecs, ...customNodeSpecs, ...hoverabilityNodeSpecs
+    ...mathTypeConversionNodeSpecs, ...pointerNodeSpecs, ...animationNodeSpecs, ...selectabilityNodeSpecs, ...customNodeSpecs, ...hoverabilityNodeSpecs,
+    ...mathQuaternionNodeSpecs
 ];
 
 export const createNoOpNode = (declaration: IInteractivityDeclaration): IInteractivityNode => {

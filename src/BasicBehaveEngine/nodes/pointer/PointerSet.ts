@@ -80,7 +80,7 @@ export class PointerSet extends BehaveEngineNode {
                 return;
             }
             
-            this.graphEngine.getWorldAnimationPathCallback(this._pointer)?.cancel();
+            this.graphEngine.clearPointerInterpolation(populatedPath);
             this.graphEngine.setPathValue(populatedPath, targetValue);
             super.processNode(flowSocket);
         } else {

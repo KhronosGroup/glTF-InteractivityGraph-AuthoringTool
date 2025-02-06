@@ -152,9 +152,11 @@ export interface IBehaveEngine {
      */
     getValueEvaluationCacheValue: (key: string) => IInteractivityValue | undefined;
 
-    setWorldAnimationPathCallback: (path: string, cancelable: ICancelable | undefined) => void;
+    setPointerInterpolationCallback: (path: string, action: IInterpolateAction) => void;
+    clearPointerInterpolation: (path: string) => void;
 
-    getWorldAnimationPathCallback: (path: string) => ICancelable | undefined;
+    setVariableInterpolationCallback: (variable: number, action: IInterpolateAction) => void;
+    clearVariableInterpolation: (variable: number) => void;
 
     getWorld: () => any;
 
@@ -177,8 +179,16 @@ export interface IEventBus {
     clearCustomEventListeners: () => void;
     dispatchCustomEvent: (name: string, vals: Record<string, any>) => void;
     getCustomEventsNames: () => string[];
+
+    setVariableInterpolationCallback: (variable: number, action: IInterpolateAction) => void;
+    getVariableInterpolationCallbacks: () => Record<number, IInterpolateAction>;
+    clearVariableInterpolation: (variable: number) => void;
+
+    setPointerInterpolationCallback: (pointer: string, action: IInterpolateAction) => void;
+    getPointerInterpolationCallbacks: () => Record<string, IInterpolateAction>;
+    clearPointerInterpolation: (pointer: string) => void;
 }
 
-export interface ICancelable {
-    cancel: () => void;
+export interface IInterpolateAction {
+    action: () => void;
 }

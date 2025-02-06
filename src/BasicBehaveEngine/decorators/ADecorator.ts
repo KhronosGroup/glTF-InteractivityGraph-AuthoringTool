@@ -1,4 +1,4 @@
-import {IBehaveEngine, ICancelable, IEventQueueItem} from "../IBehaveEngine";
+import {IBehaveEngine, IEventQueueItem, IInterpolateAction} from "../IBehaveEngine";
 import {BehaveEngineNode} from "../BehaveEngineNode";
 import {IInteractivityFlow, IInteractivityValue} from "../../types/InteractivityGraph";
 
@@ -82,10 +82,19 @@ export abstract class ADecorator implements IBehaveEngine {
         return this.behaveEngine.getValueEvaluationCacheValue(key);
     }
 
-    setWorldAnimationPathCallback = (path: string, cancelable: ICancelable | undefined): void => {
-        this.behaveEngine.setWorldAnimationPathCallback(path, cancelable);
-    };
-    getWorldAnimationPathCallback = (path: string): ICancelable | undefined => {
-        return this.behaveEngine.getWorldAnimationPathCallback(path);
+    setPointerInterpolationCallback = (path: string, action: IInterpolateAction) => {
+        this.behaveEngine.setPointerInterpolationCallback(path, action);
+    }
+
+    clearPointerInterpolation = (path: string) => {
+        this.behaveEngine.clearPointerInterpolation(path);
+    }
+
+    setVariableInterpolationCallback = (variable: number, action: IInterpolateAction) => {
+        this.behaveEngine.setVariableInterpolationCallback(variable, action);
+    }
+
+    clearVariableInterpolation = (variable: number) => {
+        this.behaveEngine.clearVariableInterpolation(variable);
     }
 }

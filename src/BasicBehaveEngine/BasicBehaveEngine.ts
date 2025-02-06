@@ -1,4 +1,4 @@
-import {IBehaveEngine, ICancelable, IEventBus, IEventQueueItem} from "./IBehaveEngine";
+import {IBehaveEngine, IEventBus, IEventQueueItem, IInterpolateAction} from "./IBehaveEngine";
 import {JsonPtrTrie} from "./JsonPtrTrie";
 import {BehaveEngineNode, IBehaviourNodeProps} from "./BehaveEngineNode";
 import {OnStartNode} from "./nodes/lifecycle/onStart";
@@ -124,8 +124,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
     private jsonPtrTrie: JsonPtrTrie;
     private _fps: number;
     private valueEvaluationCache: Map<string, IInteractivityValue>;
-    private pathToWorldAnimationCallback: Map<string, ICancelable>;
-    private variableInterpolationCallback: Map<number, ICancelable>;
+
 
     constructor(fps: number, eventBus: IEventBus) {
         this.registry = new Map<string, any>();
@@ -133,8 +132,6 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.jsonPtrTrie = new JsonPtrTrie();
         this._fps = fps;
         this.valueEvaluationCache = new Map<string, IInteractivityValue>();
-        this.pathToWorldAnimationCallback = new Map<string, ICancelable>();
-        this.variableInterpolationCallback = new Map<number, ICancelable>();
         this.onTickNodeIndices = [];
         this._lastTickTime = NaN;
         this.eventBus = eventBus;
@@ -503,6 +500,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
     }
 
     private executeEventQueue = () => {
+        // process events in queue
         const eventQueueCopy = [...this.eventBus.getEventList()];
         this.eventBus.clearEventList();
         while (eventQueueCopy.length > 0) {
@@ -515,6 +513,15 @@ export class BasicBehaveEngine implements IBehaveEngine {
             eventQueueCopy.splice(0, 1);
         }
 
+        // process interpolations
+        for (const interpolation of Object.values(this.eventBus.getVariableInterpolationCallbacks())) {
+            interpolation.action();
+        }
+        for (const interpolation of Object.values(this.eventBus.getPointerInterpolationCallbacks())) {
+            interpolation.action();
+        }
+
+        // process onTick nodes
         this._lastTickTime = Date.now() / 1000;
         for (const onTickNodeIndex of this.onTickNodeIndices) {
             const tickFlow: IInteractivityFlow = { node: onTickNodeIndex, socket: "tick"}
@@ -528,27 +535,21 @@ export class BasicBehaveEngine implements IBehaveEngine {
         }, 1000 / this.fps)
     }
 
-    getWorldAnimationPathCallback(path: string): ICancelable | undefined {
-       return this.pathToWorldAnimationCallback.get(path);
+   
+
+    setPointerInterpolationCallback(path: string, action: IInterpolateAction): void {
+        this.eventBus.setPointerInterpolationCallback(path, action);
     }
 
-    setWorldAnimationPathCallback(path: string, cancelable: ICancelable | undefined): void {
-        if (cancelable === undefined) {
-            this.pathToWorldAnimationCallback.delete(path);
-        } else {
-            this.pathToWorldAnimationCallback.set(path, cancelable)
-        }
+    setVariableInterpolationCallback(variable: number, action: IInterpolateAction): void {
+        this.eventBus.setVariableInterpolationCallback(variable, action);
     }
 
-    getVariableInterpolationCallback(variable: number): ICancelable | undefined {
-        return this.variableInterpolationCallback.get(variable);
+    clearPointerInterpolation(path: string): void {
+        this.eventBus.clearPointerInterpolation(path);
     }
 
-    setVariableInterpolationCallback(variable: number, cancelable: ICancelable | undefined): void {
-        if (cancelable === undefined) {
-            this.variableInterpolationCallback.delete(variable);
-        } else {
-            this.variableInterpolationCallback.set(variable, cancelable);
-        }
+    clearVariableInterpolation(variable: number): void {
+        this.eventBus.clearVariableInterpolation(variable);
     }
 }

@@ -21,7 +21,7 @@ export class VariableSet extends BehaveEngineNode {
         const {value} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
         this.graphEngine.processNodeStarted(this);
 
-        this.graphEngine.getVariableInterpolationCallback(this._variable)?.cancel();
+        this.graphEngine.clearVariableInterpolation(this._variable);
 
         if (Array.isArray(value)) {
             this.variables[this._variable].value = value;

@@ -154,7 +154,7 @@ export class BabylonDecorator extends ADecorator {
     }
 
     animateProperty = (path: string, easingParameters: any, callback: () => void) => {
-        this.behaveEngine.getWorldAnimationPathCallback(path)?.cancel();
+        this.behaveEngine.clearPointerInterpolation(path);
         const startTime = Date.now();
 
         const action = async () => {
@@ -172,17 +172,12 @@ export class BabylonDecorator extends ADecorator {
 
             if (elapsedDuration >= easingParameters.easingDuration) {
                 this.behaveEngine.setPathValue(path, easingParameters.targetValue);
-                this.scene.unregisterBeforeRender(action);
+                this.behaveEngine.clearPointerInterpolation(path);
                 callback()
             }
         }
 
-        this.scene.registerBeforeRender(action);
-        const cancel = () => {
-            this.scene.unregisterBeforeRender(action);
-            this.behaveEngine.setWorldAnimationPathCallback(path, undefined);
-        }
-        this.setWorldAnimationPathCallback(path, {cancel: cancel} );
+        this.behaveEngine.setPointerInterpolationCallback(path, {action: action} );
     }
 
     animateCubicBezier = (
@@ -195,7 +190,7 @@ export class BabylonDecorator extends ADecorator {
         valueType: string,
         callback: () => void
     ) => {
-        this.behaveEngine.getWorldAnimationPathCallback(path)?.cancel();
+        this.behaveEngine.clearPointerInterpolation(path);
         const startTime = Date.now();
 
         const action = async () => {
@@ -223,17 +218,12 @@ export class BabylonDecorator extends ADecorator {
 
             if (elapsedDuration >= duration) {
                 this.behaveEngine.setPathValue(path, targetValue);
-                this.scene.unregisterBeforeRender(action);
+                this.behaveEngine.clearPointerInterpolation(path);
                 callback()
             }
         }
 
-        this.scene.registerBeforeRender(action);
-        const cancel = () => {
-            this.scene.unregisterBeforeRender(action);
-            this.behaveEngine.setWorldAnimationPathCallback(path, undefined);
-        }
-        this.setWorldAnimationPathCallback(path, {cancel: cancel} );
+        this.behaveEngine.setPointerInterpolationCallback(path, {action: action} );
     }
 
     registerJsonPointer = (jsonPtr: string, getterCallback: (path: string) => any, setterCallback: (path: string, value: any) => void, typeName: string, readOnly: boolean) => {

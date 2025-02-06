@@ -43,10 +43,10 @@ export class LoggingDecorator extends ADecorator {
     };
 
     animateCubicBezier = (path: string, p1: number[], p2: number[], initialValue: any, targetValue: any, duration: number, valueType: string, callback: () => void): void => {
-        this.behaveEngine.getWorldAnimationPathCallback(path)?.cancel();
+        this.behaveEngine.clearPointerInterpolation(path);
 
         const startTime = Date.now();
-        const interpolationInterval = setInterval(() => {
+        const interpolationAction = () => {
             const elapsedDuration = (Date.now() - startTime) / 1000;
             const t = Math.min(elapsedDuration / duration, 1);
             const p = cubicBezier(t, {x: 0, y:0}, {x: p1[0], y:p1[1]}, {x: p2[0], y:p2[1]}, {x: 1, y:1});
@@ -71,34 +71,28 @@ export class LoggingDecorator extends ADecorator {
 
             if (elapsedDuration >= duration) {
                 this.behaveEngine.setPathValue(path, targetValue);
-                clearInterval(interpolationInterval);
+                this.behaveEngine.clearPointerInterpolation(path);
                 callback()
             }
-        }, 1000 / this.behaveEngine.fps);
-    
-
-        const cancel = () => {
-            clearInterval(interpolationInterval);
-            this.behaveEngine.setWorldAnimationPathCallback(path, undefined);
         }
-        this.setWorldAnimationPathCallback(path, {cancel: cancel} );
+    
+        this.behaveEngine.setPointerInterpolationCallback(path, {action: interpolationAction} );
     }
 
 
     animateProperty = (path: string, easingParameters: any, callback: () => void) => {
-        this.behaveEngine.getWorldAnimationPathCallback(path)?.cancel();
+        this.behaveEngine.clearPointerInterpolation(path);
 
-        const animatePropertyCallback = setTimeout(() => {
-            this.behaveEngine.setPathValue(path, easingParameters.targetValue);
-            callback();
-            this.behaveEngine.setWorldAnimationPathCallback(path, undefined);
-        }, easingParameters.easingDuration * 1000);
-
-        const cancel = () => {
-            clearTimeout(animatePropertyCallback);
-            this.behaveEngine.setWorldAnimationPathCallback(path, undefined);
+        const startTime = Date.now();
+        const action = () => {
+            const elapsedDuration = (Date.now() - startTime) / 1000;
+            if (elapsedDuration >= easingParameters.easingDuration) {
+                this.behaveEngine.setPathValue(path, easingParameters.targetValue);
+                callback();
+                this.behaveEngine.clearPointerInterpolation(path);
+            }
         }
-        this.setWorldAnimationPathCallback(path, {cancel: cancel} );
+        this.behaveEngine.setPointerInterpolationCallback(path, {action: action} );
     }
 
     registerKnownPointers = () => {

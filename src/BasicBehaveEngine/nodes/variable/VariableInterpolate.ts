@@ -34,11 +34,11 @@ export class VariableInterpolate extends BehaveEngineNode {
             }
             return;
         }
-        this.graphEngine.getVariableInterpolationCallback(this._variable)?.cancel();
+        this.graphEngine.clearVariableInterpolation(this._variable);
 
         //set of interpolation
         const callback = () => {
-            this.graphEngine.setVariableInterpolationCallback(this._variable, undefined);
+            this.graphEngine.clearVariableInterpolation(this._variable);
             if (this.flows.done) {
                 this.addEventToWorkQueue(this.flows.done)
             }
@@ -47,7 +47,7 @@ export class VariableInterpolate extends BehaveEngineNode {
         const targetValue = value;
         const startTime = Date.now();
 
-        const interpolationInterval = setInterval(() => {
+        const interpolationAction = () => {
             const elapsedDuration = (Date.now() - startTime) / 1000;
             const t = Math.min(elapsedDuration / duration, 1);
             const p = cubicBezier(t, {x: 0, y:0}, {x: p1[0], y:p1[1]}, {x: p2[0], y:p2[1]}, {x: 1, y:1});
@@ -73,11 +73,11 @@ export class VariableInterpolate extends BehaveEngineNode {
 
             if (elapsedDuration >= duration) {
                 this.variables[this._variable].value = [targetValue];
-                clearInterval(interpolationInterval);
+                this.graphEngine.clearVariableInterpolation(this._variable);
                 callback()
             }
-        }, 1000 / this.graphEngine.fps);
-        this.graphEngine.setVariableInterpolationCallback(this._variable, {cancel: () => clearInterval(interpolationInterval)});
+        };
+        this.graphEngine.setVariableInterpolationCallback(this._variable, {action: interpolationAction});
 
         if (this.flows.out) {
             this.processFlow(this.flows.out);

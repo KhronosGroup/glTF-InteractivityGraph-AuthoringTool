@@ -1,4 +1,4 @@
-import { IEventBus } from "../IBehaveEngine";
+import { IEventBus, IInterpolateAction } from "../IBehaveEngine";
 
 import { IEventQueueItem } from "../IBehaveEngine";
 
@@ -6,12 +6,14 @@ export class DOMEventBus implements IEventBus {
     private eventList: IEventQueueItem[];
     private customEventListeners: Record<string, ((event: CustomEvent) => void)[]>;
     private eventListeners: Record<string, (event: Event) => void>;
-
-
+    private variableInterpolationCallbacks: Record<number, IInterpolateAction>;
+    private pointerInterpolationCallbacks: Record<string, IInterpolateAction>;
     constructor() {
         this.eventList = [];
         this.customEventListeners = {};
         this.eventListeners = {};
+        this.variableInterpolationCallbacks = {};
+        this.pointerInterpolationCallbacks = {};
     }
 
     public getEventList = (): IEventQueueItem[] => {
@@ -57,5 +59,29 @@ export class DOMEventBus implements IEventBus {
             document.removeEventListener(name, this.eventListeners[name]);
         });
         this.eventListeners = {};
+    }
+
+    public setVariableInterpolationCallback = (variable: number, action: IInterpolateAction): void => {
+        this.variableInterpolationCallbacks[variable] = action;
+    }
+
+    public clearVariableInterpolation = (variable: number): void => {
+        delete this.variableInterpolationCallbacks[variable];
+    }
+
+    public getVariableInterpolationCallbacks = (): Record<number, IInterpolateAction> => {
+        return this.variableInterpolationCallbacks;
+    }
+
+    public setPointerInterpolationCallback = (pointer: string, action: IInterpolateAction): void => {
+        this.pointerInterpolationCallbacks[pointer] = action;
+    }
+
+    public clearPointerInterpolation = (pointer: string): void => {
+        delete this.pointerInterpolationCallbacks[pointer];
+    }
+
+    public getPointerInterpolationCallbacks = (): Record<string, IInterpolateAction> => {
+        return this.pointerInterpolationCallbacks;
     }
 }

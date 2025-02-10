@@ -4,7 +4,7 @@ import { Handle, Position} from "reactflow";
 
 import {RenderIf} from "../components/RenderIf";
 import { IInteractivityFlow, IInteractivityValue, IInteractivityNode, IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityVariable, IInteractivityValueType } from "../types/InteractivityGraph";
-import { knownDeclarations, standardTypes } from "../types/nodes";
+import { interactivityNodeSpecs, knownDeclarations, standardTypes } from "../types/nodes";
 import { InteractivityGraphContext } from "../InteractivityGraphContext";
 
 require("../css/flowNodes.css");
@@ -187,7 +187,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         if (updatedConfiguration.pointer !== undefined) {
             const vals = parsePath(updatedConfiguration.pointer.value?.[0] || "");
             for (let i = 0; i < vals.length; i++) {
-                const value: IInteractivityValue = {value: [undefined], typeOptions: [2], type: 2}
+                const value: IInteractivityValue = {value: [undefined], typeOptions: [1], type: 1}
                 inputValuesToSet[vals[i]] = value;
             }
         }
@@ -235,10 +235,56 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
             }
         }
 
-        setOutputFlows({...outputFlows, ...outputFlowsToSet});
-        setInputFlows({...inputFlows, ...inputFlowsToSet});
-        setInputValues({...inputValues, ...inputValuesToSet});
-        setOutputValues({...outputValues, ...outputValuesToSet});
+        const nodeSpec: IInteractivityNode = interactivityNodeSpecs.find(node => node.op === nodeType)!;
+        
+        const nodeSpecInputValues: Record<string, IInteractivityValue> = nodeSpec.values?.input || {};
+        const nodeSpecOutputValues: Record<string, IInteractivityValue> = nodeSpec.values?.output || {};
+        const nodeSpecInputFlows: Record<string, IInteractivityFlow> = nodeSpec.flows?.input || {};
+        const nodeSpecOutputFlows: Record<string, IInteractivityFlow> = nodeSpec.flows?.output || {};
+
+        // We only want to set socket values that are either in the node's spec or are created as a result of the configuration
+        // If the current node has a value for a socket we should use it otherwise we will use the node spec default (if it exists)
+        // remaining sockets would have been populated during the above configuration evaluation
+        const knownInputValueKeys = [...Object.keys(nodeSpecInputValues), ...Object.keys(inputValuesToSet)];
+        for (const key of knownInputValueKeys) {
+            if (inputValues[key] !== undefined && (inputValues[key].value?.[0] != null || inputValues[key].node != null)) {
+                inputValuesToSet[key] = inputValues[key];
+            } else if (nodeSpecInputValues[key] !== undefined) {
+                inputValuesToSet[key] = nodeSpecInputValues[key];
+            }
+        }
+
+        const knownOutputValueKeys = [...Object.keys(nodeSpecOutputValues), ...Object.keys(outputValuesToSet)];
+        for (const key of knownOutputValueKeys) {
+            if (outputValues[key] !== undefined && (outputValues[key].value?.[0] != null || outputValues[key].node != null)) {
+                outputValuesToSet[key] = outputValues[key];
+            } else if (nodeSpecOutputValues[key] !== undefined) {
+                outputValuesToSet[key] = nodeSpecOutputValues[key];
+            }
+        }
+
+        const knownInputFlowKeys = [...Object.keys(nodeSpecInputFlows), ...Object.keys(inputFlowsToSet)];
+        for (const key of knownInputFlowKeys) {
+            if (inputFlows[key] !== undefined && (inputFlows[key].node != null)) {
+                inputFlowsToSet[key] = inputFlows[key];
+            } else if (nodeSpecInputFlows[key] !== undefined) {
+                inputFlowsToSet[key] = nodeSpecInputFlows[key];
+            }
+        }
+
+        const knownOutputFlowKeys = [...Object.keys(nodeSpecOutputFlows), ...Object.keys(outputFlowsToSet)];
+        for (const key of knownOutputFlowKeys) {
+            if (outputFlows[key] !== undefined && (outputFlows[key].node != null)) {
+                outputFlowsToSet[key] = outputFlows[key];
+            } else if (nodeSpecOutputFlows[key] !== undefined) {
+                outputFlowsToSet[key] = nodeSpecOutputFlows[key];
+            }
+        }
+
+        setOutputFlows(outputFlowsToSet);
+        setInputFlows(inputFlowsToSet);
+        setInputValues(inputValuesToSet);
+        setOutputValues(outputValuesToSet);
     }, [inputValues, outputValues, inputFlows, outputFlows, node, configuration])
 
     const stringToListOfNumbers = (inputString: string) => {
@@ -353,7 +399,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                     {
 
                                         props.data.types.map((t: any, index: number) => (
-                                            <option key={index} value={index} selected={configuration.type.value?.[0] == index}>{t.name}</option>
+                                            <option key={index} value={index} selected={configuration.type.value?.[0] == index}>{t.name || t.signature}</option>
                                         ))
                                     }
                                 </select>

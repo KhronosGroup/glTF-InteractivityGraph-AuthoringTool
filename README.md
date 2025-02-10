@@ -104,6 +104,7 @@ To add your own pointer, simply add the logic for your getter and setter to the 
 - configuration default values and validation
 - decleration validation
 - read through validation steps in spec and add any missing
+- handle graphs with different types in authroing system => do not override types array or assume it is always the standard one
 
 ### Non normative implementations
 - writing mesh material with pointer path (will be replaced in the future when KHR_materials_variants is specified) > "/meshes/${nodeIndex}/primitives/${primitiveIndex}/material""

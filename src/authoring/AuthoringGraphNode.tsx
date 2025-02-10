@@ -378,7 +378,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                     {
 
                                         props.data.variables.map((v: any, index: number) => (
-                                            <option key={index} value={index} selected={configuration.variable.value?.[0] == index}>{v.name}</option>
+                                            <option key={index} value={index} selected={configuration.variable.value?.[0] == index}>{v.name || v.id}</option>
                                         ))
                                     }
                                 </select>

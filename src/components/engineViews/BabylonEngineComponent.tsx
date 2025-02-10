@@ -16,7 +16,6 @@ import {Scene} from "@babylonjs/core/scene";
 import "@babylonjs/loaders/glTF";
 import {Spacer} from "../Spacer";
 import {KHR_interactivity, KHR_INTERACTIVITY_EXTENSION_NAME} from "../../loaderExtensions/KHR_interactivity";
-import {KHR_node_visibility, KHR_NODE_VISIBILITY_EXTENSION_NAME} from "../../loaderExtensions/KHR_node_visibility";
 import {GLTFLoader} from "@babylonjs/loaders/glTF/2.0";
 import {BabylonDecorator} from "../../BasicBehaveEngine/decorators/BabylonDecorator";
 import {BasicBehaveEngine} from "../../BasicBehaveEngine/BasicBehaveEngine";
@@ -33,9 +32,7 @@ GLTFLoader.RegisterExtension(KHR_INTERACTIVITY_EXTENSION_NAME, (loader) => {
     return new KHR_interactivity(loader);
 });
 
-GLTFLoader.RegisterExtension(KHR_NODE_VISIBILITY_EXTENSION_NAME, (loader) => {
-    return new KHR_node_visibility(loader);
-});
+
 
 export const BabylonEngineComponent = () => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -155,7 +152,6 @@ export const BabylonEngineComponent = () => {
         rootNode.getChildren<TransformNode>().forEach((child: TransformNode) => traverse(child));
 
         finalNodes.sort((a, b) => a.metadata.nodeIndex - b.metadata.nodeIndex);
-        console.log(finalNodes);
         return finalNodes;
     }
 
@@ -342,4 +338,3 @@ export const BabylonEngineComponent = () => {
         </div>
     )
 }
-

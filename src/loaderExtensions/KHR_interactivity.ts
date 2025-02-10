@@ -1,6 +1,4 @@
 import { GLTFLoader, IGLTFLoaderExtension } from '@babylonjs/loaders/glTF/2.0';
-import { IScene } from '@babylonjs/loaders/glTF/2.0/glTFLoaderInterfaces';
-import { Nullable } from '@babylonjs/core/types.js';
 
 export const KHR_INTERACTIVITY_EXTENSION_NAME = 'KHR_interactivity';
 export class KHR_interactivity implements IGLTFLoaderExtension {
@@ -17,25 +15,12 @@ export class KHR_interactivity implements IGLTFLoaderExtension {
         this._loader = null;
     }
 
-    loadSceneAsync(context: string, scene: IScene): Nullable<Promise<void>> {
-        // this is a hack, we should change the IGLTFLoaderExtension but that is part of babylonjs so for now I just copy the extension to the scene before loading
-        scene.extensions = this._loader.gltf.extensions;
-        return GLTFLoader.LoadExtensionAsync(context, scene, this.name, (extensionContext, extension) => {
-            const promises = new Array<Promise<any>>();
-            promises.push(this._loader.loadSceneAsync(context, scene));
-            if (scene.extensions && scene.extensions.KHR_interactivity && scene.extensions.KHR_interactivity) {
-                const p = async () => {
-                    this._loader.babylonScene.extras = this._loader.babylonScene.extras || {};
-                    const graphIndex = scene.extensions!.KHR_interactivity.graph;
-                    this._loader.babylonScene.extras.behaveGraph = scene.extensions!.KHR_interactivity.graphs[graphIndex];
-                };
-                promises.push(p());
-            }
-
-            return Promise.all(promises).then(() => {
-                //no op
-            });
-        });
+    public onLoading(): void {
+        console.log(this._loader?.gltf);
+        const graphIndex = this._loader?.gltf.extensions?.KHR_interactivity?.graph;
+        const interactivityGraph = this._loader?.gltf.extensions?.KHR_interactivity?.graphs[graphIndex];
+        this._loader.babylonScene.metadata = this._loader.babylonScene.metadata || {};
+        this._loader.babylonScene.metadata.behaveGraph = interactivityGraph;
     }
 }
 

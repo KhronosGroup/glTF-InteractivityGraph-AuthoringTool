@@ -81,13 +81,9 @@ describe('Extensions', () => {
 
 
     it('should add behaviors to scene extras', async () => {
-        const loadScene: IScene = {
-            index: 0,
-            nodes: [],
-        };
-        await khrInteractivity.loadSceneAsync('test', loadScene);
-        expect(scene.extras.behaveGraph).not.toBeUndefined();
-        const behavior = scene.extras.behaveGraph;
+        khrInteractivity.onLoading();
+        expect(scene.metadata.behaveGraph).not.toBeUndefined();
+        const behavior = scene.metadata.behaveGraph;
         expect(behavior.nodes.length).toBe(1);
         expect(behavior.events.length).toBe(0);
         expect(behavior.variables.length).toBe(0);

@@ -10,7 +10,8 @@ import {
     Quaternion,
     TargetCamera, Node,
     PickingInfo,
-    IPointerEvent
+    IPointerEvent,
+    TransformNode
 } from "@babylonjs/core";
 import {Vector3} from "@babylonjs/core/Maths/math.vector";
 import {cubicBezier, easeFloat, easeFloat3, easeFloat4, linearFloat, slerpFloat4} from "../easingUtils";
@@ -151,6 +152,16 @@ export class BabylonDecorator extends ADecorator {
 
     getWorld = (): any => {
         return this.world;
+    }
+
+    public loadBehaveGraphFromRootNode(rootNode: TransformNode): void {
+        if (rootNode.metadata === undefined || rootNode.metadata['behaveGraph'] === undefined) {
+            console.info('No behavior found in root node');
+            return;
+        }
+
+        const behaveGraph = rootNode.metadata['behaveGraph'];
+        this.loadBehaveGraph(behaveGraph);
     }
 
     animateProperty = (path: string, easingParameters: any, callback: () => void) => {
@@ -786,12 +797,12 @@ export class BabylonDecorator extends ADecorator {
     }
 
     public extractBehaveGraphFromScene = (): any => {
-        if ((this.scene as never)['extras'] === undefined || (this.scene as never)['extras']['behaveGraph'] === undefined) {
+        if (this.scene.metadata.behaveGraph === undefined) {
             console.info('No behavior found in scene');
             return;
         }
 
-        return (this.scene as never)['extras']['behaveGraph'];
+        return this.scene.metadata.behaveGraph;
     };
 
     public addNodeClickedListener = (nodeIndex: number, callback: (selectionPoint: number[], selectedNodeIndex: number, controllerIndex: number, selectionRayOrigin: number[]) => void): void => {

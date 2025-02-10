@@ -19,7 +19,7 @@ export class Normalize extends BehaveEngineNode {
         switch (type) {
             case "float2":
                 // eslint-disable-next-line no-case-declarations
-                const length2 = Math.sqrt(Math.pow(a[0], 2) + Math.pow(a[1], 2));
+                const length2 = Math.hypot(a[0], a[1]);
                 val = [
                     a[0]/length2,
                     a[1]/length2
@@ -27,7 +27,7 @@ export class Normalize extends BehaveEngineNode {
                 break;
             case "float3":
                 // eslint-disable-next-line no-case-declarations
-                const length3 = Math.sqrt(Math.pow(a[0], 2) + Math.pow(a[1], 2) + Math.pow(a[2], 2));
+                const length3 = Math.hypot(a[0], a[1], a[2]);
                 val = [
                     a[0]/length3,
                     a[1]/length3,
@@ -36,7 +36,7 @@ export class Normalize extends BehaveEngineNode {
                 break;
             case "float4":
                 // eslint-disable-next-line no-case-declarations
-                const length4 = Math.sqrt(Math.pow(a[0], 2) + Math.pow(a[1], 2) + Math.pow(a[2], 2) + Math.pow(a[3], 2));
+                const length4 = Math.hypot(a[0], a[1], a[2], a[3]);
                 val = [
                     a[0]/length4,
                     a[1]/length4,

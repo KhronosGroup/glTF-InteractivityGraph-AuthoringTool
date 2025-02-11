@@ -280,6 +280,12 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                 outputFlowsToSet[key] = nodeSpecOutputFlows[key];
             }
         }
+        if (nodeSpec.op === "flow/sequence") {
+            // flow sequence is a very special node which has sockets that are not in the node spec nor or generated based on configuration
+            for (const key of Object.keys(outputFlows)) {
+                outputFlowsToSet[key] = outputFlows[key];
+            }
+        }
 
         setOutputFlows(outputFlowsToSet);
         setInputFlows(inputFlowsToSet);

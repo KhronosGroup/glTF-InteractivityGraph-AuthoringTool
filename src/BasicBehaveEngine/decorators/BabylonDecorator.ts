@@ -136,6 +136,11 @@ export class BabylonDecorator extends ADecorator {
                 }
             }
         }
+
+        // setting all nodes to inherit visibility (defualt in KHR_interactivity's opinion)
+        for (const node of this.world.glTFNodes) {
+            node.inheritVisibility = true;
+        }
     }
 
     processAddingNodeToQueue = (flow: IInteractivityFlow) => {
@@ -676,16 +681,15 @@ export class BabylonDecorator extends ADecorator {
         }, (path, value) => {
             const parts: string[] = path.split("/");
             const node = this.world.glTFNodes[Number(parts[2])];
-            const shouldBeVisible = value || value === undefined || value === null;
 
             if (node instanceof AbstractMesh) {
-                (node as AbstractMesh).isVisible = shouldBeVisible;
+                (node as AbstractMesh).isVisible = value;
             }
             if (node._babylonTransformNode) {
-                (node._babylonTransformNode as AbstractMesh).isVisible = shouldBeVisible;
+                (node._babylonTransformNode as AbstractMesh).isVisible = value;
             }
             node._primitiveBabylonMeshes?.forEach((mesh: AbstractMesh) => {
-                mesh.isVisible = shouldBeVisible;
+                mesh.isVisible = value;
             });
         }, "bool", false);
 

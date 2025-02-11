@@ -2237,12 +2237,12 @@ const mathTrigNodeSpecs: IInteractivityNode[] = [
         description: "Arc tangent of y/x in radians",
         values: {
             input: {
-                y: {
+                a: {
                     typeOptions: floatNTypes,
                     type: 2,
                     value: [undefined]
                 },
-                x: {
+                b: {
                     typeOptions: floatNTypes,
                     type: 2,
                     value: [undefined]

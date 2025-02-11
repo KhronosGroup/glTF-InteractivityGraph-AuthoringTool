@@ -827,7 +827,7 @@ export class BabylonDecorator extends ADecorator {
                     return;
                 }
                 const targetMesh: AbstractMesh = this.world.glTFNodes[nodeIndex];
-                if (targetMesh !== hit.pickedMesh && targetMesh.id !== hit.pickedMesh.id && (!targetMesh.getChildMeshes(false).includes(hit.pickedMesh))) {
+                if (targetMesh !== hit.pickedMesh && targetMesh.uniqueId !== hit.pickedMesh.uniqueId && (!targetMesh.getChildMeshes(false).includes(hit.pickedMesh))) {
                     return;
                 } else if (targetMesh.getChildMeshes(false).includes(hit.pickedMesh) && hit.pickedMesh.metadata.onSelectCallback != null) {
                     return;
@@ -838,6 +838,7 @@ export class BabylonDecorator extends ADecorator {
                         pos = [-hit.pickedPoint.x, hit.pickedPoint.y, hit.pickedPoint.z];
                     }
                     const hitNodeIndex = this.world.glTFNodes.findIndex((value: { uniqueId: number; }) => value.uniqueId === hit.pickedMesh!.uniqueId);
+                    
                     callback(pos, hitNodeIndex, 0, [-ray.origin.x, ray.origin.y, ray.origin.z]);
                 }
             }

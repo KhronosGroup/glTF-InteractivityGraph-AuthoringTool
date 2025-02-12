@@ -50,7 +50,6 @@ export class PointerGet extends BehaveEngineNode {
     }
 
     override processNode(flowSocket?: string) {
-        this.graphEngine.clearValueEvaluationCache();
         const vals = this.evaluateAllValues(Object.keys(this._pointerVals));
         const populatedPath = this.populatePath(this._pointer, vals)
         this.graphEngine.processNodeStarted(this);

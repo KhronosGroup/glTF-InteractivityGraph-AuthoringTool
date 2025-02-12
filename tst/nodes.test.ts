@@ -313,14 +313,17 @@ describe('nodes', () => {
         const multiGate: MultiGate = new MultiGate({
             ...defaultProps,
             configuration: {isRandom: { value: [false] }, loop: { value: [false] }},
-            flows: {0: { node: 0, socket: 'in' }, 1: { node: 1, socket: 'in' }, 2: { node: 2, socket: 'in' }},
+            flows: {c: { node: 0, socket: 'in' }, a: { node: 1, socket: 'in' }, b: { node: 2, socket: 'in' }},
         });
 
         multiGate.processFlow = jest.fn<(flow: IInteractivityFlow) => Promise<void>>();
-        await multiGate.processNode('in');
-        await multiGate.processNode('in');
-        await multiGate.processNode('in');
-        await multiGate.processNode('in');
+        multiGate.processNode('in');
+        expect(multiGate.processFlow).toHaveBeenCalledWith({ socket: 'in', node: 1 });
+        multiGate.processNode('in');
+        expect(multiGate.processFlow).toHaveBeenCalledWith({ socket: 'in', node: 2 });
+        multiGate.processNode('in');
+        expect(multiGate.processFlow).toHaveBeenCalledWith({ socket: 'in', node: 0 });
+        multiGate.processNode('in');
 
         expect(multiGate.processFlow).toHaveBeenCalledTimes(3);
     });

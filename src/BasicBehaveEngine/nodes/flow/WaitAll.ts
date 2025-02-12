@@ -19,6 +19,7 @@ export class WaitAll extends BehaveEngineNode {
     }
 
     override processNode(flowSocket?: string) {
+        this.graphEngine.clearValueEvaluationCache();
         this.graphEngine.processNodeStarted(this)
         if (flowSocket === "reset") {
             this._lockedFlows = [...Array(this._numberInputFlows).keys()];

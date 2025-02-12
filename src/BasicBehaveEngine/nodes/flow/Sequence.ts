@@ -13,6 +13,7 @@ export class Sequence extends BehaveEngineNode {
     }
 
     override processNode(flowSocket?: string) {
+        this.graphEngine.clearValueEvaluationCache();
         this.graphEngine.processNodeStarted(this)
 
         const flows = Object.keys(this.flows).sort();

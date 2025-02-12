@@ -25,6 +25,7 @@ export class MultiGate extends BehaveEngineNode {
     }
 
     override processNode(flowSocket?: string) {
+        this.graphEngine.clearValueEvaluationCache();
         this.graphEngine.processNodeStarted(this);
 
         if (flowSocket === "reset") {

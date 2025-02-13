@@ -661,7 +661,7 @@ export class BabylonDecorator extends ADecorator {
                 let pickability: boolean = curNode.metadata.selectable;
                 while (curNode.parent != null && pickability) {
                     curNode = curNode.parent;
-                    pickability = pickability && (curNode.metadata.selectable ?? true)
+                    pickability = pickability && (curNode.metadata?.selectable ?? true)
                 }
                 this.world.glTFNodes[Number(parts[2])].isPickable = pickability;
             }

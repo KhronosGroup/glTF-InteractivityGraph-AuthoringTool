@@ -164,21 +164,18 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
             if (ce.values === undefined) {return}
 
             for (const key of Object.keys(ce.values)) {
-                if (inputValues[key] !== undefined) {
-                    continue;
-                }
-                const type = ce.values[key].type;
-                
+                const currentValue = inputValues[key];
+                const type = ce.values[key].type;  
                 const value: IInteractivityValue = {
                     value: [undefined],
                     typeOptions: [type],
                     type: type
                 }
-
+                const valueToSet = currentValue === undefined ? value : currentValue;
                 if (nodeType === "event/send") {
-                    inputValuesToSet[key] = value;
+                    inputValuesToSet[key] = valueToSet;
                 } else if (nodeType === "event/receive") {
-                    outputValuesToSet[key] = value;
+                    outputValuesToSet[key] = valueToSet;
                 }
             }
 
@@ -203,14 +200,12 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
             const v: IInteractivityVariable = graph.variables[variableId];
             const currentValue: IInteractivityValue = inputValues["value"];
             const value: IInteractivityValue =  {typeOptions: [v.type], type: v.type, value: [undefined]}
+            const valueToSet = currentValue === undefined ? value : currentValue;
 
-            if (currentValue === undefined) {
-                // if there is not a value here already, you can wipe it
-                if (nodeType === "variable/set" || nodeType === "variable/interpolate") {
-                    inputValuesToSet["value"] = value;
-                } else if (nodeType === "variable/get") {
-                    outputValuesToSet["value"] = value;
-                }
+            if (nodeType === "variable/set" || nodeType === "variable/interpolate") {
+                inputValuesToSet["value"] = valueToSet;
+            } else if (nodeType === "variable/get") {
+                outputValuesToSet["value"] = valueToSet;
             }
         }
         if (updatedConfiguration.type !== undefined) {

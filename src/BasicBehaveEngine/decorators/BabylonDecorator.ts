@@ -682,14 +682,12 @@ export class BabylonDecorator extends ADecorator {
             const parts: string[] = path.split("/");
             const node = this.world.glTFNodes[Number(parts[2])];
 
-            if (node instanceof AbstractMesh) {
-                (node as AbstractMesh).isVisible = value;
-            }
-            if (node._babylonTransformNode) {
-                (node._babylonTransformNode as AbstractMesh).isVisible = value;
-            }
-            node._primitiveBabylonMeshes?.forEach((mesh: AbstractMesh) => {
-                mesh.isVisible = value;
+            node.isVisible = value;
+            node.getChildMeshes().forEach((child: AbstractMesh) => {
+                if (child.metadata?.pointer === undefined) {
+                    // if the child does not have a pointer, that means it is a primitive
+                    child.isVisible = value;
+                }
             });
         }, "bool", false);
 

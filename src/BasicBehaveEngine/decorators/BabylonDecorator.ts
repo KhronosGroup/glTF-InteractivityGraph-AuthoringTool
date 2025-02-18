@@ -249,6 +249,7 @@ export class BabylonDecorator extends ADecorator {
     registerKnownPointers = () => {
         const maxGltfNode:number = this.world.glTFNodes.length-1;
         const maxGlTFMaterials: number = this.world.materials.length-1;
+        const maxAnimations: number = this.world.animations.length-1;
 
         this.registerJsonPointer(`/nodes/${maxGltfNode}/scale`, (path) => {
             const parts: string[] = path.split("/");
@@ -776,6 +777,57 @@ export class BabylonDecorator extends ADecorator {
             const primitive = mesh._primitiveBabylonMeshes[Number(parts[4])];
             primitive.material = this.world.materials[value];
         }, "int", false);
+
+        this.registerJsonPointer(`/animations/${maxAnimations}/extensions/KHR_interactivity/isPlaying`, (path) => {
+            const parts: string[] = path.split("/");
+            const animation: AnimationGroup = this.world.animations[Number(parts[2])];
+            return [animation.metadata?.instance?.isPlaying ?? false];
+        }, (path, value) => {
+            //no-op
+        }, "bool", true);
+
+        this.registerJsonPointer(`/animations/${maxAnimations}/extensions/KHR_interactivity/minTime`, (path) => {
+            const parts: string[] = path.split("/");
+            const animation: AnimationGroup = this.world.animations[Number(parts[2])];
+            const fps = 60;
+            return [animation.from / fps];
+        }, (path, value) => {
+            //no-op
+        }, "float", true);
+
+        this.registerJsonPointer(`/animations/${maxAnimations}/extensions/KHR_interactivity/maxTime`, (path) => {
+            const parts: string[] = path.split("/");
+            const animation: AnimationGroup = this.world.animations[Number(parts[2])];
+            const fps = 60;
+            return [animation.to / fps];
+        }, (path, value) => {
+            //no-op
+        }, "float", true);
+
+        this.registerJsonPointer(`/animations/${maxAnimations}/extensions/KHR_interactivity/playhead`, (path) => {
+            const parts: string[] = path.split("/");
+            const animation: AnimationGroup = this.world.animations[Number(parts[2])];
+            const animationInstance: AnimationGroup = animation?.metadata?.instance;
+            if (animationInstance === undefined || animationInstance.animatables[0] === undefined) {return [NaN]}
+            const masterFrame = animationInstance.animatables[0].masterFrame;
+            const fps = 60;
+            return [masterFrame / fps];
+        }, (path, value) => {
+            //no-op
+        }, "float", true);
+
+        // TODO: virtual playhead isnt something that is really stored on animations, ask babylon js to add it if we really need it 
+        this.registerJsonPointer(`/animations/${maxAnimations}/extensions/KHR_interactivity/virtualPlayhead`, (path) => {
+            const parts: string[] = path.split("/");
+            const animation: AnimationGroup = this.world.animations[Number(parts[2])];
+            const animationInstance: AnimationGroup = animation?.metadata?.instance;
+            if (animationInstance === undefined || animationInstance.animatables[0] === undefined) {return [NaN]}
+            const masterFrame = animationInstance.animatables[0].masterFrame;
+            const fps = 60;
+            return [masterFrame / fps];
+        }, (path, value) => {
+            //no-op
+        }, "float", true);
     }
 
     private swimDownSelectability(node: Node, parentSelctability: boolean) {
@@ -799,7 +851,7 @@ export class BabylonDecorator extends ADecorator {
     }
 
     public extractBehaveGraphFromScene = (): any => {
-        if (this.scene.metadata.behaveGraph === undefined) {
+        if (this.scene.metadata?.behaveGraph === undefined) {
             console.info('No behavior found in scene');
             return;
         }
@@ -897,8 +949,7 @@ export class BabylonDecorator extends ADecorator {
                     this._animateRange(speed, true, true, anim.from, anim.to, startFrame, anim, undefined, () => {
                         count++;
                         if (count > loops) {
-                            this._animateRange(speed, true, false, anim.from, endFrame % anim.to, anim.from, anim,
-                                callback, undefined);
+                            this._animateRange(speed, true, false, anim.from, endFrame % anim.to, anim.from, anim, callback, undefined);
                         }
                     })
                 } else if (endFrame <= anim.to) {

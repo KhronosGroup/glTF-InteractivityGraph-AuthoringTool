@@ -415,10 +415,8 @@ const NodeListComponent = (props: {closeModal: any}) => {
     const {getExecutableGraph} = useContext(InteractivityGraphContext);
     const getData = () => {
         const graph = getExecutableGraph();
-        const nodes = graph.nodes;
-        const nodeTypeSet = new Set(nodes.map((node: any) => node.type));
-        const nodeTypes = Array.from(nodeTypeSet);
-        return nodeTypes;
+        const declarations = graph.declarations;
+        return declarations.map((x: { op: any; }) => x.op);
     }
 
     const copyToClipboard = async () => {
@@ -434,7 +432,7 @@ const NodeListComponent = (props: {closeModal: any}) => {
     return (
         <Panel id={"node-list-panel"} position={"top-center"} style={{border:"1px solid gray", background: "white"}}>
             <Container style={{padding: 16}}>
-                <h3>Nde List</h3>
+                <h3>Node List</h3>
                 <pre style={{textAlign: "left", overflow:"scroll", height: 400, width: 400}}>{JSON.stringify(getData())}</pre>
                 <Row style={{ marginTop: 16 }}>
                     <Col xs={12} md={6}>

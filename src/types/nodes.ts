@@ -3638,6 +3638,13 @@ const flowNodeSpecs: IInteractivityNode[] = [
                     type: 1,
                     value: [undefined]
                 }
+            },
+            output: {
+                index: {
+                    typeOptions: [1],
+                    type: 1,
+                    value: [undefined]
+                }
             }
         }
     },

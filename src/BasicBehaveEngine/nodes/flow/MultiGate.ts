@@ -1,7 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class MultiGate extends BehaveEngineNode {
-    REQUIRED_CONFIGURATIONS = {isRandom: {}, loop: {}}
+    REQUIRED_CONFIGURATIONS = {isRandom: {defaultValue: [false]}, loop: {defaultValue: [false]}}
     _numberOutputFlows: number;
     _currentIndex: number;
     _isRandom: boolean;

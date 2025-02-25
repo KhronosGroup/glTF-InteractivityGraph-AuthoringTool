@@ -3,7 +3,7 @@ import {Vector2 } from '@babylonjs/core/Maths/math.vector';
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class OnSelect extends BehaveEngineNode {
-    REQUIRED_CONFIGURATIONS = {stopPropagation: {}, nodeIndex: {}}
+    REQUIRED_CONFIGURATIONS = {stopPropagation: {defaultValue: [false]}, nodeIndex: {defaultValue: [-1]}}
     _nodeIndex: number;
     _stopPropagation: boolean;
     pointer: Vector2;

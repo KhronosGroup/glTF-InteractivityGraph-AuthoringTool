@@ -2,7 +2,7 @@ import '@babylonjs/core/Culling/ray';
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class OnHoverOut extends BehaveEngineNode {
-    REQUIRED_CONFIGURATIONS = {stopPropagation: {}, nodeIndex: {}}
+    REQUIRED_CONFIGURATIONS = {stopPropagation: {defaultValue: [false]}, nodeIndex: {defaultValue: [-1]}}
     _nodeIndex: number;
     _stopPropagation: boolean;
     constructor(props: IBehaviourNodeProps) {

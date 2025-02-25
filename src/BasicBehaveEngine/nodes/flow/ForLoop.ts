@@ -1,7 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class ForLoop extends BehaveEngineNode {
-    REQUIRED_CONFIGURATIONS = {initialIndex: {}};
+    REQUIRED_CONFIGURATIONS = {initialIndex: {defaultValue: [0]}};
     REQUIRED_VALUES = {startIndex: {}, endIndex: {}};
 
     _initialIndex: number;

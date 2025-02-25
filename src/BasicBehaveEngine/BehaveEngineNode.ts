@@ -101,13 +101,27 @@ export class BehaveEngineNode {
      * @throws An error if a required configuration is missing.
      */
     protected validateConfigurations(configurations: Record<string, IInteractivityConfigurationValue>) {
-        Object.keys(this.REQUIRED_CONFIGURATIONS).forEach(requiredConfiguration => {
-            if (configurations == null || configurations[requiredConfiguration] == null) {
-                const err = `Required Configuration ${requiredConfiguration} is missing and no default value was provided for ${this.name}`;
-                console.error(err);
-                throw new Error(err);
+        let isMissingConfigs = false;
+        Object.entries(this.REQUIRED_CONFIGURATIONS).forEach(([key, value]) => {
+            if (configurations[key] == null) {
+                if (value.defaultValue == null) {
+                    const err = `Required Configuration ${key} is missing and there is no default value provided for ${this.name}`;
+                    console.error(err);
+                    throw new Error(err);
+                } else {
+                    //todo: if one is missing or invalid?? we need to default to the default value for all
+                    configurations[key] = {value: value.defaultValue};
+                    isMissingConfigs = true;
+                }
             }
         });
+        if (isMissingConfigs) {
+            Object.entries(this.REQUIRED_CONFIGURATIONS).forEach(([key, value]) => {
+                configurations[key] = {value: value.defaultValue};
+            });
+        }
+
+        //TODO: validation of the domain of the config (probably need to do in each node)
     }
 
     /**

@@ -53,6 +53,7 @@ export enum InteractivityConfigurationValueType {
 
 export interface IInteractivityConfigurationValue {
    value?: any[]
+   defaultValue?: any[]
 }
 
 export interface IInteractivityFlow {

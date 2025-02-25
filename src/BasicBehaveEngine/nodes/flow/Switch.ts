@@ -1,7 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class Switch extends BehaveEngineNode {
-    REQUIRED_CONFIGURATIONS = {cases: {}};
+    REQUIRED_CONFIGURATIONS = {cases: {defaultValue: [[]]}};
     REQUIRED_VALUES = {selection: {}};
 
     _cases: number[];

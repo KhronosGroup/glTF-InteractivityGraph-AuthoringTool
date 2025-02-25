@@ -1,7 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class WaitAll extends BehaveEngineNode {
-    REQUIRED_CONFIGURATIONS = {inputFlows: {}}
+    REQUIRED_CONFIGURATIONS = {inputFlows: {defaultValue: [0]}}
 
     _lockedFlows: number[];
     _numberInputFlows: number;

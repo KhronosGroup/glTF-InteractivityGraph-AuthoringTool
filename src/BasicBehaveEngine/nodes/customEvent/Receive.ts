@@ -3,6 +3,7 @@ import {IInteractivityEvent} from "../../../types/InteractivityGraph";
 
 export class Receive extends BehaveEngineNode {
     REQUIRED_CONFIGURATIONS = {event: {}}
+    _defaultValues: Record<string, any> = {};
 
     _event: number;
     constructor(props: IBehaviourNodeProps) {
@@ -22,18 +23,27 @@ export class Receive extends BehaveEngineNode {
 
         const customEventDesc: IInteractivityEvent = this.events[event];
 
+        const defaultValues: Record<string, any> = {};
         Object.entries(customEventDesc.values).forEach(([key, value]) => {
-            // TODO Probably should be the default value based on type
-            // TODO Spec says that the default for float is NaN, not sure why
-            const defaultValue = 0;
-            this.outValues[key] = {
-                value: [defaultValue],
+            const typeName = this.getType(value.type);
+            let defaultVal = this.getDefualtValueForType(typeName);
+            if (value.value) {
+                // if there is a given default value in the CE then use that
+                defaultVal = value.value;
+            }
+            defaultValues[key] = {
+                value: defaultVal,
                 type: value.type,
             }
         });
+        this._defaultValues = defaultValues;
+        this.outValues = JSON.parse(JSON.stringify(defaultValues));
 
         this.graphEngine.addCustomEventListener(`KHR_INTERACTIVITY:${customEventDesc.id}`, (e: any) => {
             this.graphEngine.processNodeStarted(this);
+
+            // reset values to default before processing the event
+            this.outValues = JSON.parse(JSON.stringify(this._defaultValues));
             const ce = (e as CustomEvent).detail as { [key: string]: any };
             Object.keys(ce).forEach((ceKey) => {
                 const typeIndex = Object.entries(customEventDesc.values).find(([key, _]) => key === ceKey)?.[1]?.type;

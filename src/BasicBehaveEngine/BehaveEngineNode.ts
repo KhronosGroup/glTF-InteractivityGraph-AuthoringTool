@@ -212,6 +212,9 @@ export class BehaveEngineNode {
                 return [NaN, NaN, NaN, NaN];
             case "float4x4":
                 return [NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN];
+            default:
+                console.error(`No default value for type ${type} returning NaN which is probably not valid`);
+                return [NaN];
         }
     }
 

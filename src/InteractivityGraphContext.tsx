@@ -1,5 +1,5 @@
 import { createContext, useRef, useState } from 'react';
-import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityGraph, IInteractivityNode, IInteractivityVariable } from './types/InteractivityGraph';
+import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityGraph, IInteractivityNode, IInteractivityValue, IInteractivityVariable } from './types/InteractivityGraph';
 import { createNoOpNode, interactivityNodeSpecs, standardTypes } from './types/nodes';
 import { v4 as uuidv4 } from 'uuid';
 import { Edge, Node } from 'reactflow';
@@ -318,10 +318,16 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         graph.declarations = [...graphRef.current.declarations];
         for (const node of graphRef.current.nodes) {
 
+            // Create stripped values object without typeOptions
+            const strippedValues: Record<string, IInteractivityValue> = {};
+            Object.entries(node.values?.input || {}).forEach(([key, value]) => {
+                strippedValues[key] = {...value, typeOptions: undefined};
+            });
+
             const behaveNode: any = {
                 id: node.uid,
                 declaration: graph.declarations.findIndex((declaration: IInteractivityDeclaration) => declaration.op === node.op),
-                values: node.values?.input || {},
+                values: strippedValues,
                 configuration: node.configuration || {},
                 flows: node.flows?.output || {},
                 metadata: node.metadata

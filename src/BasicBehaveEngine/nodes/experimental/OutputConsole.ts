@@ -30,16 +30,16 @@ export class OutputConsole extends BehaveEngineNode {
             case 7:
             case 8:
                 let matrixString = '';
-                for (let row = 0; row < message.length; row++) {
+                for (let col = 0; col < message[0].length; col++) {
                     matrixString += '[ ';
-                    for (let col = 0; col < message[row].length; col++) {
+                    for (let row = 0; row < message.length; row++) {
                         matrixString += message[row][col];
-                        if (col < message[row].length - 1) {
+                        if (row < message.length - 1) {
                             matrixString += ', ';
                         }
                     }
                     matrixString += ' ]';
-                    if (row < message.length - 1) {
+                    if (col < message[0].length - 1) {
                         matrixString += '\n';
                     }
                 }

@@ -21,6 +21,6 @@ export class Combine3x3 extends BehaveEngineNode {
             }
         }
 
-        return {'value': {value: [[a, b, c], [d, e, f], [g, h, i]], type: this.getTypeIndex("float3x3")}};
+        return {'value': {value: [[a, d, g], [b, e, h], [c, f, i]], type: this.getTypeIndex("float3x3")}};
     }
 }

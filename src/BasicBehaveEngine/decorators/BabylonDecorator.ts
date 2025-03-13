@@ -740,10 +740,10 @@ export class BabylonDecorator extends ADecorator {
             const node = this.world.glTFNodes[Number(parts[2])];
             const matrix = (node as AbstractMesh).getPoseMatrix().asArray();
             return [
-                [matrix[0], matrix[1], matrix[2], matrix[3]],
-                [matrix[4], matrix[5], matrix[6], matrix[7]], 
-                [matrix[8], matrix[9], matrix[10], matrix[11]],
-                [matrix[12], matrix[13], matrix[14], matrix[15]]
+                [matrix[0], matrix[4], matrix[8], matrix[12]],
+                [matrix[1], matrix[5], matrix[9], matrix[13]], 
+                [matrix[2], matrix[6], matrix[10], matrix[14]],
+                [matrix[3], matrix[7], matrix[11], matrix[15]]
             ];
         }, (path, value) => {
             //no-op
@@ -754,10 +754,10 @@ export class BabylonDecorator extends ADecorator {
             const node = this.world.glTFNodes[Number(parts[2])];
             const globalMatrix = (node as AbstractMesh).getWorldMatrix().asArray();
             return [
-                [globalMatrix[0], globalMatrix[1], globalMatrix[2], globalMatrix[3]],
-                [globalMatrix[4], globalMatrix[5], globalMatrix[6], globalMatrix[7]], 
-                [globalMatrix[8], globalMatrix[9], globalMatrix[10], globalMatrix[11]],
-                [globalMatrix[12], globalMatrix[13], globalMatrix[14], globalMatrix[15]]
+                [globalMatrix[0], globalMatrix[4], globalMatrix[8], globalMatrix[12]],
+                [globalMatrix[1], globalMatrix[5], globalMatrix[9], globalMatrix[13]], 
+                [globalMatrix[2], globalMatrix[6], globalMatrix[10], globalMatrix[14]],
+                [globalMatrix[3], globalMatrix[7], globalMatrix[11], globalMatrix[15]]
             ];
         }, (path, value) => {
             //no-op

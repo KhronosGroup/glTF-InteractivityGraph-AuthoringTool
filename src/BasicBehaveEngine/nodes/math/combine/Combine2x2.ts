@@ -21,6 +21,6 @@ export class Combine2x2 extends BehaveEngineNode {
             }
         }
 
-        return {'value': {value: [[a, b], [c, d]], type: this.getTypeIndex("float2x2")}};
+        return {'value': {value: [[a, c], [b, d]], type: this.getTypeIndex("float2x2")}};
     }
 }

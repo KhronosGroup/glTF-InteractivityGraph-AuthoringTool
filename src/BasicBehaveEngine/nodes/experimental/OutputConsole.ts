@@ -23,12 +23,13 @@ export class OutputConsole extends BehaveEngineNode {
             case 2:
             case 3:
             case 4:
-            case 5:
+            case 5: {
                 console.log(`ADBE/outputConsole: ${message}`);
                 break;
+            }
             case 6:
             case 7:
-            case 8:
+            case 8: {
                 let matrixString = '';
                 for (let col = 0; col < message[0].length; col++) {
                     matrixString += '[ ';
@@ -45,9 +46,11 @@ export class OutputConsole extends BehaveEngineNode {
                 }
                 console.log(`ADBE/outputConsole: ${matrixString}`);
                 break;
-            default:
+            }
+            default: {
                 console.log(`ADBE/outputConsole: ${message}`);
                 break;
+            }
         }
 
         super.processNode(flowSocket);

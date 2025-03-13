@@ -166,6 +166,8 @@ export class ThreeDecorator extends ADecorator {
         const oldHoveredNode = this.hoveredNode;
         const oldHoveredNodeIndex = this.hoveredNodeIndex;
 
+        this.hoveredNode = null;
+
         if (intersects.length > 0) {
             const intersectedObject = intersects[0].object;
             this.hoveredNode = intersectedObject;
@@ -174,9 +176,8 @@ export class ThreeDecorator extends ADecorator {
             const hitNodeIndex = this.world.glTFNodes.findIndex(
                 (node: Object3D) => node.uuid === intersectedObject.uuid
             );
-            this.hoveredNodeIndex = hitNodeIndex;
 
-            // Handle hover events
+            // Swim up tree and set hovered to true on parents
             let curNode: Object3D | null = intersectedObject;
 
             // Swim up tree and set hovered to true on parents
@@ -184,7 +185,7 @@ export class ThreeDecorator extends ADecorator {
                 curNode.userData = curNode.userData || {};
                 curNode.userData.shouldExecuteHoverIn = curNode.userData.hovered == null || curNode.userData.hovered == false;
                 curNode.userData.hovered = true;
-                curNode.userData.hoveredNodeIndex = hitNodeIndex;
+
                 curNode = curNode.parent;
             }
 
@@ -197,32 +198,30 @@ export class ThreeDecorator extends ADecorator {
             if (curNode != null) {
                 curNode.userData.onHoverInCallback(hitNodeIndex, 0);
             }
-        } else {
-            this.hoveredNode = null;
+        } else if (oldHoveredNode) {
             this.hoveredNodeIndex = -1;
-        }
 
-        // Handle hover out events
-        if (oldHoveredNode && (this.hoveredNode?.uuid !== oldHoveredNode.uuid)) {
-            let curNode: Object3D | null = oldHoveredNode;
+            // Handle hover out events
+            if (oldHoveredNode && (this.hoveredNode?.uuid !== oldHoveredNode.uuid) ) {
+                let curNode: Object3D | null = oldHoveredNode;
 
-            // Swim up tree and set hovered to false on parents
-            while (curNode != null) {
-                curNode.userData.shouldExecuteHoverOut = curNode.userData.hovered === true &&
-                    curNode.userData.hoveredNodeIndex === oldHoveredNodeIndex;
-                curNode.userData.hovered = false;
-                curNode.userData.hoveredNodeIndex = -1;
-                curNode = curNode.parent;
-            }
+                // Swim up tree and set hovered to false on parents
+                while (curNode != null) {
+                    curNode.userData.shouldExecuteHoverOut = oldHoveredNodeIndex;
+                    curNode.userData.hoveredNodeIndex = -1;
+                    curNode = curNode.parent;
+                }
 
-            // Find onHoverOut callback in parent chain
-            curNode = oldHoveredNode;
-            while (curNode != null && (!curNode.userData || !curNode.userData.onHoverOutCallback)) {
-                curNode = curNode.parent;
-            }
+                // Find onHoverOut callback in parent chain
+                curNode = oldHoveredNode;
+                while (curNode != null && (!curNode.userData || !curNode.userData.onHoverOutCallback)) {
+                    curNode = curNode.parent;
+                }
 
-            if (curNode != null) {
-                curNode.userData.onHoverOutCallback(oldHoveredNodeIndex, 0);
+                // Call onHoverOut callback
+                if (curNode != null) {
+                    curNode.userData.onHoverOutCallback(oldHoveredNodeIndex, 0);
+                }
             }
         }
     }
@@ -253,27 +252,34 @@ export class ThreeDecorator extends ADecorator {
             const hit = intersects[0];
             const hitObject = hit.object;
 
-            // Check if the object has an onSelectCallback
-            if (hitObject.userData?.onSelectCallback) {
-                const hitNodeIndex = this.world.glTFNodes.findIndex(
-                    (node: Object3D) => node.uuid === hitObject.uuid
-                );
+            // Prepare selection data
+            const selectionPoint = [
+                hit.point.x,
+                hit.point.y,
+                hit.point.z
+            ];
 
-                const selectionPoint = [
-                    hit.point.x,
-                    hit.point.y,
-                    hit.point.z
-                ];
+            const rayOrigin = [
+                this.raycaster.ray.origin.x,
+                this.raycaster.ray.origin.y,
+                this.raycaster.ray.origin.z
+            ];
 
-                const rayOrigin = [
-                    this.raycaster.ray.origin.x,
-                    this.raycaster.ray.origin.y,
-                    this.raycaster.ray.origin.z
-                ];
+            // Check if the hit object or any of its parents has an onSelectCallback
+            let currentNode: Object3D | null = hitObject;
+            let callbackExecuted = false;
+            const hitNodeIndex = hitObject.userData?.nodeIndex ?? -1;
 
-                hitObject.userData.onSelectCallback(selectionPoint, hitNodeIndex, 0, rayOrigin);
-            } else {
-                console.warn('No onSelectCallback found for hit object');
+            while (currentNode && !callbackExecuted) {
+                if (currentNode.userData?.onSelectCallback) {
+                    currentNode.userData.onSelectCallback(selectionPoint, hitNodeIndex, 0, rayOrigin);
+                    callbackExecuted = true;
+                }
+                currentNode = currentNode.parent;
+            }
+
+            if (!callbackExecuted) {
+                console.warn('No onSelectCallback found for hit object or its parents');
             }
         } else {
             console.warn('No selectable objects intersected');
@@ -415,6 +421,7 @@ export class ThreeDecorator extends ADecorator {
             if (callback) callback();
             return;
         }
+        console.log("Playing animation", anim);
 
         // Create mixer if it doesn't exist for this animation
         anim.userData = anim.userData || {};
@@ -432,8 +439,9 @@ export class ThreeDecorator extends ADecorator {
             if (callback) callback();
             return;
         }
-
-        const mixer = new AnimationMixer(rootNode);
+        // Create a mixer for the entire scene instead of just the first node
+        // This ensures animations are properly targeted
+        const mixer = new AnimationMixer(this.scene);
         anim.userData.mixer = mixer;
 
         // Create and configure the animation action
@@ -668,7 +676,7 @@ export class ThreeDecorator extends ADecorator {
             const parts: string[] = path.split("/");
             const node = this.world.glTFNodes[Number(parts[2])];
             return [node.position.x, node.position.y, node.position.z];
-        }, (path, value) => {
+            }, (path, value) => {
             const parts: string[] = path.split("/");
             const node = this.world.glTFNodes[Number(parts[2])] as Object3D;
             node.position.set(value[0], value[1], value[2]);
@@ -695,14 +703,22 @@ export class ThreeDecorator extends ADecorator {
         }, (path, value) => {
             const parts: string[] = path.split("/");
             const node = this.world.glTFNodes[Number(parts[2])];
+            
+            // Store previous value to detect changes
+            const previousVisibility = node.visible;
+            
+            // Update the node's visibility
             node.visible = value;
-
-            // Update visibility for child meshes that don't have their own pointer
-            node.traverse((child: Object3D) => {
-                if (child.userData?.pointer === undefined) {
-                    child.visible = value;
-                }
-            });
+            
+            // Only traverse children if visibility changed
+            if (previousVisibility !== value) {
+                // Update all child objects that don't have their own visibility pointer
+                node.traverse((child: Object3D) => {
+                    if (child !== node && !child.userData?.visibilityOverridden) {
+                        child.visible = value;
+                    }
+                });
+            }
         }, "bool", false);
 
         // Node selectability
@@ -993,6 +1009,7 @@ export class ThreeDecorator extends ADecorator {
             for (const animation of this.world.animations) {
                 if (animation.userData?.mixer && animation.userData?.animating) {
                     animation.userData.mixer.update(deltaTime);
+                    console.log("Updating animation", animation);
                 }
             }
         }

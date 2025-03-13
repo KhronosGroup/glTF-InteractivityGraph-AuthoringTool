@@ -27,6 +27,8 @@ export const ThreeEngineComponent = () => {
     const animationMixerRef = useRef<AnimationMixer | null>(null);
     const clockRef = useRef<Clock | null>(null);
     const threeLoaderRef = useRef<GLTFLoader | null>(null);
+    const resizeObserverRef = useRef<ResizeObserver | null>(null);
+    const animationFrameRef = useRef<number | null>(null);
     const [activeKey, setActiveKey] = useState("1");
     const [graphRunning, setGraphRunning] = useState(false);
     const [openModal, setOpenModal] = useState<ThreeEngineModal>(ThreeEngineModal.NONE);
@@ -99,7 +101,7 @@ export const ThreeEngineComponent = () => {
 
         // Setup animation loop
         const animate = () => {
-            requestAnimationFrame(animate);
+            animationFrameRef.current = requestAnimationFrame(animate);
             
             if (controlsRef.current) {
                 controlsRef.current.update();
@@ -123,27 +125,71 @@ export const ThreeEngineComponent = () => {
         
         animate();
 
-        // Handle window resize
+        // Handle resize with debounce to prevent excessive ResizeObserver callbacks
+        let resizeTimeout: ReturnType<typeof setTimeout> | null = null;
         const handleResize = () => {
             if (!containerRef.current || !cameraRef.current || !rendererRef.current) return;
             
-            const width = containerRef.current.clientWidth;
-            const height = containerRef.current.clientHeight;
+            // Clear any pending resize timeout
+            if (resizeTimeout) {
+                clearTimeout(resizeTimeout);
+            }
             
-            cameraRef.current.aspect = width / height;
-            cameraRef.current.updateProjectionMatrix();
-            
-            rendererRef.current.setSize(width, height);
+            // Debounce the resize operation
+            resizeTimeout = setTimeout(() => {
+                const width = containerRef.current?.clientWidth || 800;
+                const height = containerRef.current?.clientHeight || 600;
+                
+                if (cameraRef.current) {
+                    cameraRef.current.aspect = width / height;
+                    cameraRef.current.updateProjectionMatrix();
+                }
+                if (rendererRef.current) {
+                    rendererRef.current.setSize(width, height);
+                }
+            }, 100); // 100ms debounce
         };
         
+        // Use ResizeObserver instead of window resize event
+        if (containerRef.current) {
+            const resizeObserver = new ResizeObserver((entries) => {
+                // Only handle resize if component is mounted
+                if (containerRef.current) {
+                    handleResize();
+                }
+            });
+            
+            resizeObserver.observe(containerRef.current);
+            resizeObserverRef.current = resizeObserver;
+        }
+        
+        // Fallback to window resize event as well
         window.addEventListener('resize', handleResize);
 
         return () => {
             // Clean up resources when the component unmounts
             window.removeEventListener('resize', handleResize);
             
+            // Cancel any pending resize timeout
+            if (resizeTimeout) {
+                clearTimeout(resizeTimeout);
+            }
+            
+            // Disconnect ResizeObserver
+            if (resizeObserverRef.current) {
+                resizeObserverRef.current.disconnect();
+            }
+            
+            // Cancel animation frame
+            if (animationFrameRef.current) {
+                cancelAnimationFrame(animationFrameRef.current);
+            }
+            
             if (rendererRef.current) {
-                containerRef.current?.removeChild(rendererRef.current.domElement);
+                // Check if parent element still contains the renderer's domElement before removing
+                if (containerRef.current && containerRef.current.contains(rendererRef.current.domElement)) {
+                    containerRef.current.removeChild(rendererRef.current.domElement);
+                }
                 rendererRef.current.dispose();
             }
             
@@ -225,6 +271,9 @@ export const ThreeEngineComponent = () => {
                 controlsRef.current.update();
             }
             
+            // Cleanup URL object to prevent memory leaks
+            URL.revokeObjectURL(url);
+            
             // Extract necessary elements from the model
             return {
                 loadedModelScene, // Return the loaded model's scene which has userData
@@ -236,7 +285,9 @@ export const ThreeEngineComponent = () => {
             };
         } catch (error) {
             console.error("Error loading GLB file:", error);
-            return { loadedModelScene: null, nodes: [], materials: [], animations: [], meshes: [] };
+            // Cleanup URL object even on error
+            URL.revokeObjectURL(url);
+            return { loadedModelScene: null, nodes: [], materials: [], animations: [], meshes: [], parser: null };
         }
     };
 

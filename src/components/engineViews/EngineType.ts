@@ -1,4 +1,5 @@
 export enum EngineType {
     LOGGING = "Logging",
-    BABYLON = "Babylon"
+    BABYLON = "Babylon",
+    THREE = "Three"
 }

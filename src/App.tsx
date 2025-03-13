@@ -4,6 +4,7 @@ import {EngineType} from "./components/engineViews/EngineType";
 import {RenderIf} from "./components/RenderIf";
 import {LoggingEngineComponent} from "./components/engineViews/LoggingEngineComponent";
 import {BabylonEngineComponent} from "./components/engineViews/BabylonEngineComponent";
+import {ThreeEngineComponent} from "./components/engineViews/ThreeEngineComponent";
 import {Tab, Tabs} from "react-bootstrap";
 import {Spacer} from "./components/Spacer";
 import { InteractivityGraphProvider } from './InteractivityGraphContext';
@@ -28,6 +29,9 @@ export const App = () => {
         <RenderIf shouldShow={engineType === EngineType.BABYLON}>
             <BabylonEngineComponent/>
         </RenderIf>
+        <RenderIf shouldShow={engineType === EngineType.THREE}>
+            <ThreeEngineComponent/>
+        </RenderIf>
       </div>
     </InteractivityGraphProvider>
       
@@ -49,6 +53,9 @@ export const EngineSelector: React.FC<EngineSelectorProps> = ({setEngineType}) =
             case '2':
                 engine = EngineType.BABYLON;
                 break;
+            case '3':
+                engine = EngineType.THREE;
+                break;
             default:
                 throw Error("Invalid Selection")
         }
@@ -65,6 +72,7 @@ export const EngineSelector: React.FC<EngineSelectorProps> = ({setEngineType}) =
             >
                 <Tab title={"Logging Engine"} eventKey={1}/>
                 <Tab title={"Babylon Engine"} eventKey={2}/>
+                <Tab title={"Three.js Engine"} eventKey={3}/>
             </Tabs>
         </div>
 

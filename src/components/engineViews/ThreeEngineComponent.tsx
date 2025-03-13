@@ -1,6 +1,5 @@
-import React, { useEffect, useRef, useState, useContext } from "react";
+import { useEffect, useRef, useState, useContext } from "react";
 import { Button, Col, Container, Form, Modal, Row, Tab, Tabs } from "react-bootstrap";
-import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTF, GLTFLoader, GLTFParser } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
@@ -9,9 +8,10 @@ import { KTX2Loader } from "three/examples/jsm/loaders/KTX2Loader.js";
 import { Spacer } from "../Spacer";
 import { InteractivityGraphContext } from "../../InteractivityGraphContext";
 import { DOMEventBus } from "../../BasicBehaveEngine/eventBuses/DOMEventBus";
-import { KHR_interactivity, KHR_interactivity_three, KHR_INTERACTIVITY_EXTENSION_NAME } from "../../loaderExtensions/KHR_interactivity";
+import { KHR_interactivity_three } from "../../loaderExtensions/KHR_interactivity";
 import { ThreeDecorator } from "../../BasicBehaveEngine/decorators/ThreeDecorator";
 import { BasicBehaveEngine } from "../../BasicBehaveEngine/BasicBehaveEngine";
+import { WebGLRenderer, Scene, PerspectiveCamera, AnimationMixer, Clock, Group, AnimationClip, SRGBColorSpace, AmbientLight, DirectionalLight, Box3, Vector3, Object3D, Material, Mesh } from "three";
 
 enum ThreeEngineModal {
     CUSTOM_EVENT = "CUSTOM_EVENT",
@@ -20,12 +20,12 @@ enum ThreeEngineModal {
 
 export const ThreeEngineComponent = () => {
     const containerRef = useRef<HTMLDivElement | null>(null);
-    const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
-    const sceneRef = useRef<THREE.Scene | null>(null);
-    const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+    const rendererRef = useRef<WebGLRenderer | null>(null);
+    const sceneRef = useRef<Scene | null>(null);
+    const cameraRef = useRef<PerspectiveCamera | null>(null);
     const controlsRef = useRef<OrbitControls | null>(null);
-    const animationMixerRef = useRef<THREE.AnimationMixer | null>(null);
-    const clockRef = useRef<THREE.Clock | null>(null);
+    const animationMixerRef = useRef<AnimationMixer | null>(null);
+    const clockRef = useRef<Clock | null>(null);
     const threeLoaderRef = useRef<GLTFLoader | null>(null);
     const [activeKey, setActiveKey] = useState("1");
     const [graphRunning, setGraphRunning] = useState(false);
@@ -34,26 +34,26 @@ export const ThreeEngineComponent = () => {
     const threeEngineRef = useRef<ThreeDecorator | null>(null);
     const [fileUploaded, setFileUploaded] = useState<string | null>(null);
     const [clickedHotSpot, setClickedHotSpot] = useState<string | null>(null);
-    const [loadedModel, setLoadedModel] = useState<THREE.Group | null>(null);
-    const [animations, setAnimations] = useState<THREE.AnimationClip[]>([]);
+    const [loadedModel, setLoadedModel] = useState<Group | null>(null);
+    const [animations, setAnimations] = useState<AnimationClip[]>([]);
 
     const { getExecutableGraph, loadGraphFromJson } = useContext(InteractivityGraphContext);
 
     useEffect(() => {
-        // Create the Three.js renderer
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        // Create the js renderer
+        const renderer = new WebGLRenderer({ antialias: true });
         renderer.setSize(containerRef.current?.clientWidth || 800, containerRef.current?.clientHeight || 600);
         renderer.setClearColor(0x333333);
-        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        renderer.outputColorSpace = SRGBColorSpace;
         rendererRef.current = renderer;
         containerRef.current?.appendChild(renderer.domElement);
 
         // Create scene
-        const scene = new THREE.Scene();
+        const scene = new Scene();
         sceneRef.current = scene;
 
         // Create camera
-        const camera = new THREE.PerspectiveCamera(
+        const camera = new PerspectiveCamera(
             75,
             (containerRef.current?.clientWidth || 800) / (containerRef.current?.clientHeight || 600),
             0.1,
@@ -63,10 +63,10 @@ export const ThreeEngineComponent = () => {
         cameraRef.current = camera;
 
         // Add lights
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        const ambientLight = new AmbientLight(0xffffff, 0.5);
         scene.add(ambientLight);
         
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        const directionalLight = new DirectionalLight(0xffffff, 0.8);
         directionalLight.position.set(1, 1, 1);
         scene.add(directionalLight);
 
@@ -83,11 +83,9 @@ export const ThreeEngineComponent = () => {
         ktx2Loader.setTranscoderPath('https://www.gstatic.com/basis-universal/latest/');
         
         const gltfLoader = new GLTFLoader();
-        console.log("Creating new GLTFLoader and registering KHR_interactivity extension");
 
         // Register the custom KHR_interactivity extension
         gltfLoader.register((parser) => {
-            console.log("GLTFLoader register callback executed");
             return new KHR_interactivity_three(parser);
         });
         
@@ -97,7 +95,7 @@ export const ThreeEngineComponent = () => {
         threeLoaderRef.current = gltfLoader;
 
         // Animation clock
-        clockRef.current = new THREE.Clock();
+        clockRef.current = new Clock();
 
         // Setup animation loop
         const animate = () => {
@@ -207,16 +205,16 @@ export const ThreeEngineComponent = () => {
             // Set up animations
             if (gltf.animations && gltf.animations.length > 0) {
                 console.log("Found animations:", gltf.animations.length);
-                animationMixerRef.current = new THREE.AnimationMixer(loadedModelScene);
+                animationMixerRef.current = new AnimationMixer(loadedModelScene);
                 setAnimations(gltf.animations);
             }
             
             // Reset camera position and controls
             if (cameraRef.current && controlsRef.current) {
                 // Calculate bounding box to properly frame the model
-                const box = new THREE.Box3().setFromObject(loadedModelScene);
-                const center = box.getCenter(new THREE.Vector3());
-                const size = box.getSize(new THREE.Vector3());
+                const box = new Box3().setFromObject(loadedModelScene);
+                const center = box.getCenter(new Vector3());
+                const size = box.getSize(new Vector3());
                 
                 const maxDim = Math.max(size.x, size.y, size.z);
                 const fov = cameraRef.current.fov * (Math.PI / 180);
@@ -266,8 +264,8 @@ export const ThreeEngineComponent = () => {
         });
     };
 
-    const extractGLTFNodes = (scene: THREE.Group): THREE.Object3D[] => {
-        const nodes: THREE.Object3D[] = [];
+    const extractGLTFNodes = (scene: Group): Object3D[] => {
+        const nodes: Object3D[] = [];
         
         scene.traverse((object) => {
             // In a real implementation, we would need to extract node information similar to the Babylon implementation
@@ -278,13 +276,13 @@ export const ThreeEngineComponent = () => {
         return nodes;
     };
 
-    const extractMaterials = (scene: THREE.Group): THREE.Material[] => {
-        const materials: THREE.Material[] = [];
-        const uniqueMaterials = new Set<THREE.Material>();
+    const extractMaterials = (scene: Group): Material[] => {
+        const materials: Material[] = [];
+        const uniqueMaterials = new Set<Material>();
         
         scene.traverse((object: any) => {
             if (object.isMesh && object.material) {
-                const objMaterials: Array<THREE.Material> = Array.isArray(object.material) ? object.material : [object.material];
+                const objMaterials: Array<Material> = Array.isArray(object.material) ? object.material : [object.material];
                 objMaterials.forEach(material => {
                     if (!uniqueMaterials.has(material)) {
                         uniqueMaterials.add(material);
@@ -298,12 +296,12 @@ export const ThreeEngineComponent = () => {
         return materials;
     };
 
-    const extractMeshes = (scene: THREE.Group): THREE.Mesh[] => {
-        const meshes: THREE.Mesh[] = [];
+    const extractMeshes = (scene: Group): Mesh[] => {
+        const meshes: Mesh[] = [];
         
         scene.traverse((object) => {
             if (object.type === 'Mesh') {
-                meshes.push(object as THREE.Mesh);
+                meshes.push(object as Mesh);
             }
         });
         
@@ -314,11 +312,11 @@ export const ThreeEngineComponent = () => {
     const runGraph = async (
         threeEngineRef: any, 
         behaveGraph: any, 
-        scene: THREE.Scene | THREE.Group | null, 
-        nodes: THREE.Object3D[], 
-        materials: THREE.Material[], 
-        animations: THREE.AnimationClip[], 
-        meshes: THREE.Mesh[], 
+        scene: Scene | Group | null, 
+        nodes: Object3D[], 
+        materials: Material[], 
+        animations: AnimationClip[], 
+        meshes: Mesh[], 
         shouldOverride: boolean,
         parser: GLTFParser | null,
     ) => {
@@ -349,7 +347,7 @@ export const ThreeEngineComponent = () => {
         
         // Create a new ThreeDecorator with a fresh BehaveEngine
         console.log("Creating new ThreeDecorator");
-        threeEngineRef.current = new ThreeDecorator(new BasicBehaveEngine(60, eventBus), world, scene as THREE.Scene);
+        threeEngineRef.current = new ThreeDecorator(new BasicBehaveEngine(60, eventBus), world, scene as Scene);
         
         // Initialize the world with the scene
         console.log("Initializing world with scene");
@@ -357,29 +355,23 @@ export const ThreeEngineComponent = () => {
         
         // Set the camera for interactions
         if (cameraRef.current) {
-            console.log("Setting camera for ThreeDecorator");
             threeEngineRef.current.setCamera(cameraRef.current);
         }
         
         // Setup pointer events for interactivity
         if (rendererRef.current) {
-            console.log("Setting up pointer events");
             threeEngineRef.current.setupPointerEvents(rendererRef.current.domElement);
         }
         
         // Extract the behave graph from the scene (if present from GLTFLoader)
-        console.log("Extracting behaveGraph from scene");
         const extractedBehaveGraph = threeEngineRef.current.extractBehaveGraphFromScene();
-        console.log("Extracted behave graph:", extractedBehaveGraph);
         
         if ((!behaveGraph.nodes || behaveGraph.nodes.length === 0 || shouldOverride) && extractedBehaveGraph) {
             // Use the graph from the loaded file
-            console.log("Loading graph from extracted behaveGraph");
             loadGraphFromJson(extractedBehaveGraph);
             threeEngineRef.current.loadBehaveGraph(extractedBehaveGraph);
         } else {
             // Use the graph from the authoring tool
-            console.log("Loading graph from authoring tool");
             threeEngineRef.current.loadBehaveGraph(behaveGraph);
         }
     };

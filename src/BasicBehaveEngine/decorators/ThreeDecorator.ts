@@ -1,7 +1,6 @@
 import { ADecorator } from "./ADecorator";
 import { BehaveEngineNode } from "../BehaveEngineNode";
 import { IBehaveEngine } from "../IBehaveEngine";
-import * as THREE from "three";
 import { cubicBezier, easeFloat, easeFloat3, easeFloat4, linearFloat, slerpFloat4 } from "../easingUtils";
 import { IInteractivityFlow } from "../../types/InteractivityGraph";
 import { AnimationStart } from "../nodes/animation/AnimationStart";
@@ -10,28 +9,29 @@ import { AnimationStopAt } from "../nodes/animation/AnimationStopAt";
 import { OnSelect } from "../nodes/experimental/OnSelect";
 import { OnHoverIn } from "../nodes/experimental/OnHoverIn";
 import { OnHoverOut } from "../nodes/experimental/OnHoverOut";
+import { Scene, Object3D, Raycaster, Vector2, Camera, PerspectiveCamera, Quaternion, Euler, AnimationClip, AnimationMixer, LoopRepeat, LoopOnce, Clock, Material, Mesh, MeshStandardMaterial, Intersection } from "three";
 
 export class ThreeDecorator extends ADecorator {
-    scene: THREE.Scene;
+    scene: Scene;
     world: any;
-    hoveredNode: THREE.Object3D | null;
+    hoveredNode: Object3D | null;
     hoveredNodeIndex: number;
-    raycaster: THREE.Raycaster;
-    pointer: THREE.Vector2;
-    camera: THREE.Camera | null;
+    raycaster: Raycaster;
+    pointer: Vector2;
+    camera: Camera | null;
     domEventBus: any;
 
-    constructor(behaveEngine: IBehaveEngine, world: any, scene: THREE.Scene) {
+    constructor(behaveEngine: IBehaveEngine, world: any, scene: Scene) {
         super(behaveEngine);
         this.world = world;
         this.scene = scene;
         this.hoveredNode = null;
         this.hoveredNodeIndex = -1;
-        this.raycaster = new THREE.Raycaster();
-        this.pointer = new THREE.Vector2();
+        this.raycaster = new Raycaster();
+        this.pointer = new Vector2();
         this.camera = null;
 
-        // Extend behave engine with Three.js specific methods
+        // Extend behave engine with js specific methods
 
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
@@ -100,13 +100,13 @@ export class ThreeDecorator extends ADecorator {
 
     /**
      * Sets the active camera for the decorator
-     * @param camera The Three.js camera to use for raycasting and other operations
+     * @param camera The js camera to use for raycasting and other operations
      */
-    public setCamera = (camera: THREE.Camera) => {
+    public setCamera = (camera: Camera) => {
         this.camera = camera;
 
         // Add camera position and rotation pointers if this is a perspective camera
-        if (camera instanceof THREE.PerspectiveCamera) {
+        if (camera instanceof PerspectiveCamera) {
             this.registerJsonPointer(`/extensions/KHR_interactivity/activeCamera/position`, (path) => {
                 if (!this.camera) return [0, 0, 0];
                 return [this.camera.position.x, this.camera.position.y, this.camera.position.z];
@@ -117,10 +117,10 @@ export class ThreeDecorator extends ADecorator {
             }, "float3", false);
 
             this.registerJsonPointer(`/extensions/KHR_interactivity/activeCamera/rotation`, (path) => {
-                if (!this.camera || !(this.camera instanceof THREE.PerspectiveCamera)) return [0, 0, 0, 1];
+                if (!this.camera || !(this.camera instanceof PerspectiveCamera)) return [0, 0, 0, 1];
 
                 // Convert euler rotation to quaternion if needed
-                const quaternion = new THREE.Quaternion();
+                const quaternion = new Quaternion();
                 quaternion.setFromEuler(this.camera.rotation);
 
                 return [
@@ -131,8 +131,8 @@ export class ThreeDecorator extends ADecorator {
                 ];
             }, (path, value) => {
                 if (this.camera) {
-                    const quaternion = new THREE.Quaternion(value[0], value[1], value[2], value[3]);
-                    const euler = new THREE.Euler();
+                    const quaternion = new Quaternion(value[0], value[1], value[2], value[3]);
+                    const euler = new Euler();
                     euler.setFromQuaternion(quaternion);
                     this.camera.rotation.copy(euler);
                 }
@@ -159,7 +159,7 @@ export class ThreeDecorator extends ADecorator {
         // Check for intersections with objects that have hover enabled
         const intersects = this.raycaster.intersectObjects(this.scene.children, true)
             .filter(obj => {
-                const object = obj.object as THREE.Object3D;
+                const object = obj.object as Object3D;
                 return object.userData?.compositeHoverability !== false;
             });
 
@@ -172,12 +172,12 @@ export class ThreeDecorator extends ADecorator {
 
             // Find the index of the node in the world's glTFNodes array
             const hitNodeIndex = this.world.glTFNodes.findIndex(
-                (node: THREE.Object3D) => node.uuid === intersectedObject.uuid
+                (node: Object3D) => node.uuid === intersectedObject.uuid
             );
             this.hoveredNodeIndex = hitNodeIndex;
 
             // Handle hover events
-            let curNode: THREE.Object3D | null = intersectedObject;
+            let curNode: Object3D | null = intersectedObject;
 
             // Swim up tree and set hovered to true on parents
             while (curNode != null) {
@@ -204,7 +204,7 @@ export class ThreeDecorator extends ADecorator {
 
         // Handle hover out events
         if (oldHoveredNode && (this.hoveredNode?.uuid !== oldHoveredNode.uuid)) {
-            let curNode: THREE.Object3D | null = oldHoveredNode;
+            let curNode: Object3D | null = oldHoveredNode;
 
             // Swim up tree and set hovered to false on parents
             while (curNode != null) {
@@ -245,7 +245,7 @@ export class ThreeDecorator extends ADecorator {
         // Check for intersections with objects that are selectable
         const intersects = this.raycaster.intersectObjects(this.scene.children, true)
             .filter(obj => {
-                const object = obj.object as THREE.Object3D;
+                const object = obj.object as Object3D;
                 return object.userData?.selectable !== false;
             });
 
@@ -253,12 +253,10 @@ export class ThreeDecorator extends ADecorator {
             const hit = intersects[0];
             const hitObject = hit.object;
 
-            console.log('Hit object:', hitObject);
-
             // Check if the object has an onSelectCallback
             if (hitObject.userData?.onSelectCallback) {
                 const hitNodeIndex = this.world.glTFNodes.findIndex(
-                    (node: THREE.Object3D) => node.uuid === hitObject.uuid
+                    (node: Object3D) => node.uuid === hitObject.uuid
                 );
 
                 const selectionPoint = [
@@ -273,7 +271,6 @@ export class ThreeDecorator extends ADecorator {
                     this.raycaster.ray.origin.z
                 ];
 
-                console.log('Triggering onSelectCallback for node index:', hitNodeIndex);
                 hitObject.userData.onSelectCallback(selectionPoint, hitNodeIndex, 0, rayOrigin);
             } else {
                 console.warn('No onSelectCallback found for hit object');
@@ -292,15 +289,12 @@ export class ThreeDecorator extends ADecorator {
             const t = Math.min(elapsedDuration / easingParameters.easingDuration, 1);
             if (easingParameters.valueType === "float3") {
                 const v = easeFloat3(t, easingParameters);
-                console.log(`animateProperty float3: ${v}`);
                 this.behaveEngine.setPathValue(path, v);
             } else if (easingParameters.valueType === "float4") {
                 const v = easeFloat4(t, easingParameters);
-                console.log(`animateProperty float4: ${v}`);
                 this.behaveEngine.setPathValue(path, v);
             } else if (easingParameters.valueType === "float") {
                 const v = easeFloat(t, easingParameters);
-                console.log(`animateProperty float: ${v}`);
                 this.behaveEngine.setPathValue(path, v);
             }
 
@@ -338,12 +332,10 @@ export class ThreeDecorator extends ADecorator {
                     linearFloat(p.y, initialValue[1], targetValue[1]),
                     linearFloat(p.y, initialValue[2], targetValue[2])
                 ];
-                console.log(`animateCubicBezier float3: ${value}`);
                 this.behaveEngine.setPathValue(path, value);
             } else if (valueType === "float4") {
                 if (this.isSlerpPath(path)) {
                     const value = slerpFloat4(p.y, initialValue, targetValue);
-                    console.log(`animateCubicBezier float4 slerp: ${value}`);
                     this.behaveEngine.setPathValue(path, value);
                 } else {
                     const value = [
@@ -352,19 +344,15 @@ export class ThreeDecorator extends ADecorator {
                         linearFloat(p.y, initialValue[2], targetValue[2]),
                         linearFloat(p.y, initialValue[3], targetValue[3])
                     ];
-                    console.log(`animateCubicBezier float4: ${value}`);
                     this.behaveEngine.setPathValue(path, value);
                 }
             } else if (valueType === "float") {
                 const value = [linearFloat(p.y, initialValue[0], targetValue[0])];
-                console.log(`animateCubicBezier float: ${value}`);
-                this.behaveEngine.setPathValue(path, value);
             } else if (valueType == "float2") {
                 const value = [
                     linearFloat(p.y, initialValue[0], targetValue[0]),
                     linearFloat(p.y, initialValue[1], targetValue[1])
                 ];
-                console.log(`animateCubicBezier float2: ${value}`);
                 this.behaveEngine.setPathValue(path, value);
             }
 
@@ -421,7 +409,7 @@ export class ThreeDecorator extends ADecorator {
     }
 
     public startAnimation = (animation: number, startTime: number, endTime: number, speed: number, callback: () => void): void => {
-        const anim: THREE.AnimationClip & { userData: any } = this.world.animations[animation];
+        const anim: AnimationClip & { userData: any } = this.world.animations[animation];
         if (!anim) {
             console.warn(`Animation ${animation} not found`);
             if (callback) callback();
@@ -445,7 +433,7 @@ export class ThreeDecorator extends ADecorator {
             return;
         }
 
-        const mixer = new THREE.AnimationMixer(rootNode);
+        const mixer = new AnimationMixer(rootNode);
         anim.userData.mixer = mixer;
 
         // Create and configure the animation action
@@ -460,7 +448,7 @@ export class ThreeDecorator extends ADecorator {
         action.timeScale = speed;
 
         const isLooping = !isFinite(endTime) || endTime <= 0;
-        action.loop = isLooping ? THREE.LoopRepeat : THREE.LoopOnce;
+        action.loop = isLooping ? LoopRepeat : LoopOnce;
 
         if (!isLooping) {
             action.clampWhenFinished = true;
@@ -481,7 +469,7 @@ export class ThreeDecorator extends ADecorator {
         anim.userData.action = action;
 
         // Set up the animation clock
-        anim.userData.clock = new THREE.Clock();
+        anim.userData.clock = new Clock();
 
         // Mark as animating
         anim.userData.animating = true;
@@ -527,11 +515,11 @@ export class ThreeDecorator extends ADecorator {
     }
 
     /**
-     * Initializes the world object with Three.js scene data
-     * @param scene The Three.js scene
+     * Initializes the world object with js scene data
+     * @param scene The js scene
      * @param parser The glTF parser that contains associations
      */
-    public async initializeWorld(scene: THREE.Scene, parser: any): Promise<void> {
+    public async initializeWorld(scene: Scene, parser: any): Promise<void> {
         console.log('Initializing world with scene and parser');
         // Create the world data structure if it doesn't exist
         if (!this.world) {
@@ -545,10 +533,9 @@ export class ThreeDecorator extends ADecorator {
         // Use the parser's nodeCache to correctly map indices to objects
         // This is more reliable than traversing the scene or using associations
         if (parser && parser.nodeCache) {
-            console.log('Using nodeCache from parser');
             
             // Extract nodes from nodeCache which maps directly from glTF indices to THREE objects
-            const nodes: THREE.Object3D[] = [];
+            const nodes: Object3D[] = [];
             const maxNodeIndex = Object.keys(parser.nodeCache).reduce((max, key) => 
                 Math.max(max, parseInt(key)), -1);
             
@@ -566,7 +553,7 @@ export class ThreeDecorator extends ADecorator {
             this.world.glTFNodes = nodes.filter(Boolean);
             
             // Extract materials from parser.materialsCache if available
-            const materials: THREE.Material[] = [];
+            const materials: Material[] = [];
             if (parser.materialsCache) {
                 const maxMaterialIndex = Object.keys(parser.materialsCache).reduce((max, key) => 
                     Math.max(max, parseInt(key)), -1);
@@ -581,9 +568,9 @@ export class ThreeDecorator extends ADecorator {
                 this.world.materials = materials.filter(Boolean);
             } else {
                 // Fallback: collect materials from meshes if parser cache isn't available
-                const uniqueMaterials = new Set<THREE.Material>();
-                this.world.glTFNodes.forEach((node: THREE.Object3D) => {
-                    if (node instanceof THREE.Mesh) {
+                const uniqueMaterials = new Set<Material>();
+                this.world.glTFNodes.forEach((node: Object3D) => {
+                    if (node instanceof Mesh) {
                         if (Array.isArray(node.material)) {
                             node.material.forEach(mat => uniqueMaterials.add(mat));
                         } else if (node.material) {
@@ -595,9 +582,9 @@ export class ThreeDecorator extends ADecorator {
             }
             
             // Handle animations from scene.userData
-            const animations: THREE.AnimationClip[] = [];
+            const animations: AnimationClip[] = [];
             if (scene.userData && scene.userData.animations) {
-                scene.userData.animations.forEach((anim: THREE.AnimationClip) => {
+                scene.userData.animations.forEach((anim: AnimationClip) => {
                     animations.push(anim);
                 });
             }
@@ -605,14 +592,14 @@ export class ThreeDecorator extends ADecorator {
         } else {
             console.warn('Parser or nodeCache not available, using fallback method');
             // Fallback: Collect objects by traversing the scene
-            const nodes: THREE.Object3D[] = [];
-            const materials: THREE.Material[] = [];
+            const nodes: Object3D[] = [];
+            const materials: Material[] = [];
             
             scene.traverse((object) => {
                 nodes.push(object);
                 
                 // Check for materials
-                if (object instanceof THREE.Mesh) {
+                if (object instanceof Mesh) {
                     if (Array.isArray(object.material)) {
                         object.material.forEach(mat => {
                             if (!materials.includes(mat)) {
@@ -629,7 +616,7 @@ export class ThreeDecorator extends ADecorator {
             this.world.materials = materials;
             
             // Handle animations from scene.userData
-            const animations: THREE.AnimationClip[] = [];
+            const animations: AnimationClip[] = [];
             if (scene.userData && scene.userData.animations) {
                 animations.push(...scene.userData.animations);
             }
@@ -637,7 +624,7 @@ export class ThreeDecorator extends ADecorator {
         }
         
         // Initialize default hoverability and selectability
-        this.world.glTFNodes.forEach((node: THREE.Object3D, index: number) => {
+        this.world.glTFNodes.forEach((node: Object3D, index: number) => {
             node.userData = node.userData || {};
             node.userData.hoverable = node.userData.hoverable ?? true;
             node.userData.selectable = node.userData.selectable ?? true;
@@ -646,8 +633,8 @@ export class ThreeDecorator extends ADecorator {
 
         // Initialize composite properties by swimming down from the root
         this.world.glTFNodes
-            .filter((node: THREE.Object3D) => !node.parent)
-            .forEach((rootNode: THREE.Object3D) => {
+            .filter((node: Object3D) => !node.parent)
+            .forEach((rootNode: Object3D) => {
                 this.swimDownHoverability(rootNode, true);
                 this.swimDownSelectability(rootNode, true);
             });
@@ -661,7 +648,6 @@ export class ThreeDecorator extends ADecorator {
     };
 
     registerKnownPointers = () => {
-        console.log('Registering known pointers - world:', this.world, this.world.glTFNodes);
         const maxGltfNode: number = this.world.glTFNodes.length - 1;
         const maxGlTFMaterials: number = this.world.materials.length - 1;
         const maxAnimations: number = this.world.animations.length - 1;
@@ -684,8 +670,7 @@ export class ThreeDecorator extends ADecorator {
             return [node.position.x, node.position.y, node.position.z];
         }, (path, value) => {
             const parts: string[] = path.split("/");
-            console.log(`Setting translation for node ${parts[2]} to`, value); // Moved this line
-            const node = this.world.glTFNodes[Number(parts[2])] as THREE.Object3D;
+            const node = this.world.glTFNodes[Number(parts[2])] as Object3D;
             node.position.set(value[0], value[1], value[2]);
             node.matrixWorldNeedsUpdate = true;
         }, "float3", false);
@@ -713,7 +698,7 @@ export class ThreeDecorator extends ADecorator {
             node.visible = value;
 
             // Update visibility for child meshes that don't have their own pointer
-            node.traverse((child: THREE.Object3D) => {
+            node.traverse((child: Object3D) => {
                 if (child.userData?.pointer === undefined) {
                     child.visible = value;
                 }
@@ -759,7 +744,7 @@ export class ThreeDecorator extends ADecorator {
         // Material properties - Base color factor (color + alpha)
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/pbrMetallicRoughness/baseColorFactor`, (path) => {
             const parts: string[] = path.split("/");
-            const material = this.world.materials[Number(parts[2])] as THREE.MeshStandardMaterial;
+            const material = this.world.materials[Number(parts[2])] as MeshStandardMaterial;
             if (!material || !material.color) return [0, 0, 0, 1];
             return [
                 material.color.r,
@@ -769,7 +754,7 @@ export class ThreeDecorator extends ADecorator {
             ];
         }, (path, value) => {
             const parts: string[] = path.split("/");
-            const material = this.world.materials[Number(parts[2])] as THREE.MeshStandardMaterial;
+            const material = this.world.materials[Number(parts[2])] as MeshStandardMaterial;
             if (material) {
                 material.color.setRGB(value[0], value[1], value[2]);
                 material.opacity = value[3];
@@ -781,11 +766,11 @@ export class ThreeDecorator extends ADecorator {
         // Material properties - Roughness factor
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/pbrMetallicRoughness/roughnessFactor`, (path) => {
             const parts: string[] = path.split("/");
-            const material = this.world.materials[Number(parts[2])] as THREE.MeshStandardMaterial;
+            const material = this.world.materials[Number(parts[2])] as MeshStandardMaterial;
             return material ? [material.roughness] : [0];
         }, (path, value) => {
             const parts: string[] = path.split("/");
-            const material = this.world.materials[Number(parts[2])] as THREE.MeshStandardMaterial;
+            const material = this.world.materials[Number(parts[2])] as MeshStandardMaterial;
             if (material) {
                 material.roughness = value;
                 material.needsUpdate = true;
@@ -795,11 +780,11 @@ export class ThreeDecorator extends ADecorator {
         // Material properties - Metallic factor
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/pbrMetallicRoughness/metallicFactor`, (path) => {
             const parts: string[] = path.split("/");
-            const material = this.world.materials[Number(parts[2])] as THREE.MeshStandardMaterial;
+            const material = this.world.materials[Number(parts[2])] as MeshStandardMaterial;
             return material ? [material.metalness] : [0];
         }, (path, value) => {
             const parts: string[] = path.split("/");
-            const material = this.world.materials[Number(parts[2])] as THREE.MeshStandardMaterial;
+            const material = this.world.materials[Number(parts[2])] as MeshStandardMaterial;
             if (material) {
                 material.metalness = value;
                 material.needsUpdate = true;
@@ -809,11 +794,11 @@ export class ThreeDecorator extends ADecorator {
         // Material properties - Alpha cutoff
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/alphaCutoff`, (path) => {
             const parts: string[] = path.split("/");
-            const material = this.world.materials[Number(parts[2])] as THREE.MeshStandardMaterial;
+            const material = this.world.materials[Number(parts[2])] as MeshStandardMaterial;
             return material && material.alphaTest !== undefined ? [material.alphaTest] : [0];
         }, (path, value) => {
             const parts: string[] = path.split("/");
-            const material = this.world.materials[Number(parts[2])] as THREE.MeshStandardMaterial;
+            const material = this.world.materials[Number(parts[2])] as MeshStandardMaterial;
             if (material) {
                 material.alphaTest = value;
                 material.needsUpdate = true;
@@ -823,12 +808,12 @@ export class ThreeDecorator extends ADecorator {
         // Material properties - Emissive factor
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/emissiveFactor`, (path) => {
             const parts: string[] = path.split("/");
-            const material = this.world.materials[Number(parts[2])] as THREE.MeshStandardMaterial;
+            const material = this.world.materials[Number(parts[2])] as MeshStandardMaterial;
             if (!material || !material.emissive) return [0, 0, 0];
             return [material.emissive.r, material.emissive.g, material.emissive.b];
         }, (path, value) => {
             const parts: string[] = path.split("/");
-            const material = this.world.materials[Number(parts[2])] as THREE.MeshStandardMaterial;
+            const material = this.world.materials[Number(parts[2])] as MeshStandardMaterial;
             if (material) {
                 material.emissive.setRGB(value[0], value[1], value[2]);
                 material.needsUpdate = true;
@@ -838,13 +823,13 @@ export class ThreeDecorator extends ADecorator {
         // Texture transforms for the base color texture
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/pbrMetallicRoughness/baseColorTexture/extensions/KHR_texture_transform/offset`, (path) => {
             const parts: string[] = path.split("/");
-            const material = this.world.materials[Number(parts[2])] as THREE.MeshStandardMaterial;
+            const material = this.world.materials[Number(parts[2])] as MeshStandardMaterial;
             if (!material || !material.map) return [0, 0];
 
             return [material.map.offset.x, material.map.offset.y];
         }, (path, value) => {
             const parts: string[] = path.split("/");
-            const material = this.world.materials[Number(parts[2])] as THREE.MeshStandardMaterial;
+            const material = this.world.materials[Number(parts[2])] as MeshStandardMaterial;
             if (material && material.map) {
                 material.map.offset.set(value[0], value[1]);
                 material.needsUpdate = true;
@@ -853,13 +838,13 @@ export class ThreeDecorator extends ADecorator {
 
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/pbrMetallicRoughness/baseColorTexture/extensions/KHR_texture_transform/scale`, (path) => {
             const parts: string[] = path.split("/");
-            const material = this.world.materials[Number(parts[2])] as THREE.MeshStandardMaterial;
+            const material = this.world.materials[Number(parts[2])] as MeshStandardMaterial;
             if (!material || !material.map) return [1, 1];
 
             return [material.map.repeat.x, material.map.repeat.y];
         }, (path, value) => {
             const parts: string[] = path.split("/");
-            const material = this.world.materials[Number(parts[2])] as THREE.MeshStandardMaterial;
+            const material = this.world.materials[Number(parts[2])] as MeshStandardMaterial;
             if (material && material.map) {
                 material.map.repeat.set(value[0], value[1]);
                 material.needsUpdate = true;
@@ -868,13 +853,13 @@ export class ThreeDecorator extends ADecorator {
 
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/pbrMetallicRoughness/baseColorTexture/extensions/KHR_texture_transform/rotation`, (path) => {
             const parts: string[] = path.split("/");
-            const material = this.world.materials[Number(parts[2])] as THREE.MeshStandardMaterial;
+            const material = this.world.materials[Number(parts[2])] as MeshStandardMaterial;
             if (!material || !material.map) return [0];
 
             return [material.map.rotation];
         }, (path, value) => {
             const parts: string[] = path.split("/");
-            const material = this.world.materials[Number(parts[2])] as THREE.MeshStandardMaterial;
+            const material = this.world.materials[Number(parts[2])] as MeshStandardMaterial;
             if (material && material.map) {
                 material.map.rotation = value[0];
                 material.needsUpdate = true;
@@ -898,7 +883,7 @@ export class ThreeDecorator extends ADecorator {
             const parts: string[] = path.split("/");
             const animation = this.world.animations[Number(parts[2])];
             if (!animation) return [0];
-            return [animation.duration > 0 ? 0 : 0]; // Start time is always 0 in Three.js
+            return [animation.duration > 0 ? 0 : 0]; // Start time is always 0 in js
         }, (path, value) => {
             // Read-only in implementation
         }, "float", true);
@@ -944,7 +929,7 @@ export class ThreeDecorator extends ADecorator {
     /**
      * Recursively applies selectability to a node and its children
      */
-    private swimDownSelectability(node: THREE.Object3D, parentSelectability: boolean) {
+    private swimDownSelectability(node: Object3D, parentSelectability: boolean) {
         const curNodeSelectability = node.userData?.selectable !== false;
         const propagatedSelectability = curNodeSelectability && parentSelectability;
 
@@ -961,7 +946,7 @@ export class ThreeDecorator extends ADecorator {
     /**
      * Recursively applies hoverability to a node and its children
      */
-    private swimDownHoverability(node: THREE.Object3D, parentHoverability: boolean) {
+    private swimDownHoverability(node: Object3D, parentHoverability: boolean) {
         const curNodeHoverability = node.userData?.hoverable !== false;
         const propagatedHoverability = curNodeHoverability && parentHoverability;
 
@@ -983,7 +968,7 @@ export class ThreeDecorator extends ADecorator {
      * @param height Screen height
      * @returns The raycast results, if any
      */
-    public performRaycast(x: number, y: number, width: number, height: number): THREE.Intersection[] {
+    public performRaycast(x: number, y: number, width: number, height: number): Intersection[] {
         if (!this.camera) return [];
 
         // Calculate pointer position in normalized device coordinates

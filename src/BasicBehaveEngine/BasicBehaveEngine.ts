@@ -111,6 +111,7 @@ import { MatDecompose } from "./nodes/math/matrix/matDecompose";
 import { MatCompose } from "./nodes/math/matrix/matCompose";
 import { MatMul } from "./nodes/math/matrix/MatMul";
 import { MathSwitch } from "./nodes/math/special/MathSwitch";
+import { Inverse } from "./nodes/math/matrix/Inverse";
 
 
 export class BasicBehaveEngine implements IBehaveEngine {
@@ -466,7 +467,8 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/quatMul", QuatMul);
         this.registerBehaveEngineNode("math/matDecompose", MatDecompose);
         this.registerBehaveEngineNode("math/matCompose", MatCompose);
-        this.registerBehaveEngineNode("math/matMul", MatMul);
+        this.registerBehaveEngineNode("math/matmul", MatMul);
+        this.registerBehaveEngineNode("math/inverse", Inverse);
     }
 
     protected validateGraph = (behaviorGraph: any) => {

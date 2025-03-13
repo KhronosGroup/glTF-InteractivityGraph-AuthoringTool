@@ -20,13 +20,13 @@ export class MatCompose extends BehaveEngineNode {
         const typeIndexScale = this.values['scale'].type!
         const typeScale: string = this.getType(typeIndexScale);
 
+
         const validTypePairings = (typeTranslation === "float3" && typeRotation === "float4" && typeScale === "float3")
         if (!validTypePairings) {
             throw Error("Invalid type pairings")
         }
 
         // Create matrices for translation, rotation and scale
-        const translationMatrix = new Float32Array(16);
         const rotationMatrix = new Float32Array(16);
         const scaleMatrix = new Float32Array(16);
         const resultMatrix = new Float32Array(16);

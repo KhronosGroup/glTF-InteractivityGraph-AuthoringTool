@@ -738,7 +738,13 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/nodes/${maxGltfNode}/matrix`, (path) => {
             const parts: string[] = path.split("/");
             const node = this.world.glTFNodes[Number(parts[2])];
-            return (this.world.glTFNodes[node] as AbstractMesh).getPoseMatrix().asArray();
+            const matrix = (node as AbstractMesh).getPoseMatrix().asArray();
+            return [
+                [matrix[0], matrix[1], matrix[2], matrix[3]],
+                [matrix[4], matrix[5], matrix[6], matrix[7]], 
+                [matrix[8], matrix[9], matrix[10], matrix[11]],
+                [matrix[12], matrix[13], matrix[14], matrix[15]]
+            ];
         }, (path, value) => {
             //no-op
         }, "float4x4", true);

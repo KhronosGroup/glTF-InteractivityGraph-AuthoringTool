@@ -364,7 +364,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                     <div>
                         {
                             (configuration.event !== undefined) &&
-                            <div>
+                            <div>z
                                 <label htmlFor="event">event</label>
                                 <select id="event" name="event" onChange={(event) => {
                                     if (Number(event.target.value) === -1) {
@@ -372,7 +372,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                     }
                                     onChangeConfiguration(event)
                                 }} >
-                                    <option key={-1} value={-1} selected={configuration.event.value === undefined}>--NO SELECTION--</option>
+                                    <option key={-1} defaultValue={-1} selected={configuration.event.value === undefined}>--NO SELECTION--</option>
                                     {
                                         props.data.events.map((ce: any, index: number) => (
                                             <option key={index} value={index} selected={configuration.event.value?.[0] == index}>{ce.id}</option>
@@ -391,7 +391,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                     }
                                     onChangeConfiguration(event)
                                 }}>
-                                    <option key={-1} value={-1} selected={configuration.variable.value === undefined}>--NO SELECTION--</option>
+                                    <option key={-1} defaultValue={-1} selected={configuration.variable.value === undefined}>--NO SELECTION--</option>
                                     {
 
                                         props.data.variables.map((v: any, index: number) => (
@@ -412,7 +412,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                     
                                     onChangeConfiguration(event)
                                 }}>
-                                    <option key={-1} value={-1} selected={configuration.type.value === undefined}>--NO SELECTION--</option>
+                                    <option key={-1} defaultValue={-1} selected={configuration.type.value === undefined}>--NO SELECTION--</option>
                                     {
 
                                         props.data.types.map((t: any, index: number) => (

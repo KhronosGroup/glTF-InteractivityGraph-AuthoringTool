@@ -22,10 +22,9 @@ export class MatMul extends BehaveEngineNode {
             throw Error("Invalid type pairings")
         }
 
-
-        const val: number[][] = a.map((rowA: any[], i: string | number) =>
-            rowA.map((_, j) =>
-                rowA.reduce((sum, _, k) => sum + a[i][k] * b[k][j], 0)
+        const val: number[][] = b.map((colB: any[], i: string | number) =>
+            colB.map((_, j) =>
+                colB.reduce((sum, _, k) => sum + a[k][j] * b[i][k], 0)
             )
         );
 

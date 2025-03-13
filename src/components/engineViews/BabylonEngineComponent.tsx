@@ -167,7 +167,7 @@ export const BabylonEngineComponent = () => {
         const extractedBehaveGraph = babylonEngineRef.current.extractBehaveGraphFromScene()
         if ((!behaveGraph.nodes || behaveGraph.nodes.length === 0 || shouldOverride) && extractedBehaveGraph) {
             loadGraphFromJson(extractedBehaveGraph);
-            babylonEngineRef.current.loadBehaveGraph(extractedBehaveGraph);
+            babylonEngineRef.current.loadBehaveGraph(getExecutableGraph());
         } else {
             babylonEngineRef.current.loadBehaveGraph(behaveGraph);
         }

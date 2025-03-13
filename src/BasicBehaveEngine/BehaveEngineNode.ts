@@ -73,7 +73,6 @@ export class BehaveEngineNode {
     public processFlow(flow: IInteractivityFlow) {
         if (flow === undefined || flow.node === undefined) {return}
         const nextNode: BehaveEngineNode | undefined = this.idToBehaviourNodeMap.get(Number(flow.node));
-
         if (nextNode === undefined) {return}
         this.graphEngine.processExecutingNextNode(flow);
         nextNode.processNode(flow.socket);
@@ -195,8 +194,12 @@ export class BehaveEngineNode {
 
     protected getType(id: number): string {
         const type = this.types[id];
+        if (type === undefined) {
+            console.log(id)
+            console.log(this.types)
+        }
         let typeName: string;
-        if (type.signature === "custom" && type.extensions) {
+        if (type?.signature === "custom" && type?.extensions) {
             typeName = Object.keys(type.extensions)[0]
         } else {
             typeName = type.signature;

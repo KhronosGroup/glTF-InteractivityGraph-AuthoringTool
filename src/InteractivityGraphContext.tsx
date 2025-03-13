@@ -322,6 +322,11 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
                 for (const key in node.configuration) {
                     copyOfTemplateNode.configuration = copyOfTemplateNode.configuration || {};
                     copyOfTemplateNode.configuration[key] = node.configuration[key];
+                    if (key === "type") {
+                      const oldTypeName = json.types[node.configuration[key].value].signature;
+                      const newTypeIndex = standardTypes.findIndex(type => type.name === oldTypeName);
+                      copyOfTemplateNode.configuration[key].value = [newTypeIndex];
+                    }
                 }
             }
 
@@ -342,7 +347,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
 
 
     const getExecutableGraph = () => {
-        const graph: any = { declarations: [], nodes: [], variables: [], events: [], types: standardTypes, };
+        const graph: any = { declarations: [], nodes: [], variables: [], events: [], types: standardTypes};
 
         graph.events = [...graphRef.current.events];
         graph.variables = [...graphRef.current.variables];

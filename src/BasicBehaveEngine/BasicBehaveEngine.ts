@@ -306,7 +306,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
             .map((node, idx) => behaveGraph.declarations[node.declaration].op=== "event/onStart" ? idx : -1)
             .filter(idx => idx !== -1);
 
-        for (const startNodeIndex of onStartIndices) {            
+        for (const startNodeIndex of onStartIndices) {         
             const startFlow: IInteractivityFlow = {node: startNodeIndex, socket: "start"}
             this.addEventToWorkQueue(startFlow);
         }

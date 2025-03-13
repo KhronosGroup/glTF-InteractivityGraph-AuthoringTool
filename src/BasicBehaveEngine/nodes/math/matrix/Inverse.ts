@@ -1,3 +1,4 @@
+import * as glMatrix from "gl-matrix";
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../../BehaveEngineNode";
 
 export class Inverse extends BehaveEngineNode {
@@ -19,42 +20,29 @@ export class Inverse extends BehaveEngineNode {
     }
 
     static invert4x4(matrix: number[][]): number[][] {
-        const [[m11, m21, m31, m41], [m12, m22, m32, m42], [m13, m23, m33, m43], [m14, m24, m34, m44]] = matrix;
-    
-        const cofactor11 = m22 * (m33 * m44 - m34 * m43) - m32 * (m23 * m44 - m24 * m43) + m42 * (m23 * m34 - m24 * m33);
-        const cofactor12 = -(m21 * (m33 * m44 - m34 * m43) - m31 * (m23 * m44 - m24 * m43) + m41 * (m23 * m34 - m24 * m33));
-        const cofactor13 = m21 * (m32 * m44 - m34 * m42) - m31 * (m22 * m44 - m24 * m42) + m41 * (m22 * m33 - m23 * m32);
-        const cofactor14 = -(m21 * (m32 * m43 - m33 * m42) - m31 * (m22 * m43 - m23 * m42) + m41 * (m22 * m33 - m23 * m32));
-    
-        const determinant = m11 * cofactor11 + m12 * cofactor12 + m13 * cofactor13 + m14 * cofactor14;
-    
-        if (determinant === 0) {
+        // Convert row-major to column-major for gl-matrix
+        const colMajor = new Float32Array([
+            matrix[0][0], matrix[1][0], matrix[2][0], matrix[3][0],
+            matrix[0][1], matrix[1][1], matrix[2][1], matrix[3][1], 
+            matrix[0][2], matrix[1][2], matrix[2][2], matrix[3][2],
+            matrix[0][3], matrix[1][3], matrix[2][3], matrix[3][3]
+        ]);
+
+        const result = glMatrix.mat4.create();
+        const success = glMatrix.mat4.invert(result, colMajor);
+
+        if (!success) {
             console.error("Matrix is not invertible.");
-            return this.createIdentityMatrix(); // Assuming createIdentityMatrix is a valid function in your context
+            return this.createIdentityMatrix();
         }
-    
-        const inverseDeterminant = 1 / determinant;
-    
-        const result: number[][] = [
-            [cofactor11 * inverseDeterminant,
-            cofactor12 * inverseDeterminant,
-            cofactor13 * inverseDeterminant,
-            cofactor14 * inverseDeterminant],
-            [-(m12 * (m33 * m44 - m34 * m43) - m32 * (m13 * m44 - m14 * m43) + m42 * (m13 * m34 - m14 * m33)) * inverseDeterminant,
-            m11 * (m33 * m44 - m34 * m43) - m31 * (m13 * m44 - m14 * m43) + m41 * (m13 * m34 - m14 * m33) * inverseDeterminant,
-            -(m11 * (m32 * m44 - m34 * m42) - m31 * (m12 * m44 - m14 * m42) + m41 * (m12 * m34 - m14 * m32)) * inverseDeterminant,
-            m11 * (m32 * m43 - m33 * m42) - m31 * (m12 * m43 - m13 * m42) + m41 * (m12 * m33 - m13 * m32) * inverseDeterminant],
-            [m12 * (m23 * m44 - m24 * m43) - m22 * (m13 * m44 - m14 * m43) + m42 * (m13 * m24 - m14 * m23) * inverseDeterminant,
-            -(m11 * (m23 * m44 - m24 * m43) - m21 * (m13 * m44 - m14 * m43) + m41 * (m13 * m24 - m14 * m23)) * inverseDeterminant,
-            m11 * (m22 * m44 - m24 * m42) - m21 * (m12 * m44 - m14 * m42) + m41 * (m12 * m24 - m14 * m22) * inverseDeterminant,
-            -(m11 * (m22 * m43 - m23 * m42) - m21 * (m12 * m43 - m13 * m42) + m41 * (m12 * m23 - m13 * m22)) * inverseDeterminant],
-            [-(m12 * (m23 * m34 - m24 * m33) - m22 * (m13 * m34 - m14 * m33) + m32 * (m13 * m24 - m14 * m23)) * inverseDeterminant,
-            m11 * (m23 * m34 - m24 * m33) - m21 * (m13 * m34 - m14 * m33) + m31 * (m13 * m24 - m14 * m23) * inverseDeterminant,
-            -(m11 * (m22 * m34 - m24 * m32) - m21 * (m12 * m34 - m14 * m32) + m31 * (m12 * m24 - m14 * m22)) * inverseDeterminant,
-            m11 * (m22 * m33 - m23 * m32) - m21 * (m12 * m33 - m13 * m32) + m31 * (m12 * m23 - m13 * m22) * inverseDeterminant]
+
+        // Convert column-major back to row-major 2D array
+        return [
+            [result[0], result[4], result[8], result[12]],
+            [result[1], result[5], result[9], result[13]],
+            [result[2], result[6], result[10], result[14]],
+            [result[3], result[7], result[11], result[15]]
         ];
-    
-        return result;
     }
 
     static invert3x3(matrix: number[][]): number[][] {

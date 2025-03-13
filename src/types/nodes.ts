@@ -92,6 +92,9 @@ export const knownDeclarations: IInteractivityDeclaration[] = [
         op: "math/select"
     },
     {
+        op: "math/switch"
+    },
+    {
         op: "math/random"
     },
     {
@@ -469,7 +472,7 @@ export const standardTypes: IInteractivityValueType[] = [
 const floatNTypes = [2,3,4,5,6,8];
 const floatNxNTypes = [6,7,8];
 const floatVectorTypes = [3,4,5];
-const anyType = [0,1,2,3,4,5,6,7,8,9];
+export const anyType = [0,1,2,3,4,5,6,7,8,9];
 
 const customNodeSpecs: IInteractivityNode[] = [
     {
@@ -2400,6 +2403,37 @@ const mathSpecialNodeSpecs: IInteractivityNode[] = [
                 b: {
                     typeOptions: anyType,
                     type: 0,
+                    value: [undefined]
+                }
+            },
+            output: {
+                value: {
+                    typeOptions: anyType,
+                    type: 0,
+                    value: [undefined]
+                }
+            }
+        }
+    },
+    {
+        op: "math/switch",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/switch"),
+        description: "Switch between two values based on a condition",
+        configuration: {
+            cases: {
+                value: [undefined]
+            }
+        },
+        values: {
+            input: {
+                default: {
+                    typeOptions: anyType,
+                    type: 0,
+                    value: [undefined]
+                },
+                selection: {
+                    typeOptions: [1],
+                    type: 1,
                     value: [undefined]
                 }
             },

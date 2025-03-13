@@ -4,7 +4,7 @@ import { Handle, Position} from "reactflow";
 
 import {RenderIf} from "../components/RenderIf";
 import { IInteractivityFlow, IInteractivityValue, IInteractivityNode, IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityVariable, IInteractivityValueType } from "../types/InteractivityGraph";
-import { interactivityNodeSpecs, knownDeclarations, standardTypes } from "../types/nodes";
+import { anyType, interactivityNodeSpecs, knownDeclarations, standardTypes } from "../types/nodes";
 import { InteractivityGraphContext } from "../InteractivityGraphContext";
 
 require("../css/flowNodes.css");
@@ -149,13 +149,25 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                     cases = [];
                 }
             }            
-            for (let i = 0; i < cases.length; i++) {
-                const outputFlow: IInteractivityFlow = {
-                    node: undefined,
-                    socket: undefined
+            if (nodeType === "flow/switch") {
+                for (let i = 0; i < cases.length; i++) {
+                    const outputFlow: IInteractivityFlow = {
+                        node: undefined,
+                        socket: undefined
+                    }
+                    outputFlowsToSet[`${i}`] = outputFlow;
                 }
-                outputFlowsToSet[`${i}`] = outputFlow;
+            } else if (nodeType === "math/switch") {
+                for (let i = 0; i < cases.length; i++) {
+                    const inputValue: IInteractivityValue = {
+                        value: [undefined],
+                        typeOptions: anyType,
+                        type: 0
+                    }
+                    inputValuesToSet[`${i}`] = inputValue;
+                }
             }
+            
         }
         if (updatedConfiguration.event !== undefined && updatedConfiguration.event.value?.[0] != null) {
             const customEventId = Number(updatedConfiguration.event.value?.[0]);

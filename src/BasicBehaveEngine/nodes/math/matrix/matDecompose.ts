@@ -56,13 +56,22 @@ export class MatDecompose extends BehaveEngineNode {
             return result;
         }
 
-        result.translation.value = [a[0][3]/ s_x, a[1][3]/ s_y, a[2][3]/ s_z];
+        result.translation.value = [a[0][3], a[1][3], a[2][3]];
 
         // detemine scale signs based on detB sign
         if (detB > 0) {
             result.scale.value = [s_x, s_y, s_z];
         } else {
             result.scale.value = [-s_x, -s_y, -s_z];
+            B[0][0] = -B[0][0];
+            B[0][1] = -B[0][1]; 
+            B[0][2] = -B[0][2];
+            B[1][0] = -B[1][0];
+            B[1][1] = -B[1][1];
+            B[1][2] = -B[1][2];
+            B[2][0] = -B[2][0];
+            B[2][1] = -B[2][1];
+            B[2][2] = -B[2][2];
         }
 
         // get rotation from B matrix and turn it into a quaternion

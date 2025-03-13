@@ -118,6 +118,7 @@ import { QuatApply } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatAp
 import { QuatMul } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatMul';
 import { MatCompose } from '../src/BasicBehaveEngine/nodes/math/matrix/matCompose';
 import { MatDecompose } from '../src/BasicBehaveEngine/nodes/math/matrix/matDecompose';
+import { MathSwitch } from '../src/BasicBehaveEngine/nodes/math/special/MathSwitch';
 
 describe('nodes', () => {
     let executionLog: string;
@@ -480,15 +481,15 @@ describe('nodes', () => {
         expect(res['value']!.value[0][0]).toBe(2);
         expect(res['value']!.value[0][1]).toBe(0);
         expect(res['value']!.value[0][2]).toBe(0);
-        expect(res['value']!.value[0][3]).toBe(2);
+        expect(res['value']!.value[0][3]).toBe(1);
         expect(res['value']!.value[1][0]).toBe(0);
         expect(res['value']!.value[1][1]).toBe(2);
         expect(res['value']!.value[1][2]).toBe(0);
-        expect(res['value']!.value[1][3]).toBe(4);
+        expect(res['value']!.value[1][3]).toBe(2);
         expect(res['value']!.value[2][0]).toBe(0);
         expect(res['value']!.value[2][1]).toBe(0);
         expect(res['value']!.value[2][2]).toBe(2);
-        expect(res['value']!.value[2][3]).toBe(6);
+        expect(res['value']!.value[2][3]).toBe(3);
         expect(res['value']!.value[3][0]).toBe(0);
         expect(res['value']!.value[3][1]).toBe(0);
         expect(res['value']!.value[3][2]).toBe(0);
@@ -498,7 +499,7 @@ describe('nodes', () => {
     it('math/matDecompose',  () => {
         const matDecompose: MatDecompose = new MatDecompose({
             ...defaultProps,
-            values: {a: { value: [[2, 0, 0, 2], [0, 2, 0, 4], [0, 0, 2, 6], [0, 0, 0, 1]], type: 8 }},
+            values: {a: { value: [[2, 0, 0, 1], [0, 2, 0, 2], [0, 0, 2, 3], [0, 0, 0, 1]], type: 8 }},
         });
 
         const res = matDecompose.processNode();
@@ -991,6 +992,20 @@ describe('nodes', () => {
         expect(val['value'].value[0]).toBe(4);
         expect(val['value'].value[1]).toBe(-6);
         expect(val['value'].value[2]).toBe(10);
+    });
+
+    it("math/switch", () => {
+        let mathSwitch: MathSwitch = new MathSwitch({
+            ...defaultProps,
+            configuration: {cases: { value: [0, 1]}},
+            values: {0: { value: [-10.5], type: 2}, 1: { value: [5.5], type: 2}, default: { value: [3], type: 2}, selection: { value: [0], type: 1}}
+        });
+
+        let val = mathSwitch.processNode();
+        expect(val['value'].value[0]).toBe(-10.5);
+        mathSwitch!.values['selection'].value![0] = 12;
+        let val2 = mathSwitch.processNode();
+        expect(val2['value'].value[0]).toBe(3);
     });
 
     it("math/sub", () => {

@@ -110,6 +110,7 @@ import { NoOpNode } from "./nodes/experimental/NoOp";
 import { MatDecompose } from "./nodes/math/matrix/matDecompose";
 import { MatCompose } from "./nodes/math/matrix/matCompose";
 import { MatMul } from "./nodes/math/matrix/MatMul";
+import { MathSwitch } from "./nodes/math/special/MathSwitch";
 
 
 export class BasicBehaveEngine implements IBehaveEngine {
@@ -437,6 +438,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/isinf", IsInfNode);
         this.registerBehaveEngineNode("math/isnan", IsNaNNode);
         this.registerBehaveEngineNode("math/select", Select);
+        this.registerBehaveEngineNode("math/switch", MathSwitch);
         this.registerBehaveEngineNode("math/extract2", Extract2);
         this.registerBehaveEngineNode("math/extract3", Extract3);
         this.registerBehaveEngineNode("math/extract4", Extract4);

@@ -194,6 +194,12 @@ export const knownDeclarations: IInteractivityDeclaration[] = [
         op: "math/matmul"
     },
     {
+        op: "math/matCompose"
+    },
+    {
+        op: "math/matDecompose"
+    },
+    {
         op: "math/combine2"
     },
     {
@@ -1591,6 +1597,79 @@ const mathMatrixNodeSpecs: IInteractivityNode[] = [
                     type: 6,
                     value: [undefined, undefined,
                            undefined, undefined]
+                }
+            }
+        }
+    },
+    {
+        op: "math/matCompose",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/matCompose"),
+        description: "Compose a matrix from a translation, rotation, and scale",
+        values: {
+            input: {
+                translation: {
+                    typeOptions: [4],
+                    type: 4,
+                    value: [undefined, undefined, undefined]
+                },
+                rotation: {
+                    typeOptions: [5],
+                    type: 5,
+                    value: [undefined, undefined, undefined, undefined]
+                },
+                scale: {
+                    typeOptions: [4],
+                    type: 4,
+                    value: [undefined, undefined, undefined]
+                }
+            },
+            output: {
+                value: {
+                    typeOptions: [8],
+                    type: 8,
+                    value: [undefined, undefined, undefined, undefined,
+                        undefined, undefined, undefined, undefined,
+                        undefined, undefined, undefined, undefined,
+                        undefined, undefined, undefined, undefined]
+                }
+            }
+        }
+    },
+    {
+        op: "math/matDecompose",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/matDecompose"),
+        description: "Decompose a matrix into a translation, rotation, and scale",
+        values: {
+            input: {
+                a: {
+                    typeOptions: [8],
+                    type: 8,
+                    value: [undefined, undefined, undefined, undefined,
+                        undefined, undefined, undefined, undefined,
+                        undefined, undefined, undefined, undefined,
+                        undefined, undefined, undefined, undefined]
+                }
+            },
+            output: {
+                translation: {
+                    typeOptions: [3],
+                    type: 3,
+                    value: [undefined, undefined, undefined]
+                },
+                rotation: {
+                    typeOptions: [4],
+                    type: 4,
+                    value: [undefined, undefined, undefined, undefined]
+                },
+                scale: {
+                    typeOptions: [3],
+                    type: 3,
+                    value: [undefined, undefined, undefined]
+                },
+                isValid: {
+                    typeOptions: [0],
+                    type: 0,
+                    value: [undefined]
                 }
             }
         }

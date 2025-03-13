@@ -13,10 +13,43 @@ export class OutputConsole extends BehaveEngineNode {
         this.graphEngine.clearValueEvaluationCache();
 
         const {message} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const typeIndex = this.values['message'].type!
+
 
         this.graphEngine.processNodeStarted(this);
 
-        console.log(`ADBE/outputConsole: ${message}`);
+        switch (typeIndex) {
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+                console.log(`ADBE/outputConsole: ${message}`);
+                break;
+            case 6:
+            case 7:
+            case 8:
+                let matrixString = '';
+                for (let row = 0; row < message.length; row++) {
+                    matrixString += '[ ';
+                    for (let col = 0; col < message[row].length; col++) {
+                        matrixString += message[row][col];
+                        if (col < message[row].length - 1) {
+                            matrixString += ', ';
+                        }
+                    }
+                    matrixString += ' ]';
+                    if (row < message.length - 1) {
+                        matrixString += '\n';
+                    }
+                }
+                console.log(`ADBE/outputConsole: ${matrixString}`);
+                break;
+            default:
+                console.log(`ADBE/outputConsole: ${message}`);
+                break;
+        }
+
         super.processNode(flowSocket);
     }
 }

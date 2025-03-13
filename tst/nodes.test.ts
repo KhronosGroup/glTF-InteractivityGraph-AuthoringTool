@@ -116,6 +116,8 @@ import { IInteractivityFlow, IInteractivityVariable } from '../src/types/Interac
 import { DOMEventBus } from "../src/BasicBehaveEngine/eventBuses/DOMEventBus";
 import { QuatApply } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatApply';
 import { QuatMul } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatMul';
+import { MatCompose } from '../src/BasicBehaveEngine/nodes/math/matrix/matCompose';
+import { MatDecompose } from '../src/BasicBehaveEngine/nodes/math/matrix/matDecompose';
 
 describe('nodes', () => {
     let executionLog: string;
@@ -466,6 +468,52 @@ describe('nodes', () => {
 
         const resCustom = await pointerGetCustomPtr.processNode();
         expect(resCustom['value']!.value[0]).toBe(1);
+    });
+
+    it('math/matCompose',  () => {
+        const matCompose: MatCompose = new MatCompose({
+            ...defaultProps,
+            values: {translation: { value: [1, 2, 3], type: 4 }, rotation: { value: [0, 0, 0, 1], type: 5 }, scale: { value: [2, 2, 2], type: 4 }},
+        });
+
+        const res = matCompose.processNode();
+        expect(res['value']!.value[0][0]).toBe(2);
+        expect(res['value']!.value[0][1]).toBe(0);
+        expect(res['value']!.value[0][2]).toBe(0);
+        expect(res['value']!.value[0][3]).toBe(2);
+        expect(res['value']!.value[1][0]).toBe(0);
+        expect(res['value']!.value[1][1]).toBe(2);
+        expect(res['value']!.value[1][2]).toBe(0);
+        expect(res['value']!.value[1][3]).toBe(4);
+        expect(res['value']!.value[2][0]).toBe(0);
+        expect(res['value']!.value[2][1]).toBe(0);
+        expect(res['value']!.value[2][2]).toBe(2);
+        expect(res['value']!.value[2][3]).toBe(6);
+        expect(res['value']!.value[3][0]).toBe(0);
+        expect(res['value']!.value[3][1]).toBe(0);
+        expect(res['value']!.value[3][2]).toBe(0);
+        expect(res['value']!.value[3][3]).toBe(1);
+    });
+
+    it('math/matDecompose',  () => {
+        const matDecompose: MatDecompose = new MatDecompose({
+            ...defaultProps,
+            values: {a: { value: [[2, 0, 0, 2], [0, 2, 0, 4], [0, 0, 2, 6], [0, 0, 0, 1]], type: 8 }},
+        });
+
+        const res = matDecompose.processNode();
+        expect(res['translation']!.value[0]).toBe(1);
+        expect(res['translation']!.value[1]).toBe(2);
+        expect(res['translation']!.value[2]).toBe(3);
+        expect(res['rotation']!.value[0]).toBe(0);
+        expect(res['rotation']!.value[1]).toBe(0);
+        expect(res['rotation']!.value[2]).toBe(0);
+        expect(res['rotation']!.value[3]).toBe(1);
+        expect(res['scale']!.value[0]).toBe(2);
+        expect(res['scale']!.value[1]).toBe(2);
+        expect(res['scale']!.value[2]).toBe(2);
+        expect(res['isValid']!.value).toBe(true);
+
     });
 
     it('pointer/set', async () => {

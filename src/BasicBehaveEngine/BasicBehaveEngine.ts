@@ -107,6 +107,9 @@ import { HyperbolicTangent } from "./nodes/math/hyperbolic/HyperbolicTangent";
 import { IInteractivityVariable, IInteractivityEvent, IInteractivityValue, IInteractivityFlow, IInteractivityGraph, IInteractivityNode, IInteractivityValueType, IInteractivityDeclaration } from "../types/InteractivityGraph";
 import { VariableInterpolate } from "./nodes/variable/VariableInterpolate";
 import { NoOpNode } from "./nodes/experimental/NoOp";
+import { MatDecompose } from "./nodes/math/matrix/matDecompose";
+import { MatCompose } from "./nodes/math/matrix/matCompose";
+import { MatMul } from "./nodes/math/matrix/MatMul";
 
 
 export class BasicBehaveEngine implements IBehaveEngine {
@@ -459,6 +462,9 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/popcnt", CountOneBits);
         this.registerBehaveEngineNode("math/quatApply", QuatApply);
         this.registerBehaveEngineNode("math/quatMul", QuatMul);
+        this.registerBehaveEngineNode("math/matDecompose", MatDecompose);
+        this.registerBehaveEngineNode("math/matCompose", MatCompose);
+        this.registerBehaveEngineNode("math/matMul", MatMul);
     }
 
     protected validateGraph = (behaviorGraph: any) => {

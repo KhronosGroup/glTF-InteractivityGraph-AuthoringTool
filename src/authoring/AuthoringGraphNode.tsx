@@ -242,12 +242,16 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
             }
         }
 
-        const nodeSpec: IInteractivityNode = interactivityNodeSpecs.find(node => node.op === nodeType)!;
+        const nodeSpec: IInteractivityNode | undefined = interactivityNodeSpecs.find(node => node.op === nodeType);
+
+        console.log(nodeType)
+
+        console.log(nodeSpec)
         
-        const nodeSpecInputValues: Record<string, IInteractivityValue> = nodeSpec.values?.input || {};
-        const nodeSpecOutputValues: Record<string, IInteractivityValue> = nodeSpec.values?.output || {};
-        const nodeSpecInputFlows: Record<string, IInteractivityFlow> = nodeSpec.flows?.input || {};
-        const nodeSpecOutputFlows: Record<string, IInteractivityFlow> = nodeSpec.flows?.output || {};
+        const nodeSpecInputValues: Record<string, IInteractivityValue> = nodeSpec?.values?.input || {};
+        const nodeSpecOutputValues: Record<string, IInteractivityValue> = nodeSpec?.values?.output || {};
+        const nodeSpecInputFlows: Record<string, IInteractivityFlow> = nodeSpec?.flows?.input || {};
+        const nodeSpecOutputFlows: Record<string, IInteractivityFlow> = nodeSpec?.flows?.output || {};
 
         // We only want to set socket values that are either in the node's spec or are created as a result of the configuration
         // If the current node has a value for a socket we should use it otherwise we will use the node spec default (if it exists)
@@ -287,7 +291,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                 outputFlowsToSet[key] = nodeSpecOutputFlows[key];
             }
         }
-        if (nodeSpec.op === "flow/sequence" || nodeSpec.op === "flow/multiGate") {
+        if (nodeSpec?.op === "flow/sequence" || nodeSpec?.op === "flow/multiGate") {
             // flow sequence is a very special node which has sockets that are not in the node spec nor or generated based on configuration
             for (const key of Object.keys(outputFlows)) {
                 outputFlowsToSet[key] = outputFlows[key];

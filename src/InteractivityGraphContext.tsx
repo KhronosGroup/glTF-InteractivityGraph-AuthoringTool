@@ -242,8 +242,37 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
             nodes: [],
             variables: json.variables,
             events: json.events,
-            types: json.types
+            types: standardTypes
         };
+
+        // translate the types to be the standard types
+        for (const declaration of graph.declarations) {
+            if (declaration.inputValueSockets) {
+                for (const socket of Object.values(declaration.inputValueSockets)) {
+                    const oldTypeName = json.types[socket.type].signature;
+                    socket.type = standardTypes.findIndex(type => type.name === oldTypeName);
+                }
+            }
+            if (declaration.outputValueSockets) {
+                for (const socket of Object.values(declaration.outputValueSockets)) {
+                    const oldTypeName = json.types[socket.type].signature;
+                    socket.type = standardTypes.findIndex(type => type.name === oldTypeName);
+                }
+            }
+        }
+
+        for (const variable of graph.variables) {
+            const oldTypeName = json.types[variable.type].signature;
+            variable.type = standardTypes.findIndex(type => type.name === oldTypeName);
+        }
+
+        for (const event of graph.events) {
+          for (const socket of Object.values(event.values)) {
+            const oldTypeName = json.types[socket.type].signature;
+            socket.type = standardTypes.findIndex(type => type.name === oldTypeName);
+          }
+        }
+
 
         const loadedNodes: IInteractivityNode[] = [];
         const uuids = [];
@@ -270,7 +299,9 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
                     if (node.values[key].value !== undefined) {
                         copyOfTemplateNode.values = copyOfTemplateNode.values || {};
                         copyOfTemplateNode.values.input = copyOfTemplateNode.values.input || {};
-                        copyOfTemplateNode.values.input[key] = {value: node.values[key].value, type: node.values[key].type, typeOptions: copyOfTemplateNode.values.input[key]?.typeOptions || [node.values[key].type]};
+                        const oldTypeName = json.types[node.values[key].type].signature;
+                        const newTypeIndex = standardTypes.findIndex(type => type.name === oldTypeName);
+                        copyOfTemplateNode.values.input[key] = {value: node.values[key].value, type: newTypeIndex, typeOptions: copyOfTemplateNode.values.input[key]?.typeOptions || [newTypeIndex]};
                     } else if (node.values[key].socket !== undefined && node.values[key].node !== null) {
                         copyOfTemplateNode.values = copyOfTemplateNode.values || {};
                         copyOfTemplateNode.values.input = copyOfTemplateNode.values.input || {};

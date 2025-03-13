@@ -40,7 +40,6 @@ export class MatCompose extends BehaveEngineNode {
         resultMatrix[3] = translation[0];
         resultMatrix[7] = translation[1];
         resultMatrix[11] = translation[2];
-        print4x4Matrix(resultMatrix);
 
         // Convert to 2D array format
         const val = Array(4).fill(0).map((_, i) => 
@@ -50,16 +49,4 @@ export class MatCompose extends BehaveEngineNode {
 
         return {'value': {value: val, type: this.getTypeIndex("float4x4")}}
     }
-}
-
-
-function print4x4Matrix(matrix: Float32Array) {
-    for (let i = 0; i < 4; i++) {
-        const  row = [];
-        for (let j = 0; j < 4; j++) {
-            row.push(matrix[i * 4 + j].toFixed(3));
-        }
-        console.log(row.join('\t'));
-    }
-    console.log('\n');
 }

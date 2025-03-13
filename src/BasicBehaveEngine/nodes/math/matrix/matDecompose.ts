@@ -79,7 +79,6 @@ export class MatDecompose extends BehaveEngineNode {
         const rotation = glMatrix.quat.create();
         glMatrix.quat.fromMat3(rotation, B_matrix);
         result.rotation.value = [rotation[0], rotation[1], rotation[2], rotation[3]];
-        console.log(result);
 
         return result;
     }

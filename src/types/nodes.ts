@@ -2,6 +2,9 @@ import { IInteractivityDeclaration, IInteractivityNode, IInteractivityValue, IIn
 
 export const knownDeclarations: IInteractivityDeclaration[] = [
     {
+        op: "debug/log"
+    },
+    {
         op: "math/e"
     },
     {
@@ -3776,12 +3779,40 @@ const flowNodeSpecs: IInteractivityNode[] = [
     }
 ];
 
+
+const debugNodeSpecs: IInteractivityNode[] = [
+    {
+        op: "debug/log",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "debug/log"),
+        description: "Log the value to the console",
+        configuration: {
+            message: {
+                value: [undefined]
+            }
+        },
+        flows: {
+            input: {
+                in: {
+                    node: undefined,
+                    socket: undefined
+                }
+            },
+            output: {
+                out: {
+                    node: undefined,
+                    socket: undefined
+                }
+            }
+        }
+    }
+]
+
 export const interactivityNodeSpecs: IInteractivityNode[] = [
     ...mathConstantNodeSpecs, ...mathArithmeticNodeSpecs, ...mathComparisonNodeSpecs, ...mathTrigNodeSpecs,
     ...mathSpecialNodeSpecs,...lifecycleNodeSpecs, ...flowNodeSpecs, ...variableNodeSpecs, ...mathHyperbolicNodeSpecs,
     ...mathExponentialNodeSpecs, ...mathVectorNodeSpecs, ...mathMatrixNodeSpecs, ...mathSwizzleNodeSpecs, ...mathIntegerBitwiseNodeSpecs,
     ...mathTypeConversionNodeSpecs, ...pointerNodeSpecs, ...animationNodeSpecs, ...selectabilityNodeSpecs, ...customNodeSpecs, ...hoverabilityNodeSpecs,
-    ...mathQuaternionNodeSpecs
+    ...mathQuaternionNodeSpecs,...debugNodeSpecs
 ];
 
 export const createNoOpNode = (declaration: IInteractivityDeclaration): IInteractivityNode => {

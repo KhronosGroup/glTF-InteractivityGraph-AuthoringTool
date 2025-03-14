@@ -112,6 +112,7 @@ import { MatCompose } from "./nodes/math/matrix/matCompose";
 import { MatMul } from "./nodes/math/matrix/MatMul";
 import { MathSwitch } from "./nodes/math/special/MathSwitch";
 import { Inverse } from "./nodes/math/matrix/Inverse";
+import { DebugLog } from "./nodes/experimental/Debug";
 
 
 export class BasicBehaveEngine implements IBehaveEngine {
@@ -469,6 +470,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/matCompose", MatCompose);
         this.registerBehaveEngineNode("math/matmul", MatMul);
         this.registerBehaveEngineNode("math/inverse", Inverse);
+        this.registerBehaveEngineNode("debug/log", DebugLog);
     }
 
     protected validateGraph = (behaviorGraph: any) => {

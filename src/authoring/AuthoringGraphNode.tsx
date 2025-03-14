@@ -4,7 +4,7 @@ import { Handle, Position} from "reactflow";
 
 import {RenderIf} from "../components/RenderIf";
 import { IInteractivityFlow, IInteractivityValue, IInteractivityNode, IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityVariable, IInteractivityValueType } from "../types/InteractivityGraph";
-import { anyType, interactivityNodeSpecs, knownDeclarations, standardTypes } from "../types/nodes";
+import { anyType, interactivityNodeSpecs, standardTypes } from "../types/nodes";
 import { InteractivityGraphContext } from "../InteractivityGraphContext";
 
 require("../css/flowNodes.css");
@@ -196,6 +196,13 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
             const vals = parsePath(updatedConfiguration.pointer.value?.[0] || "");
             for (let i = 0; i < vals.length; i++) {
                 const value: IInteractivityValue = {value: [undefined], typeOptions: [1], type: 1}
+                inputValuesToSet[vals[i]] = value;
+            }
+        }
+        if (updatedConfiguration.message !== undefined) {
+            const vals = parsePath(updatedConfiguration.message.value?.[0] || "");
+            for (let i = 0; i < vals.length; i++) {
+                const value: IInteractivityValue = {value: [undefined], typeOptions: anyType, type: 0}
                 inputValuesToSet[vals[i]] = value;
             }
         }

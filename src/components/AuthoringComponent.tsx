@@ -419,8 +419,14 @@ const NodeListComponent = (props: {closeModal: any}) => {
         return declarations.map((x: { op: any; }) => x.op);
     }
 
+    const getDataString = () => {
+        const data = getData();
+        if (Array.isArray(data)) return "\"" + data.join('", "') + "\"";
+        else return JSON.stringify(data);
+    }
+
     const copyToClipboard = async () => {
-        const jsonString = JSON.stringify(getData());
+        const jsonString = getDataString();
         await navigator.clipboard.writeText(jsonString);
 
         setCopied(true)
@@ -433,7 +439,7 @@ const NodeListComponent = (props: {closeModal: any}) => {
         <Panel id={"node-list-panel"} position={"top-center"} style={{border:"1px solid gray", background: "white"}}>
             <Container style={{padding: 16}}>
                 <h3>Node List</h3>
-                <pre style={{textAlign: "left", overflow:"scroll", height: 400, width: 400}}>{JSON.stringify(getData())}</pre>
+                <pre style={{textAlign: "left", overflow:"scroll", height: 400, width: 400}}>{getDataString()}</pre>
                 <Row style={{ marginTop: 16 }}>
                     <Col xs={12} md={6}>
                         <Button variant={"outline-primary"}  style={{width: "100%"}} onClick={copyToClipboard}>

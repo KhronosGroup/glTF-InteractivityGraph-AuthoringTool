@@ -107,7 +107,7 @@ export const EngineSelector: React.FC<EngineSelectorProps> = ({setEngineType}) =
             >
                 <Tab title={"Logging Engine"} eventKey={1}/>
                 <Tab title={"Babylon Engine"} eventKey={2}/>
-                <Tab title={"Three.js Engine"} eventKey={3}/>
+                <Tab title={"Three.js"} eventKey={3}/>
             </Tabs>
         </div>
 

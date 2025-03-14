@@ -419,7 +419,6 @@ export class ThreeDecorator extends ADecorator {
             if (callback) callback();
             return;
         }
-        console.log("Playing animation", anim);
 
         // Create mixer if it doesn't exist for this animation
         anim.userData = anim.userData || {};
@@ -430,13 +429,6 @@ export class ThreeDecorator extends ADecorator {
             anim.userData.mixer = undefined;
         }
 
-        // Create a mixer for the animation's target object
-        const rootNode = this.world.glTFNodes[0];
-        if (!rootNode) {
-            console.warn('No root node found for animation');
-            if (callback) callback();
-            return;
-        }
         // Create a mixer for the entire scene instead of just the first node
         // This ensures animations are properly targeted
         const mixer = new AnimationMixer(this.scene);

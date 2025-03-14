@@ -28,7 +28,6 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     const [inputValues, setInputValues] = useState<Record<string, IInteractivityValue>>({});
     const [outputValues, setOutputValues] = useState<Record<string, IInteractivityValue>>({});
     const [configuration, setConfiguration] = useState<Record<string, IInteractivityConfigurationValue>>({});
-
     const {graph} = useContext(InteractivityGraphContext);
     const uid = props.data.uid;
     const [node, setNode] = useState<IInteractivityNode | null>(null);
@@ -364,18 +363,18 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                     <div>
                         {
                             (configuration.event !== undefined) &&
-                            <div>z
+                            <div>
                                 <label htmlFor="event">event</label>
-                                <select id="event" name="event" onChange={(event) => {
+                                <select id="event" name="event" defaultValue={configuration.event.value?.[0] || -1} onChange={(event) => {
                                     if (Number(event.target.value) === -1) {
                                         return
                                     }
                                     onChangeConfiguration(event)
                                 }} >
-                                    <option key={-1} defaultValue={-1} selected={configuration.event.value === undefined}>--NO SELECTION--</option>
+                                    <option key={-1} value={-1}>--NO SELECTION--</option>
                                     {
                                         props.data.events.map((ce: any, index: number) => (
-                                            <option key={index} value={index} selected={configuration.event.value?.[0] == index}>{ce.id}</option>
+                                            <option key={index} value={index}>{ce.id}</option>
                                         ))
                                     }
                                 </select>
@@ -385,17 +384,17 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                             (configuration.variable !== undefined) &&
                             <div>
                                 <label htmlFor="variable">variable</label>
-                                <select id="variable" name="variable" onChange={(event) => {
+                                <select id="variable" name="variable" defaultValue={configuration.variable.value?.[0] || -1} onChange={(event) => {
                                     if (Number(event.target.value) === -1) {
                                         return
                                     }
                                     onChangeConfiguration(event)
                                 }}>
-                                    <option key={-1} defaultValue={-1} selected={configuration.variable.value === undefined}>--NO SELECTION--</option>
+                                    <option key={-1} value={-1}>--NO SELECTION--</option>
                                     {
 
                                         props.data.variables.map((v: any, index: number) => (
-                                            <option key={index} value={index} selected={configuration.variable.value?.[0] == index}>{v.name || v.id}</option>
+                                            <option key={index} value={index}>{v.name || v.id}</option>
                                         ))
                                     }
                                 </select>
@@ -405,18 +404,18 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                             (configuration.type !== undefined) &&
                             <div>
                                 <label htmlFor="type">type</label>
-                                <select id="type" name="type" onChange={(event) => {
+                                <select id="type" name="type" defaultValue={configuration.type.value?.[0] || -1} onChange={(event) => {
                                     if (Number(event.target.value) === -1) {
                                         return
                                     }
                                     
                                     onChangeConfiguration(event)
                                 }}>
-                                    <option key={-1} defaultValue={-1} selected={configuration.type.value === undefined}>--NO SELECTION--</option>
+                                    <option key={-1} value={-1}>--NO SELECTION--</option>
                                     {
 
                                         props.data.types.map((t: any, index: number) => (
-                                            <option key={index} value={index} selected={configuration.type.value?.[0] == index}>{t.name || t.signature}</option>
+                                            <option key={index} value={index}>{t.name || t.signature}</option>
                                         ))
                                     }
                                 </select>

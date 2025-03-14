@@ -211,7 +211,13 @@ export const AuthoringComponent = () => {
             console.log(loadedNodes)
             console.log(result[1])
             setNodes(loadedNodes);
-            setEdges(result[1]);
+            setTimeout(() => {
+                // react flow has an issue connecting handles for our custom nodes since they heavily rely on the node data 
+                // "Couldn’t create edge for source/target handle id: “some-id”; edge id" I tried to fix this using useUpdateNodeInternals()
+                // to alert the AuthoringGraphNode of changes which would update the handles, it seems the hook does not work properly as advertised
+                // soI am just adding a small delay between the node handles synthesizing synchronously and the edges being created in an async event
+                setEdges(result[1]);
+            }, 1000);
             setNeedsSyncingToAuthor(false);
         }
     }, [needsSyncingToAuthor]);

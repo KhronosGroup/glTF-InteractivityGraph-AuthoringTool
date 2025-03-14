@@ -102,19 +102,18 @@ export const ThreeEngineComponent = () => {
         // Setup animation loop
         const animate = () => {
             animationFrameRef.current = requestAnimationFrame(animate);
+            const delta = clockRef.current?.getDelta() || 0;
             
             if (controlsRef.current) {
                 controlsRef.current.update();
             }
             
             if (animationMixerRef.current) {
-                const delta = clockRef.current?.getDelta() || 0;
                 animationMixerRef.current.update(delta);
             }
             
             // Update ThreeDecorator if initialized
             if (threeEngineRef.current) {
-                const delta = clockRef.current?.getDelta() || 0;
                 threeEngineRef.current.update(delta);
             }
             

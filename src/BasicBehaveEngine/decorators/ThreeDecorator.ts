@@ -166,8 +166,6 @@ export class ThreeDecorator extends ADecorator {
         const oldHoveredNode = this.hoveredNode;
         const oldHoveredNodeIndex = this.hoveredNodeIndex;
 
-        this.hoveredNode = null;
-
         if (intersects.length > 0) {
             const intersectedObject = intersects[0].object;
             this.hoveredNode = intersectedObject;
@@ -1009,7 +1007,6 @@ export class ThreeDecorator extends ADecorator {
             for (const animation of this.world.animations) {
                 if (animation.userData?.mixer && animation.userData?.animating) {
                     animation.userData.mixer.update(deltaTime);
-                    console.log("Updating animation", animation);
                 }
             }
         }

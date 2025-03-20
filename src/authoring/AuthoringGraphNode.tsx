@@ -372,7 +372,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                             (configuration.event !== undefined) &&
                             <div>
                                 <label htmlFor="event">event</label>
-                                <select id="event" name="event" defaultValue={configuration.event.value?.[0] || -1} onChange={(event) => {
+                                <select id="event" name="event" defaultValue={configuration.event.value?.[0] === undefined ? -1 : configuration.event.value[0]} onChange={(event) => {
                                     if (Number(event.target.value) === -1) {
                                         return
                                     }
@@ -391,7 +391,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                             (configuration.variable !== undefined) &&
                             <div>
                                 <label htmlFor="variable">variable</label>
-                                <select id="variable" name="variable" defaultValue={configuration.variable.value?.[0] || -1} onChange={(event) => {
+                                <select id="variable" name="variable" defaultValue={configuration.variable.value?.[0] === undefined ? -1 : configuration.variable.value[0]} onChange={(event) => {
                                     if (Number(event.target.value) === -1) {
                                         return
                                     }
@@ -411,7 +411,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                             (configuration.type !== undefined) &&
                             <div>
                                 <label htmlFor="type">type</label>
-                                <select id="type" name="type" defaultValue={configuration.type.value?.[0] || -1} onChange={(event) => {
+                                <select id="type" name="type" defaultValue={configuration.type.value?.[0] === undefined ? -1 : configuration.type.value[0]} onChange={(event) => {
                                     if (Number(event.target.value) === -1) {
                                         return
                                     }

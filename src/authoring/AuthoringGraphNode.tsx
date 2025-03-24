@@ -129,22 +129,23 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
             }
         }
         if (updatedConfiguration.cases !== undefined) {
-            let cases = updatedConfiguration.cases.value?.[0] || "";
+            let cases = updatedConfiguration.cases.value || "";
             // Allow input formats in the UI, such as:
             // - 0,1, (while typing)
             // - [0,1,2 (while typing)
             // - [0,1,2]
             // - 0,1,2
-            if (typeof cases === "string") {
-                if (cases.endsWith(",")) cases = cases.slice(0, -1);
-                cases = cases.replace(/\s/g, '');
-                if (!cases.startsWith("[")) cases = `[${cases}`;
-                if (!cases.endsWith("]")) cases = `${cases}]`;
+            if (typeof cases[0] === "string") {
+                let casesesString = cases[0];
+                if (casesesString.endsWith(",")) casesesString = casesesString.slice(0, -1);
+                casesesString = casesesString.replace(/\s/g, '');
+                if (!casesesString.startsWith("[")) casesesString = `[${casesesString}`;
+                if (!casesesString.endsWith("]")) casesesString = `${casesesString}]`;
                 try {
-                    cases = JSON.parse(cases);
+                    cases = JSON.parse(casesesString);
                 }
                 catch (e) {
-                    console.error("Couldn't parse configuration array string: ", cases, e);
+                    console.error("Couldn't parse configuration array string: ", casesesString, e);
                     cases = [];
                 }
             }            

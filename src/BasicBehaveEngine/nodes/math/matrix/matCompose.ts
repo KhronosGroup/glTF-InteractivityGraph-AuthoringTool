@@ -32,7 +32,7 @@ export class MatCompose extends BehaveEngineNode {
         const resultMatrix = new Float32Array(16);
 
         // Set up individual transformation matrices
-        glMatrix.mat4.fromQuat(rotationMatrix, rotation);
+        glMatrix.mat4.fromQuat(rotationMatrix, rotation); // rotation is in xyzw
         glMatrix.mat4.fromScaling(scaleMatrix, scale);
 
         // Multiply matrices in TRS order (Translation * Rotation * Scale)

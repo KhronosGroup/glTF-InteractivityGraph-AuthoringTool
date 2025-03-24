@@ -738,12 +738,23 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/nodes/${maxGltfNode}/matrix`, (path) => {
             const parts: string[] = path.split("/");
             const node = this.world.glTFNodes[Number(parts[2])];
-            const matrix = (node as AbstractMesh).getPoseMatrix().asArray();
+
+            console.log(node.scaling, node.rotationQuaternion, node.position)
+            
+            const scaleMatrix = Matrix.Scaling(node.scaling.x, node.scaling.y, node.scaling.z);
+            const rotationMatrix = Matrix.FromQuaternionToRef(node.rotationQuaternion, Matrix.Identity());
+
+            console.log(scaleMatrix, rotationMatrix)
+       
+            
+            const matrix: Matrix = scaleMatrix.multiply(rotationMatrix);
+            matrix.setTranslation(new Vector3(node.position.x, node.position.y, node.position.z));
+            
             return [
-                [matrix[0], matrix[1], matrix[2], matrix[3]],
-                [matrix[4], matrix[5], matrix[6], matrix[7]], 
-                [matrix[8], matrix[9], matrix[10], matrix[11]],
-                [matrix[12], matrix[13], matrix[14], matrix[15]]
+                [matrix.m[0], matrix.m[1], matrix.m[2], matrix.m[3]],
+                [matrix.m[4], matrix.m[5], matrix.m[6], matrix.m[7]], 
+                [matrix.m[8], matrix.m[9], matrix.m[10], matrix.m[11]],
+                [matrix.m[12], matrix.m[13], matrix.m[14], matrix.m[15]]
             ];
         }, (path, value) => {
             //no-op
@@ -752,12 +763,16 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/nodes/${maxGltfNode}/globalMatrix`, (path) => {
             const parts: string[] = path.split("/");
             const node = this.world.glTFNodes[Number(parts[2])];
+
+            (node as AbstractMesh).computeWorldMatrix(true);
             const globalMatrix = (node as AbstractMesh).getWorldMatrix().asArray();
+            // x by -1
+            // TODO what is the correct way to undo babylon's gltf -> babylon coordinate system conversion?
             return [
-                [globalMatrix[0], globalMatrix[1], globalMatrix[2], globalMatrix[3]],
+                [-globalMatrix[0], globalMatrix[1], globalMatrix[2], globalMatrix[3]],
                 [globalMatrix[4], globalMatrix[5], globalMatrix[6], globalMatrix[7]], 
                 [globalMatrix[8], globalMatrix[9], globalMatrix[10], globalMatrix[11]],
-                [globalMatrix[12], globalMatrix[13], globalMatrix[14], globalMatrix[15]]
+                [-globalMatrix[12], globalMatrix[13], globalMatrix[14], globalMatrix[15]]
             ];
         }, (path, value) => {
             //no-op

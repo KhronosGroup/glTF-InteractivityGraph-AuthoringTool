@@ -22,10 +22,10 @@ export class Inverse extends BehaveEngineNode {
     static invert4x4(matrix: number[][]): number[][] {
         // Convert row-major to column-major for gl-matrix
         const colMajor = new Float32Array([
-            matrix[0][0], matrix[1][0], matrix[2][0], matrix[3][0],
-            matrix[0][1], matrix[1][1], matrix[2][1], matrix[3][1], 
-            matrix[0][2], matrix[1][2], matrix[2][2], matrix[3][2],
-            matrix[0][3], matrix[1][3], matrix[2][3], matrix[3][3]
+            matrix[0][0], matrix[0][1], matrix[0][2], matrix[0][3],
+            matrix[1][0], matrix[1][1], matrix[1][2], matrix[1][3], 
+            matrix[2][0], matrix[2][1], matrix[2][2], matrix[2][3],
+            matrix[3][0], matrix[3][1], matrix[3][2], matrix[3][3]
         ]);
 
         const result = glMatrix.mat4.create();
@@ -36,12 +36,11 @@ export class Inverse extends BehaveEngineNode {
             return this.createIdentityMatrix();
         }
 
-        // Convert column-major back to row-major 2D array
         return [
-            [result[0], result[4], result[8], result[12]],
-            [result[1], result[5], result[9], result[13]],
-            [result[2], result[6], result[10], result[14]],
-            [result[3], result[7], result[11], result[15]]
+            [result[0], result[1], result[2], result[3]],
+            [result[4], result[5], result[6], result[7]],
+            [result[8], result[9], result[10], result[11]],
+            [result[12], result[13], result[14], result[15]]
         ];
     }
 

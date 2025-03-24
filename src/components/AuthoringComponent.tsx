@@ -84,8 +84,6 @@ export const AuthoringComponent = () => {
 
     // handle creation and deletion of edges
     const onConnect = useCallback((vals: Edge<any> | Connection) => {
-        console.log("vals", vals)
-        console.log("graph", graph)
         const sourceNodeId = vals.source;
         const sourceNode: IInteractivityNode = graph.nodes.find(node => node.uid === sourceNodeId)!;
 
@@ -93,8 +91,6 @@ export const AuthoringComponent = () => {
         const targetNode: IInteractivityNode = graph.nodes.find(node => node.uid === targetNodeId)!;
 
         if (sourceNodeId === targetNodeId) {return}
-        console.log("sourceNode", sourceNode)
-        console.log("targetNode", targetNode)
 
         const isConfigurableSocket = nodesWithConfigurations.includes(sourceNode.op!) || nodesWithConfigurations.includes(targetNode.op!) || sourceNode.op === "flow/sequence";
        

@@ -44,9 +44,7 @@ export class DebugLog extends BehaveEngineNode {
     populateTemplate(template: string, vals: any): string {
         let templateCopy = template
         for (const val of Object.keys(vals)) {
-            console.log(this.values[val]);
             const typeName = this.getType(this.values[val].type!);
-            console.log(typeName);
             templateCopy = templateCopy.replace(`{${val}}`, formatValue(vals[val], typeName));
         }
         return templateCopy;

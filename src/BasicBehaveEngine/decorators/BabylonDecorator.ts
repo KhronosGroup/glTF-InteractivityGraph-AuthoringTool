@@ -739,11 +739,20 @@ export class BabylonDecorator extends ADecorator {
             const parts: string[] = path.split("/");
             const node = this.world.glTFNodes[Number(parts[2])];
 
+
+            console.log(node.scaling, node.rotationQuaternion, node.position)
+            
+            
             console.log(node.scaling, node.rotationQuaternion, node.position)
             
             const scaleMatrix = Matrix.Scaling(node.scaling.x, node.scaling.y, node.scaling.z);
             const rotationMatrix = Matrix.FromQuaternionToRef(node.rotationQuaternion, Matrix.Identity());
 
+
+            console.log(scaleMatrix, rotationMatrix)
+       
+            
+            
             console.log(scaleMatrix, rotationMatrix)
        
             
@@ -770,8 +779,8 @@ export class BabylonDecorator extends ADecorator {
             // TODO what is the correct way to undo babylon's gltf -> babylon coordinate system conversion?
             return [
                 [-globalMatrix[0], globalMatrix[1], globalMatrix[2], globalMatrix[3]],
-                [globalMatrix[4], globalMatrix[5], globalMatrix[6], globalMatrix[7]], 
-                [globalMatrix[8], globalMatrix[9], globalMatrix[10], globalMatrix[11]],
+                [-globalMatrix[4], globalMatrix[5], globalMatrix[6], globalMatrix[7]], 
+                [-globalMatrix[8], globalMatrix[9], globalMatrix[10], globalMatrix[11]],
                 [-globalMatrix[12], globalMatrix[13], globalMatrix[14], globalMatrix[15]]
             ];
         }, (path, value) => {

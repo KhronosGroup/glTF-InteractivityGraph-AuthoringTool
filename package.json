@@ -14,6 +14,7 @@
     "@types/node": "^16.18.40",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
+    "@types/three": "^0.174.0",
     "bootstrap": "^5.3.1",
     "gl-matrix": "^3.4.3",
     "jest-environment-jsdom": "^29.6.4",
@@ -22,6 +23,7 @@
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
     "reactflow": "^11.8.2",
+    "three": "^0.174.0",
     "uuid": "^9.0.0",
     "web-vitals": "^2.1.4"
   },

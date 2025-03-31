@@ -66,6 +66,17 @@ Follow these instructions to set up and use the DCC React app for authoring glTF
 
 6. Once you're satisfied, export the glTF asset with the KHR_interactivity extension included.
 
+## Running Tests
+
+This project contains E2E cypress tests which operate on a visual spin up of the app and unit tests on individual nodes and example graphs using a log based engine.
+
+### Unit Tests
+- npm run test
+
+### Cypress Tests
+1. start a local host of the app using `npm start`
+2. run `npm run cy:open` to open cypress and click throught the Cypress UI to see the tests run
+
 ## Imporant Notes About Tool Execution
 1. **Variable Intial State:** The tool passes around JSON for the execution graph (in which initial variable values can be updated by running) please read [Variable Behavior Guide](variable-behavior.md).
 

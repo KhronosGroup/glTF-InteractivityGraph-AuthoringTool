@@ -59,13 +59,16 @@ export const EngineSelector: React.FC<EngineSelectorProps> = ({setEngineType}) =
     return (
         <div style={{width: "90vw", margin: "0 auto", textAlign: "center", marginTop: 32}}>
             <h2>Behave Graph Execution</h2>
-            <Tabs
-                activeKey={activeKey}
-                onSelect={handleEngineChange}
-            >
-                <Tab title={"Logging Engine"} eventKey={1}/>
-                <Tab title={"Babylon Engine"} eventKey={2}/>
-            </Tabs>
+            <div data-testid={"engine-selector"}>
+                <Tabs
+                    activeKey={activeKey}
+                    onSelect={handleEngineChange}
+                >
+                    <Tab title={"Logging Engine"} eventKey={1}/>
+                    <Tab title={"Babylon Engine"} eventKey={2}/>
+                </Tabs>
+            </div>
+            
         </div>
 
     );

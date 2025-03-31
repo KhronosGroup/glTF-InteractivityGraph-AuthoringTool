@@ -34,12 +34,16 @@
       "react": "^18.2.0",
       "react-dom": "^18.2.0",
       "@types/react": "^18.2.0"
+    },
+    "cypress-plugin-snapshots": {
+      "cypress": "^14.2.1"
     }
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "NODE_OPTIONS=--experimental-vm-modules npx jest",
+    "cy:open": "cypress open",
     "posttest": "generate-coverage-data",
     "lint": "eslint '**/*.{ts,tsx}'",
     "eject": "react-scripts eject"
@@ -70,6 +74,8 @@
     "@types/jest": "^29.5.4",
     "@types/uuid": "^9.0.2",
     "babel-jest": "^29.7.0",
+    "cypress": "^14.2.1",
+    "cypress-plugin-snapshots": "^1.4.4",
     "eslint": "^8.49.0",
     "jest": "^29.6.4",
     "jest-transform-css": "^6.0.1",

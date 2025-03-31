@@ -263,7 +263,7 @@ export const BabylonEngineComponent = () => {
                 <Spacer width={16} height={0}/>
 
                 <label className="mx-3" style={{color: "white"}}>Choose file: </label>
-                <input className="d-none" type="file" accept=".glb" ref={fileInputRef} onChange={() => {
+                <input className="d-none" type="file" accept=".glb" ref={fileInputRef} data-testid={"babylon-engine-file-input"} onChange={() => {
                     if (fileInputRef.current == null || fileInputRef.current.files == null || fileInputRef.current.files.length == 0) {
                         setFileUploaded(null);
                         return;
@@ -281,7 +281,7 @@ export const BabylonEngineComponent = () => {
                 </Button>
             </div>
 
-            <canvas ref={canvasRef} style={{ width: '100%', height: '700px' }} />
+            <canvas ref={canvasRef} style={{ width: '100%', height: '700px' }} data-testid={"babylon-engine-canvas"} />
 
             <Modal show={openModal === BabylonEngineModal.CUSTOM_EVENT}>
                 <Container style={{padding: 16}}>

@@ -44,7 +44,7 @@ export const LoggingEngineComponent = () => {
     return (
         <div style={{width: "90vw", margin: "0 auto"}}>
             <div style={{background: "#3d5987", padding: 16, borderTopLeftRadius: 16, borderTopRightRadius: 16}}>
-                <Button variant="outline-light" onClick={() => {
+                <Button variant="outline-light" data-testid={"logging-engine-play-btn"} onClick={() => {
                     setExecutionLog("");
                     runGraph(getExecutableGraph(), setExecutionLog, JSON.parse(world));
                     setGraphRunning(true);
@@ -60,7 +60,7 @@ export const LoggingEngineComponent = () => {
                     Send Custom Event
                 </Button>
             </div>
-            <pre style={{background: "black", color: "white", fontFamily: "monospace", padding: 10, height: 700}}>
+            <pre style={{background: "black", color: "white", fontFamily: "monospace", padding: 10, height: 700}} data-testid={"logging-engine-log"}>
                 {executionLog}
             </pre>
 

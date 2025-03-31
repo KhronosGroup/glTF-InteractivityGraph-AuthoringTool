@@ -240,7 +240,7 @@ export const AuthoringComponent = () => {
     return (
         <div style={{width: "100vw", height: "75vh", textAlign: "center", padding: 16}}>
             <h2 style={{padding: 16}}>Behave Graph Authoring</h2>
-            <div ref={reactFlowRef} style={{width: "90%", height: "90%", border: "1px solid black", margin: "0 auto"}}>
+            <div ref={reactFlowRef} style={{width: "90%", height: "90%", border: "1px solid black", margin: "0 auto"}} data-testid={"authoring-view"}>
                 <ReactFlow
                     id={"flow-container"}
                     nodes={nodes}
@@ -328,6 +328,7 @@ const NodePickerComponent = (props: {onAddNode: any, closeModal: any, mousePos: 
                 </h3>
                 <hr style={{ borderTop: '1px solid #777', margin: '16px 0' }} />
                 <Form.Control
+                    data-testid={"node-picker-search"}
                     style={{margin: "0 auto", width: "90%"}}
                     type="text"
                     onChange={(e) => setFilter(e.target.value)}
@@ -340,7 +341,7 @@ const NodePickerComponent = (props: {onAddNode: any, closeModal: any, mousePos: 
                             return (
                                 <RenderIf key={value[0]} shouldShow={filter === "" || value[0].toLowerCase().includes(filter.toLowerCase())}>
                                     <hr style={{ borderTop: '1px solid #777', margin: '16px 0' }} />
-                                    <p style={{marginLeft: 8}} onClick={() => selectNode(value[0])}>{value[0]}</p>
+                                    <p style={{marginLeft: 8}} onClick={() => selectNode(value[0])} data-testid={`node-picker-${value[0]}`}>{value[0]}</p>
                                 </RenderIf>
                             )
                         })

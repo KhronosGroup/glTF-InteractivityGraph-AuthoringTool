@@ -45,9 +45,8 @@ Follow these instructions to set up and use the DCC React app for authoring glTF
 1. Install the required dependencies:
 
    ```bash
-   npm install --force
+   npm install
    ```
-   There are some dependency conflicts between the version of react that jest wants and the version used by reactflow, until that is fixed use the force flag for installation.
 
 ## Usage
 

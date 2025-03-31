@@ -82,6 +82,8 @@ export class MatMul extends BehaveEngineNode {
                 [result[0], result[1]],
                 [result[2], result[3]]
             ], type: typeIndexA}}
+        } else {
+            throw Error(`Invalid type ${typeA}`)
         }
     }
 }

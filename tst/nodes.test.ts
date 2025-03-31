@@ -479,27 +479,27 @@ describe('nodes', () => {
 
         const res = matCompose.processNode();
         expect(res['value']!.value[0][0]).toBe(2);
-        expect(res['value']!.value[0][1]).toBe(0);
-        expect(res['value']!.value[0][2]).toBe(0);
-        expect(res['value']!.value[0][3]).toBe(1);
         expect(res['value']!.value[1][0]).toBe(0);
-        expect(res['value']!.value[1][1]).toBe(2);
-        expect(res['value']!.value[1][2]).toBe(0);
-        expect(res['value']!.value[1][3]).toBe(2);
         expect(res['value']!.value[2][0]).toBe(0);
+        expect(res['value']!.value[3][0]).toBe(1);
+        expect(res['value']!.value[0][1]).toBe(0);
+        expect(res['value']!.value[1][1]).toBe(2);
         expect(res['value']!.value[2][1]).toBe(0);
+        expect(res['value']!.value[3][1]).toBe(2);
+        expect(res['value']!.value[0][2]).toBe(0);
+        expect(res['value']!.value[1][2]).toBe(0);
         expect(res['value']!.value[2][2]).toBe(2);
-        expect(res['value']!.value[2][3]).toBe(3);
-        expect(res['value']!.value[3][0]).toBe(0);
-        expect(res['value']!.value[3][1]).toBe(0);
-        expect(res['value']!.value[3][2]).toBe(0);
+        expect(res['value']!.value[3][2]).toBe(3);
+        expect(res['value']!.value[0][3]).toBe(0);
+        expect(res['value']!.value[1][3]).toBe(0);
+        expect(res['value']!.value[2][3]).toBe(0);
         expect(res['value']!.value[3][3]).toBe(1);
     });
 
     it('math/matDecompose',  () => {
         const matDecompose: MatDecompose = new MatDecompose({
             ...defaultProps,
-            values: {a: { value: [[2, 0, 0, 1], [0, 2, 0, 2], [0, 0, 2, 3], [0, 0, 0, 1]], type: 8 }},
+            values: {a: { value: [[2,0,0,0], [0,2,0,0], [0,0,2,0], [1,2,3,1]], type: 8 }},
         });
 
         const res = matDecompose.processNode();
@@ -913,8 +913,8 @@ describe('nodes', () => {
 
         let val = combine2x2.processNode();
         expect(val['value'].value[0][0]).toBe(-10.5);
-        expect(val['value'].value[0][1]).toBe(5.5);
-        expect(val['value'].value[1][0]).toBe(0.5);
+        expect(val['value'].value[1][0]).toBe(5.5);
+        expect(val['value'].value[0][1]).toBe(0.5);
         expect(val['value'].value[1][1]).toBe(7.5);
     });
 
@@ -926,13 +926,13 @@ describe('nodes', () => {
 
         let val = combine3x3.processNode();
         expect(val['value'].value[0][0]).toBe(-10.5);
-        expect(val['value'].value[0][1]).toBe(5.5);
-        expect(val['value'].value[0][2]).toBe(0.5);
-        expect(val['value'].value[1][0]).toBe(7.5);
+        expect(val['value'].value[1][0]).toBe(5.5);
+        expect(val['value'].value[2][0]).toBe(0.5);
+        expect(val['value'].value[0][1]).toBe(7.5);
         expect(val['value'].value[1][1]).toBe(-10);
-        expect(val['value'].value[1][2]).toBe(5);
-        expect(val['value'].value[2][0]).toBe(0);
-        expect(val['value'].value[2][1]).toBe(7);
+        expect(val['value'].value[2][1]).toBe(5);
+        expect(val['value'].value[0][2]).toBe(0);
+        expect(val['value'].value[1][2]).toBe(7);
         expect(val['value'].value[2][2]).toBe(10.5);
     });
 
@@ -944,20 +944,20 @@ describe('nodes', () => {
 
         let val = combine4x4.processNode();
         expect(val['value'].value[0][0]).toBe(-10.5);
-        expect(val['value'].value[0][1]).toBe(5.5);
-        expect(val['value'].value[0][2]).toBe(0.5);
-        expect(val['value'].value[0][3]).toBe(7.5);
-        expect(val['value'].value[1][0]).toBe(-10);
+        expect(val['value'].value[1][0]).toBe(5.5);
+        expect(val['value'].value[2][0]).toBe(0.5);
+        expect(val['value'].value[3][0]).toBe(7.5);
+        expect(val['value'].value[0][1]).toBe(-10);
         expect(val['value'].value[1][1]).toBe(5);
-        expect(val['value'].value[1][2]).toBe(0);
-        expect(val['value'].value[1][3]).toBe(7);
-        expect(val['value'].value[2][0]).toBe(10.5);
-        expect(val['value'].value[2][1]).toBe(5.8);
+        expect(val['value'].value[2][1]).toBe(0);
+        expect(val['value'].value[3][1]).toBe(7);
+        expect(val['value'].value[0][2]).toBe(10.5);
+        expect(val['value'].value[1][2]).toBe(5.8);
         expect(val['value'].value[2][2]).toBe(9.5);
-        expect(val['value'].value[2][3]).toBe(2.5);
-        expect(val['value'].value[3][0]).toBe(-1.5);
-        expect(val['value'].value[3][1]).toBe(5.7);
-        expect(val['value'].value[3][2]).toBe(6.5);
+        expect(val['value'].value[3][2]).toBe(2.5);
+        expect(val['value'].value[0][3]).toBe(-1.5);
+        expect(val['value'].value[1][3]).toBe(5.7);
+        expect(val['value'].value[2][3]).toBe(6.5);
         expect(val['value'].value[3][3]).toBe(7.7);
     });
 
@@ -1850,7 +1850,7 @@ describe('nodes', () => {
                         [9, 10, 11, 12],
                         [13, 14, 15, 16],
                     ],
-                    type: 6
+                    type: 8
                 },
                 b: { value: [
                         [1, 2, 3, 4],
@@ -1858,12 +1858,14 @@ describe('nodes', () => {
                         [9, 10, 11, 12],
                         [13, 14, 15, 16],
                     ],
-                    type: 6
+                    type: 8
                 }
             }
         });
 
         const val = matmul.processNode();
+        console.log("CHECK HERE")
+        console.log(val['value'].value)
 
         expect(val['value'].value[0][0]).toBe(90);
         expect(val['value'].value[1][2]).toBe(254);

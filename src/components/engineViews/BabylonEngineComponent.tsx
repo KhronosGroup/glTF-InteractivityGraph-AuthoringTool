@@ -7,6 +7,7 @@ import {
     DirectionalLight,
     Engine,
     HemisphericLight, Material,
+    Mesh,
     Node,
     SceneLoader,
     TransformNode,
@@ -245,6 +246,39 @@ export const BabylonEngineComponent = () => {
         reader.readAsArrayBuffer(file);
     }
 
+    const autoFrame = () => {
+        function computeSceneBoundingBox(scene: Scene) {
+            let min = new Vector3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
+            let max = new Vector3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
+        
+            scene.meshes.forEach((mesh: AbstractMesh) => {
+                if (mesh instanceof Mesh && mesh.isVisible) {
+                    mesh.computeWorldMatrix(true);
+                    const boundingInfo = mesh.getBoundingInfo();
+                    const minBox = boundingInfo.boundingBox.minimumWorld;
+                    const maxBox = boundingInfo.boundingBox.maximumWorld;
+        
+                    min = Vector3.Minimize(min, minBox);
+                    max = Vector3.Maximize(max, maxBox);
+                }
+            });
+        
+            return { min, max, center: min.add(max).scale(0.5) };
+        }
+
+        const { min, max, center } = computeSceneBoundingBox(sceneRef.current!);
+
+        const size = max.subtract(min);
+        const maxDimension = Math.max(size.x, size.y, size.z);
+        const distance = maxDimension * 2.5; 
+
+
+        const camera = sceneRef.current!.activeCamera as ArcRotateCamera;
+        camera.target = center;
+        camera.setPosition(new Vector3(center.x, center.y + maxDimension * 0.5, center.z + distance));
+        camera.radius = distance;
+    }
+
     return (
         <div style={{width: "90vw", margin: "0 auto"}}>
             <div style={{background: "#3d5987", padding: 16, borderTopLeftRadius: 16, borderTopRightRadius: 16}}>
@@ -279,6 +313,7 @@ export const BabylonEngineComponent = () => {
                 <Button variant="outline-light" disabled={fileUploaded == null} onClick={() => exportKHRInteractivityGLB()}>
                     Download glb
                 </Button>
+                <Button data-testid={"frame-btn"} hidden={true} onClick={() => autoFrame()}>Auto Frame</Button>
             </div>
 
             <canvas ref={canvasRef} style={{ width: '100%', height: '700px' }} data-testid={"babylon-engine-canvas"} />

@@ -44,6 +44,7 @@
     "build": "react-scripts build",
     "test": "NODE_OPTIONS=--experimental-vm-modules npx jest",
     "cy:open": "cypress open",
+    "cy:run": "cypress run",
     "posttest": "generate-coverage-data",
     "lint": "eslint '**/*.{ts,tsx}'",
     "eject": "react-scripts eject"

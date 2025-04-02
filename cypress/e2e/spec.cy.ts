@@ -30,6 +30,7 @@ describe('Basic UI', () => {
     cy.wait(250)
 
     cy.get('[data-testid="babylon-engine-canvas"]').scrollIntoView()
+    cy.get('[data-testid="frame-btn"]').click({force: true})
 
     cy.wait(2000)
 
@@ -49,6 +50,72 @@ describe('Basic UI', () => {
         threshold: 0.01,
       },
       name: "rot-cube-after-click"
+    })
+  })
+
+  describe('matrix tests', () => {
+    it("FromWorldToWorldTests", () => {
+      cy.visit('http://localhost:3000')
+
+      // uplaod test glb file
+      cy.get('[data-testid="babylon-engine-file-input"]').selectFile('cypress/assets/matrix/FromWorldToWorldTests.glb', {force: true})
+
+      cy.wait(250)
+
+      cy.get('[data-testid="babylon-engine-canvas"]').scrollIntoView()
+      cy.get('[data-testid="frame-btn"]').click({force: true})
+
+      cy.wait(2000)
+
+      cy.get('[data-testid="babylon-engine-canvas"]').toMatchImageSnapshot({
+        imageConfig: {
+          threshold: 0.01,
+        },
+        name: "FromWorldToWorldTests"
+      })
+
+    }),
+    it("MatrixTest_ComposeDecompose", () => {
+      cy.visit('http://localhost:3000')
+
+      // uplaod test glb file
+      cy.get('[data-testid="babylon-engine-file-input"]').selectFile('cypress/assets/matrix/MatrixTest_ComposeDecompose.glb', {force: true})
+
+      cy.wait(250)
+
+      cy.get('[data-testid="babylon-engine-canvas"]').scrollIntoView()
+      cy.get('[data-testid="frame-btn"]').click({force: true})
+
+      cy.wait(2000)
+
+      cy.get('[data-testid="babylon-engine-canvas"]').toMatchImageSnapshot({
+        imageConfig: {
+          threshold: 0.01,
+        },
+        name: "MatrixTest_ComposeDecompose"
+      })
+
+    }),
+    it("MatrixTest_GlobalMatrix_Decompose-Compose-Decompose", () => {
+      cy.visit('http://localhost:3000')
+
+      // uplaod test glb file
+      cy.get('[data-testid="babylon-engine-file-input"]').selectFile('cypress/assets/matrix/MatrixTest_GlobalMatrix_Decompose-Compose-Decompose.glb', {force: true})
+
+      cy.wait(250)
+
+      cy.get('[data-testid="babylon-engine-canvas"]').scrollIntoView()
+      cy.get('[data-testid="frame-btn"]').click({force: true})
+
+      cy.wait(2000)
+
+      cy.get('[data-testid="babylon-engine-canvas"]').toMatchImageSnapshot({
+        imageConfig: {
+          threshold: 0.01,
+        },
+        name: "MatrixTest_GlobalMatrix_Decompose-Compose-Decompose"
+      })
+
     })
   })
 })

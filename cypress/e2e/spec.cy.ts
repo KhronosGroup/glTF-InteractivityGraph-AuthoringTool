@@ -53,6 +53,26 @@ describe('Basic UI', () => {
     })
   })
 
+  it("MathTests", () => {
+    cy.visit('http://localhost:3000')
+
+     // uplaod test glb file
+     cy.get('[data-testid="babylon-engine-file-input"]').selectFile('cypress/assets/MathTests.glb', {force: true})
+
+     cy.wait(250)
+
+     cy.get('[data-testid="babylon-engine-canvas"]').scrollIntoView()
+
+     cy.wait(2000)
+
+     cy.get('[data-testid="babylon-engine-canvas"]').toMatchImageSnapshot({
+       imageConfig: {
+         threshold: 0.01,
+       },
+       name: "MathTests"
+     })
+  })
+
   describe('matrix tests', () => {
     it("FromWorldToWorldTests", () => {
       cy.visit('http://localhost:3000')

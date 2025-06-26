@@ -75,7 +75,7 @@ export class BabylonDecorator extends ADecorator {
 
         // dealing with hoverability refactor this once/if babylon has an api for hoverability
         this.hoveredNodeIndex = -1;
-        this.scene.onPointerMove = (evt: IPointerEvent, pickInfo: PickingInfo, pickResult: PointerEventTypes) => {
+        this.scene.onBeforeRenderObservable.add(() => {
             const ray = this.scene.createPickingRay(
                 this.scene.pointerX,
                 this.scene.pointerY,
@@ -135,7 +135,7 @@ export class BabylonDecorator extends ADecorator {
                     curNode.metadata.onHoverOutCallback(oldHoveredNodeIndex, 0);
                 }
             }
-        }
+        });
 
         // setting all nodes to inherit visibility (defualt in KHR_interactivity's opinion)
         for (const node of this.world.glTFNodes) {

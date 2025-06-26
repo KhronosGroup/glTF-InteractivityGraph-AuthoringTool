@@ -3786,6 +3786,9 @@ const debugNodeSpecs: IInteractivityNode[] = [
         declaration: knownDeclarations.findIndex(declaration => declaration.op === "debug/log"),
         description: "Log the value to the console",
         configuration: {
+            severity: {
+                value: [undefined]
+            },
             message: {
                 value: [undefined]
             }

@@ -4,17 +4,19 @@ import { standardTypes } from "../../../types/nodes";
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class DebugLog extends BehaveEngineNode {
-    REQUIRED_CONFIGURATIONS = {message: {defaultValue: [""]}}
+    REQUIRED_CONFIGURATIONS = {message: {defaultValue: [""]}, severity: {defaultValue: [0]}}
 
     _message: string;
+    _severity: number;
     _templateValues: Record<string, IInteractivityValue>;
 
     constructor(props: IBehaviourNodeProps) {
         super(props);
         this.name = "DebugLog";
         this.validateConfigurations(this.configuration);
-        const {message} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
+        const {message, severity} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
         this._message = message[0];
+        this._severity = Number(severity[0]);
 
         const valIds = this.parseTemplate(this._message);
         const generatedVals: Record<string, IInteractivityValue> = {};
@@ -58,7 +60,13 @@ export class DebugLog extends BehaveEngineNode {
 
         this.graphEngine.processNodeStarted(this);
 
-        console.log(populatedTemplate);
+        if (this._severity === 0) {
+            console.log(populatedTemplate);
+        } else if (this._severity === 1) {
+            console.warn(populatedTemplate);
+        } else if (this._severity === 2) {
+            console.error(populatedTemplate);
+        }
 
         super.processNode(flowSocket);
     }

@@ -119,6 +119,7 @@ import { QuatMul } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatMul'
 import { MatCompose } from '../src/BasicBehaveEngine/nodes/math/matrix/matCompose';
 import { MatDecompose } from '../src/BasicBehaveEngine/nodes/math/matrix/matDecompose';
 import { MathSwitch } from '../src/BasicBehaveEngine/nodes/math/special/MathSwitch';
+import { DebugLog } from '../src/BasicBehaveEngine/nodes/experimental/Debug';
 
 describe('nodes', () => {
     let executionLog: string;
@@ -149,6 +150,21 @@ describe('nodes', () => {
             addEventToWorkQueue: jest.fn,
         };
     })
+
+    it('debug/log', async () => {
+        const debugLog: DebugLog = new DebugLog({
+            ...defaultProps,
+            configuration: {message: { value: ["test {value}"] }, severity: { value: [1] }},
+            values: {value: { value: [42], type: 1 }},
+            flows: {out: { node: 0, socket: 'in' }},
+        });
+        const mockConsoleWarn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        debugLog.processFlow = jest.fn<(flow: IInteractivityFlow) => Promise<void>>();
+        debugLog.processNode();
+        expect(debugLog.processFlow).toHaveBeenCalledWith({ socket: 'in', node: 0 });
+        expect(mockConsoleWarn).toHaveBeenCalledWith('test 42');
+        mockConsoleWarn.mockRestore();
+    });
 
     it('event/receive', async () => {
         const receive: Receive = new Receive({

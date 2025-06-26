@@ -1,7 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../../BehaveEngineNode";
 
 export class Rotate2D extends BehaveEngineNode {
-    REQUIRED_VALUES = {a: {}, b: {}}
+    REQUIRED_VALUES = {a: {}, angle: {}}
 
     constructor(props: IBehaviourNodeProps) {
         super(props);
@@ -10,15 +10,15 @@ export class Rotate2D extends BehaveEngineNode {
     }
 
     override processNode(flowSocket?: string) {
-        const {a, b} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const {a, angle} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
         this.graphEngine.processNodeStarted(this);
         const typeIndexA = this.values['a'].type!
         const typeA: string = this.getType(typeIndexA);
-        const typeIndexB = this.values['b'].type!
-        const typeB: string = this.getType(typeIndexB);
+        const typeIndexAngle = this.values['angle'].type!
+        const typeAngle: string = this.getType(typeIndexAngle);
 
 
-        if (typeB !== "float") {
+        if (typeAngle !== "float") {
             throw Error("Invalid type")
         }
         let val: any;
@@ -26,9 +26,9 @@ export class Rotate2D extends BehaveEngineNode {
         switch (typeA) {
             case "float2":
                 // eslint-disable-next-line no-case-declarations
-                const cosTheta = Math.cos(Number(b));
+                const cosTheta = Math.cos(Number(angle));
                 // eslint-disable-next-line no-case-declarations
-                const sinTheta = Math.sin(Number(b));
+                const sinTheta = Math.sin(Number(angle));
 
                 // eslint-disable-next-line no-case-declarations
                 const rotationMatrix = [

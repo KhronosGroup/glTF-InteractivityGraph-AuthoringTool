@@ -1,7 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../../BehaveEngineNode";
 
 export class Rotate3D extends BehaveEngineNode {
-    REQUIRED_VALUES = {a: {}, b: {}, c: {}}
+    REQUIRED_VALUES = {a: {}, rotation: {}}
 
     constructor(props: IBehaviourNodeProps) {
         super(props);
@@ -10,56 +10,42 @@ export class Rotate3D extends BehaveEngineNode {
     }
 
     override processNode(flowSocket?: string) {
-        const {a, b, c} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const {a, rotation} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
         this.graphEngine.processNodeStarted(this);
         const typeIndexA = this.values['a'].type!
         const typeA: string = this.getType(typeIndexA);
-        const typeIndexB = this.values['b'].type!
-        const typeB: string = this.getType(typeIndexB);
-        const typeIndexC = this.values['c'].type!;
-        const typeC: string = this.getType(typeIndexC);
+        const typeIndexRotation = this.values['rotation'].type!
+        const typeRotation: string = this.getType(typeIndexRotation);
 
-        if (typeA !== typeB) {
-            throw Error("input types not equivalent")
+        if (typeA !== "float3") {
+            throw Error("a input should be a float3")
         }
-        if (typeC !== "float") {
-            throw Error("Invalid type")
+        if (typeRotation !== "float4") {
+            throw Error("rotation input should be a float4")
         }
         let val: any;
 
-        switch (typeA) {
-            case "float3":
-                // eslint-disable-next-line no-case-declarations
-                const cosTheta = Math.cos(Number(c));
-                // eslint-disable-next-line no-case-declarations
-                const sinTheta = Math.sin(Number(c));
-
-                // eslint-disable-next-line no-case-declarations
-                const dot = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-                // eslint-disable-next-line no-case-declarations
-                const parallelCoeff = (dot * (1 - cosTheta));
-                // eslint-disable-next-line no-case-declarations
-                const parallel = [
-                    b[0] * parallelCoeff,
-                    b[1] * parallelCoeff,
-                    b[2] * parallelCoeff
-                ]
-                // eslint-disable-next-line no-case-declarations
-                const perpendicular = [
-                    (a[0] -  dot*b[0]) * sinTheta,
-                    (a[1] -  dot*b[1]) * sinTheta,
-                    (a[2] -  dot*b[2]) * sinTheta
-                ];
-                val = [
-                   a[0] * cosTheta + perpendicular[0] + parallel[0],
-                    a[1] * cosTheta + perpendicular[1] + parallel[1],
-                    a[2] * cosTheta + perpendicular[2] + parallel[2],
-                ];
-                break;
-            default:
-                throw Error("Invalid type")
-        }
+        const r = [
+            rotation[0],
+            rotation[1],
+            rotation[2]
+        ]
+        const rCrossA = this.cross(r, a)
+        const rCrossRCrossA = this.cross(r, rCrossA);
+        val = [
+            a[0] + 2 * (rCrossRCrossA[0] + rotation[3] * rCrossA[0]),
+            a[1] + 2 * (rCrossRCrossA[1] + rotation[3] * rCrossA[1]),
+            a[2] + 2 * (rCrossRCrossA[2] + rotation[3] * rCrossA[2])
+        ]
 
         return {'value': {value: val, type: typeIndexA}}
     }
+
+    cross(a: number[], b: number[]): number[] {
+        return [
+            a[1] * b[2] - a[2] * b[1],
+            a[2] * b[0] - a[0] * b[2],
+            a[0] * b[1] - a[1] * b[0]
+        ];
+      }
 }

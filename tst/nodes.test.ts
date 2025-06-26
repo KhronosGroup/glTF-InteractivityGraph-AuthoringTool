@@ -1768,7 +1768,7 @@ describe('nodes', () => {
     it("math/rotated2D", () => {
         const rotate2D: Rotate2D = new Rotate2D({
             ...defaultProps,
-            values: {a: { value: [1.0, 0.0], type: 3 }, b: { value: [Math.PI / 2], type: 2 }}
+            values: {a: { value: [1.0, 0.0], type: 3 }, angle: { value: [Math.PI / 2], type: 2 }}
         });
 
         const val = rotate2D.processNode()['value'].value;
@@ -1782,38 +1782,14 @@ describe('nodes', () => {
     it("math/rotated3D", () => {
         const rotate3D: Rotate3D = new Rotate3D({
             ...defaultProps,
-            values: {a: { value: [1.0, 0.0, 0.0], type: 4 }, b: { value: [0.0, 1.0, 0.0], type: 4 }, c: { value: [Math.PI / 2], type: 2 }}
+            values: {a: { value: [1.0, 0.0, 0.0], type: 4 }, rotation: { value: [0, 0, 0.7071068, 0.7071068], type: 5 }}
         });
 
         const val = rotate3D.processNode()['value'].value;
 
-        const cos_theta = Math.cos(Math.PI / 2);
-        const sin_theta = Math.sin(Math.PI / 2);
-
-        const a = [1.0, 0.0, 0.0];
-        const b = [0.0, 1.0, 0.0];
-
-        const dot = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-        const parallelCoeff = dot * (1 - cos_theta);
-        const parallel = [
-            b[0] * parallelCoeff,
-            b[1] * parallelCoeff,
-            b[2] * parallelCoeff
-        ];
-        const perpendicular = [
-            (a[0] - dot * b[0]) * sin_theta,
-            (a[1] - dot * b[1]) * sin_theta,
-            (a[2] - dot * b[2]) * sin_theta
-        ];
-        const expected = [
-            a[0] * cos_theta + perpendicular[0] + parallel[0],
-            a[1] * cos_theta + perpendicular[1] + parallel[1],
-            a[2] * cos_theta + perpendicular[2] + parallel[2],
-        ];
-
-        expect(expected[0]).toEqual(val[0]);
-        expect(expected[1]).toEqual(val[1]);
-        expect(expected[2]).toEqual(val[2]);
+        expect(isCloseToVal(val[0], 0.0)).toBe(true);
+        expect(isCloseToVal(val[1], 1.0)).toBe(true);
+        expect(isCloseToVal(val[2], 0.0)).toBe(true);
     });
 
     it("math/transpose", () => {

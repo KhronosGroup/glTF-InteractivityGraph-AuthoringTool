@@ -85,8 +85,11 @@ import {Combine3} from "./nodes/math/combine/Combine3";
 import {Combine4} from "./nodes/math/combine/Combine4";
 import {Combine4x4} from "./nodes/math/combine/Combine4x4";
 import {PointerInterpolate} from "./nodes/pointer/PointerInterpolate";
-import {QuatApply} from "./nodes/math/quaternion/QuatApply";
 import {QuatMul} from "./nodes/math/quaternion/QuatMul";
+import {QuatConjugate} from "./nodes/math/quaternion/QuatConjugate";
+import {QuatFromAxisAngle} from "./nodes/math/quaternion/QuatFromAxisAngle";
+import {QuatToAxisAngle} from "./nodes/math/quaternion/QuatToAxisAngle";
+import {QuatFromDirections} from "./nodes/math/quaternion/QuatFromDirections";
 import {Not} from "./nodes/math/bitwise/Not";
 import {Xor} from "./nodes/math/bitwise/Xor";
 import {Or} from "./nodes/math/bitwise/Or";
@@ -113,6 +116,7 @@ import { MatMul } from "./nodes/math/matrix/MatMul";
 import { MathSwitch } from "./nodes/math/special/MathSwitch";
 import { Inverse } from "./nodes/math/matrix/Inverse";
 import { DebugLog } from "./nodes/experimental/Debug";
+import { QuatAngleBetween } from "./nodes/math/quaternion/QuatAngleBetween";
 
 
 export class BasicBehaveEngine implements IBehaveEngine {
@@ -464,8 +468,12 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/clz", CountLeadingZeros);
         this.registerBehaveEngineNode("math/ctz", CountTrailingZeros);
         this.registerBehaveEngineNode("math/popcnt", CountOneBits);
-        this.registerBehaveEngineNode("math/quatApply", QuatApply);
         this.registerBehaveEngineNode("math/quatMul", QuatMul);
+        this.registerBehaveEngineNode("math/quatConjugate", QuatConjugate);
+        this.registerBehaveEngineNode("math/quatFromAxisAngle", QuatFromAxisAngle);
+        this.registerBehaveEngineNode("math/quatAngleBetween", QuatAngleBetween);
+        this.registerBehaveEngineNode("math/quatToAxisAngle", QuatToAxisAngle);
+        this.registerBehaveEngineNode("math/quatFromDirections", QuatFromDirections);
         this.registerBehaveEngineNode("math/matDecompose", MatDecompose);
         this.registerBehaveEngineNode("math/matCompose", MatCompose);
         this.registerBehaveEngineNode("math/matmul", MatMul);

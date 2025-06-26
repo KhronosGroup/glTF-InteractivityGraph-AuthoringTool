@@ -419,10 +419,22 @@ export const knownDeclarations: IInteractivityDeclaration[] = [
         }
     },
     {
-        op: "math/quatApply"
+        op: "math/quatConjugate"
     },
     {
         op: "math/quatMul"
+    },
+    {
+        op: "math/quatAngleBetween"
+    },
+    {
+        op: "math/quatFromAxisAngle"
+    },
+    {
+        op: "math/quatToAxisAngle"
+    },
+    {
+        op: "math/quatFromDirections"
     }
 ]
 
@@ -510,28 +522,22 @@ const customNodeSpecs: IInteractivityNode[] = [
 
 const mathQuaternionNodeSpecs: IInteractivityNode[] = [
     {
-        op: "math/quatApply",
-        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/quatApply"),
-        description: "Apply a quaternion to a float3",
+        op: "math/quatConjugate",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/quatConjugate"),
+        description: "Conjugate a quaternion",
         values: {
             input: {
                 a: {
-                    typeOptions: [4],
-                    description: "The vec3 to have a quaternion rotation applied on it",
-                    type: 4,
-                    value: [undefined]
-                },
-                b: {
                     typeOptions: [5],
-                    description: "The quaternion to apply to the vec3",
+                    description: "The quaternion to conjugate",
                     type: 5,
                     value: [undefined]
                 }
             },
             output: {
                 value: {
-                    typeOptions: [4],
-                    type: 4,
+                    typeOptions: [5],
+                    type: 5,
                     value: [undefined]
                 }
             }
@@ -551,6 +557,110 @@ const mathQuaternionNodeSpecs: IInteractivityNode[] = [
                 b: {
                     typeOptions: [5],
                     type: 5,
+                    value: [undefined]
+                }
+            },
+            output: {
+                value: {
+                    typeOptions: [5],
+                    type: 5,
+                    value: [undefined]
+                }
+            }
+        }
+    },
+    {
+        op: "math/quatAngleBetween",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/quatAngleBetween"),
+        description: "Calculate the angle between two quaternions",
+        values: {
+            input: {
+                a: {
+                    typeOptions: [5],
+                    type: 5,
+                    value: [undefined]
+                },
+                b: {
+                    typeOptions: [5],
+                    type: 5,
+                    value: [undefined]
+                }
+            },
+            output: {
+                value: {
+                    typeOptions: [2],
+                    type: 2,
+                    value: [undefined]
+                }
+            }
+        }
+    },
+    {
+        op: "math/quatFromAxisAngle",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/quatFromAxisAngle"),
+        description: "Create a quaternion from an axis and an angle",
+        values: {
+            input: {
+                axis: {
+                    typeOptions: [4],
+                    type: 4,
+                    value: [undefined]
+                },
+                angle: {
+                    typeOptions: [2],
+                    type: 2,
+                    value: [undefined]
+                }
+            },
+            output: {
+                value: {
+                    typeOptions: [5],
+                    type: 5,
+                    value: [undefined]
+                }
+            }
+        }
+    },
+    {
+        op: "math/quatToAxisAngle",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/quatToAxisAngle"),
+        description: "Convert a quaternion to an axis and an angle",
+        values: {
+            input: {
+                a: {
+                    typeOptions: [5],
+                    type: 5,
+                    value: [undefined]
+                }
+            },
+            output: {
+                axis: {
+                    typeOptions: [4],
+                    type: 4,
+                    value: [undefined]
+                },
+                angle: {
+                    typeOptions: [2],
+                    type: 2,
+                    value: [undefined]
+                }
+            }
+        }
+    },
+    {
+        op: "math/quatFromDirections",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/quatFromDirections"),
+        description: "Create a quaternion from two directions",
+        values: {
+            input: {
+                a: {
+                    typeOptions: [4],
+                    type: 4,
+                    value: [undefined]
+                },
+                b: {
+                    typeOptions: [4],
+                    type: 4,
                     value: [undefined]
                 }
             },

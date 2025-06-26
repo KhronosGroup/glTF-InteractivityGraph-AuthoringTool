@@ -23,7 +23,6 @@ export class Rotate3D extends BehaveEngineNode {
         if (typeRotation !== "float4") {
             throw Error("rotation input should be a float4")
         }
-        let val: any;
 
         const r = [
             rotation[0],
@@ -32,7 +31,7 @@ export class Rotate3D extends BehaveEngineNode {
         ]
         const rCrossA = this.cross(r, a)
         const rCrossRCrossA = this.cross(r, rCrossA);
-        val = [
+        const val = [
             a[0] + 2 * (rCrossRCrossA[0] + rotation[3] * rCrossA[0]),
             a[1] + 2 * (rCrossRCrossA[1] + rotation[3] * rCrossA[1]),
             a[2] + 2 * (rCrossRCrossA[2] + rotation[3] * rCrossA[2])

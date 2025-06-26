@@ -114,12 +114,16 @@ import {Extract4x4} from "../src/BasicBehaveEngine/nodes/math/extract/Extract4x4
 import {PointerInterpolate} from "../src/BasicBehaveEngine/nodes/pointer/PointerInterpolate";
 import { IInteractivityFlow, IInteractivityVariable } from '../src/types/InteractivityGraph';
 import { DOMEventBus } from "../src/BasicBehaveEngine/eventBuses/DOMEventBus";
-import { QuatApply } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatApply';
 import { QuatMul } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatMul';
+import { QuatConjugate } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatConjugate';
 import { MatCompose } from '../src/BasicBehaveEngine/nodes/math/matrix/matCompose';
 import { MatDecompose } from '../src/BasicBehaveEngine/nodes/math/matrix/matDecompose';
 import { MathSwitch } from '../src/BasicBehaveEngine/nodes/math/special/MathSwitch';
 import { DebugLog } from '../src/BasicBehaveEngine/nodes/experimental/Debug';
+import { QuatAngleBetween } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatAngleBetween';
+import { QuatFromAxisAngle } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatFromAxisAngle';
+import { QuatToAxisAngle } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatToAxisAngle';
+import { QuatFromDirections } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatFromDirections';
 
 describe('nodes', () => {
     let executionLog: string;
@@ -2264,18 +2268,32 @@ describe('nodes', () => {
         expect(val['value'].value[0]).toBe(3);
     });
 
-    it("math/quatApply", () => {
-        const quatApply: QuatApply = new QuatApply({
+    it("math/quatConjugate", () => {
+        const quatConjugate: QuatConjugate = new QuatConjugate({
             ...defaultProps,
-            values: {a: { value: [0, 0, 1], type: 4}, b: { value: [0, 0.7071068, 0, 0.7071068], type: 5}}
+            values: {a: { value: [0.0870175, 0.0870175, 0.0435087, 0.9914449], type: 5}}
         });
 
-        const val = quatApply.processNode();
+        const val = quatConjugate.processNode();
 
-        expect(isCloseToVal(val['value'].value[0], 1)).toBe(true);
-        expect(isCloseToVal(val['value'].value[1], 0)).toBe(true);
-        expect(isCloseToVal(val['value'].value[2], 0)).toBe(true);
+        expect(val['value'].value[0]).toBe(-0.0870175);
+        expect(val['value'].value[1]).toBe(-0.0870175);
+        expect(val['value'].value[2]).toBe(-0.0435087);
+        expect(val['value'].value[3]).toBe(0.9914449);
     });
+
+    it("math/quatAngleBetween", () => {
+        const quatAngleBetween: QuatAngleBetween = new QuatAngleBetween({
+            ...defaultProps,
+            values: {a: { value: [0, 0, 0, 1], type: 5}, b: { value: [0, 0.7071068, 0, 0.7071068], type: 5}}
+        });
+
+        const val = quatAngleBetween.processNode();
+
+        expect(isCloseToVal(val['value'].value[0], Math.PI / 2)).toBe(true);
+    });
+
+    //TODO: add test cases for quatFromAxisAngle, quatToAxisAngle, quatFromDirections (need to get good ground truth values)
 
     it("math/quatMul", () => {
         const quatMul: QuatMul = new QuatMul({

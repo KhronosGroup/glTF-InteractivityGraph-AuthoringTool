@@ -30,7 +30,7 @@ export class QuatToAxisAngle extends BehaveEngineNode {
         return {'axis': {value: [axisX, axisY, axisZ], type: this.getTypeIndex("float3")}, 'angle': {value: [angle], type: this.getTypeIndex("float")}}
     }
 
-    isCloseTo(a: number, b: number, epsilon: number = 1e-6): boolean {
+    isCloseTo(a: number, b: number, epsilon = 1e-6): boolean {
         return Math.abs(a - b) < epsilon;
     }
 

@@ -1,8 +1,8 @@
-import {ADecorator} from "./ADecorator";
-import {BehaveEngineNode} from "../BehaveEngineNode";
-import {IBehaveEngine, IEventQueueItem} from "../IBehaveEngine";
-import {IInteractivityFlow} from "../../types/InteractivityGraph";
-import { cubicBezier, linearFloat, slerpFloat4 } from "../easingUtils";
+import {ADecorator} from "../BasicBehaveEngine/ADecorator";
+import {BehaveEngineNode} from "../BasicBehaveEngine/BehaveEngineNode";
+import {IBehaveEngine, IEventQueueItem} from "../BasicBehaveEngine/IBehaveEngine";
+import {IInteractivityFlow} from "../BasicBehaveEngine/types/InteractivityGraph";
+import { cubicBezier, linearFloat, slerpFloat4 } from "../BasicBehaveEngine/easingUtils";
 export class LoggingDecorator extends ADecorator {
     addToLog: (line: string) => void;
     world: any;

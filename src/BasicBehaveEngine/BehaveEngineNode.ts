@@ -1,4 +1,4 @@
-import { IInteractivityConfigurationValue, IInteractivityDeclaration, IInteractivityEvent, IInteractivityFlow, IInteractivityValue, IInteractivityValueType, IInteractivityVariable } from "../types/InteractivityGraph";
+import { IInteractivityConfigurationValue, IInteractivityDeclaration, IInteractivityEvent, IInteractivityFlow, IInteractivityValue, IInteractivityValueType, IInteractivityVariable } from "./types/InteractivityGraph";
 import {BasicBehaveEngine} from "./BasicBehaveEngine";
 
 export interface IBehaviourNodeProps {

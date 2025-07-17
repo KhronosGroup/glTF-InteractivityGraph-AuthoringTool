@@ -1,6 +1,6 @@
-import {ADecorator} from "./ADecorator";
-import {BehaveEngineNode} from "../BehaveEngineNode";
-import {IBehaveEngine} from "../IBehaveEngine";
+import {ADecorator} from "../BasicBehaveEngine/ADecorator";
+import {BehaveEngineNode} from "../BasicBehaveEngine/BehaveEngineNode";
+import {IBehaveEngine} from "../BasicBehaveEngine/IBehaveEngine";
 import {
     AbstractMesh,
     AnimationGroup, Camera, Color3,
@@ -14,17 +14,17 @@ import {
     TransformNode
 } from "@babylonjs/core";
 import {Vector3} from "@babylonjs/core/Maths/math.vector";
-import {cubicBezier, easeFloat, easeFloat3, easeFloat4, linearFloat, slerpFloat4} from "../easingUtils";
+import {cubicBezier, easeFloat, easeFloat3, easeFloat4, linearFloat, slerpFloat4} from "../BasicBehaveEngine/easingUtils";
 import {Scene} from "@babylonjs/core/scene";
-import {OnSelect} from "../nodes/experimental/OnSelect";
+import {OnSelect} from "../BasicBehaveEngine/nodes/experimental/OnSelect";
 import {KHR_materials_variants} from "@babylonjs/loaders/glTF/2.0";
-import {AnimationStart} from "../nodes/animation/AnimationStart";
-import {AnimationStop} from "../nodes/animation/AnimationStop";
-import {AnimationStopAt} from "../nodes/animation/AnimationStopAt";
+import {AnimationStart} from "../BasicBehaveEngine/nodes/animation/AnimationStart";
+import {AnimationStop} from "../BasicBehaveEngine/nodes/animation/AnimationStop";
+import {AnimationStopAt} from "../BasicBehaveEngine/nodes/animation/AnimationStopAt";
 import {Nullable} from "@babylonjs/core/types.js";
-import { OnHoverIn } from "../nodes/experimental/OnHoverIn";
-import { OnHoverOut } from "../nodes/experimental/OnHoverOut";
-import { IInteractivityFlow } from "../../types/InteractivityGraph";
+import { OnHoverIn } from "../BasicBehaveEngine/nodes/experimental/OnHoverIn";
+import { OnHoverOut } from "../BasicBehaveEngine/nodes/experimental/OnHoverOut";
+import { IInteractivityFlow } from "../BasicBehaveEngine/types/InteractivityGraph";
 import * as glMatrix from "gl-matrix";
 
 export class BabylonDecorator extends ADecorator {

@@ -3,8 +3,8 @@ import {useCallback, useContext, useEffect, useState} from "react";
 import { Handle, Position} from "reactflow";
 
 import {RenderIf} from "../components/RenderIf";
-import { IInteractivityFlow, IInteractivityValue, IInteractivityNode, IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityVariable, IInteractivityValueType } from "../types/InteractivityGraph";
-import { anyType, interactivityNodeSpecs, standardTypes } from "../types/nodes";
+import { IInteractivityFlow, IInteractivityValue, IInteractivityNode, IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityVariable, IInteractivityValueType } from "../BasicBehaveEngine/types/InteractivityGraph";
+import { anyType, interactivityNodeSpecs, standardTypes } from "../BasicBehaveEngine/types/nodes";
 import { InteractivityGraphContext } from "../InteractivityGraphContext";
 
 require("../css/flowNodes.css");

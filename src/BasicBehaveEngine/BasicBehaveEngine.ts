@@ -107,7 +107,7 @@ import { InverseHyperbolicTangent } from "./nodes/math/hyperbolic/InverseHyperbo
 import { Exponential } from "./nodes/math/exponential/Exponential";
 import { HyperbolicCosine } from "./nodes/math/hyperbolic/HyperbolicCosine";
 import { HyperbolicTangent } from "./nodes/math/hyperbolic/HyperbolicTangent";
-import { IInteractivityVariable, IInteractivityEvent, IInteractivityValue, IInteractivityFlow, IInteractivityGraph, IInteractivityNode, IInteractivityValueType, IInteractivityDeclaration } from "../types/InteractivityGraph";
+import { IInteractivityVariable, IInteractivityEvent, IInteractivityValue, IInteractivityFlow, IInteractivityGraph, IInteractivityNode, IInteractivityValueType, IInteractivityDeclaration } from "./types/InteractivityGraph";
 import { VariableInterpolate } from "./nodes/variable/VariableInterpolate";
 import { NoOpNode } from "./nodes/experimental/NoOp";
 import { MatDecompose } from "./nodes/math/matrix/matDecompose";

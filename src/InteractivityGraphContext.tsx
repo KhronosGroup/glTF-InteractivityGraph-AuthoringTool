@@ -1,6 +1,6 @@
 import { createContext, useRef, useState } from 'react';
-import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityGraph, IInteractivityNode, IInteractivityValue, IInteractivityVariable } from './types/InteractivityGraph';
-import { createNoOpNode, interactivityNodeSpecs, standardTypes } from './types/nodes';
+import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityGraph, IInteractivityNode, IInteractivityValue, IInteractivityVariable } from './BasicBehaveEngine/types/InteractivityGraph';
+import { createNoOpNode, interactivityNodeSpecs, standardTypes } from './BasicBehaveEngine/types/nodes';
 import { v4 as uuidv4 } from 'uuid';
 import { Edge, Node } from 'reactflow';
 interface InteractivityGraphContextType {

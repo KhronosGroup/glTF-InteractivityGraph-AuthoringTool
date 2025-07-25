@@ -1,4 +1,4 @@
-import { IInteractivityFlow, IInteractivityValue } from "../types/InteractivityGraph";
+import { IInteractivityFlow, IInteractivityValue } from "./types/InteractivityGraph";
 import {BehaveEngineNode} from "./BehaveEngineNode";
 import {IEasingParameters} from "./easingUtils";
 

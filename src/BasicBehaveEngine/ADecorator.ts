@@ -1,6 +1,6 @@
-import {IBehaveEngine, IEventQueueItem, IInterpolateAction} from "../IBehaveEngine";
-import {BehaveEngineNode} from "../BehaveEngineNode";
-import {IInteractivityFlow, IInteractivityValue} from "../../types/InteractivityGraph";
+import {IBehaveEngine, IEventQueueItem, IInterpolateAction} from "./IBehaveEngine";
+import {BehaveEngineNode} from "./BehaveEngineNode";
+import {IInteractivityFlow, IInteractivityValue} from "./types/InteractivityGraph";
 
 export abstract class ADecorator implements IBehaveEngine {
 

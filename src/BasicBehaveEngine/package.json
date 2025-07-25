@@ -1,0 +1,28 @@
+{
+  "name": "khr_interactivity_authoring_engine",
+  "version": "0.1.0",
+  "main": "build/index.ts",
+  "browser": "build/index.js",
+  "types": "build/index.d.ts",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KhronosGroup/glTF-InteractivityGraph-AuthoringTool.git"
+  },
+  "author": "Khronos Group Inc.",
+  "license": "Apache-2.0",
+  "description": "Engine of the Khronos Interactivity Graph Authoring Tool",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "gl-matrix": "^3.4.3"
+  },
+  "bugs": {
+    "url": "https://github.com/KhronosGroup/glTF-InteractivityGraph-AuthoringTool/issues"
+  },
+  "devDependencies": {
+    "@types/node": "^24.1.0",
+    "typescript": "^5.8.3"
+  }
+}

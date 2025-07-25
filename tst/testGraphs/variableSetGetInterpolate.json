@@ -1,0 +1,329 @@
+{
+	"declarations": [
+		{
+			"op": "variable/interpolate"
+		},
+		{
+			"op": "event/onStart"
+		},
+		{
+			"op": "event/onTick"
+		},
+		{
+			"op": "variable/get"
+		},
+		{
+			"op": "variable/set"
+		},
+		{
+			"op": "math/lt"
+		},
+		{
+			"op": "math/sub"
+		},
+		{
+			"op": "math/abs"
+		}
+	],
+	"nodes": [
+		{
+			"declaration": 3,
+			"values": {},
+			"configuration": {
+				"variable": {
+					"value": [
+						"2"
+					]
+				}
+			},
+			"flows": {},
+			"metadata": {
+				"positionX": -195.95383588090348,
+				"positionY": -832.3403981522296
+			}
+		},
+		{
+			"declaration": 3,
+			"values": {},
+			"configuration": {
+				"variable": {
+					"value": [
+						"1"
+					]
+				}
+			},
+			"flows": {},
+			"metadata": {
+				"positionX": -229.14831449728152,
+				"positionY": -536.8026343791762
+			}
+		},
+		{
+			"declaration": 6,
+			"values": {
+				"a": {
+					"socket": "value",
+					"node": 1
+				},
+				"b": {
+					"socket": "value",
+					"node": 0
+				}
+			},
+			"configuration": {},
+			"flows": {},
+			"metadata": {
+				"positionX": 624.9338549715301,
+				"positionY": -481.5433115532742
+			}
+		},
+		{
+			"declaration": 7,
+			"values": {
+				"a": {
+					"socket": "value",
+					"node": 2
+				}
+			},
+			"configuration": {},
+			"flows": {},
+			"metadata": {
+				"positionX": 934.7527576480936,
+				"positionY": -161.52951336128532
+			}
+		},
+		{
+			"declaration": 5,
+			"values": {
+				"a": {
+					"socket": "value",
+					"node": 3
+				},
+				"b": {
+					"value": [
+						0.02
+					],
+					"type": "2",
+					"typeOptions": [
+						1,
+						2,
+						3,
+						4,
+						5,
+						6
+					]
+				}
+			},
+			"configuration": {},
+			"flows": {},
+			"metadata": {
+				"positionX": 1306.8002433408903,
+				"positionY": -6.6200620230034986
+			}
+		},
+		{
+			"declaration": 2,
+			"values": {},
+			"configuration": {},
+			"flows": {
+				"out": {
+					"socket": "in",
+					"node": 6
+				}
+			},
+			"metadata": {
+				"positionX": -226.06192975335293,
+				"positionY": -263.78706801342986
+			}
+		},
+		{
+			"declaration": 4,
+			"values": {
+				"value": {
+					"node": 1,
+					"socket": "value"
+				}
+			},
+			"configuration": {
+				"variable": {
+					"value": [
+						"2"
+					]
+				}
+			},
+			"flows": {
+				"out": {}
+			},
+			"metadata": {
+				"positionX": 329.70761651598326,
+				"positionY": -221.89488448389324
+			}
+		},
+		{
+			"declaration": 1,
+			"values": {},
+			"configuration": {},
+			"flows": {
+				"out": {
+					"socket": "in",
+					"node": 8
+				}
+			},
+			"metadata": {
+				"positionX": -353.37350745692464,
+				"positionY": 167.9963001666167
+			}
+		},
+		{
+			"declaration": 0,
+			"values": {
+				"duration": {
+					"value": [
+						1
+					],
+					"type": 2,
+					"typeOptions": [
+						2
+					]
+				},
+				"p1": {
+					"value": [
+						0,
+						0
+					],
+					"type": 3,
+					"typeOptions": [
+						3
+					]
+				},
+				"p2": {
+					"value": [
+						1,
+						1
+					],
+					"type": 3,
+					"typeOptions": [
+						3
+					]
+				},
+				"value": {
+					"value": [
+						1
+					],
+					"typeOptions": [
+						2
+					],
+					"type": 2
+				}
+			},
+			"configuration": {
+				"variable": {
+					"value": [
+						"1"
+					]
+				},
+				"useSlerp": {
+					"value": [
+						"false"
+					]
+				}
+			},
+			"flows": {
+				"out": {},
+				"err": {},
+				"done": {
+					"socket": "in",
+					"node": 9
+				}
+			},
+			"metadata": {
+				"positionX": 466.4641298277642,
+				"positionY": 173.7013721047333
+			}
+		},
+		{
+			"declaration": 4,
+			"values": {
+				"value": {
+					"node": 4,
+					"socket": "value"
+				}
+			},
+			"configuration": {
+				"variable": {
+					"value": [
+						"0"
+					]
+				}
+			},
+			"flows": {
+				"out": {}
+			},
+			"metadata": {
+				"positionX": 1685.6861489825728,
+				"positionY": 445.98005490227087
+			}
+		}
+	],
+	"variables": [
+		{
+			"name": "TestPassed",
+			"value": [
+				false
+			],
+			"type": 0
+		},
+		{
+			"name": "driver",
+			"value": [
+				0
+			],
+			"type": 2
+		},
+		{
+			"name": "copied",
+			"value": [
+				100
+			],
+			"type": 2
+		}
+	],
+	"events": [],
+	"types": [
+		{
+			"name": "bool",
+			"signature": "bool"
+		},
+		{
+			"name": "int",
+			"signature": "int"
+		},
+		{
+			"name": "float",
+			"signature": "float"
+		},
+		{
+			"name": "float2",
+			"signature": "float2"
+		},
+		{
+			"name": "float3",
+			"signature": "float3"
+		},
+		{
+			"name": "float4",
+			"signature": "float4"
+		},
+		{
+			"name": "float4x4",
+			"signature": "float4x4"
+		},
+		{
+			"name": "AMZN_interactivity_string",
+			"signature": "custom",
+			"extensions": {
+				"AMZN_interactivity_string": {}
+			}
+		}
+	]
+}

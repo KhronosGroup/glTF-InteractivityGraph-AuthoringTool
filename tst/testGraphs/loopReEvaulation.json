@@ -1,0 +1,307 @@
+{
+	"declarations": [
+		{
+			"op": "flow/while"
+		},
+		{
+			"op": "variable/get"
+		},
+		{
+			"op": "flow/doN"
+		},
+		{
+			"op": "variable/set"
+		},
+		{
+			"op": "math/add"
+		},
+		{
+			"op": "event/onStart"
+		},
+		{
+			"op": "math/eq"
+		},
+		{
+			"op": "flow/branch"
+		}
+	],
+	"nodes": [
+		{
+			"declaration": 5,
+			"values": {},
+			"configuration": {},
+			"flows": {
+				"out": {
+					"node": 4,
+					"socket": "in"
+				}
+			},
+			"metadata": {
+				"positionX": 308.0337941221595,
+				"positionY": 276.49910309748634
+			}
+		},
+		{
+			"declaration": 1,
+			"values": {},
+			"configuration": {
+				"variable": {
+					"value": [
+						"1"
+					]
+				}
+			},
+			"flows": {},
+			"metadata": {
+				"positionX": 820.8877524346034,
+				"positionY": -92.7037577945165
+			}
+		},
+		{
+			"declaration": 4,
+			"values": {
+				"a": {
+					"node": 1,
+					"socket": "value"
+				},
+				"b": {
+					"value": [
+						1
+					],
+					"typeOptions": [
+						1,
+						2,
+						3,
+						4,
+						5,
+						6
+					],
+					"type": 1
+				}
+			},
+			"configuration": {},
+			"flows": {},
+			"metadata": {
+				"positionX": 1190.298374884771,
+				"positionY": -131.67827300714885
+			}
+		},
+		{
+			"declaration": 1,
+			"values": {},
+			"configuration": {
+				"variable": {
+					"value": [
+						"0"
+					]
+				}
+			},
+			"flows": {},
+			"metadata": {
+				"positionX": 271.008179108551,
+				"positionY": -104.5655667722742
+			}
+		},
+		{
+			"declaration": 0,
+			"values": {
+				"condition": {
+					"node": 3,
+					"socket": "value"
+				}
+			},
+			"configuration": {},
+			"flows": {
+				"loopBody": {
+					"node": 5,
+					"socket": "in"
+				},
+				"completed": {}
+			},
+			"metadata": {
+				"positionX": 768.3064200760656,
+				"positionY": 249.62929545061996
+			}
+		},
+		{
+			"declaration": 2,
+			"values": {
+				"n": {
+					"value": [
+						5
+					],
+					"typeOptions": [
+						1
+					],
+					"type": 1
+				}
+			},
+			"configuration": {},
+			"flows": {
+				"out": {
+					"node": 6,
+					"socket": "in"
+				}
+			},
+			"metadata": {
+				"positionX": 1182.6729262562123,
+				"positionY": 191.13238560182782
+			}
+		},
+		{
+			"declaration": 3,
+			"values": {
+				"value": {
+					"node": 2,
+					"socket": "value"
+				}
+			},
+			"configuration": {
+				"variable": {
+					"value": [
+						"1"
+					]
+				}
+			},
+			"flows": {
+				"out": {
+					"node": 8,
+					"socket": "in"
+				}
+			},
+			"metadata": {
+				"positionX": 1637.8675235059613,
+				"positionY": 143.86058545159614
+			}
+		},
+		{
+			"declaration": 6,
+			"values": {
+				"a": {
+					"node": 5,
+					"socket": "currentCount"
+				},
+				"b": {
+					"value": [
+						5
+					],
+					"typeOptions": [
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6
+					],
+					"type": "1"
+				}
+			},
+			"configuration": {},
+			"flows": {},
+			"metadata": {
+				"positionX": 1722.9524715746686,
+				"positionY": 473.63384018075726
+			}
+		},
+		{
+			"declaration": 7,
+			"values": {
+				"condition": {
+					"node": 7,
+					"socket": "value"
+				}
+			},
+			"configuration": {},
+			"flows": {
+				"true": {
+					"node": 9,
+					"socket": "in"
+				},
+				"false": {}
+			},
+			"metadata": {
+				"positionX": 2105.563439784672,
+				"positionY": 204.42833900252708
+			}
+		},
+		{
+			"declaration": 3,
+			"values": {
+				"value": {
+					"value": [
+						false
+					],
+					"typeOptions": [
+						0
+					],
+					"type": 0
+				}
+			},
+			"configuration": {
+				"variable": {
+					"value": [
+						"0"
+					]
+				}
+			},
+			"flows": {
+				"out": {}
+			}
+		}
+	],
+	"variables": [
+		{
+			"name": "loop",
+			"value": [
+				true
+			],
+			"type": 0
+		},
+		{
+			"name": "while_loop_iterations",
+			"value": [
+				0
+			],
+			"type": 1
+		}
+	],
+	"events": [],
+	"types": [
+		{
+			"name": "bool",
+			"signature": "bool"
+		},
+		{
+			"name": "int",
+			"signature": "int"
+		},
+		{
+			"name": "float",
+			"signature": "float"
+		},
+		{
+			"name": "float2",
+			"signature": "float2"
+		},
+		{
+			"name": "float3",
+			"signature": "float3"
+		},
+		{
+			"name": "float4",
+			"signature": "float4"
+		},
+		{
+			"name": "float4x4",
+			"signature": "float4x4"
+		},
+		{
+			"name": "AMZN_interactivity_string",
+			"signature": "custom",
+			"extensions": {
+				"AMZN_interactivity_string": {}
+			}
+		}
+	]
+}

@@ -1,0 +1,201 @@
+{
+	"declarations": [
+		{
+			"op": "math/random"
+		},
+		{
+			"op": "math/eq"
+		},
+		{
+			"op": "math/not"
+		},
+		{
+			"op": "math/and"
+		},
+		{
+			"op": "variable/set"
+		},
+		{
+			"op": "event/onStart"
+		}
+	],
+	"nodes": [
+		{
+			"declaration": 5,
+			"values": {},
+			"configuration": {},
+			"flows": {
+				"out": {
+					"node": 7,
+					"socket": "in"
+				}
+			},
+			"metadata": {
+				"positionX": 1643.2977831972466,
+				"positionY": 486.3039430167564
+			}
+		},
+		{
+			"declaration": 0,
+			"values": {},
+			"configuration": {},
+			"flows": {},
+			"metadata": {
+				"positionX": 479.7326592278114,
+				"positionY": 391.0389733650747
+			}
+		},
+		{
+			"declaration": 1,
+			"values": {
+				"a": {
+					"node": 1,
+					"socket": "value"
+				},
+				"b": {
+					"node": 1,
+					"socket": "value"
+				}
+			},
+			"configuration": {},
+			"flows": {},
+			"metadata": {
+				"positionX": 1205.2590748467221,
+				"positionY": 371.7070193162524
+			}
+		},
+		{
+			"declaration": 0,
+			"values": {},
+			"configuration": {},
+			"flows": {},
+			"metadata": {
+				"positionX": 525.09375,
+				"positionY": 44.109375
+			}
+		},
+		{
+			"declaration": 1,
+			"values": {
+				"a": {
+					"node": 3,
+					"socket": "value"
+				},
+				"b": {
+					"node": 1,
+					"socket": "value"
+				}
+			},
+			"configuration": {},
+			"flows": {},
+			"metadata": {
+				"positionX": 940.140625,
+				"positionY": 109.6640625
+			}
+		},
+		{
+			"declaration": 2,
+			"values": {
+				"a": {
+					"node": 4,
+					"socket": "value"
+				}
+			},
+			"configuration": {},
+			"flows": {},
+			"metadata": {
+				"positionX": 1197.762079838278,
+				"positionY": 108.24119473378539
+			}
+		},
+		{
+			"declaration": 3,
+			"values": {
+				"a": {
+					"node": 5,
+					"socket": "value"
+				},
+				"b": {
+					"node": 2,
+					"socket": "value"
+				}
+			},
+			"configuration": {},
+			"flows": {},
+			"metadata": {
+				"positionX": 1546.907847374393,
+				"positionY": 204.63113055663922
+			}
+		},
+		{
+			"declaration": 4,
+			"values": {
+				"value": {
+					"node": 6,
+					"socket": "value"
+				}
+			},
+			"configuration": {
+				"variable": {
+					"value": [
+						"0"
+					]
+				}
+			},
+			"flows": {
+				"out": {}
+			},
+			"metadata": {
+				"positionX": 2213.0694038390047,
+				"positionY": 347.07403571707874
+			}
+		}
+	],
+	"variables": [
+		{
+			"name": "TestPassed",
+			"value": [
+				false
+			],
+			"type": 0
+		}
+	],
+	"events": [],
+	"types": [
+		{
+			"name": "bool",
+			"signature": "bool"
+		},
+		{
+			"name": "int",
+			"signature": "int"
+		},
+		{
+			"name": "float",
+			"signature": "float"
+		},
+		{
+			"name": "float2",
+			"signature": "float2"
+		},
+		{
+			"name": "float3",
+			"signature": "float3"
+		},
+		{
+			"name": "float4",
+			"signature": "float4"
+		},
+		{
+			"name": "float4x4",
+			"signature": "float4x4"
+		},
+		{
+			"name": "AMZN_interactivity_string",
+			"signature": "custom",
+			"extensions": {
+				"AMZN_interactivity_string": {}
+			}
+		}
+	]
+}

@@ -388,10 +388,10 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("variable/get", VariableGet);
         this.registerBehaveEngineNode("variable/set", VariableSet);
         this.registerBehaveEngineNode("variable/interpolate", VariableInterpolate);
-        this.registerBehaveEngineNode("math/e", Euler);
-        this.registerBehaveEngineNode("math/inf", Inf);
-        this.registerBehaveEngineNode("math/nan", NotANumber);
-        this.registerBehaveEngineNode("math/pi", Pi);
+        this.registerBehaveEngineNode("math/E", Euler);
+        this.registerBehaveEngineNode("math/Inf", Inf);
+        this.registerBehaveEngineNode("math/NaN", NotANumber);
+        this.registerBehaveEngineNode("math/Pi", Pi);
         this.registerBehaveEngineNode("math/sign", Sign);
         this.registerBehaveEngineNode("math/trunc", Truncate);
         this.registerBehaveEngineNode("math/floor", Floor);
@@ -441,8 +441,8 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/rotate2d", Rotate2D);
         this.registerBehaveEngineNode("math/rotate3d", Rotate3D);
         this.registerBehaveEngineNode("math/length", VectorLength);
-        this.registerBehaveEngineNode("math/isinf", IsInfNode);
-        this.registerBehaveEngineNode("math/isnan", IsNaNNode);
+        this.registerBehaveEngineNode("math/isInf", IsInfNode);
+        this.registerBehaveEngineNode("math/isNaN", IsNaNNode);
         this.registerBehaveEngineNode("math/select", Select);
         this.registerBehaveEngineNode("math/switch", MathSwitch);
         this.registerBehaveEngineNode("math/extract2", Extract2);
@@ -476,7 +476,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/quatFromDirections", QuatFromDirections);
         this.registerBehaveEngineNode("math/matDecompose", MatDecompose);
         this.registerBehaveEngineNode("math/matCompose", MatCompose);
-        this.registerBehaveEngineNode("math/matmul", MatMul);
+        this.registerBehaveEngineNode("math/matMul", MatMul);
         this.registerBehaveEngineNode("math/inverse", Inverse);
         this.registerBehaveEngineNode("debug/log", DebugLog);
     }

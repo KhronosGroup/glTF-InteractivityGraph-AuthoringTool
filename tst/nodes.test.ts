@@ -613,7 +613,7 @@ describe('nodes', () => {
         expect(onTick.processFlow).toHaveBeenCalledWith({ socket: 'in', node: 0 });
     });
 
-    it("math/e", () => {
+    it("math/E", () => {
         const euler: Euler = new Euler({
             ...defaultProps
         });
@@ -631,7 +631,7 @@ describe('nodes', () => {
         expect(val['value'].value[0]).toBe(Infinity);
     });
 
-    it("math/pi", () => {
+    it("math/Pi", () => {
         const pi: Pi = new Pi({
             ...defaultProps
         });
@@ -1837,7 +1837,7 @@ describe('nodes', () => {
         expect(val['value'].value[0]).toBe(-4);
     });
 
-    it("math/matmul", () => {
+    it("math/matMul", () => {
         const matmul: MatMul = new MatMul({
             ...defaultProps,
             values: {a: { value: [
@@ -1869,7 +1869,7 @@ describe('nodes', () => {
         expect(val['value'].value[2][0]).toBe(314);
     });
 
-    it("math/isInfNode", () => {
+    it("math/isInf", () => {
         let isInfNode: IsInfNode = new IsInfNode({
             ...defaultProps,
             values: {a: { value: [1.0], type: 2 }}
@@ -1887,7 +1887,7 @@ describe('nodes', () => {
         expect(val[0]).toBe(true);
     });
 
-    it("math/isNaNNode", () => {
+    it("math/isNaN", () => {
         let isNaNNode: IsNaNNode = new IsNaNNode({
             ...defaultProps,
             values: {a: { value: [1.0], type: 2 }}

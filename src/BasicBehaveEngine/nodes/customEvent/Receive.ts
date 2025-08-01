@@ -62,7 +62,7 @@ export class Receive extends BehaveEngineNode {
     override parseType(type: string, val: any) {
         switch (type) {
             case "bool":
-                return [val[0] === "true"];
+                return [JSON.parse(val[0]) === true];
             case "int":
                 return [Number(val[0])];
             case "float":

@@ -54,6 +54,14 @@ export abstract class ADecorator implements IBehaveEngine {
         this.behaveEngine.loadBehaveGraph(behaveGraph);
     }
 
+    pauseEventQueue = () => {
+        this.behaveEngine.pauseEventQueue();
+    }
+
+    resumeEventQueue = () => {
+        this.behaveEngine.resumeEventQueue();
+    }
+
     dispatchCustomEvent = (name: string, vals: any) => {
         this.behaveEngine.dispatchCustomEvent(name, vals);
     }

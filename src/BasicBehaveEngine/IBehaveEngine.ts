@@ -102,6 +102,16 @@ export interface IBehaveEngine {
     loadBehaveGraph: (behaveGraph: any) => void;
 
     /**
+     * Pause the event queue processing.
+     */
+    pauseEventQueue: () => void;
+
+    /**
+     * Resume the event queue processing.
+     */
+    resumeEventQueue: () => void;
+
+    /**
      * Emit a custom event with a specified name and values.
      * @param name - The name of the custom event to emit.
      * @param params - The values to be passed to the custom event callback functions.

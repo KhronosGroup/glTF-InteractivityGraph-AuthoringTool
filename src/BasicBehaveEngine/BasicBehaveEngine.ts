@@ -134,6 +134,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
     private jsonPtrTrie: JsonPtrTrie;
     private _fps: number;
     private valueEvaluationCache: Map<string, IInteractivityValue>;
+    private _timerID: NodeJS.Timeout | null;
 
 
     constructor(fps: number, eventBus: IEventBus) {
@@ -150,6 +151,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this._scheduledDelays = [];
         this.nodes = [];
         this.types = [];
+        this._timerID = null;
 
         this.registerKnownBehaviorNodes();
     }
@@ -315,8 +317,23 @@ export class BasicBehaveEngine implements IBehaveEngine {
             const startFlow: IInteractivityFlow = {node: startNodeIndex, socket: "start"}
             this.addEventToWorkQueue(startFlow);
         }
-
+        if (this._timerID !== null) {
+            clearTimeout(this._timerID);
+        }
         this.executeEventQueue();
+    }
+
+    public pauseEventQueue = () => {
+        if (this._timerID !== null) {
+            clearTimeout(this._timerID);
+            this._timerID = null;
+        }
+    }
+
+    public resumeEventQueue = () => {
+        if (this._timerID === null) {
+            this.executeEventQueue();
+        }
     }
 
     public processNodeStarted = (behaveEngineNode: BehaveEngineNode) => {
@@ -549,8 +566,10 @@ export class BasicBehaveEngine implements IBehaveEngine {
 
             tickNode.processNode()
         }
-        
-        setTimeout(() => {
+        if (this._timerID !== null) {
+            clearTimeout(this._timerID);
+        }
+        this._timerID = setTimeout(() => {
             this.executeEventQueue()
         }, 1000 / this.fps)
     }

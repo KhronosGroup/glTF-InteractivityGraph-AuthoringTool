@@ -52,6 +52,7 @@ export class Receive extends BehaveEngineNode {
                 const typeIndex = Object.entries(customEventDesc.values).find(([key, _]) => key === ceKey)?.[1]?.type;
                 const typeName: string = this.getType(Number(typeIndex));
                 const rawVal = ce[ceKey];
+                console.log(`[Receive: ${customEventDesc.id}] Parsing type`, typeName, rawVal);
                 const val = this.parseType(typeName, [rawVal]);
                 this.outValues[ceKey] = {
                     value: val,

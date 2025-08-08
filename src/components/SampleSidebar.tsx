@@ -7,6 +7,7 @@ import { Button, ListGroup, Offcanvas } from 'react-bootstrap';
 interface Sample {
   label: string;
   name: string;
+  description?: string;
   screenshot?: string;
   tags?: string[];
   variants: {
@@ -219,6 +220,16 @@ export const SampleSidebar: React.FC<SampleSidebarProps> = ({ onSelectModel }) =
                     <div className="d-flex w-100 justify-content-between">
                       <h6 className="mb-1">{model.label || model.name}</h6>
                     </div>
+                    <div>{model.description}</div>
+                    {model.screenshot && (
+                      <img 
+                        src={`${baseRepoUrl}${sampleBasePath}${model.name}/${model.screenshot}`} 
+                        alt={model.label || model.name} 
+                        className="img-fluid mt-2 mb-2" 
+                        style={{ maxWidth: '120px', height: 'auto' }}
+                      />
+                    )}
+
                     {model.tags && Array.isArray(model.tags) && model.tags.length > 0 && (
                       <div className="mt-1">
                         {model.tags.map((tag, tagIndex) => (

@@ -32,6 +32,7 @@ export const SampleSidebar: React.FC<SampleSidebarProps> = ({ onSelectModel }) =
   const [show, setShow] = useState(false);
   const [sampleModels, setSampleModels] = useState<Sample[]>([]);
   const [testModels, setTestModels] = useState<Sample[]>([]);
+  const [mathTestModels, setMathTestModels] = useState<Sample[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [debugData, setDebugData] = useState<unknown>(null);
@@ -72,11 +73,23 @@ export const SampleSidebar: React.FC<SampleSidebarProps> = ({ onSelectModel }) =
       if (!testResponse.ok) {
         throw new Error(`Failed to fetch test assets: ${testResponse.status}`);
       }
+
+            // Fetch test models
+      const mathTestResponse = await fetch(
+        'https://raw.githubusercontent.com/needle-tools/glTF-Interactivity-Sample-Assets/main/Tests/Interactivity/mathtests-index.json'
+      );
       
+      if (!mathTestResponse.ok) {
+        throw new Error(`Failed to fetch test assets: ${mathTestResponse.status}`);
+      }
+
+
       const testData = await testResponse.json();
       console.log('Received test data:', testData);
+      const mathTestData = await mathTestResponse.json();
+      console.log('Received math test data:', testData);
       
-      setDebugData({ samples: sampleData, tests: testData });
+      setDebugData({ samples: sampleData, tests: testData, mathtests : mathTestData });
       
       // Make sure the data is an array before setting it
       if (Array.isArray(sampleData)) {
@@ -92,6 +105,14 @@ export const SampleSidebar: React.FC<SampleSidebarProps> = ({ onSelectModel }) =
         console.error('Received invalid test data format:', testData);
         setTestModels([]);
       }
+
+      if (Array.isArray(mathTestData)) {
+        setMathTestModels(mathTestData);
+      } else {
+        console.error('Received invalid math test data format:', mathTestData);
+        setTestModels([]);
+      }
+
     } catch (err) {
       console.error('Error fetching data:', err);
       setSampleModels([]);
@@ -222,6 +243,40 @@ export const SampleSidebar: React.FC<SampleSidebarProps> = ({ onSelectModel }) =
               <a href="https://github.com/needle-tools/glTF-Interactivity-Sample-Assets/" target="_blank">See on GitHub</a>
               <ListGroup>
                 {testModels.map((model, index) => (
+                  <ListGroup.Item 
+                    key={index}
+                    action 
+                    onClick={() => handleSelectSample(model, true)}
+                    className="d-flex flex-column align-items-start"
+                  >
+                    <div className="d-flex w-100 justify-content-between">
+                      <h6 className="mb-1">{model.label || model.name}</h6>
+                    </div>
+                    {model.tags && Array.isArray(model.tags) && model.tags.length > 0 && (
+                      <div className="mt-1">
+                        {model.tags.map((tag, tagIndex) => (
+                          <span 
+                            key={tagIndex} 
+                            className="badge bg-secondary me-1"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </ListGroup.Item>
+                ))}
+              </ListGroup>
+            </>
+          )}
+
+          
+          {mathTestModels.length > 0 && (
+            <>
+              <h5 className="mt-4 mb-2">Math Test Assets</h5>
+              <a href="https://github.com/needle-tools/glTF-Interactivity-Sample-Assets/" target="_blank">See on GitHub</a>
+              <ListGroup>
+                {mathTestModels.map((model, index) => (
                   <ListGroup.Item 
                     key={index}
                     action 

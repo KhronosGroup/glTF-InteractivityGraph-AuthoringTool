@@ -1,6 +1,5 @@
-import { IInteractivityFlow, IInteractivityValue } from "../types/InteractivityGraph";
+import { IInteractivityFlow, IInteractivityValue } from "./types/InteractivityGraph";
 import {BehaveEngineNode} from "./BehaveEngineNode";
-import {IEasingParameters} from "./easingUtils";
 
 /**
  * Interface representing the Behave Engine, which provides methods for interacting with a behavioral graph engine.
@@ -52,19 +51,7 @@ export interface IBehaveEngine {
      * @param type - The type of the Behave Engine node.
      * @param behaveEngineNode - The class representing the Behave Engine node.
      */
-    registerBehaveEngineNode: (type: string, behaveEngineNode: typeof BehaveEngineNode) => void;
-
-    /**
-     * Animate a property over time using specified values.
-     * @param path - The property path to be animated.
-     * @param easingParameters - Easing type and the easing type specific parameters to preform the easing function
-     * @param callback - A callback function to be executed after the animation is complete.
-     */
-    animateProperty: (
-        path: string,
-        easingParameters: IEasingParameters<any>,
-        callback: () => void
-    ) => void;
+    registerBehaveEngineNode: (type: string, behaveEngineNode: typeof BehaveEngineNode) => void
 
     /**
      * Animate a property over time using specified values.
@@ -100,6 +87,16 @@ export interface IBehaveEngine {
      * @param behaveGraph - The Behave graph to be loaded.
      */
     loadBehaveGraph: (behaveGraph: any) => void;
+
+    /**
+     * Pause the event queue processing.
+     */
+    pauseEventQueue: () => void;
+
+    /**
+     * Resume the event queue processing.
+     */
+    resumeEventQueue: () => void;
 
     /**
      * Emit a custom event with a specified name and values.

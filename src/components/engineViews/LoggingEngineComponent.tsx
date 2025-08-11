@@ -2,7 +2,7 @@ import React, {useContext, useEffect, useRef, useState} from "react";
 import {Button, Col, Container, Form, Modal, Row, Tab, Tabs} from "react-bootstrap";
 import {Spacer} from "../Spacer";
 import {BasicBehaveEngine} from "../../BasicBehaveEngine/BasicBehaveEngine";
-import {LoggingDecorator} from "../../BasicBehaveEngine/decorators/LoggingDecorator";
+import {LoggingDecorator} from "../../decorators/LoggingDecorator";
 import { InteractivityGraphContext } from "../../InteractivityGraphContext";
 import { DOMEventBus } from "../../BasicBehaveEngine/eventBuses/DOMEventBus";
 

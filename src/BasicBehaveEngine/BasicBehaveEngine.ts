@@ -260,6 +260,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this._variables = behaveGraph.variables;
         this.events = behaveGraph.events;
         this.types = behaveGraph.types;
+        this.idToBehaviourNodeMap.clear();
 
         const defaultProps = {
             idToBehaviourNodeMap: this.idToBehaviourNodeMap,

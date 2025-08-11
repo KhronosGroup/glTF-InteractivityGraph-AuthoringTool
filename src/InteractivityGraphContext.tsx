@@ -236,6 +236,15 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         return [nodes, edges, events, variables];
       };
 
+    const getUpdatedTypeIndex = (oldType: {signature: string, extensions?: any}): number => {
+      const oldTypeSignature = oldType.signature;
+      if (oldTypeSignature === "custom") {
+        const typeExtensions = JSON.stringify(Object.keys(oldType.extensions).sort())
+        return standardTypes.findIndex(type => type.signature === "custom" && JSON.stringify(Object.keys(type.extensions).sort()) == typeExtensions)
+      } else {
+        return standardTypes.findIndex(type => type.signature === oldTypeSignature);
+      }
+    }  
     const loadGraphFromJson = (json: any) => {
         const graph: IInteractivityGraph = {
             declarations: json.declarations,
@@ -249,27 +258,23 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         for (const declaration of graph.declarations) {
             if (declaration.inputValueSockets) {
                 for (const socket of Object.values(declaration.inputValueSockets)) {
-                    const oldTypeName = json.types[socket.type].signature;
-                    socket.type = standardTypes.findIndex(type => type.name === oldTypeName);
+                  socket.type = getUpdatedTypeIndex(json.types[socket.type]);
                 }
             }
             if (declaration.outputValueSockets) {
                 for (const socket of Object.values(declaration.outputValueSockets)) {
-                    const oldTypeName = json.types[socket.type].signature;
-                    socket.type = standardTypes.findIndex(type => type.name === oldTypeName);
+                    socket.type = getUpdatedTypeIndex(json.types[socket.type]);
                 }
             }
         }
 
         for (const variable of graph.variables) {
-            const oldTypeName = json.types[variable.type].signature;
-            variable.type = standardTypes.findIndex(type => type.name === oldTypeName);
+            variable.type = getUpdatedTypeIndex(json.types[variable.type]);
         }
 
         for (const event of graph.events) {
           for (const socket of Object.values(event.values)) {
-            const oldTypeName = json.types[socket.type].signature;
-            socket.type = standardTypes.findIndex(type => type.name === oldTypeName);
+            socket.type = getUpdatedTypeIndex(json.types[socket.type]);
           }
         }
 
@@ -299,8 +304,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
                     if (node.values[key].value !== undefined) {
                         copyOfTemplateNode.values = copyOfTemplateNode.values || {};
                         copyOfTemplateNode.values.input = copyOfTemplateNode.values.input || {};
-                        const oldTypeName = json.types[node.values[key].type].signature;
-                        const newTypeIndex = standardTypes.findIndex(type => type.name === oldTypeName);
+                        const newTypeIndex = getUpdatedTypeIndex(json.types[node.values[key].type]);
                         copyOfTemplateNode.values.input[key] = {value: node.values[key].value, type: newTypeIndex, typeOptions: copyOfTemplateNode.values.input[key]?.typeOptions || [newTypeIndex]};
                     } else if (node.values[key].socket !== undefined && node.values[key].node !== null) {
                         copyOfTemplateNode.values = copyOfTemplateNode.values || {};
@@ -323,8 +327,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
                     copyOfTemplateNode.configuration = copyOfTemplateNode.configuration || {};
                     copyOfTemplateNode.configuration[key] = node.configuration[key];
                     if (key === "type") {
-                      const oldTypeName = json.types[node.configuration[key].value].signature;
-                      const newTypeIndex = standardTypes.findIndex(type => type.name === oldTypeName);
+                      const newTypeIndex = getUpdatedTypeIndex(json.types[node.configuration[key].value])
                       copyOfTemplateNode.configuration[key].value = [newTypeIndex];
                     }
                 }

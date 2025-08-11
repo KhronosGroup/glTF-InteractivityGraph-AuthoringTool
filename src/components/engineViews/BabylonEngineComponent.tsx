@@ -161,7 +161,7 @@ export const BabylonEngineComponent = () => {
             babylonEngineRef.current.clearCustomEventListeners()
         }
 
-        const world = {glTFNodes: nodes, animations: animations, materials: materials, meshes: meshes};
+        const world = {glTFNodes: nodes, animations: animations, materials: materials, meshes: meshes.filter(m => m.subMeshes !== undefined)};
         const eventBus = new DOMEventBus();
         babylonEngineRef.current = new BabylonDecorator(new BasicBehaveEngine(60, eventBus), world, scene)
 

@@ -5,16 +5,16 @@ export const knownDeclarations: IInteractivityDeclaration[] = [
         op: "debug/log"
     },
     {
-        op: "math/e"
+        op: "math/E"
     },
     {
-        op: "math/pi"
+        op: "math/Pi"
     },
     {
-        op: "math/inf"
+        op: "math/Inf"
     },
     {
-        op: "math/nan"
+        op: "math/NaN"
     },
     {
         op: "math/abs"
@@ -86,10 +86,10 @@ export const knownDeclarations: IInteractivityDeclaration[] = [
         op: "math/ge"
     },
     {
-        op: "math/isnan"
+        op: "math/isNaN"
     },
     {
-        op: "math/isinf"
+        op: "math/isInf"
     },
     {
         op: "math/select"
@@ -197,7 +197,7 @@ export const knownDeclarations: IInteractivityDeclaration[] = [
         op: "math/inverse"
     },
     {
-        op: "math/matmul"
+        op: "math/matMul"
     },
     {
         op: "math/matCompose"
@@ -1689,8 +1689,8 @@ const mathMatrixNodeSpecs: IInteractivityNode[] = [
         }
     },
     {
-        op: "math/matmul",
-        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/matmul"),
+        op: "math/matMul",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/matMul"),
         description: "Multiply two matrices",
         values: {
             input: {
@@ -2451,8 +2451,8 @@ const mathTrigNodeSpecs: IInteractivityNode[] = [
 
 const mathSpecialNodeSpecs: IInteractivityNode[] = [
     {
-        op: "math/isnan",
-        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/isnan"),
+        op: "math/isNaN",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/isNaN"),
         description: "Check if a number is NaN",
         values: {
             input: {
@@ -2472,8 +2472,8 @@ const mathSpecialNodeSpecs: IInteractivityNode[] = [
         }
     },
     {
-        op: "math/isinf",
-        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/isinf"),
+        op: "math/isInf",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/isInf"),
         description: "Check if a number is infinite",
         values: {
             input: {
@@ -3141,8 +3141,8 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
 
 const mathConstantNodeSpecs: IInteractivityNode[] = [
     {
-        op: "math/e",
-        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/e"),
+        op: "math/E",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/E"),
         description: "The mathematical constant e",
         values: {
             output: {
@@ -3155,8 +3155,8 @@ const mathConstantNodeSpecs: IInteractivityNode[] = [
         }
     },
     {
-        op: "math/pi",
-        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/pi"),
+        op: "math/Pi",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/Pi"),
         description: "The mathematical constant pi",
         values: {
             output: {
@@ -3169,8 +3169,8 @@ const mathConstantNodeSpecs: IInteractivityNode[] = [
         }
     },
     {
-        op: "math/inf",
-        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/inf"),
+        op: "math/Inf",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/Inf"),
         description: "The mathematical constant infinity",
         values: {
             output: {
@@ -3183,8 +3183,8 @@ const mathConstantNodeSpecs: IInteractivityNode[] = [
         }
     },
     {
-        op: "math/nan",
-        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/nan"),
+        op: "math/NaN",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/NaN"),
         description: "The mathematical constant NaN",
         values: {
             output: {

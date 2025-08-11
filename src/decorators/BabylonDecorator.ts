@@ -722,15 +722,16 @@ export class BabylonDecorator extends ADecorator {
 
         this.registerJsonPointer(`/meshes/${maxGltfNode}/primitives/${maxGltfNode}/material`, (path) => {
             const parts: string[] = path.split("/");
-            const mesh = this.world.glTFNodes[Number(parts[2])];
-            const primitive = mesh._primitiveBabylonMeshes[Number(parts[4])];
+            const mesh = this.world.meshes[Number(parts[2])];
+            const primitive = mesh.subMeshes[Number(parts[4])];
             console.log("results", mesh, primitive, this.world.materials.indexOf(primitive.material));
-            return this.world.materials.indexOf(primitive.material);
+            return primitive.materialIndex
         }, (path, value) => {
             const parts: string[] = path.split("/");
-            const mesh = this.world.glTFNodes[Number(parts[2])];
-            const primitive = mesh._primitiveBabylonMeshes[Number(parts[4])];
-            primitive.material = this.world.materials[value];
+            const mesh = this.world.meshes[Number(parts[2])];
+            const primitive = mesh.subMeshes[Number(parts[4])];
+            primitive.materialIndex = value;
+            primitive._mesh.material = this.world.materials[value]
         }, "int", false);
 
         this.registerJsonPointer(`/animations/${maxAnimations}/extensions/KHR_interactivity/isPlaying`, (path) => {

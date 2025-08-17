@@ -1,5 +1,6 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 import {IInteractivityEvent} from "../../../types/InteractivityGraph";
+import { JsonPtrTrie } from "../../JsonPtrTrie";
 
 export class Receive extends BehaveEngineNode {
     REQUIRED_CONFIGURATIONS = {event: {}}
@@ -68,15 +69,27 @@ export class Receive extends BehaveEngineNode {
             case "float":
                 return [Number(val[0])];
             case "float2":
-                return JSON.parse(val);
+                return this.parseMaybeJSON(val[0])
             case "float3":
-                return JSON.parse(val);
+                return this.parseMaybeJSON(val[0])
             case "float4":
-                return JSON.parse(val);
+                return this.parseMaybeJSON(val[0])
             case "float4x4":
-                return JSON.parse(val);
+                return this.parseMaybeJSON(val[0])
             default:
                 return val
         }
     }
+
+    parseMaybeJSON(input: any) {
+        if (typeof input === "string") {
+          try {
+            return JSON.parse(input);
+          } catch (e) {
+            throw new Error("Invalid JSON string");
+          }
+        }
+        // Already an object/array/etc.
+        return input;
+      }
 }

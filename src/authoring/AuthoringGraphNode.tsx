@@ -31,6 +31,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     const {graph} = useContext(InteractivityGraphContext);
     const uid = props.data.uid;
     const [node, setNode] = useState<IInteractivityNode | null>(null);
+    console.log(props)
 
     useEffect(() => {
         const node: IInteractivityNode = graph.nodes.find(node => node.uid === uid)!;
@@ -217,9 +218,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         if (updatedConfiguration.variable !== undefined) {
             const variableId = Number(updatedConfiguration.variable.value?.[0] || 0);
             const v: IInteractivityVariable = graph.variables[variableId];
-            const currentValue: IInteractivityValue = inputValues["value"];
-            const value: IInteractivityValue =  {typeOptions: [v.type], type: v.type, value: [undefined]}
-            const valueToSet = currentValue === undefined ? value : currentValue;
+            const valueToSet: IInteractivityValue =  {typeOptions: [v.type], type: v.type, value: [undefined]}
 
             if (nodeType === "variable/set" || nodeType === "variable/interpolate") {
                 inputValuesToSet["value"] = valueToSet;
@@ -496,6 +495,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                         {/*inputValues*/}
                         <div>
                             {Object.entries(inputValues).map(([socket, value]) => {
+                                console.log(value)
                                 return (
                                     <div key={socket} className={"flow-node-socket"}>
                                         <label htmlFor={socket}>{socket}</label>

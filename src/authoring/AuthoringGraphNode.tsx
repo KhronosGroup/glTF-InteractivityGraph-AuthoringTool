@@ -217,9 +217,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         if (updatedConfiguration.variable !== undefined) {
             const variableId = Number(updatedConfiguration.variable.value?.[0] || 0);
             const v: IInteractivityVariable = graph.variables[variableId];
-            const currentValue: IInteractivityValue = inputValues["value"];
-            const value: IInteractivityValue =  {typeOptions: [v.type], type: v.type, value: [undefined]}
-            const valueToSet = currentValue === undefined ? value : currentValue;
+            const valueToSet: IInteractivityValue =  {typeOptions: [v.type], type: v.type, value: [undefined]}
 
             if (nodeType === "variable/set" || nodeType === "variable/interpolate") {
                 inputValuesToSet["value"] = valueToSet;

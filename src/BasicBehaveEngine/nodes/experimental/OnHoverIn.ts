@@ -1,4 +1,3 @@
-import '@babylonjs/core/Culling/ray';
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class OnHoverIn extends BehaveEngineNode {

@@ -14,7 +14,8 @@
   "license": "Apache-2.0",
   "description": "Engine of the Khronos Interactivity Graph Authoring Tool",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "gl-matrix": "^3.4.3"

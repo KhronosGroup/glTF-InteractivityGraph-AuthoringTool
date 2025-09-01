@@ -52,16 +52,16 @@ export abstract class ADecorator implements IBehaveEngine {
     public get fps () {
         return 1;
     }
-    loadBehaveGraph = (behaveGraph: any) => {
-        this.behaveEngine.loadBehaveGraph(behaveGraph);
+    loadBehaveGraph = (behaveGraph: any, run = true) => {
+        this.behaveEngine.loadBehaveGraph(behaveGraph, run);
     }
 
     pauseEventQueue = () => {
         this.behaveEngine.pauseEventQueue();
     }
 
-    resumeEventQueue = () => {
-        this.behaveEngine.resumeEventQueue();
+    playEventQueue = () => {
+        this.behaveEngine.playEventQueue();
     }
 
     dispatchCustomEvent = (name: string, vals: any) => {

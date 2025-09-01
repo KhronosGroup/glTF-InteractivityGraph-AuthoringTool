@@ -85,8 +85,9 @@ export interface IBehaveEngine {
     /**
      * Load a Behave graph into the Behave Engine.
      * @param behaveGraph - The Behave graph to be loaded.
+     * @param runGraph - Whether to start executing the event queue immediately after loading the graph. Default is true.
      */
-    loadBehaveGraph: (behaveGraph: any) => void;
+    loadBehaveGraph: (behaveGraph: any, runGraph?: boolean) => void;
 
     /**
      * Pause the event queue processing.
@@ -94,9 +95,9 @@ export interface IBehaveEngine {
     pauseEventQueue: () => void;
 
     /**
-     * Resume the event queue processing.
+     * Start/Resume the event queue processing.
      */
-    resumeEventQueue: () => void;
+    playEventQueue: () => void;
 
     /**
      * Emit a custom event with a specified name and values.

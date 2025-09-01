@@ -249,7 +249,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.eventBus.clearCustomEventListeners();
     }
 
-    public loadBehaveGraph = (behaveGraph: any) => {
+    public loadBehaveGraph = (behaveGraph: any, runGraph = true) => {
         try {
             this.validateGraph(behaveGraph);
         } catch (e) {
@@ -321,8 +321,11 @@ export class BasicBehaveEngine implements IBehaveEngine {
         }
         if (this._timerID !== null) {
             clearTimeout(this._timerID);
+            this._timerID = null;
         }
-        this.executeEventQueue();
+        if (runGraph) {
+            this.executeEventQueue();
+        }
     }
 
     public pauseEventQueue = () => {
@@ -332,7 +335,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         }
     }
 
-    public resumeEventQueue = () => {
+    public playEventQueue = () => {
         if (this._timerID === null) {
             this.executeEventQueue();
         }

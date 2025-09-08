@@ -1,6 +1,6 @@
 
-import { IInteractivityValue } from "../../../types/InteractivityGraph";
-import { standardTypes } from "../../../types/nodes";
+import { IInteractivityValue } from "../../types/InteractivityGraph";
+import { standardTypes } from "../../types/nodes";
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class DebugLog extends BehaveEngineNode {

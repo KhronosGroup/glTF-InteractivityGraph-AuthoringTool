@@ -1,5 +1,5 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
-import {IInteractivityEvent} from "../../../types/InteractivityGraph";
+import {IInteractivityEvent} from "../../types/InteractivityGraph";
 export class Send extends BehaveEngineNode {
     REQUIRED_CONFIGURATIONS = {event: {}}
     _event: number;

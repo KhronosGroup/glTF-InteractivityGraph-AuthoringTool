@@ -1,6 +1,6 @@
-import {IBehaveEngine, IEventQueueItem, IInterpolateAction} from "../IBehaveEngine";
-import {BehaveEngineNode} from "../BehaveEngineNode";
-import {IInteractivityFlow, IInteractivityValue} from "../../types/InteractivityGraph";
+import {IBehaveEngine, IEventQueueItem, IInterpolateAction} from "./IBehaveEngine";
+import {BehaveEngineNode} from "./BehaveEngineNode";
+import {IInteractivityFlow, IInteractivityValue} from "./types/InteractivityGraph";
 
 export abstract class ADecorator implements IBehaveEngine {
 
@@ -15,8 +15,6 @@ export abstract class ADecorator implements IBehaveEngine {
     abstract processExecutingNextNode: (flow: IInteractivityFlow) => void;
     abstract registerKnownPointers: () => void;
     abstract registerJsonPointer: (jsonPtr: string, getterCallback: (path: string) => any, setterCallback: (path: string, value: any) => void, typeName: string, readOnly: boolean) => void;
-    abstract animateProperty: (path: string, easingParameters: any, callback: () => void) => void;
-    abstract animateCubicBezier: (path: string, p1: number[], p2: number[], initialValue: any, targetValue: any, duration: number, valueType: string, callback: () => void) => void;
     abstract getWorld: () => any;
 
     getEventList = () => {
@@ -46,12 +44,24 @@ export abstract class ADecorator implements IBehaveEngine {
     isSlerpPath = (path: string): boolean => {
         return this.behaveEngine.isSlerpPath(path);
     }
+    
+    animateCubicBezier = (path: string, p1: number[], p2: number[], initialValue: any, targetValue: any, duration: number, valueType: string, callback: () => void) => {
+        this.behaveEngine.animateCubicBezier(path, p1, p2, initialValue, targetValue, duration, valueType, callback);
+    }
 
     public get fps () {
         return 1;
     }
-    loadBehaveGraph = (behaveGraph: any) => {
-        this.behaveEngine.loadBehaveGraph(behaveGraph);
+    loadBehaveGraph = (behaveGraph: any, run = true) => {
+        this.behaveEngine.loadBehaveGraph(behaveGraph, run);
+    }
+
+    pauseEventQueue = () => {
+        this.behaveEngine.pauseEventQueue();
+    }
+
+    playEventQueue = () => {
+        this.behaveEngine.playEventQueue();
     }
 
     dispatchCustomEvent = (name: string, vals: any) => {

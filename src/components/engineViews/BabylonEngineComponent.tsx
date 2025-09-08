@@ -18,7 +18,7 @@ import "@babylonjs/loaders/glTF";
 import {Spacer} from "../Spacer";
 import {KHR_interactivity, KHR_INTERACTIVITY_EXTENSION_NAME} from "../../loaderExtensions/KHR_interactivity";
 import {GLTFLoader} from "@babylonjs/loaders/glTF/2.0";
-import {BabylonDecorator} from "../../BasicBehaveEngine/decorators/BabylonDecorator";
+import {BabylonDecorator} from "../../decorators/BabylonDecorator";
 import {BasicBehaveEngine} from "../../BasicBehaveEngine/BasicBehaveEngine";
 import {GLTFFileLoader, GLTFLoaderAnimationStartMode} from "@babylonjs/loaders";
 import { InteractivityGraphContext } from "../../InteractivityGraphContext";

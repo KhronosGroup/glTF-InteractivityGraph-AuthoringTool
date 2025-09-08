@@ -14,8 +14,8 @@ import {RenderIf} from "./RenderIf";
 import {Button, Col, Container, Row, Form} from "react-bootstrap";
 import 'reactflow/dist/style.css';
 import {Spacer} from "./Spacer";
-import {interactivityNodeSpecs, knownDeclarations, standardTypes} from "../types/nodes";
-import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityNode, IInteractivityVariable } from '../types/InteractivityGraph';
+import {interactivityNodeSpecs, knownDeclarations, standardTypes} from "../BasicBehaveEngine/types/nodes";
+import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityNode, IInteractivityVariable } from '../BasicBehaveEngine/types/InteractivityGraph';
 import { InteractivityGraphContext } from '../InteractivityGraphContext';
 
 const nodeTypes = interactivityNodeSpecs.reduce((nodes, node) => {

@@ -1,4 +1,4 @@
-import { IInteractivityValue } from "../../../types/InteractivityGraph";
+import { IInteractivityValue } from "../../types/InteractivityGraph";
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class PointerSet extends BehaveEngineNode {

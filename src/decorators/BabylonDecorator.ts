@@ -1,6 +1,6 @@
-import {ADecorator} from "./ADecorator";
-import {BehaveEngineNode} from "../BehaveEngineNode";
-import {IBehaveEngine} from "../IBehaveEngine";
+import {ADecorator} from "../BasicBehaveEngine/ADecorator";
+import {BehaveEngineNode} from "../BasicBehaveEngine/BehaveEngineNode";
+import {IBehaveEngine} from "../BasicBehaveEngine/IBehaveEngine";
 import {
     AbstractMesh,
     AnimationGroup, Camera, Color3,
@@ -14,17 +14,17 @@ import {
     TransformNode
 } from "@babylonjs/core";
 import {Vector3} from "@babylonjs/core/Maths/math.vector";
-import {cubicBezier, easeFloat, easeFloat3, easeFloat4, linearFloat, slerpFloat4} from "../easingUtils";
+import {cubicBezier, easeFloat, easeFloat3, easeFloat4, linearFloat, slerpFloat4} from "../BasicBehaveEngine/easingUtils";
 import {Scene} from "@babylonjs/core/scene";
-import {OnSelect} from "../nodes/experimental/OnSelect";
+import {OnSelect} from "../BasicBehaveEngine/nodes/experimental/OnSelect";
 import {KHR_materials_variants} from "@babylonjs/loaders/glTF/2.0";
-import {AnimationStart} from "../nodes/animation/AnimationStart";
-import {AnimationStop} from "../nodes/animation/AnimationStop";
-import {AnimationStopAt} from "../nodes/animation/AnimationStopAt";
+import {AnimationStart} from "../BasicBehaveEngine/nodes/animation/AnimationStart";
+import {AnimationStop} from "../BasicBehaveEngine/nodes/animation/AnimationStop";
+import {AnimationStopAt} from "../BasicBehaveEngine/nodes/animation/AnimationStopAt";
 import {Nullable} from "@babylonjs/core/types.js";
-import { OnHoverIn } from "../nodes/experimental/OnHoverIn";
-import { OnHoverOut } from "../nodes/experimental/OnHoverOut";
-import { IInteractivityFlow } from "../../types/InteractivityGraph";
+import { OnHoverIn } from "../BasicBehaveEngine/nodes/experimental/OnHoverIn";
+import { OnHoverOut } from "../BasicBehaveEngine/nodes/experimental/OnHoverOut";
+import { IInteractivityFlow } from "../BasicBehaveEngine/types/InteractivityGraph";
 import * as glMatrix from "gl-matrix";
 
 export class BabylonDecorator extends ADecorator {
@@ -62,8 +62,6 @@ export class BabylonDecorator extends ADecorator {
         // @ts-ignore
         this.behaveEngine.startAnimation = this.startAnimation
 
-        this.behaveEngine.animateProperty = this.animateProperty
-        this.behaveEngine.animateCubicBezier = this.animateCubicBezier;
         this.behaveEngine.getWorld = this.getWorld;
         this.registerKnownPointers();
         this.registerBehaveEngineNode("event/onSelect", OnSelect);
@@ -167,79 +165,6 @@ export class BabylonDecorator extends ADecorator {
 
         const behaveGraph = rootNode.metadata['behaveGraph'];
         this.loadBehaveGraph(behaveGraph);
-    }
-
-    animateProperty = (path: string, easingParameters: any, callback: () => void) => {
-        this.behaveEngine.clearPointerInterpolation(path);
-        const startTime = Date.now();
-
-        const action = async () => {
-            const elapsedDuration = (Date.now() - startTime) / 1000;
-            const t = Math.min(elapsedDuration / easingParameters.easingDuration, 1);
-            if (easingParameters.valueType === "float3") {
-                const v = easeFloat3(t, easingParameters);
-                console.log(v);
-                this.behaveEngine.setPathValue(path, v);
-            } else if (easingParameters.valueType === "float4") {
-                this.behaveEngine.setPathValue(path, easeFloat4(t, easingParameters));
-            } else if (easingParameters.valueType === "float") {
-                this.behaveEngine.setPathValue(path, easeFloat(t, easingParameters));
-            }
-
-            if (elapsedDuration >= easingParameters.easingDuration) {
-                this.behaveEngine.setPathValue(path, easingParameters.targetValue);
-                this.behaveEngine.clearPointerInterpolation(path);
-                callback()
-            }
-        }
-
-        this.behaveEngine.setPointerInterpolationCallback(path, {action: action} );
-    }
-
-    animateCubicBezier = (
-        path: string,
-        p1: number[],
-        p2: number[],
-        initialValue: any,
-        targetValue: any,
-        duration: number,
-        valueType: string,
-        callback: () => void
-    ) => {
-        this.behaveEngine.clearPointerInterpolation(path);
-        const startTime = Date.now();
-
-        const action = async () => {
-            const elapsedDuration = (Date.now() - startTime) / 1000;
-            const t = Math.min(elapsedDuration / duration, 1);
-            const p = cubicBezier(t, {x: 0, y:0}, {x: p1[0], y:p1[1]}, {x: p2[0], y:p2[1]}, {x: 1, y:1});
-            if (valueType === "float3") {
-                const value = [linearFloat(p.y, initialValue[0], targetValue[0]), linearFloat(p.y, initialValue[1], targetValue[1]), linearFloat(p.y, initialValue[2], targetValue[2])]
-                this.behaveEngine.setPathValue(path, value);
-            } else if (valueType === "float4") {
-                if (this.isSlerpPath(path)) {
-                    const value = slerpFloat4(p.y, initialValue, targetValue);
-                    this.behaveEngine.setPathValue(path, value);
-                } else {
-                    const value = [linearFloat(p.y, initialValue[0], targetValue[0]), linearFloat(p.y, initialValue[1], targetValue[1]), linearFloat(p.y, initialValue[2], targetValue[2]), linearFloat(p.y, initialValue[3], targetValue[3])]
-                    this.behaveEngine.setPathValue(path, value);
-                }
-            } else if (valueType === "float") {
-                const value = [linearFloat(p.y, initialValue[0], targetValue[0])]
-                this.behaveEngine.setPathValue(path, value);
-            } else if (valueType == "float2") {
-                const value = [linearFloat(p.y, initialValue[0], targetValue[0]), linearFloat(p.y, initialValue[1], targetValue[1])]
-                this.behaveEngine.setPathValue(path, value);
-            }
-
-            if (elapsedDuration >= duration) {
-                this.behaveEngine.setPathValue(path, targetValue);
-                this.behaveEngine.clearPointerInterpolation(path);
-                callback()
-            }
-        }
-
-        this.behaveEngine.setPointerInterpolationCallback(path, {action: action} );
     }
 
     registerJsonPointer = (jsonPtr: string, getterCallback: (path: string) => any, setterCallback: (path: string, value: any) => void, typeName: string, readOnly: boolean) => {

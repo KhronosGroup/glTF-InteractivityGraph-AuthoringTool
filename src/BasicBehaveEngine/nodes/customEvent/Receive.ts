@@ -1,6 +1,5 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
-import {IInteractivityEvent} from "../../../types/InteractivityGraph";
-import { JsonPtrTrie } from "../../JsonPtrTrie";
+import {IInteractivityEvent} from "../../types/InteractivityGraph";
 
 export class Receive extends BehaveEngineNode {
     REQUIRED_CONFIGURATIONS = {event: {}}

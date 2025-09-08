@@ -13,7 +13,7 @@ export class VariableGet extends BehaveEngineNode {
         this.validateConfigurations(this.configuration);
 
         const {variable} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
-        this._variable = variable;
+        this._variable = variable[0];
     }
 
     override processNode(flowSocket?: string) {

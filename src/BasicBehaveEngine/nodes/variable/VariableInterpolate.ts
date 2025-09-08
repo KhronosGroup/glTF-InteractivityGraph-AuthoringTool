@@ -15,8 +15,8 @@ export class VariableInterpolate extends BehaveEngineNode {
         this.validateConfigurations(this.configuration);
 
         const {variable, useSlerp} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
-        this._variable = variable;
-        this._useSlerp = useSlerp;
+        this._variable = variable[0];
+        this._useSlerp = useSlerp[0];
         this._valueType = this.getType(this.variables[this._variable].type);
     }
 

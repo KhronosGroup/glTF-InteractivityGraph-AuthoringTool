@@ -16,7 +16,7 @@ export class PointerSet extends BehaveEngineNode {
 
         const {pointer, type} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
         this._pointer = pointer[0];
-        this._typeIndex = type;
+        this._typeIndex = type[0];
         const valIds = this.parsePath(this._pointer);
         const generatedVals: Record<string, IInteractivityValue> = {};
         for (let i = 0; i < valIds.length; i++) {

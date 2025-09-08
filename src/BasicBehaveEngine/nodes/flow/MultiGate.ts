@@ -17,8 +17,8 @@ export class MultiGate extends BehaveEngineNode {
 
         const { isRandom, loop} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
         this._numberOutputFlows = Object.keys(this.flows).length;
-        this._isRandom = JSON.parse(isRandom);
-        this._loop = JSON.parse(loop);
+        this._isRandom = isRandom[0];
+        this._loop = loop[0];
         this._orderedOutFlows =  Object.keys(this.flows).sort();
         this._unSeenOutIndexes = Array(this._numberOutputFlows).fill(0).map((_, index) => index);
         this._currentIndex = 0;

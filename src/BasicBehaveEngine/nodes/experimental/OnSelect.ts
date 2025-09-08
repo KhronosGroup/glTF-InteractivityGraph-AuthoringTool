@@ -15,8 +15,8 @@ export class OnSelect extends BehaveEngineNode {
         this.validateConfigurations(this.configuration);
 
         const {nodeIndex, stopPropagation} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
-        this._nodeIndex = nodeIndex;
-        this._stopPropagation = stopPropagation;
+        this._nodeIndex = nodeIndex[0];
+        this._stopPropagation = stopPropagation[0];
 
         this.outValues.selectionPoint = {
             type: this.getTypeIndex('float3'),

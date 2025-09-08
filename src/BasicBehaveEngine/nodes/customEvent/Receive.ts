@@ -14,7 +14,7 @@ export class Receive extends BehaveEngineNode {
         this.validateConfigurations(this.configuration);
 
         const {event} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
-        this._event = event;
+        this._event = event[0];
 
         this.setUpEventListener();
     }
@@ -22,7 +22,7 @@ export class Receive extends BehaveEngineNode {
     setUpEventListener() {
         const {event} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
 
-        const customEventDesc: IInteractivityEvent = this.events[event];
+        const customEventDesc: IInteractivityEvent = this.events[event[0]];
 
         const defaultValues: Record<string, any> = {};
         Object.entries(customEventDesc.values).forEach(([key, value]) => {

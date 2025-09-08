@@ -13,7 +13,7 @@ export class ForLoop extends BehaveEngineNode {
         this.validateConfigurations(this.configuration);
 
         const {initialIndex} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
-        this._initialIndex = initialIndex;
+        this._initialIndex = initialIndex[0];
         this.outValues.index = { value: [this._initialIndex], type: this.getTypeIndex('int')};
     }
 

@@ -11,7 +11,7 @@ export class Send extends BehaveEngineNode {
         this.validateConfigurations(this.configuration);
 
         const {event} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
-        this._event = event;
+        this._event = event[0];
     }
 
     override processNode(flowSocket?: string) {

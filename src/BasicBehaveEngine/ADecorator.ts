@@ -22,7 +22,7 @@ export abstract class ADecorator implements IBehaveEngine {
         this.behaveEngine.hoverOn(nodeIndex, controllerIndex);
     }
 
-    select = (selectedNodeIndex: number, controllerIndex: number, selectionPoint: number[] | undefined, selectionRayOrigin: number[] | undefined) => {
+    select = (selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) => {
         this.behaveEngine.select(selectedNodeIndex, controllerIndex, selectionPoint, selectionRayOrigin);
     }
 

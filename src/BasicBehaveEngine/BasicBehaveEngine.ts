@@ -137,7 +137,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
     private valueEvaluationCache: Map<string, IInteractivityValue>;
     private _timerID: NodeJS.Timeout | null;
     public hoverableNodesIndices: Map<number, IHoverInformation>;
-    public selectableNodesIndices: Map<number, (selectedNodeIndex: number, controllerIndex: number, selectionPoint: number[] | undefined, selectionRayOrigin: number[] | undefined) => void>;
+    public selectableNodesIndices: Map<number, (selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) => void>;
     public lastHoveredNodeIndices: Map<number, number | undefined>;
 
 
@@ -158,7 +158,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this._timerID = null;
         this.hoverableNodesIndices = new Map<number, IHoverInformation>();
         this.lastHoveredNodeIndices = new Map<number, number>();
-        this.selectableNodesIndices = new Map<number, (selectedNodeIndex: number, controllerIndex: number, selectionPoint: number[] | undefined, selectionRayOrigin: number[] | undefined) => void>();
+        this.selectableNodesIndices = new Map<number, (selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) => void>();
 
         this.registerKnownBehaviorNodes();
     }
@@ -175,11 +175,11 @@ export class BasicBehaveEngine implements IBehaveEngine {
         return this._variables;
     }
 
-    public select(selectedNodeIndex: number, controllerIndex: number, selectionPoint: number[] | undefined, selectionRayOrigin: number[] | undefined) {
+    public select(selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) {
         this.alertOnSelect(selectedNodeIndex, controllerIndex, selectionPoint, selectionRayOrigin, selectedNodeIndex);
     }
 
-    public alertOnSelect(selectedNodeIndex: number, controllerIndex: number, selectionPoint: number[] | undefined, selectionRayOrigin: number[] | undefined, currentNodeIndex: number | undefined) {
+    public alertOnSelect(selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined, currentNodeIndex: number | undefined) {
         while (currentNodeIndex !== undefined) {
             const callback = this.selectableNodesIndices.get(currentNodeIndex);
             if (callback !== undefined) {

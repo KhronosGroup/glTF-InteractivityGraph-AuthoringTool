@@ -35,7 +35,7 @@ export class OnSelect extends BehaveEngineNode {
     }
 
     setUpOnSelect() {
-        const callback = (selectedNodeIndex: number, controllerIndex: number, selectionPoint: number[] | undefined, selectionRayOrigin: number[] | undefined) => {
+        const callback = (selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) => {
             this.outValues.selectionPoint = {
                 type: this.getTypeIndex('float3'),
                 value: selectionPoint ?? [NaN, NaN, NaN],

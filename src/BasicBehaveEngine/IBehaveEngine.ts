@@ -55,7 +55,7 @@ export interface IBehaveEngine {
      * @param selectionPoint - The position in world space where the collision happened.
      * @param selectionRayOrigin - The origin of the selection ray.
      */
-    select: (selectedNodeIndex: number, controllerIndex: number, selectionPoint: number[] | undefined, selectionRayOrigin: number[] | undefined) => void;
+    select: (selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) => void;
 
     isSlerpPath: (path: string) => boolean;
 

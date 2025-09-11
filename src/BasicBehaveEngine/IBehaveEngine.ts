@@ -1,6 +1,11 @@
 import { IInteractivityFlow, IInteractivityValue } from "./types/InteractivityGraph";
 import {BehaveEngineNode} from "./BehaveEngineNode";
 
+export interface IHoverInformation {
+    callbackHoverIn?: (selectedNodeIndex: number | undefined, controllerIndex: number, firstCommonHoverNodeIndex: number | undefined) => void;
+    callbackHoverOut?: (selectedNodeIndex: number | undefined, controllerIndex: number, firstCommonHoverNodeIndex: number | undefined) => void;
+}
+
 /**
  * Interface representing the Behave Engine, which provides methods for interacting with a behavioral graph engine.
  */
@@ -28,6 +33,29 @@ export interface IBehaveEngine {
      * Register known pointers to be used within the Behave Engine.
      */
     registerKnownPointers: () => void;
+
+    /**
+     * Get the parent node index of a given node index.
+     * @param nodeIndex - The index of the node whose parent index is to be retrieved.
+     * @returns The parent node index, or undefined if the node has no parent.
+     */
+    getParentNodeIndex: (nodeIndex: number) => number | undefined;
+
+    /**
+     * Trigger a hover event on a specified node index and controller index.
+     * @param nodeIndex The index of the hovered node. If undefined, it indicates no node is being hovered.
+     * @param controllerIndex The index of the controller.
+     */
+    hoverOn: (nodeIndex: number | undefined, controllerIndex: number) => void;
+
+    /**
+     * Trigger a selection event on a specified node index and controller index.
+     * @param selectedNodeIndex - The index of the selected node.
+     * @param controllerIndex - The index of the controller.
+     * @param selectionPoint - The position in world space where the collision happened.
+     * @param selectionRayOrigin - The origin of the selection ray.
+     */
+    select: (selectedNodeIndex: number, controllerIndex: number, selectionPoint: number[] | undefined, selectionRayOrigin: number[] | undefined) => void;
 
     isSlerpPath: (path: string) => boolean;
 

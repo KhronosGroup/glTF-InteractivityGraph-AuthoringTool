@@ -1,4 +1,4 @@
-import {IBehaveEngine, IEventBus, IEventQueueItem, IInterpolateAction} from "./IBehaveEngine";
+import {IBehaveEngine, IEventBus, IEventQueueItem, IHoverInformation, IInterpolateAction} from "./IBehaveEngine";
 import {JsonPtrTrie} from "./JsonPtrTrie";
 import {BehaveEngineNode, IBehaviourNodeProps} from "./BehaveEngineNode";
 import {OnStartNode} from "./nodes/lifecycle/onStart";
@@ -136,6 +136,9 @@ export class BasicBehaveEngine implements IBehaveEngine {
     private _fps: number;
     private valueEvaluationCache: Map<string, IInteractivityValue>;
     private _timerID: NodeJS.Timeout | null;
+    public hoverableNodesIndices: Map<number, IHoverInformation>;
+    public selectableNodesIndices: Map<number, (selectedNodeIndex: number, controllerIndex: number, selectionPoint: number[] | undefined, selectionRayOrigin: number[] | undefined) => void>;
+    public lastHoveredNodeIndices: Map<number, number | undefined>;
 
 
     constructor(fps: number, eventBus: IEventBus) {
@@ -153,6 +156,9 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.nodes = [];
         this.types = [];
         this._timerID = null;
+        this.hoverableNodesIndices = new Map<number, IHoverInformation>();
+        this.lastHoveredNodeIndices = new Map<number, number>();
+        this.selectableNodesIndices = new Map<number, (selectedNodeIndex: number, controllerIndex: number, selectionPoint: number[] | undefined, selectionRayOrigin: number[] | undefined) => void>();
 
         this.registerKnownBehaviorNodes();
     }
@@ -167,6 +173,72 @@ export class BasicBehaveEngine implements IBehaveEngine {
 
     public get variables() {
         return this._variables;
+    }
+
+    public select(selectedNodeIndex: number, controllerIndex: number, selectionPoint: number[] | undefined, selectionRayOrigin: number[] | undefined) {
+        this.alertOnSelect(selectedNodeIndex, controllerIndex, selectionPoint, selectionRayOrigin, selectedNodeIndex);
+    }
+
+    public alertOnSelect(selectedNodeIndex: number, controllerIndex: number, selectionPoint: number[] | undefined, selectionRayOrigin: number[] | undefined, currentNodeIndex: number | undefined) {
+        while (currentNodeIndex !== undefined) {
+            const callback = this.selectableNodesIndices.get(currentNodeIndex);
+            if (callback !== undefined) {
+                callback(selectedNodeIndex, controllerIndex, selectionPoint, selectionRayOrigin);
+                return;
+            }
+            currentNodeIndex = this.getParentNodeIndex(currentNodeIndex);
+        }
+    }
+
+    public hoverOn(nodeIndex: number | undefined, controllerIndex: number) {
+        const lastHoverNodeIndex = this.lastHoveredNodeIndices.get(controllerIndex);
+        if (nodeIndex === lastHoverNodeIndex) {
+            return;
+        }
+        const oldHoverIndicies = new Set();
+        let firstCommonHoverNodeIndex = undefined;
+        if (lastHoverNodeIndex !== undefined && nodeIndex !== undefined) {
+            let currentOldHoverNodeIndex : number | undefined = lastHoverNodeIndex;
+            while (currentOldHoverNodeIndex !== undefined) {
+                oldHoverIndicies.add(currentOldHoverNodeIndex);
+                currentOldHoverNodeIndex = this.getParentNodeIndex(currentOldHoverNodeIndex);
+            }
+            let currentHoverNodeIndex : number | undefined = nodeIndex;
+            while (currentHoverNodeIndex !== undefined) {
+                if (oldHoverIndicies.has(currentHoverNodeIndex)) {
+                    firstCommonHoverNodeIndex = currentHoverNodeIndex;
+                    break;
+                }
+                currentHoverNodeIndex = this.getParentNodeIndex(currentHoverNodeIndex);
+            }
+        }
+
+        this.alertOnHoverOut(nodeIndex, controllerIndex, lastHoverNodeIndex, firstCommonHoverNodeIndex);
+        this.alertOnHoverIn(nodeIndex, controllerIndex, nodeIndex,  firstCommonHoverNodeIndex);
+        
+        this.lastHoveredNodeIndices.set(controllerIndex, nodeIndex);
+    }
+
+    public alertOnHoverIn(selectedNodeIndex: number | undefined, controllerIndex: number, currentHoverNodeIndex: number | undefined, firstCommonHoverNodeIndex: number | undefined) {
+        while (currentHoverNodeIndex !== undefined && currentHoverNodeIndex !== firstCommonHoverNodeIndex) {
+            const hoverInformation = this.hoverableNodesIndices.get(currentHoverNodeIndex);
+            if (hoverInformation?.callbackHoverIn !== undefined) {
+                hoverInformation.callbackHoverIn(selectedNodeIndex, controllerIndex, firstCommonHoverNodeIndex);
+                break;
+            }
+            currentHoverNodeIndex = this.getParentNodeIndex(currentHoverNodeIndex);
+        }
+    }
+
+    public alertOnHoverOut(selectedNodeIndex: number | undefined, controllerIndex: number, currentHoverNodeIndex: number | undefined, firstCommonHoverNodeIndex: number | undefined) {
+        while (currentHoverNodeIndex !== undefined && currentHoverNodeIndex !== firstCommonHoverNodeIndex) {
+            const hoverInformation = this.hoverableNodesIndices.get(currentHoverNodeIndex);
+            if (hoverInformation?.callbackHoverOut !== undefined) {
+                hoverInformation.callbackHoverOut(selectedNodeIndex, controllerIndex, firstCommonHoverNodeIndex);
+                break;
+            }
+            currentHoverNodeIndex = this.getParentNodeIndex(currentHoverNodeIndex);
+        }
     }
 
     public clearScheduledDelays() {
@@ -250,6 +322,9 @@ export class BasicBehaveEngine implements IBehaveEngine {
     }
 
     public loadBehaveGraph = (behaveGraph: any, runGraph = true) => {
+        this.hoverableNodesIndices.clear();
+        this.selectableNodesIndices.clear();
+        this.lastHoveredNodeIndices.clear();
         try {
             this.validateGraph(behaveGraph);
         } catch (e) {
@@ -359,6 +434,11 @@ export class BasicBehaveEngine implements IBehaveEngine {
 
     public getWorld = (): any => {
         //pass
+    }
+
+    public getParentNodeIndex = (nodeIndex: number): number | undefined => {
+        //pass
+        return undefined;
     }
 
     public isSlerpPath = (path: string): boolean => {

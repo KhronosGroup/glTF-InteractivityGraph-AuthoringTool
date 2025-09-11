@@ -16,6 +16,15 @@ export abstract class ADecorator implements IBehaveEngine {
     abstract registerKnownPointers: () => void;
     abstract registerJsonPointer: (jsonPtr: string, getterCallback: (path: string) => any, setterCallback: (path: string, value: any) => void, typeName: string, readOnly: boolean) => void;
     abstract getWorld: () => any;
+    abstract getParentNodeIndex: (nodeIndex: number) => number | undefined;
+
+    hoverOn = (nodeIndex: number | undefined, controllerIndex: number) => {
+        this.behaveEngine.hoverOn(nodeIndex, controllerIndex);
+    }
+
+    select = (selectedNodeIndex: number, controllerIndex: number, selectionPoint: number[] | undefined, selectionRayOrigin: number[] | undefined) => {
+        this.behaveEngine.select(selectedNodeIndex, controllerIndex, selectionPoint, selectionRayOrigin);
+    }
 
     getEventList = () => {
         return this.behaveEngine.getEventList();
@@ -49,11 +58,12 @@ export abstract class ADecorator implements IBehaveEngine {
         this.behaveEngine.animateCubicBezier(path, p1, p2, initialValue, targetValue, duration, valueType, callback);
     }
 
-    public get fps () {
-        return 1;
+    public get fps () : number {
+        return this.behaveEngine.fps;
     }
-    loadBehaveGraph = (behaveGraph: any, run = true) => {
-        this.behaveEngine.loadBehaveGraph(behaveGraph, run);
+
+    loadBehaveGraph = (behaveGraph: any, runGraph = true) => {
+        this.behaveEngine.loadBehaveGraph(behaveGraph, runGraph);
     }
 
     pauseEventQueue = () => {

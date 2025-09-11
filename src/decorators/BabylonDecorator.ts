@@ -40,18 +40,7 @@ export class BabylonDecorator extends ADecorator {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         this.behaveEngine.extractBehaveGraphFromScene = this.extractBehaveGraphFromScene
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        this.behaveEngine.alertParentOnSelect = this.alertParentOnSelect
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        this.behaveEngine.alertParentOnHoverIn = this.alertParentOnHoverIn
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        this.behaveEngine.alertParentOnHoverOut = this.alertParentOnHoverOut
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        this.behaveEngine.addNodeClickedListener = this.addNodeClickedListener
+
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         this.behaveEngine.stopAnimation = this.stopAnimation
@@ -61,6 +50,10 @@ export class BabylonDecorator extends ADecorator {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         this.behaveEngine.startAnimation = this.startAnimation
+
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        this.behaveEngine.getParentNodeIndex = this.getParentNodeIndex;
 
         this.behaveEngine.getWorld = this.getWorld;
         this.registerKnownPointers();
@@ -81,57 +74,33 @@ export class BabylonDecorator extends ADecorator {
                 this.scene.activeCamera,
             );
             const result = this.scene.pickWithRay(ray, (m) => m.metadata == null || m.metadata.compositeHoverability != false);
-            const oldHoveredNode = this.hoveredNode;
-            const oldHoveredNodeIndex = this.hoveredNodeIndex;
-
+            let hitNodeIndex : number | undefined = undefined;
             if (result && result.pickedMesh) {
-                let curNode: Node | null = result.pickedMesh;
-                this.hoveredNode = curNode;
-                const hitNodeIndex = this.world.glTFNodes.findIndex((value: { uniqueId: number; }) => value.uniqueId === result.pickedMesh!.uniqueId);
-                this.hoveredNodeIndex = hitNodeIndex;
-
-                //swim up tree and set hovered to true on parents
-                while (curNode != null) {
-                    curNode.metadata = curNode.metadata || {};
-                    curNode.metadata.shouldExecuteHoverIn = curNode.metadata.hovered == null || curNode.metadata.hovered == false;
-                    curNode.metadata.hovered = true;
-                    curNode.metadata.hoveredNodeIndex = hitNodeIndex;
-                    curNode = curNode.parent;
-                }
-
-                curNode = result.pickedMesh;
-                //swim up unitl find onHoverIn callback
-                while (curNode != null && (curNode.metadata == null || curNode.metadata.onHoverInCallback == null)) {
-                    curNode = curNode.parent;
-                }
-
-                if (curNode != null) {
-                    curNode.metadata.onHoverInCallback(hitNodeIndex, 0);
-                }
-            } else {
-                this.hoveredNode = undefined;
-                this.hoveredNodeIndex = -1;
+                hitNodeIndex = this.world.glTFNodes.findIndex((value: { uniqueId: number; }) => value.uniqueId === result.pickedMesh!.uniqueId);
             }
+            this.hoverOn(hitNodeIndex, 0);
+        });
 
-            if (oldHoveredNode && oldHoveredNode.uniqueId !== (this.hoveredNode?.uniqueId ?? null)) {
-                let curNode = oldHoveredNode;
+        this.scene.onPointerObservable.add(async (pointerInfo) => {
+            if (pointerInfo.type === PointerEventTypes.POINTERPICK) {
+                const ray = this.scene.createPickingRay(
+                    this.scene.pointerX,
+                    this.scene.pointerY,
+                    Matrix.Identity(),
+                    this.scene.activeCamera,
+                );
 
-                //swim up tree and set hovered to false on parents
-                while (curNode != null) {
-                    curNode.metadata.shouldExecuteHoverOut = curNode.metadata.hovered === true && curNode.metadata.hoveredNodeIndex === oldHoveredNodeIndex;
-                    curNode.metadata.hovered = false;
-                    curNode.metadata.hoveredNodeIndex = -1;
-                    curNode = curNode.parent;
+                const hit = this.scene.pickWithRay(ray);
+                if (hit == null || hit.pickedMesh == null) {
+                    return;
                 }
-
-                curNode = oldHoveredNode;
-                //swim up unitl find onHoverout callback
-                while (curNode != null && (curNode.metadata == null || curNode.metadata.onHoverOutCallback == null)) {
-                    curNode = curNode.parent;
-                }
-                if (curNode != null) {
-                    curNode.metadata.onHoverOutCallback(oldHoveredNodeIndex, 0);
-                }
+                let pos = [hit.pickedMesh.position.x, hit.pickedMesh.position.y, hit.pickedMesh.position.z];
+                    if (hit.pickedPoint != null) {
+                        // Babylon.js uses a left-handed coordinate system, so we negate the x value to convert to right-handed
+                        pos = [-hit.pickedPoint.x, hit.pickedPoint.y, hit.pickedPoint.z];
+                    }
+                const hitNodeIndex = this.world.glTFNodes.findIndex((value: { uniqueId: number; }) => value.uniqueId === hit.pickedMesh!.uniqueId);
+                this.select(hitNodeIndex, 0, pos, [-ray.origin.x, ray.origin.y, ray.origin.z]);
             }
         });
 
@@ -155,6 +124,15 @@ export class BabylonDecorator extends ADecorator {
 
     getWorld = (): any => {
         return this.world;
+    }
+
+    getParentNodeIndex = (nodeIndex: number) => {
+        const node = this.world.glTFNodes[nodeIndex];
+        if (!node || !node.parent) {
+            return undefined;
+        }
+        const parentNodeIndex = this.world.glTFNodes.findIndex((value: { uniqueId: number; }) => value.uniqueId === node.parent.uniqueId);
+        return parentNodeIndex !== -1 ? parentNodeIndex : undefined;
     }
 
     public loadBehaveGraphFromRootNode(rootNode: TransformNode): void {
@@ -814,75 +792,6 @@ export class BabylonDecorator extends ADecorator {
 
         return this.scene.metadata.behaveGraph;
     };
-
-    public addNodeClickedListener = (nodeIndex: number, callback: (selectionPoint: number[], selectedNodeIndex: number, controllerIndex: number, selectionRayOrigin: number[]) => void): void => {
-        this.world.glTFNodes[nodeIndex].metadata = this.world.glTFNodes[nodeIndex].metadata || {};
-        this.world.glTFNodes[nodeIndex].metadata.onSelectCallback = callback;
-
-        this.scene.onPointerObservable.add(async (pointerInfo) => {
-            if (pointerInfo.type === PointerEventTypes.POINTERPICK) {
-                const ray = this.scene.createPickingRay(
-                    this.scene.pointerX,
-                    this.scene.pointerY,
-                    Matrix.Identity(),
-                    this.scene.activeCamera,
-                );
-
-                const hit = this.scene.pickWithRay(ray);
-                if (hit == null || hit.pickedMesh == null) {
-                    return;
-                }
-                const targetMesh: AbstractMesh = this.world.glTFNodes[nodeIndex];
-                if (targetMesh !== hit.pickedMesh && targetMesh.uniqueId !== hit.pickedMesh.uniqueId && (!targetMesh.getChildMeshes(false).includes(hit.pickedMesh))) {
-                    return;
-                } else if (targetMesh.getChildMeshes(false).includes(hit.pickedMesh) && hit.pickedMesh.metadata.onSelectCallback != null) {
-                    return;
-                } else {
-                    let pos = [hit.pickedMesh.position.x, hit.pickedMesh.position.y, hit.pickedMesh.position.z];
-                    if (hit.pickedPoint != null) {
-                        // Babylon.js uses a left-handed coordinate system, so we negate the x value to convert to right-handed
-                        pos = [-hit.pickedPoint.x, hit.pickedPoint.y, hit.pickedPoint.z];
-                    }
-                    const hitNodeIndex = this.world.glTFNodes.findIndex((value: { uniqueId: number; }) => value.uniqueId === hit.pickedMesh!.uniqueId);
-                    
-                    callback(pos, hitNodeIndex, 0, [-ray.origin.x, ray.origin.y, ray.origin.z]);
-                }
-            }
-        });
-    }
-
-    public alertParentOnSelect = (selectionPoint: number[], selectedNodeIndex: number, controllerIndex: number, selectionRayOrigin: number[], childNodeIndex: number): void => {
-        let curNode = this.world.glTFNodes[childNodeIndex].parent;
-        while (curNode !== null && (curNode.metadata == null || curNode.metadata.onSelectCallback == null)) {
-            curNode = curNode.parent;
-        }
-
-        if (curNode !== null) {
-            curNode.metadata.onSelectCallback(selectionPoint, selectedNodeIndex, controllerIndex, selectionRayOrigin);
-        }
-    }
-
-    public alertParentOnHoverIn = (selectedNodeIndex: number, controllerIndex: number, childNodeIndex: number): void => {
-        let curNode = this.world.glTFNodes[childNodeIndex].parent;
-        while (curNode !== null && (curNode.metadata == null || curNode.metadata.onHoverInCallback == null)) {
-            curNode = curNode.parent;
-        }
-
-        if (curNode !== null) {
-            curNode.metadata.onHoverInCallback(selectedNodeIndex, controllerIndex);
-        }
-    }
-
-    public alertParentOnHoverOut = (selectedNodeIndex: number, controllerIndex: number, childNodeIndex: number): void => {
-        let curNode = this.world.glTFNodes[childNodeIndex].parent;
-        while (curNode !== null && (curNode.metadata == null || curNode.metadata.onHoverOutCallback == null)) {
-            curNode = curNode.parent;
-        }
-
-        if (curNode !== null) {
-            curNode.metadata.onHoverOutCallback(selectedNodeIndex, controllerIndex);
-        }
-    }
 
     public startAnimation = (animation: number, startTime: number, endTime: number, speed: number,  callback: () => void): void => {
         // const fps = this.behaveEngine.fps;

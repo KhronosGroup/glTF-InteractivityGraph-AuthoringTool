@@ -15,6 +15,7 @@ export class LoggingDecorator extends ADecorator {
         this.behaveEngine.processExecutingNextNode = this.processExecutingNextNode;
         this.behaveEngine.processNodeStarted = this.processNodeStarted;
         this.behaveEngine.getWorld = this.getWorld;
+        this.behaveEngine.getParentNodeIndex = this.getParentNodeIndex;
 
         this.registerKnownPointers();
     }
@@ -34,6 +35,10 @@ export class LoggingDecorator extends ADecorator {
     getWorld = (): any => {
         console.log(this.world)
         return this.world;
+    }
+
+    getParentNodeIndex = (nodeIndex: number): number | undefined => {
+        return undefined;
     }
 
     registerJsonPointer = (jsonPtr: string, getterCallback: (path: string) => any, setterCallback: (path: string, value: any) => void, typeName: string, readOnly: boolean) => {

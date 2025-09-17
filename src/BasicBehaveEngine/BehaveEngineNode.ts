@@ -226,7 +226,10 @@ export class BehaveEngineNode {
             case "float3":
                 return [NaN, NaN, NaN];
             case "float4":
+            case "float2x2":
                 return [NaN, NaN, NaN, NaN];
+            case "float3x3":
+                return [NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN];
             case "float4x4":
                 return [NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN];
             default:

@@ -18,103 +18,103 @@ export abstract class ADecorator implements IBehaveEngine {
     abstract getWorld: () => any;
     abstract getParentNodeIndex: (nodeIndex: number) => number | undefined;
 
-    hoverOn = (nodeIndex: number | undefined, controllerIndex: number) => {
+    hoverOn(nodeIndex: number | undefined, controllerIndex: number) {
         this.behaveEngine.hoverOn(nodeIndex, controllerIndex);
     }
 
-    select = (selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) => {
+    select(selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) {
         this.behaveEngine.select(selectedNodeIndex, controllerIndex, selectionPoint, selectionRayOrigin);
     }
 
-    getEventList = () => {
+    getEventList() {
         return this.behaveEngine.getEventList();
     }
 
-    clearEventList = () => {
+    clearEventList() {
         this.behaveEngine.clearEventList();
     }
 
-    addEvent = (event: IEventQueueItem) => {
+    addEvent(event: IEventQueueItem) {
         this.behaveEngine.addEvent(event);
     }
 
-    addCustomEventListener = (name: string, func: any) => {
+    addCustomEventListener(name: string, func: any) {
         this.behaveEngine.addCustomEventListener(name, func);
     }
 
-    clearCustomEventListeners = () => {
+    clearCustomEventListeners() {
         this.behaveEngine.clearCustomEventListeners();
     }
 
-    registerBehaveEngineNode = (type: string, behaveEngineNode: typeof BehaveEngineNode) => {
+    registerBehaveEngineNode(type: string, behaveEngineNode: typeof BehaveEngineNode) {
         this.behaveEngine.registerBehaveEngineNode(type, behaveEngineNode);
     }
 
-    isSlerpPath = (path: string): boolean => {
+    isSlerpPath(path: string): boolean {
         return this.behaveEngine.isSlerpPath(path);
     }
-    
-    animateCubicBezier = (path: string, p1: number[], p2: number[], initialValue: any, targetValue: any, duration: number, valueType: string, callback: () => void) => {
+
+    animateCubicBezier(path: string, p1: number[], p2: number[], initialValue: any, targetValue: any, duration: number, valueType: string, callback: () => void) {
         this.behaveEngine.animateCubicBezier(path, p1, p2, initialValue, targetValue, duration, valueType, callback);
     }
 
-    public get fps () : number {
+    public get fps(): number {
         return this.behaveEngine.fps;
     }
 
-    loadBehaveGraph = (behaveGraph: any, runGraph = true) => {
+    loadBehaveGraph(behaveGraph: any, runGraph = true) {
         this.behaveEngine.loadBehaveGraph(behaveGraph, runGraph);
     }
 
-    pauseEventQueue = () => {
+    pauseEventQueue() {
         this.behaveEngine.pauseEventQueue();
     }
 
-    playEventQueue = () => {
+    playEventQueue() {
         this.behaveEngine.playEventQueue();
     }
 
-    dispatchCustomEvent = (name: string, vals: any) => {
+    dispatchCustomEvent(name: string, vals: any) {
         this.behaveEngine.dispatchCustomEvent(name, vals);
     }
 
-    setPathValue = (path: string, targetValue: any) => {
+    setPathValue(path: string, targetValue: any) {
         this.behaveEngine.setPathValue(path, targetValue);
     }
 
-    getPathValue = (path: string) => {
+    getPathValue(path: string) {
         this.behaveEngine.getPathValue(path);
     }
 
-    getPathtypeName = (path: string) => {
+    getPathtypeName(path: string) {
         this.behaveEngine.getPathtypeName(path);
     }
 
-    addEntryToValueEvaluationCache = (key: string, val: IInteractivityValue): void  => {
+    addEntryToValueEvaluationCache(key: string, val: IInteractivityValue): void {
         this.behaveEngine.addEntryToValueEvaluationCache(key, val);
     }
 
-    clearValueEvaluationCache = (): void => {
+    clearValueEvaluationCache(): void {
         this.behaveEngine.clearValueEvaluationCache();
     }
 
-    getValueEvaluationCacheValue = (key: string): IInteractivityValue | undefined => {
+    getValueEvaluationCacheValue(key: string): IInteractivityValue | undefined {
         return this.behaveEngine.getValueEvaluationCacheValue(key);
     }
 
-    setPointerInterpolationCallback = (path: string, action: IInterpolateAction) => {
+    setPointerInterpolationCallback(path: string, action: IInterpolateAction) {
         this.behaveEngine.setPointerInterpolationCallback(path, action);
     }
 
-    clearPointerInterpolation = (path: string) => {
+    clearPointerInterpolation(path: string) {
         this.behaveEngine.clearPointerInterpolation(path);
     }
 
-    setVariableInterpolationCallback = (variable: number, action: IInterpolateAction) => {
+    setVariableInterpolationCallback(variable: number, action: IInterpolateAction) {
         this.behaveEngine.setVariableInterpolationCallback(variable, action);
     }
 
-    clearVariableInterpolation = (variable: number) => {
+    clearVariableInterpolation(variable: number) {
         this.behaveEngine.clearVariableInterpolation(variable);
     }
 }

@@ -73,22 +73,35 @@ export class Receive extends BehaveEngineNode {
                 return this.parseMaybeJSON(val[0])
             case "float4":
                 return this.parseMaybeJSON(val[0])
+            case "float2x2":
+                return this.parseMaybeJSON(val[0], 2);
+            case "float3x3":
+                return this.parseMaybeJSON(val[0], 3);
             case "float4x4":
-                return this.parseMaybeJSON(val[0])
+                return this.parseMaybeJSON(val[0], 4);
             default:
                 return val
         }
     }
 
-    parseMaybeJSON(input: any) {
-        if (typeof input === "string") {
+    parseMaybeJSON(input: any, matrixWidth?: number): any {
+        let inputCopy = JSON.parse(JSON.stringify(input));
+        if (typeof inputCopy === "string") {
           try {
-            return JSON.parse(input);
+            inputCopy = JSON.parse(inputCopy);
           } catch (e) {
             throw new Error("Invalid JSON string");
           }
         }
+        if (matrixWidth && Array.isArray(inputCopy) && inputCopy.length === matrixWidth * matrixWidth) {
+            // If the input is a flat array with the correct length, convert it to a 2D array
+            const matrix: number[][] = [];
+            for (let i = 0; i < matrixWidth; i++) {
+                matrix[i] = inputCopy.slice(i * matrixWidth, (i + 1) * matrixWidth);
+            }
+            return matrix;
+        }
         // Already an object/array/etc.
-        return input;
+        return inputCopy;
       }
 }

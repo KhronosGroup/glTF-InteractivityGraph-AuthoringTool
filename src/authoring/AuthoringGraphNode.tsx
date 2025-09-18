@@ -3,8 +3,8 @@ import {useCallback, useContext, useEffect, useState} from "react";
 import { Handle, Position} from "reactflow";
 
 import {RenderIf} from "../components/RenderIf";
-import { IInteractivityFlow, IInteractivityValue, IInteractivityNode, IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityVariable, IInteractivityValueType } from "../types/InteractivityGraph";
-import { anyType, interactivityNodeSpecs, standardTypes } from "../types/nodes";
+import { IInteractivityFlow, IInteractivityValue, IInteractivityNode, IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityVariable, IInteractivityValueType } from "../BasicBehaveEngine/types/InteractivityGraph";
+import { anyType, interactivityNodeSpecs, standardTypes } from "../BasicBehaveEngine/types/nodes";
 import { InteractivityGraphContext } from "../InteractivityGraphContext";
 
 require("../css/flowNodes.css");
@@ -31,7 +31,6 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     const {graph} = useContext(InteractivityGraphContext);
     const uid = props.data.uid;
     const [node, setNode] = useState<IInteractivityNode | null>(null);
-    console.log(props)
 
     useEffect(() => {
         const node: IInteractivityNode = graph.nodes.find(node => node.uid === uid)!;
@@ -495,7 +494,6 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                         {/*inputValues*/}
                         <div>
                             {Object.entries(inputValues).map(([socket, value]) => {
-                                console.log(value)
                                 return (
                                     <div key={socket} className={"flow-node-socket"}>
                                         <label htmlFor={socket}>{socket}</label>

@@ -107,7 +107,7 @@ import { InverseHyperbolicTangent } from "./nodes/math/hyperbolic/InverseHyperbo
 import { Exponential } from "./nodes/math/exponential/Exponential";
 import { HyperbolicCosine } from "./nodes/math/hyperbolic/HyperbolicCosine";
 import { HyperbolicTangent } from "./nodes/math/hyperbolic/HyperbolicTangent";
-import { IInteractivityVariable, IInteractivityEvent, IInteractivityValue, IInteractivityFlow, IInteractivityGraph, IInteractivityNode, IInteractivityValueType, IInteractivityDeclaration } from "../types/InteractivityGraph";
+import { IInteractivityVariable, IInteractivityEvent, IInteractivityValue, IInteractivityFlow, IInteractivityNode, IInteractivityValueType, IInteractivityDeclaration } from "./types/InteractivityGraph";
 import { VariableInterpolate } from "./nodes/variable/VariableInterpolate";
 import { NoOpNode } from "./nodes/experimental/NoOp";
 import { MatDecompose } from "./nodes/math/matrix/matDecompose";
@@ -117,6 +117,7 @@ import { MathSwitch } from "./nodes/math/special/MathSwitch";
 import { Inverse } from "./nodes/math/matrix/Inverse";
 import { DebugLog } from "./nodes/experimental/Debug";
 import { QuatAngleBetween } from "./nodes/math/quaternion/QuatAngleBetween";
+import { cubicBezier, linearFloat, slerpFloat4 } from "./easingUtils";
 
 
 export class BasicBehaveEngine implements IBehaveEngine {
@@ -134,6 +135,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
     private jsonPtrTrie: JsonPtrTrie;
     private _fps: number;
     private valueEvaluationCache: Map<string, IInteractivityValue>;
+    private _timerID: NodeJS.Timeout | null;
 
 
     constructor(fps: number, eventBus: IEventBus) {
@@ -150,6 +152,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this._scheduledDelays = [];
         this.nodes = [];
         this.types = [];
+        this._timerID = null;
 
         this.registerKnownBehaviorNodes();
     }
@@ -246,7 +249,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.eventBus.clearCustomEventListeners();
     }
 
-    public loadBehaveGraph = (behaveGraph: any) => {
+    public loadBehaveGraph = (behaveGraph: any, runGraph = true) => {
         try {
             this.validateGraph(behaveGraph);
         } catch (e) {
@@ -257,6 +260,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this._variables = behaveGraph.variables;
         this.events = behaveGraph.events;
         this.types = behaveGraph.types;
+        this.idToBehaviourNodeMap.clear();
 
         const defaultProps = {
             idToBehaviourNodeMap: this.idToBehaviourNodeMap,
@@ -315,8 +319,26 @@ export class BasicBehaveEngine implements IBehaveEngine {
             const startFlow: IInteractivityFlow = {node: startNodeIndex, socket: "start"}
             this.addEventToWorkQueue(startFlow);
         }
+        if (this._timerID !== null) {
+            clearTimeout(this._timerID);
+            this._timerID = null;
+        }
+        if (runGraph) {
+            this.executeEventQueue();
+        }
+    }
 
-        this.executeEventQueue();
+    public pauseEventQueue = () => {
+        if (this._timerID !== null) {
+            clearTimeout(this._timerID);
+            this._timerID = null;
+        }
+    }
+
+    public playEventQueue = () => {
+        if (this._timerID === null) {
+            this.executeEventQueue();
+        }
     }
 
     public processNodeStarted = (behaveEngineNode: BehaveEngineNode) => {
@@ -347,10 +369,6 @@ export class BasicBehaveEngine implements IBehaveEngine {
         }
     }
 
-    public animateProperty = (path: string, easingParameters: any, callback: () => void) => {
-        //pass
-    }
-
     public animateCubicBezier = (
         path: string,
         p1: number[],
@@ -361,7 +379,40 @@ export class BasicBehaveEngine implements IBehaveEngine {
         valueType: string,
         callback: () => void
     ) => {
-        //pass
+        this.clearPointerInterpolation(path);
+        const startTime = performance.now();
+
+        const action = async () => {
+            const elapsedDuration = (performance.now() - startTime) / 1000;
+            const t = Math.min(elapsedDuration / duration, 1);
+            const p = cubicBezier(t, {x: 0, y:0}, {x: p1[0], y:p1[1]}, {x: p2[0], y:p2[1]}, {x: 1, y:1});
+            if (valueType === "float3") {
+                const value = [linearFloat(p.y, initialValue[0], targetValue[0]), linearFloat(p.y, initialValue[1], targetValue[1]), linearFloat(p.y, initialValue[2], targetValue[2])];
+                this.setPathValue(path, value);
+            } else if (valueType === "float4") {
+                if (this.isSlerpPath(path)) {
+                    const value = slerpFloat4(p.y, initialValue, targetValue);
+                    this.setPathValue(path, value);
+                } else {
+                    const value = [linearFloat(p.y, initialValue[0], targetValue[0]), linearFloat(p.y, initialValue[1], targetValue[1]), linearFloat(p.y, initialValue[2], targetValue[2]), linearFloat(p.y, initialValue[3], targetValue[3])];
+                    this.setPathValue(path, value);
+                }
+            } else if (valueType === "float") {
+                const value = [linearFloat(p.y, initialValue[0], targetValue[0])];
+                this.setPathValue(path, value);
+            } else if (valueType == "float2") {
+                const value = [linearFloat(p.y, initialValue[0], targetValue[0]), linearFloat(p.y, initialValue[1], targetValue[1])];
+                this.setPathValue(path, value);
+            }
+
+            if (elapsedDuration >= duration) {
+                this.setPathValue(path, targetValue);
+                this.clearPointerInterpolation(path);
+                callback();
+            }
+        };
+
+        this.setPointerInterpolationCallback(path, {action: action} );
     }
 
     private registerKnownBehaviorNodes = () => {
@@ -549,8 +600,10 @@ export class BasicBehaveEngine implements IBehaveEngine {
 
             tickNode.processNode()
         }
-        
-        setTimeout(() => {
+        if (this._timerID !== null) {
+            clearTimeout(this._timerID);
+        }
+        this._timerID = setTimeout(() => {
             this.executeEventQueue()
         }, 1000 / this.fps)
     }

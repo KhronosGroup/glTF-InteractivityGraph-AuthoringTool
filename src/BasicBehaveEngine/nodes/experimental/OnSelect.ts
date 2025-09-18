@@ -35,18 +35,18 @@ export class OnSelect extends BehaveEngineNode {
     }
 
     setUpOnSelect() {
-        const callback = (selectionPoint: number[], selectedNodeIndex: number, controllerIndex: number, selectionRayOrigin: number[]) => {
+        const callback = (selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) => {
             this.outValues.selectionPoint = {
                 type: this.getTypeIndex('float3'),
-                value: selectionPoint,
+                value: selectionPoint ?? [NaN, NaN, NaN],
             };
             this.outValues.selectionRayOrigin = {
                 type: this.getTypeIndex('float3'),
-                value: selectionRayOrigin,
+                value: selectionRayOrigin ?? [NaN, NaN, NaN],
             };
             this.outValues.selectedNodeIndex = {
                 type: this.getTypeIndex('int'),
-                value: [selectedNodeIndex],
+                value: [selectedNodeIndex ?? -1],
             };
             this.outValues.controllerIndex = {
                 type: this.getTypeIndex('int'),
@@ -58,14 +58,10 @@ export class OnSelect extends BehaveEngineNode {
             this.addEventToWorkQueue(this.flows.out);
 
             if (!this._stopPropagation) {
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-ignore
-                this.graphEngine.alertParentOnSelect(selectionPoint, selectedNodeIndex, controllerIndex, selectionRayOrigin, this._nodeIndex);
+                const parentNodeIndex = this.graphEngine.getParentNodeIndex(this._nodeIndex);
+                this.graphEngine.alertOnSelect(selectedNodeIndex, controllerIndex, selectionPoint, selectionRayOrigin, parentNodeIndex);
             }
         }
-
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        this.graphEngine.addNodeClickedListener(this._nodeIndex, callback)
+        this.graphEngine.selectableNodesIndices.set(this._nodeIndex, callback);
     }
 }

@@ -27,12 +27,12 @@ export class OnHoverIn extends BehaveEngineNode {
     }
 
     setUpOnHoverIn() {
-        const callback = (selectedNodeIndex: number, controllerIndex: number) => {
-            if (this.graphEngine.getWorld().glTFNodes[this._nodeIndex].metadata.shouldExecuteHoverIn) {
-                this.graphEngine.getWorld().glTFNodes[this._nodeIndex].metadata.shouldExecuteHoverIn = false;
+        const callback = (selectedNodeIndex: number | undefined, controllerIndex: number, firstCommonHoverNodeIndex: number | undefined) => {
+            const hoverInformation = this.graphEngine.hoverableNodesIndices.get(this._nodeIndex);
+            if (hoverInformation) {
                 this.outValues.selectedNodeIndex = {
                     type: this.getTypeIndex('int'),
-                    value: [selectedNodeIndex],
+                    value: [selectedNodeIndex ?? -1],
                 };
                 this.outValues.controllerIndex = {
                     type: this.getTypeIndex('int'),
@@ -43,12 +43,15 @@ export class OnHoverIn extends BehaveEngineNode {
             }
 
             if (!this._stopPropagation) {
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-ignore
-                this.graphEngine.alertParentOnHoverIn(selectedNodeIndex, controllerIndex, this._nodeIndex);
+                const parentNodeIndex = this.graphEngine.getParentNodeIndex(this._nodeIndex);
+                this.graphEngine.alertOnHoverIn(selectedNodeIndex, controllerIndex, parentNodeIndex, firstCommonHoverNodeIndex);
             }
         }
-
-        this.graphEngine.getWorld().glTFNodes[this._nodeIndex].metadata.onHoverInCallback = callback;
+        const hoverInformation = this.graphEngine.hoverableNodesIndices.get(this._nodeIndex);
+        if (hoverInformation) {
+            hoverInformation.callbackHoverIn = callback;
+        } else {
+            this.graphEngine.hoverableNodesIndices.set(this._nodeIndex, { callbackHoverIn: callback });
+        }
     }
 }

@@ -266,15 +266,19 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
                     socket.type = getUpdatedTypeIndex(json.types[socket.type]);
                 }
             }
+        } 
+        
+        if (graph.variables) {
+            for (const variable of graph.variables) {
+                variable.type = getUpdatedTypeIndex(json.types[variable.type]);
+            }
         }
 
-        for (const variable of graph.variables) {
-            variable.type = getUpdatedTypeIndex(json.types[variable.type]);
-        }
-
-        for (const event of graph.events) {
-          for (const socket of Object.values(event.values)) {
-            socket.type = getUpdatedTypeIndex(json.types[socket.type]);
+        if (graph.events) {
+          for (const event of graph.events) {
+            for (const socket of Object.values(event.values)) {
+              socket.type = getUpdatedTypeIndex(json.types[socket.type]);
+            }
           }
         }
 
@@ -352,9 +356,9 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
     const getExecutableGraph = () => {
         const graph: any = { declarations: [], nodes: [], variables: [], events: [], types: standardTypes};
 
-        graph.events = [...graphRef.current.events];
-        graph.variables = [...graphRef.current.variables];
-        graph.declarations = [...graphRef.current.declarations];
+        graph.events = [...graphRef.current.events || []];
+        graph.variables = [...graphRef.current.variables || []];
+        graph.declarations = [...graphRef.current.declarations || []];
         for (const node of graphRef.current.nodes) {
 
             // Create stripped values object without typeOptions

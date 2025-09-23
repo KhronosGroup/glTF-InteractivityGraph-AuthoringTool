@@ -181,13 +181,8 @@ export class BasicBehaveEngine implements IBehaveEngine {
     }
 
     public alertOnSelect(selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined, currentNodeIndex: number | undefined) {
-        console.log("ALERT ON SELECT", selectedNodeIndex)
         while (currentNodeIndex !== undefined) {
-            console.log("CURRENT NODE INDEX", currentNodeIndex)
-            console.log("SELECTABLE NODES INDICES", this.selectableNodesIndices)
-            // console.log("CALLBACK", this.selectableNodesIndices.get('2'))
             const callback = this.selectableNodesIndices.get(currentNodeIndex);
-            console.log("CALLBACK", callback)
             if (callback !== undefined) {
                 callback(selectedNodeIndex, controllerIndex, selectionPoint, selectionRayOrigin);
                 return;

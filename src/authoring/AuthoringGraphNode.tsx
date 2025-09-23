@@ -1,9 +1,8 @@
-import * as React from "react";
 import {useCallback, useContext, useEffect, useState} from "react";
 import { Handle, Position} from "reactflow";
 
 import {RenderIf} from "../components/RenderIf";
-import { IInteractivityFlow, IInteractivityValue, IInteractivityNode, IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityVariable, IInteractivityValueType } from "../BasicBehaveEngine/types/InteractivityGraph";
+import { IInteractivityFlow, IInteractivityValue, IInteractivityNode, IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityVariable } from "../BasicBehaveEngine/types/InteractivityGraph";
 import { anyType, interactivityNodeSpecs, standardTypes } from "../BasicBehaveEngine/types/nodes";
 import { InteractivityGraphContext } from "../InteractivityGraphContext";
 
@@ -223,6 +222,39 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                 inputValuesToSet["value"] = valueToSet;
             } else if (nodeType === "variable/get") {
                 outputValuesToSet["value"] = valueToSet;
+            }
+        }
+        if (updatedConfiguration.variables !== undefined) {
+            console.log(updatedConfiguration);
+            let variableIds = updatedConfiguration.variables.value || "";
+            console.log(variableIds)
+            // Allow input formats in the UI, such as:
+            // - 0,1, (while typing)
+            // - [0,1,2 (while typing)
+            // - [0,1,2]
+            // - 0,1,2
+            if (typeof variableIds[0] === "string") {
+                let variablesIdString = variableIds[0];
+                if (variablesIdString.endsWith(",")) variablesIdString = variablesIdString.slice(0, -1);
+                variablesIdString = variablesIdString.replace(/\s/g, '');
+                if (!variablesIdString.startsWith("[")) variablesIdString = `[${variablesIdString}`;
+                if (!variablesIdString.endsWith("]")) variablesIdString = `${variablesIdString}]`;
+                try {
+                    console.log("Variable ID string", variablesIdString)
+                    variableIds = JSON.parse(variablesIdString);
+                } catch (e) {
+                    console.error("Couldn't parse configuration array string: ", variablesIdString, e);
+                    variableIds = [];
+                }
+            }
+            for (const variableId of variableIds) {
+                if (variableId == null) {
+                    continue
+                }
+                const v: IInteractivityVariable = graph.variables[variableId];
+                const valueToSet: IInteractivityValue =  {typeOptions: [v.type], type: v.type, value: [undefined]}
+
+                inputValuesToSet[variableId] = valueToSet;
             }
         }
         if (updatedConfiguration.type !== undefined) {

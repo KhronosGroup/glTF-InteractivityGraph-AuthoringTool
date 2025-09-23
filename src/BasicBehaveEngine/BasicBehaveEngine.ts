@@ -118,6 +118,7 @@ import { Inverse } from "./nodes/math/matrix/Inverse";
 import { DebugLog } from "./nodes/experimental/Debug";
 import { QuatAngleBetween } from "./nodes/math/quaternion/QuatAngleBetween";
 import { cubicBezier, linearFloat, slerpFloat4 } from "./easingUtils";
+import { VariableSetMultiple } from "./nodes/variable/VariableSetMultiple";
 
 
 export class BasicBehaveEngine implements IBehaveEngine {
@@ -518,6 +519,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("event/send", Send);
         this.registerBehaveEngineNode("variable/get", VariableGet);
         this.registerBehaveEngineNode("variable/set", VariableSet);
+        this.registerBehaveEngineNode("variable/setMultiple", VariableSetMultiple);
         this.registerBehaveEngineNode("variable/interpolate", VariableInterpolate);
         this.registerBehaveEngineNode("math/E", Euler);
         this.registerBehaveEngineNode("math/Inf", Inf);

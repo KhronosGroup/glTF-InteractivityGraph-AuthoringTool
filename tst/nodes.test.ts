@@ -18,6 +18,7 @@ import {WaitAll} from "../src/BasicBehaveEngine/nodes/flow/WaitAll";
 import {MultiGate} from "../src/BasicBehaveEngine/nodes/flow/MultiGate";
 import {Throttle} from "../src/BasicBehaveEngine/nodes/flow/Throttle";
 import {VariableGet} from "../src/BasicBehaveEngine/nodes/variable/VariableGet";
+import {VariableSetMultiple} from "../src/BasicBehaveEngine/nodes/variable/VariableSetMultiple";
 import {Euler} from "../src/BasicBehaveEngine/nodes/math/constants/Euler";
 import {Pi} from "../src/BasicBehaveEngine/nodes/math/constants/Pi";
 import {AbsoluteValue} from "../src/BasicBehaveEngine/nodes/math/arithmetic/AbsoluteValue";
@@ -50,7 +51,7 @@ import {Log10} from "../src/BasicBehaveEngine/nodes/math/exponential/Log10";
 import {CubeRoot} from "../src/BasicBehaveEngine/nodes/math/exponential/CubeRoot";
 import {SquareRoot} from "../src/BasicBehaveEngine/nodes/math/exponential/SquareRoot";
 import {Power} from "../src/BasicBehaveEngine/nodes/math/exponential/Power";
-import {standardTypes} from "../src/types/nodes";
+import {standardTypes} from "../src/BasicBehaveEngine/types/nodes";
 import {Clamp} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Clamp";
 import {Saturate} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Saturate";
 import {Negate} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Negate";
@@ -112,7 +113,7 @@ import {Extract2x2} from "../src/BasicBehaveEngine/nodes/math/extract/Extract2x2
 import {Extract3x3} from "../src/BasicBehaveEngine/nodes/math/extract/Extract3x3";
 import {Extract4x4} from "../src/BasicBehaveEngine/nodes/math/extract/Extract4x4";
 import {PointerInterpolate} from "../src/BasicBehaveEngine/nodes/pointer/PointerInterpolate";
-import { IInteractivityFlow, IInteractivityVariable } from '../src/types/InteractivityGraph';
+import { IInteractivityFlow, IInteractivityVariable } from '../src/BasicBehaveEngine/types/InteractivityGraph';
 import { DOMEventBus } from "../src/BasicBehaveEngine/eventBuses/DOMEventBus";
 import { QuatMul } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatMul';
 import { QuatConjugate } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatConjugate';
@@ -121,9 +122,6 @@ import { MatDecompose } from '../src/BasicBehaveEngine/nodes/math/matrix/matDeco
 import { MathSwitch } from '../src/BasicBehaveEngine/nodes/math/special/MathSwitch';
 import { DebugLog } from '../src/BasicBehaveEngine/nodes/experimental/Debug';
 import { QuatAngleBetween } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatAngleBetween';
-import { QuatFromAxisAngle } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatFromAxisAngle';
-import { QuatToAxisAngle } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatToAxisAngle';
-import { QuatFromDirections } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatFromDirections';
 
 describe('nodes', () => {
     let executionLog: string;
@@ -457,6 +455,20 @@ describe('nodes', () => {
 
         await variableSet.processNode('in');
         expect(variables[0].value![0]).toBe(10);
+    });
+
+    it('variable/setMultiple', async () => {
+        const variables: IInteractivityVariable[] = [{ value: [42], type: 1  }, { value: [false], type: 0 }];
+        const variableSetMultiple: VariableSetMultiple = new VariableSetMultiple({
+            ...defaultProps,
+            configuration: {variables: { value: [0, 1] }},
+            variables: variables,
+            values: {0: { value: [10], type: 1 }, 1: { value: [true], type: 0 }},
+        });
+
+        await variableSetMultiple.processNode('in');
+        expect(variables[0].value![0]).toBe(10);
+        expect(variables[1].value![0]).toBe(true);
     });
 
     it('pointer/get', async () => {
@@ -2083,12 +2095,12 @@ describe('nodes', () => {
     });
 
     it("type/intToFloat", () => {
-        let intToFloat = new IntToFloat({
+        const intToFloat = new IntToFloat({
             ...defaultProps,
             values: {a: { value: [10], type: 1}}
         });
 
-        let val = intToFloat.processNode();
+        const val = intToFloat.processNode();
 
         expect(val['value'].value[0]).toBe(10);
     });

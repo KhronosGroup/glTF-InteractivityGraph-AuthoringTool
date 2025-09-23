@@ -62,6 +62,6 @@ export class OnSelect extends BehaveEngineNode {
                 this.graphEngine.alertOnSelect(selectedNodeIndex, controllerIndex, selectionPoint, selectionRayOrigin, parentNodeIndex);
             }
         }
-        this.graphEngine.selectableNodesIndices.set(this._nodeIndex, callback);
+        this.graphEngine.selectableNodesIndices.set(Number(this._nodeIndex), callback);
     }
 }

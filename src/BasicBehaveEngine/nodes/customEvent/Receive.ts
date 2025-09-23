@@ -85,6 +85,8 @@ export class Receive extends BehaveEngineNode {
     }
 
     parseMaybeJSON(input: any, matrixWidth?: number): any {
+        console.log("CHECK HERE")
+        console.log(input)
         let inputCopy = JSON.parse(JSON.stringify(input));
         if (typeof inputCopy === "string") {
           try {

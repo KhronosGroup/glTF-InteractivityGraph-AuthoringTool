@@ -100,6 +100,7 @@ export class BabylonDecorator extends ADecorator {
                         pos = [-hit.pickedPoint.x, hit.pickedPoint.y, hit.pickedPoint.z];
                     }
                 const hitNodeIndex = this.world.glTFNodes.findIndex((value: { uniqueId: number; }) => value.uniqueId === hit.pickedMesh!.uniqueId);
+                console.log("HIT NODE INDEX", hitNodeIndex)
                 this.select(hitNodeIndex, 0, pos, [-ray.origin.x, ray.origin.y, ray.origin.z]);
             }
         });

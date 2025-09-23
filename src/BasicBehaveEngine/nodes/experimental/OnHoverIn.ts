@@ -51,7 +51,7 @@ export class OnHoverIn extends BehaveEngineNode {
         if (hoverInformation) {
             hoverInformation.callbackHoverIn = callback;
         } else {
-            this.graphEngine.hoverableNodesIndices.set(this._nodeIndex, { callbackHoverIn: callback });
+            this.graphEngine.hoverableNodesIndices.set(Number(this._nodeIndex), { callbackHoverIn: callback });
         }
     }
 }

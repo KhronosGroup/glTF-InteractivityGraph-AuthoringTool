@@ -172,7 +172,7 @@ describe('nodes', () => {
         const receive: Receive = new Receive({
             ...defaultProps,
             configuration: {event: { value: [0] }},
-            events: [{ id: 'testCustomEvent', values: {text: { type: 7 }} }],
+            events: [{ id: 'testCustomEvent', values: {text: { type: 9 }} }],
             flows: {out: { }},
         });
 
@@ -1872,8 +1872,6 @@ describe('nodes', () => {
         });
 
         const val = matmul.processNode();
-        console.log("CHECK HERE")
-        console.log(val['value'].value)
 
         expect(val['value'].value[0][0]).toBe(90);
         expect(val['value'].value[1][2]).toBe(254);

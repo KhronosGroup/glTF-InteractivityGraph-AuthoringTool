@@ -1,5 +1,5 @@
 import {BasicBehaveEngine} from "../src/BasicBehaveEngine/BasicBehaveEngine";
-import {LoggingDecorator} from "../src/BasicBehaveEngine/decorators/LoggingDecorator";
+import {LoggingDecorator} from "../src/decorators/LoggingDecorator";
 import { DOMEventBus } from "../src/BasicBehaveEngine/eventBuses/DOMEventBus";
 import {IBehaveEngine} from "../src/BasicBehaveEngine/IBehaveEngine";
 import fs from "fs";

@@ -51,7 +51,7 @@ export class OnHoverOut extends BehaveEngineNode {
         if (hoverInformation) {
             hoverInformation.callbackHoverOut = callback;
         } else {
-            this.graphEngine.hoverableNodesIndices.set(this._nodeIndex, { callbackHoverOut: callback });
+            this.graphEngine.hoverableNodesIndices.set(Number(this._nodeIndex), { callbackHoverOut: callback });
         }
     }
 }

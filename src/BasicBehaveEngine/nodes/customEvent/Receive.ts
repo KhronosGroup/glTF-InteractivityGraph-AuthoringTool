@@ -85,23 +85,29 @@ export class Receive extends BehaveEngineNode {
     }
 
     parseMaybeJSON(input: any, matrixWidth?: number): any {
-        let inputCopy = JSON.parse(JSON.stringify(input));
-        if (typeof inputCopy === "string") {
-          try {
-            inputCopy = JSON.parse(inputCopy);
-          } catch (e) {
-            throw new Error("Invalid JSON string");
-          }
-        }
-        if (matrixWidth && Array.isArray(inputCopy) && inputCopy.length === matrixWidth * matrixWidth) {
-            // If the input is a flat array with the correct length, convert it to a 2D array
-            const matrix: number[][] = [];
-            for (let i = 0; i < matrixWidth; i++) {
-                matrix[i] = inputCopy.slice(i * matrixWidth, (i + 1) * matrixWidth);
+        try {
+            let inputCopy = input;
+            if (typeof input === "string") {
+                inputCopy = JSON.parse(input);
             }
-            return matrix;
+            if (matrixWidth && inputCopy.length === matrixWidth * matrixWidth) {
+                // If the input is a flat array with the correct length, convert it to a 2D array
+                const matrix: number[][] = [];
+                for (let i = 0; i < matrixWidth; i++) {
+                    matrix[i] = inputCopy.slice(i * matrixWidth, (i + 1) * matrixWidth);
+                }
+                return matrix;
+            }
+            // Create copy of array, otherwise use JSON.parse for copying objects.
+            // This avoids issues with Float32Array that are parsed incorrectly via the JSON functions.
+            if (inputCopy.slice) {
+                inputCopy = inputCopy.slice(0);
+            } else {
+                inputCopy = JSON.parse(JSON.stringify(inputCopy));
+            }
+            return inputCopy;
+        } catch (e) {
+            throw new Error("Error while parsing JSON in event/receive");
         }
-        // Already an object/array/etc.
-        return inputCopy;
       }
 }

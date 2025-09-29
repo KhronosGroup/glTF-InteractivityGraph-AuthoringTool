@@ -11,7 +11,7 @@ export class OnHoverIn extends BehaveEngineNode {
         this.validateConfigurations(this.configuration);
 
         const {nodeIndex, stopPropagation} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
-        this._nodeIndex = nodeIndex[0];
+        this._nodeIndex = Number(nodeIndex[0]);
         this._stopPropagation = stopPropagation[0];
 
         this.outValues.selectedNodeIndex = {
@@ -51,7 +51,7 @@ export class OnHoverIn extends BehaveEngineNode {
         if (hoverInformation) {
             hoverInformation.callbackHoverIn = callback;
         } else {
-            this.graphEngine.hoverableNodesIndices.set(Number(this._nodeIndex), { callbackHoverIn: callback });
+            this.graphEngine.hoverableNodesIndices.set(this._nodeIndex, { callbackHoverIn: callback });
         }
     }
 }

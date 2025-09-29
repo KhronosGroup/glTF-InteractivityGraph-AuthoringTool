@@ -99,8 +99,7 @@ export class BabylonDecorator extends ADecorator {
                         // Babylon.js uses a left-handed coordinate system, so we negate the x value to convert to right-handed
                         pos = [-hit.pickedPoint.x, hit.pickedPoint.y, hit.pickedPoint.z];
                     }
-                const hitNodeIndex = this.world.glTFNodes.findIndex((value: { uniqueId: number; }) => value.uniqueId === hit.pickedMesh!.uniqueId);
-                console.log("HIT NODE INDEX", hitNodeIndex)
+                const hitNodeIndex = this.world.glTFNodes.findIndex((value: { uniqueId: number; }) => value.uniqueId === hit.pickedMesh!.uniqueId);                
                 this.select(hitNodeIndex, 0, pos, [-ray.origin.x, ray.origin.y, ray.origin.z]);
             }
         });

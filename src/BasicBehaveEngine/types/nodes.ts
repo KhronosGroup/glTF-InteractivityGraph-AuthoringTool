@@ -1687,6 +1687,11 @@ const mathMatrixNodeSpecs: IInteractivityNode[] = [
                     type: 6,
                     value: [undefined, undefined,
                            undefined, undefined]
+                },
+                isValid: {
+                    typeOptions: [0],
+                    type: 0,
+                    value: [undefined]
                 }
             }
         }

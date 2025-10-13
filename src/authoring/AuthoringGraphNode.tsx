@@ -280,10 +280,6 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         }
 
         const nodeSpec: IInteractivityNode | undefined = interactivityNodeSpecs.find(node => node.op === nodeType);
-
-        console.log(nodeType)
-
-        console.log(nodeSpec)
         
         const nodeSpecInputValues: Record<string, IInteractivityValue> = nodeSpec?.values?.input || {};
         const nodeSpecOutputValues: Record<string, IInteractivityValue> = nodeSpec?.values?.output || {};

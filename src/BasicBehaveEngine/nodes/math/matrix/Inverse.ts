@@ -15,29 +15,18 @@ export class Inverse extends BehaveEngineNode {
         this.validateValues(this.values);
     }
 
-    static createIdentityMatrix():number[][] {
-        return [
-            [1, 0, 0, 0,],
-            [0, 1, 0, 0,],
-            [0, 0, 1, 0,],
-            [0, 0, 0, 1]
-        ];
+    static createZeroMatrix(dimension: number):number[][] {
+        return Array.from({length: dimension}, (_, i) => Array.from({length: dimension}, (_, j) => 0));
     }
 
-    static invert4x4(matrix: number[][]): inverseResults {
-        // Convert row-major to column-major for gl-matrix
-        const colMajor = new Float32Array([
-            matrix[0][0], matrix[0][1], matrix[0][2], matrix[0][3],
-            matrix[1][0], matrix[1][1], matrix[1][2], matrix[1][3], 
-            matrix[2][0], matrix[2][1], matrix[2][2], matrix[2][3],
-            matrix[3][0], matrix[3][1], matrix[3][2], matrix[3][3]
-        ]);
+    static invert4x4(matrix: number[]): inverseResults {
+        const colMajor = new Float32Array(matrix);
 
         const result = glMatrix.mat4.create();
         const success = glMatrix.mat4.invert(result, colMajor);
 
         if (!success) {
-            return {value: this.createIdentityMatrix(), isValid: false};
+            return {value: this.createZeroMatrix(4), isValid: false};
         }
 
         const resultMatrix = [
@@ -49,14 +38,14 @@ export class Inverse extends BehaveEngineNode {
         return {value: resultMatrix, isValid: true};
     }
 
-    static invert3x3(matrix: number[][]): inverseResults {
-        const [[m11, m21, m31], [m12, m22, m32], [m13, m23, m33]] = matrix;
+    static invert3x3(matrix: number[]): inverseResults {
+        const [m11, m21, m31, m12, m22, m32, m13, m23, m33] = matrix;
         const cofactor11 = m22 * m33 - m23 * m32;
         const cofactor12 = -(m21 * m33 - m23 * m31);
         const cofactor13 = m21 * m32 - m22 * m31;
         const determinant = m11 * cofactor11 + m12 * cofactor12 + m13 * cofactor13;
-        if (determinant === 0) {
-            return {value: this.createIdentityMatrix(), isValid: false};
+        if (determinant === 0 || isNaN(determinant) || !isFinite(determinant)) {
+            return {value: this.createZeroMatrix(3), isValid: false};
         }
         const inverseDeterminant = 1 / determinant;
         const result: number[][] = [
@@ -69,11 +58,11 @@ export class Inverse extends BehaveEngineNode {
         return {value: result, isValid: true};
     }
 
-    static invert2x2(matrix: number[][]): inverseResults {
-        const [[m11, m21], [m12, m22]] = matrix;
+    static invert2x2(matrix: number[]): inverseResults {
+        const [m11, m21, m12, m22] = matrix;
         const determinant = m11 * m22 - m12 * m21;
-        if (determinant === 0) {
-            return {value: this.createIdentityMatrix(), isValid: false};
+        if (determinant === 0 || isNaN(determinant) || !isFinite(determinant)) {
+            return {value: this.createZeroMatrix(2), isValid: false};
         }
         const inverseDeterminant = 1 / determinant;
         const result: number[][] = [[m22 * inverseDeterminant, -m12 * inverseDeterminant], [-m21 * inverseDeterminant, m11 * inverseDeterminant]];

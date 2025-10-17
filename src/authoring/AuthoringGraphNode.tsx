@@ -213,7 +213,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                 inputValuesToSet["cp2"] = {value: [NaN, NaN], typeOptions: [2], type: 2};
             }
         }
-        if (updatedConfiguration.variable !== undefined) {
+        if (updatedConfiguration.variable !== undefined && updatedConfiguration.variable.value?.[0] != null) {
             const variableId = Number(updatedConfiguration.variable.value?.[0] || 0);
             const v: IInteractivityVariable = graph.variables[variableId];
             const valueToSet: IInteractivityValue =  {typeOptions: [v.type], type: v.type, value: [undefined]}

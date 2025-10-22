@@ -22,7 +22,7 @@ export class MathSwitch extends BehaveEngineNode {
 
         this.graphEngine.processNodeStarted(this);
         // ensure all cases are defined
-        const caseVals = this.evaluateAllValues(Object.keys(this._cases));
+        const caseVals = this.evaluateAllValues(this._cases.map(v => `${v}`));
         for (const [key, caseVal] of Object.entries(caseVals)) {
             if (caseVal === undefined) {
                 throw Error(`case value ${key} is undefined`);
@@ -47,16 +47,17 @@ export class MathSwitch extends BehaveEngineNode {
         }
 
         const selectionIndex = Number(selection);
-        if (selectionIndex < 0 || selectionIndex >= this._cases.length) {
-            return {
-                'value': {value: [defaultSelection], type: typeIndexDefault}
-            };
-        } else {
-            const val = Object.values(caseVals)[selectionIndex];
-            const returnVal = Array.isArray(val) ? val : [val];
+        
+        const val = caseVals[`${selectionIndex}`];
+        if (val === undefined) {
+            const returnVal = Array.isArray(defaultSelection) ? defaultSelection : [defaultSelection];
             return {
                 'value': {value: returnVal, type: typeIndexDefault}
             };
-        }        
+        }
+        const returnVal = Array.isArray(val) ? val : [val];
+        return {
+            'value': {value: returnVal, type: typeIndexDefault}
+        };      
     }
 }

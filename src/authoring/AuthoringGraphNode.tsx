@@ -154,7 +154,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                         node: undefined,
                         socket: undefined
                     }
-                    outputFlowsToSet[`${i}`] = outputFlow;
+                    outputFlowsToSet[`${cases[i]}`] = outputFlow;
                 }
             } else if (nodeType === "math/switch") {
                 for (let i = 0; i < cases.length; i++) {
@@ -163,7 +163,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                         typeOptions: anyType,
                         type: 0
                     }
-                    inputValuesToSet[`${i}`] = inputValue;
+                    inputValuesToSet[`${cases[i]}`] = inputValue;
                 }
             }
             

@@ -48,23 +48,23 @@ export class Arctangent2 extends BehaveEngineNode {
                 break
             case "float2x2":
                 val = [
-                    [Math.atan2(a[0][0], b[0][0]), Math.atan2(a[0][1], b[0][1])],
-                    [Math.atan2(a[1][0], b[1][0]), Math.atan2(a[1][1], b[1][1])],
+                    Math.atan2(a[0], b[0]), Math.atan2(a[1], b[1]),
+                    Math.atan2(a[2], b[2]), Math.atan2(a[3], b[3]),
                 ]
                 break
             case "float3x3":
                 val = [
-                    [Math.atan2(a[0][0], b[0][0]), Math.atan2(a[0][1], b[0][1]), Math.atan2(a[0][2], b[0][2])],
-                    [Math.atan2(a[1][0], b[1][0]), Math.atan2(a[1][1], b[1][1]), Math.atan2(a[1][2], b[1][2])],
-                    [Math.atan2(a[2][0], b[2][0]), Math.atan2(a[2][1], b[2][1]), Math.atan2(a[2][2], b[2][2])],
+                    Math.atan2(a[0], b[0]), Math.atan2(a[1], b[1]), Math.atan2(a[2], b[2]),
+                    Math.atan2(a[3], b[3]), Math.atan2(a[4], b[4]), Math.atan2(a[5], b[5]),
+                    Math.atan2(a[6], b[6]), Math.atan2(a[7], b[7]), Math.atan2(a[8], b[8]),
                 ]
                 break
             case "float4x4":
                 val = [
-                    [Math.atan2(a[0][0], b[0][0]), Math.atan2(a[0][1], b[0][1]), Math.atan2(a[0][2], b[0][2]), Math.atan2(a[0][3], b[0][3])],
-                    [Math.atan2(a[1][0], b[1][0]), Math.atan2(a[1][1], b[1][1]), Math.atan2(a[1][2], b[1][2]), Math.atan2(a[1][3], b[1][3])],
-                    [Math.atan2(a[2][0], b[2][0]), Math.atan2(a[2][1], b[2][1]), Math.atan2(a[2][2], b[2][2]), Math.atan2(a[2][3], b[2][3])],
-                    [Math.atan2(a[3][0], b[3][0]), Math.atan2(a[3][1], b[3][1]), Math.atan2(a[3][2], b[3][2]), Math.atan2(a[3][3], b[3][3])],
+                    Math.atan2(a[0], b[0]), Math.atan2(a[1], b[1]), Math.atan2(a[2], b[2]), Math.atan2(a[3], b[3]),
+                    Math.atan2(a[4], b[4]), Math.atan2(a[5], b[5]), Math.atan2(a[6], b[6]), Math.atan2(a[7], b[7]),
+                    Math.atan2(a[8], b[8]), Math.atan2(a[9], b[9]), Math.atan2(a[10], b[10]), Math.atan2(a[11], b[11]),
+                    Math.atan2(a[12], b[12]), Math.atan2(a[13], b[13]), Math.atan2(a[14], b[14]), Math.atan2(a[15], b[15]),
                 ]
                 break
             default:

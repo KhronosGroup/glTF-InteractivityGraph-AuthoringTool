@@ -45,23 +45,23 @@ export class Sign extends BehaveEngineNode {
                 break
             case "float2x2":
                 val = [
-                    [Math.sign(a[0][0]), Math.sign(a[0][1])],
-                    [Math.sign(a[1][0]), Math.sign(a[1][1])],
+                    Math.sign(a[0]), Math.sign(a[1]),
+                    Math.sign(a[2]), Math.sign(a[3]),
                 ]
                 break
             case "float3x3":
                 val = [
-                    [Math.sign(a[0][0]), Math.sign(a[0][1]), Math.sign(a[0][2])],
-                    [Math.sign(a[1][0]), Math.sign(a[1][1]), Math.sign(a[1][2])],
-                    [Math.sign(a[2][0]), Math.sign(a[2][1]), Math.sign(a[2][2])],
+                    Math.sign(a[0]), Math.sign(a[1]), Math.sign(a[2]),
+                    Math.sign(a[3]), Math.sign(a[4]), Math.sign(a[5]),
+                    Math.sign(a[6]), Math.sign(a[7]), Math.sign(a[8]),
                 ]
                 break
             case "float4x4":
                 val = [
-                    [Math.sign(a[0][0]), Math.sign(a[0][1]), Math.sign(a[0][2]), Math.sign(a[0][3])],
-                    [Math.sign(a[1][0]), Math.sign(a[1][1]), Math.sign(a[1][2]), Math.sign(a[1][3])],
-                    [Math.sign(a[2][0]), Math.sign(a[2][1]), Math.sign(a[2][2]), Math.sign(a[2][3])],
-                    [Math.sign(a[3][0]), Math.sign(a[3][1]), Math.sign(a[3][2]), Math.sign(a[3][3])],
+                    Math.sign(a[0]), Math.sign(a[1]), Math.sign(a[2]), Math.sign(a[3]),
+                    Math.sign(a[4]), Math.sign(a[5]), Math.sign(a[6]), Math.sign(a[7]),
+                    Math.sign(a[8]), Math.sign(a[9]), Math.sign(a[10]), Math.sign(a[11]),
+                    Math.sign(a[12]), Math.sign(a[13]), Math.sign(a[14]), Math.sign(a[15]),
                 ]
                 break
             default:

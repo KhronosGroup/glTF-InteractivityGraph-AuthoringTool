@@ -19,10 +19,10 @@ export class Extract2x2 extends BehaveEngineNode {
         }
 
         return {
-            '0': {value: [a[0][0]], type: this.getTypeIndex("float")},
-            '1': {value: [a[0][1]], type: this.getTypeIndex("float")},
-            '2': {value: [a[1][0]], type: this.getTypeIndex("float")},
-            '3': {value: [a[1][1]], type: this.getTypeIndex("float")},
+            '0': {value: [a[0]], type: this.getTypeIndex("float")},
+            '1': {value: [a[1]], type: this.getTypeIndex("float")},
+            '2': {value: [a[2]], type: this.getTypeIndex("float")},
+            '3': {value: [a[3]], type: this.getTypeIndex("float")},
         };
     }
 }

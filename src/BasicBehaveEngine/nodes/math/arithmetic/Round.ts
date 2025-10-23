@@ -43,23 +43,23 @@ export class Round extends BehaveEngineNode {
                 break;
             case "float2x2":
                 val = [
-                    [round(a[0][0]), round(a[0][1])],
-                    [round(a[1][0]), round(a[1][1])],
+                    round(a[0]), round(a[1]),
+                    round(a[2]), round(a[3]),
                 ]
                 break;
             case "float3x3":
                 val = [
-                    [round(a[0][0]), round(a[0][1]), round(a[0][2])],
-                    [round(a[1][0]), round(a[1][1]), round(a[1][2])],
-                    [round(a[2][0]), round(a[2][1]), round(a[2][2])],
+                    round(a[0]), round(a[1]), round(a[2]),
+                    round(a[3]), round(a[4]), round(a[5]),
+                    round(a[6]), round(a[7]), round(a[8]),
                 ]
                 break;
             case "float4x4":
                 val = [
-                    [round(a[0][0]), round(a[0][1]), round(a[0][2]), round(a[0][3])],
-                    [round(a[1][0]), round(a[1][1]), round(a[1][2]), round(a[1][3])],
-                    [round(a[2][0]), round(a[2][1]), round(a[2][2]), round(a[2][3])],
-                    [round(a[3][0]), round(a[3][1]), round(a[3][2]), round(a[3][3])],
+                    round(a[0]), round(a[1]), round(a[2]), round(a[3]),
+                    round(a[4]), round(a[5]), round(a[6]), round(a[7]),
+                    round(a[8]), round(a[9]), round(a[10]), round(a[11]),
+                    round(a[12]), round(a[13]), round(a[14]), round(a[15]),
                 ]
                 break;
             default:

@@ -43,23 +43,23 @@ export class InverseHyperbolicSine extends BehaveEngineNode {
                 break
             case "float2x2":
                 val = [
-                    [Math.asinh(a[0][0]), Math.asinh(a[0][1])],
-                    [Math.asinh(a[1][0]), Math.asinh(a[1][1])],
+                    Math.asinh(a[0]), Math.asinh(a[1]),
+                    Math.asinh(a[2]), Math.asinh(a[3]),
                 ]
                 break
             case "float3x3":
                 val = [
-                    [Math.asinh(a[0][0]), Math.asinh(a[0][1]), Math.asinh(a[0][2])],
-                    [Math.asinh(a[1][0]), Math.asinh(a[1][1]), Math.asinh(a[1][2])],
-                    [Math.asinh(a[2][0]), Math.asinh(a[2][1]), Math.asinh(a[2][2])],
+                    Math.asinh(a[0]), Math.asinh(a[1]), Math.asinh(a[2]),
+                    Math.asinh(a[3]), Math.asinh(a[4]), Math.asinh(a[5]),
+                    Math.asinh(a[6]), Math.asinh(a[7]), Math.asinh(a[8]),
                 ]
                 break
             case "float4x4":
                 val = [
-                    [Math.asinh(a[0][0]), Math.asinh(a[0][1]), Math.asinh(a[0][2]), Math.asinh(a[0][3])],
-                    [Math.asinh(a[1][0]), Math.asinh(a[1][1]), Math.asinh(a[1][2]), Math.asinh(a[1][3])],
-                    [Math.asinh(a[2][0]), Math.asinh(a[2][1]), Math.asinh(a[2][2]), Math.asinh(a[2][3])],
-                    [Math.asinh(a[3][0]), Math.asinh(a[3][1]), Math.asinh(a[3][2]), Math.asinh(a[3][3])],
+                    Math.asinh(a[0]), Math.asinh(a[1]), Math.asinh(a[2]), Math.asinh(a[3]),
+                    Math.asinh(a[4]), Math.asinh(a[5]), Math.asinh(a[6]), Math.asinh(a[7]),
+                    Math.asinh(a[8]), Math.asinh(a[9]), Math.asinh(a[10]), Math.asinh(a[11]),
+                    Math.asinh(a[12]), Math.asinh(a[13]), Math.asinh(a[14]), Math.asinh(a[15]),
                 ]
                 break
             default:

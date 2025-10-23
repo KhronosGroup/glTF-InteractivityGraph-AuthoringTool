@@ -43,23 +43,24 @@ export class Tangent extends BehaveEngineNode {
                 break
             case "float2x2":
                 val = [
-                    [Math.tan(a[0][0]), Math.tan(a[0][1])],
-                    [Math.tan(a[1][0]), Math.tan(a[1][1])],
+                    Math.tan(a[0]), Math.tan(a[1]),
+                    Math.tan(a[2]), Math.tan(a[3]),
                 ]
                 break
             case "float3x3":
                 val = [
-                    [Math.tan(a[0][0]), Math.tan(a[0][1]), Math.tan(a[0][2])],
-                    [Math.tan(a[1][0]), Math.tan(a[1][1]), Math.tan(a[1][2])],
-                    [Math.tan(a[2][0]), Math.tan(a[2][1]), Math.tan(a[2][2])],
+                    Math.tan(a[0]), Math.tan(a[1]), Math.tan(a[2]),
+                    Math.tan(a[3]), Math.tan(a[4]), Math.tan(a[5]),
+                    Math.tan(a[6]), Math.tan(a[7]), Math.tan(a[8]),
+                    Math.tan(a[12]), Math.tan(a[13]), Math.tan(a[14]),
                 ]
                 break
             case "float4x4":
                 val = [
-                    [Math.tan(a[0][0]), Math.tan(a[0][1]), Math.tan(a[0][2]), Math.tan(a[0][3])],
-                    [Math.tan(a[1][0]), Math.tan(a[1][1]), Math.tan(a[1][2]), Math.tan(a[1][3])],
-                    [Math.tan(a[2][0]), Math.tan(a[2][1]), Math.tan(a[2][2]), Math.tan(a[2][3])],
-                    [Math.tan(a[3][0]), Math.tan(a[3][1]), Math.tan(a[3][2]), Math.tan(a[3][3])],
+                    Math.tan(a[0]), Math.tan(a[1]), Math.tan(a[2]), Math.tan(a[3]),
+                    Math.tan(a[4]), Math.tan(a[5]), Math.tan(a[6]), Math.tan(a[7]),
+                    Math.tan(a[8]), Math.tan(a[9]), Math.tan(a[10]), Math.tan(a[11]),
+                    Math.tan(a[12]), Math.tan(a[13]), Math.tan(a[14]), Math.tan(a[15]),
                 ]
                 break
             default:

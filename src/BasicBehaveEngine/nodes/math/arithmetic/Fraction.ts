@@ -43,23 +43,23 @@ export class Fraction extends BehaveEngineNode {
                 break
             case "float2x2":
                 val = [
-                    [a[0][0] - Math.floor(a[0][0]), a[0][1] - Math.floor(a[0][1])],
-                    [a[1][0] - Math.floor(a[1][0]), a[1][1] - Math.floor(a[1][1])],
+                    a[0] - Math.floor(a[0]), a[1] - Math.floor(a[1]),
+                    a[2] - Math.floor(a[2]), a[3] - Math.floor(a[3]),
                 ]
                 break
             case "float3x3":
                 val = [
-                    [a[0][0] - Math.floor(a[0][0]), a[0][1] - Math.floor(a[0][1]), a[0][2] - Math.floor(a[0][2])],
-                    [a[1][0] - Math.floor(a[1][0]), a[1][1] - Math.floor(a[1][1]), a[1][2] - Math.floor(a[1][2])],
-                    [a[2][0] - Math.floor(a[2][0]), a[2][1] - Math.floor(a[2][1]), a[2][2] - Math.floor(a[2][2])],
+                    a[0] - Math.floor(a[0]), a[1] - Math.floor(a[1]), a[2] - Math.floor(a[2]),
+                    a[3] - Math.floor(a[3]), a[4] - Math.floor(a[4]), a[5] - Math.floor(a[5]),
+                    a[6] - Math.floor(a[6]), a[7] - Math.floor(a[7]), a[8] - Math.floor(a[8]),
                 ]
                 break
             case "float4x4":
                 val = [
-                    [a[0][0] - Math.floor(a[0][0]), a[0][1] - Math.floor(a[0][1]), a[0][2] - Math.floor(a[0][2]), a[0][3] - Math.floor(a[0][3])],
-                    [a[1][0] - Math.floor(a[1][0]), a[1][1] - Math.floor(a[1][1]), a[1][2] - Math.floor(a[1][2]), a[1][3] - Math.floor(a[1][3])],
-                    [a[2][0] - Math.floor(a[2][0]), a[2][1] - Math.floor(a[2][1]), a[2][2] - Math.floor(a[2][2]), a[2][3] - Math.floor(a[2][3])],
-                    [a[3][0] - Math.floor(a[3][0]), a[3][1] - Math.floor(a[3][1]), a[3][2] - Math.floor(a[3][2]), a[3][3] - Math.floor(a[3][3])],
+                    a[0] - Math.floor(a[0]), a[1] - Math.floor(a[1]), a[2] - Math.floor(a[2]), a[3] - Math.floor(a[3]),
+                    a[4] - Math.floor(a[4]), a[5] - Math.floor(a[5]), a[6] - Math.floor(a[6]), a[7] - Math.floor(a[7]),
+                    a[8] - Math.floor(a[8]), a[9] - Math.floor(a[9]), a[10] - Math.floor(a[10]), a[11] - Math.floor(a[11]),
+                    a[12] - Math.floor(a[12]), a[13] - Math.floor(a[13]), a[14] - Math.floor(a[14]), a[15] - Math.floor(a[15]),
                 ]
                 break
             default:

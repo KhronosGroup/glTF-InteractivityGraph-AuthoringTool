@@ -47,23 +47,23 @@ export class DegreeToRadians extends BehaveEngineNode {
                 break
             case "float2x2":
                 val = [
-                    [this.degreeToRadians(a[0][0]), this.degreeToRadians(a[0][1])],
-                    [this.degreeToRadians(a[1][0]), this.degreeToRadians(a[1][1])],
+                    this.degreeToRadians(a[0]), this.degreeToRadians(a[1]),
+                    this.degreeToRadians(a[2]), this.degreeToRadians(a[3]),
                 ]
                 break
             case "float3x3":
                 val = [
-                    [this.degreeToRadians(a[0][0]), this.degreeToRadians(a[0][1]), this.degreeToRadians(a[0][2])],
-                    [this.degreeToRadians(a[1][0]), this.degreeToRadians(a[1][1]), this.degreeToRadians(a[1][2])],
-                    [this.degreeToRadians(a[2][0]), this.degreeToRadians(a[2][1]), this.degreeToRadians(a[2][2])],
+                    this.degreeToRadians(a[0]), this.degreeToRadians(a[1]), this.degreeToRadians(a[2]),
+                    this.degreeToRadians(a[3]), this.degreeToRadians(a[4]), this.degreeToRadians(a[5]),
+                    this.degreeToRadians(a[6]), this.degreeToRadians(a[7]), this.degreeToRadians(a[8]),
                 ]
                 break
             case "float4x4":
                 val = [
-                    [this.degreeToRadians(a[0][0]), this.degreeToRadians(a[0][1]), this.degreeToRadians(a[0][2]), this.degreeToRadians(a[0][3])],
-                    [this.degreeToRadians(a[1][0]), this.degreeToRadians(a[1][1]), this.degreeToRadians(a[1][2]), this.degreeToRadians(a[1][3])],
-                    [this.degreeToRadians(a[2][0]), this.degreeToRadians(a[2][1]), this.degreeToRadians(a[2][2]), this.degreeToRadians(a[2][3])],
-                    [this.degreeToRadians(a[3][0]), this.degreeToRadians(a[3][1]), this.degreeToRadians(a[3][2]), this.degreeToRadians(a[3][3])],
+                    this.degreeToRadians(a[0]), this.degreeToRadians(a[1]), this.degreeToRadians(a[2]), this.degreeToRadians(a[3]),
+                    this.degreeToRadians(a[4]), this.degreeToRadians(a[5]), this.degreeToRadians(a[6]), this.degreeToRadians(a[7]),
+                    this.degreeToRadians(a[8]), this.degreeToRadians(a[9]), this.degreeToRadians(a[10]), this.degreeToRadians(a[11]),
+                    this.degreeToRadians(a[12]), this.degreeToRadians(a[13]), this.degreeToRadians(a[14]), this.degreeToRadians(a[15]),
                 ]
                 break
             default:

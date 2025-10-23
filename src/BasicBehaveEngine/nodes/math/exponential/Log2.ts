@@ -43,23 +43,23 @@ export class Log2 extends BehaveEngineNode {
                 break
             case "float2x2":
                 val = [
-                    [Math.log2(a[0][0]), Math.log2(a[0][1])],
-                    [Math.log2(a[1][0]), Math.log2(a[1][1])],
+                    Math.log2(a[0]), Math.log2(a[1]),
+                    Math.log2(a[2]), Math.log2(a[3]),
                 ]
                 break
             case "float3x3":
                 val = [
-                    [Math.log2(a[0][0]), Math.log2(a[0][1]), Math.log2(a[0][2])],
-                    [Math.log2(a[1][0]), Math.log2(a[1][1]), Math.log2(a[1][2])],
-                    [Math.log2(a[2][0]), Math.log2(a[2][1]), Math.log2(a[2][2])],
+                    Math.log2(a[0]), Math.log2(a[1]), Math.log2(a[2]),
+                    Math.log2(a[3]), Math.log2(a[4]), Math.log2(a[5]),
+                    Math.log2(a[6]), Math.log2(a[7]), Math.log2(a[8]),
                 ]
                 break
             case "float4x4":
                 val = [
-                    [Math.log2(a[0][0]), Math.log2(a[0][1]), Math.log2(a[0][2]), Math.log2(a[0][3])],
-                    [Math.log2(a[1][0]), Math.log2(a[1][1]), Math.log2(a[1][2]), Math.log2(a[1][3])],
-                    [Math.log2(a[2][0]), Math.log2(a[2][1]), Math.log2(a[2][2]), Math.log2(a[2][3])],
-                    [Math.log2(a[3][0]), Math.log2(a[3][1]), Math.log2(a[3][2]), Math.log2(a[3][3])],
+                    Math.log2(a[0]), Math.log2(a[1]), Math.log2(a[2]), Math.log2(a[3]),
+                    Math.log2(a[4]), Math.log2(a[5]), Math.log2(a[6]), Math.log2(a[7]),
+                    Math.log2(a[8]), Math.log2(a[9]), Math.log2(a[10]), Math.log2(a[11]),
+                    Math.log2(a[12]), Math.log2(a[13]), Math.log2(a[14]), Math.log2(a[15]),
                 ]
                 break
             default:

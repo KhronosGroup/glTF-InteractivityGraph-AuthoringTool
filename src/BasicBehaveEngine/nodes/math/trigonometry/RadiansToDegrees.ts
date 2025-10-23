@@ -47,23 +47,23 @@ export class RadiansToDegrees extends BehaveEngineNode {
                 break
             case "float2x2":
                 val = [
-                    [this.radiansToDegrees(a[0][0]), this.radiansToDegrees(a[0][1])],
-                    [this.radiansToDegrees(a[1][0]), this.radiansToDegrees(a[1][1])],
+                    this.radiansToDegrees(a[0]), this.radiansToDegrees(a[1]),
+                    this.radiansToDegrees(a[2]), this.radiansToDegrees(a[3]),
                 ]
                 break
             case "float3x3":
                 val = [
-                    [this.radiansToDegrees(a[0][0]), this.radiansToDegrees(a[0][1]), this.radiansToDegrees(a[0][2])],
-                    [this.radiansToDegrees(a[1][0]), this.radiansToDegrees(a[1][1]), this.radiansToDegrees(a[1][2])],
-                    [this.radiansToDegrees(a[2][0]), this.radiansToDegrees(a[2][1]), this.radiansToDegrees(a[2][2])],
+                    this.radiansToDegrees(a[0]), this.radiansToDegrees(a[1]), this.radiansToDegrees(a[2]),
+                    this.radiansToDegrees(a[3]), this.radiansToDegrees(a[4]), this.radiansToDegrees(a[5]),
+                    this.radiansToDegrees(a[6]), this.radiansToDegrees(a[7]), this.radiansToDegrees(a[8]),
                 ]
                 break
             case "float4x4":
                 val = [
-                    [this.radiansToDegrees(a[0][0]), this.radiansToDegrees(a[0][1]), this.radiansToDegrees(a[0][2]), this.radiansToDegrees(a[0][3])],
-                    [this.radiansToDegrees(a[1][0]), this.radiansToDegrees(a[1][1]), this.radiansToDegrees(a[1][2]), this.radiansToDegrees(a[1][3])],
-                    [this.radiansToDegrees(a[2][0]), this.radiansToDegrees(a[2][1]), this.radiansToDegrees(a[2][2]), this.radiansToDegrees(a[2][3])],
-                    [this.radiansToDegrees(a[3][0]), this.radiansToDegrees(a[3][1]), this.radiansToDegrees(a[3][2]), this.radiansToDegrees(a[3][3])],
+                    this.radiansToDegrees(a[0]), this.radiansToDegrees(a[1]), this.radiansToDegrees(a[2]), this.radiansToDegrees(a[3]),
+                    this.radiansToDegrees(a[4]), this.radiansToDegrees(a[5]), this.radiansToDegrees(a[6]), this.radiansToDegrees(a[7]),
+                    this.radiansToDegrees(a[8]), this.radiansToDegrees(a[9]), this.radiansToDegrees(a[10]), this.radiansToDegrees(a[11]),
+                    this.radiansToDegrees(a[12]), this.radiansToDegrees(a[13]), this.radiansToDegrees(a[14]), this.radiansToDegrees(a[15]),
                 ]
                 break
             default:

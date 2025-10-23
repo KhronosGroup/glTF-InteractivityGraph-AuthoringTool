@@ -43,23 +43,23 @@ export class HyperbolicTangent extends BehaveEngineNode {
                 break
             case "float2x2":
                 val = [
-                    [Math.tanh(a[0][0]), Math.tanh(a[0][1])],
-                    [Math.tanh(a[1][0]), Math.tanh(a[1][1])],
+                    Math.tanh(a[0]), Math.tanh(a[1]),
+                    Math.tanh(a[2]), Math.tanh(a[3]),
                 ]
                 break
             case "float3x3":
                 val = [
-                    [Math.tanh(a[0][0]), Math.tanh(a[0][1]), Math.tanh(a[0][2])],
-                    [Math.tanh(a[1][0]), Math.tanh(a[1][1]), Math.tanh(a[1][2])],
-                    [Math.tanh(a[2][0]), Math.tanh(a[2][1]), Math.tanh(a[2][2])],
+                    Math.tanh(a[0]), Math.tanh(a[1]), Math.tanh(a[2]),
+                    Math.tanh(a[3]), Math.tanh(a[4]), Math.tanh(a[5]),
+                    Math.tanh(a[6]), Math.tanh(a[7]), Math.tanh(a[8]),
                 ]
                 break
             case "float4x4":
                 val = [
-                    [Math.tanh(a[0][0]), Math.tanh(a[0][1]), Math.tanh(a[0][2]), Math.tanh(a[0][3])],
-                    [Math.tanh(a[1][0]), Math.tanh(a[1][1]), Math.tanh(a[1][2]), Math.tanh(a[1][3])],
-                    [Math.tanh(a[2][0]), Math.tanh(a[2][1]), Math.tanh(a[2][2]), Math.tanh(a[2][3])],
-                    [Math.tanh(a[3][0]), Math.tanh(a[3][1]), Math.tanh(a[3][2]), Math.tanh(a[3][3])],
+                    Math.tanh(a[0]), Math.tanh(a[1]), Math.tanh(a[2]), Math.tanh(a[3]),
+                    Math.tanh(a[4]), Math.tanh(a[5]), Math.tanh(a[6]), Math.tanh(a[7]),
+                    Math.tanh(a[8]), Math.tanh(a[9]), Math.tanh(a[10]), Math.tanh(a[11]),
+                    Math.tanh(a[12]), Math.tanh(a[13]), Math.tanh(a[14]), Math.tanh(a[15]),
                 ]
                 break
             default:

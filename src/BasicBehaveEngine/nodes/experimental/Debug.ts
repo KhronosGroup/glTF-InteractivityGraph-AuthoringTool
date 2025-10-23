@@ -1,6 +1,5 @@
 
 import { IInteractivityValue } from "../../types/InteractivityGraph";
-import { standardTypes } from "../../types/nodes";
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class DebugLog extends BehaveEngineNode {
@@ -86,21 +85,21 @@ function formatValue(value: any, typeName: string): string {
             return `[${value[0]}, ${value[1]}, ${value[2]}, ${value[3]}]`;
         case "float2x2":
             return `[
-                [${value[0][0]}, ${value[0][1]}],
-                [${value[1][0]}, ${value[1][1]}]
+                [${value[0]}, ${value[1]}],
+                [${value[2]}, ${value[3]}]
             ]`;
         case "float3x3":
             return `[
-                [${value[0][0]}, ${value[0][1]}, ${value[0][2]}],
-                [${value[1][0]}, ${value[1][1]}, ${value[1][2]}],
-                [${value[2][0]}, ${value[2][1]}, ${value[2][2]}]
+                [${value[0]}, ${value[1]}, ${value[2]}],
+                [${value[3]}, ${value[4]}, ${value[5]}],
+                [${value[6]}, ${value[7]}, ${value[8]}]
             ]`;
         case "float4x4":
             return `[
-                [${value[0][0]}, ${value[0][1]}, ${value[0][2]}, ${value[0][3]}],
-                [${value[1][0]}, ${value[1][1]}, ${value[1][2]}, ${value[1][3]}],
-                [${value[2][0]}, ${value[2][1]}, ${value[2][2]}, ${value[2][3]}],
-                [${value[3][0]}, ${value[3][1]}, ${value[3][2]}, ${value[3][3]}]
+                [${value[0]}, ${value[1]}, ${value[2]}, ${value[3]}],
+                [${value[4]}, ${value[5]}, ${value[6]}, ${value[7]}],
+                [${value[8]}, ${value[9]}, ${value[10]}, ${value[11]}],
+                [${value[12]}, ${value[13]}, ${value[14]}, ${value[15]}]
             ]`;
         default:
             return value.toString();

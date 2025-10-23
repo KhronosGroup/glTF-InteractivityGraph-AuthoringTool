@@ -1,5 +1,6 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../../BehaveEngineNode";
 import * as glMatrix from "gl-matrix";
+import { unflattenMatrix } from "../../../matrixUtils";
 
 export class MatDecompose extends BehaveEngineNode {
     REQUIRED_VALUES = {a: {}}
@@ -28,16 +29,18 @@ export class MatDecompose extends BehaveEngineNode {
             'isValid': {value: true, type: this.getTypeIndex("bool")}
         }
 
+        const unflattenedA = unflattenMatrix(a, 4);
+
         // check last row of matrix for valid transform matrix structure
-        if (a[0][3] !== 0 || a[1][3] !== 0 || a[2][3] !== 0 || a[3][3] !== 1) {
+        if (unflattenedA[0][3] !== 0 || unflattenedA[1][3] !== 0 || unflattenedA[2][3] !== 0 || unflattenedA[3][3] !== 1) {
             console.log("Invalid matrix structure")
             result.isValid.value = false;
             return result;
         }
 
-        const s_x = Math.sqrt(a[0][0] * a[0][0] + a[0][1] * a[0][1] + a[0][2] * a[0][2]);
-        const s_y = Math.sqrt(a[1][0] * a[1][0] + a[1][1] * a[1][1] + a[1][2] * a[1][2]);
-        const s_z = Math.sqrt(a[2][0] * a[2][0] + a[2][1] * a[2][1] + a[2][2] * a[2][2]);
+        const s_x = Math.sqrt(unflattenedA[0][0] * unflattenedA[0][0] + unflattenedA[0][1] * unflattenedA[0][1] + unflattenedA[0][2] * unflattenedA[0][2]);
+        const s_y = Math.sqrt(unflattenedA[1][0] * unflattenedA[1][0] + unflattenedA[1][1] * unflattenedA[1][1] + unflattenedA[1][2] * unflattenedA[1][2]);
+        const s_z = Math.sqrt(unflattenedA[2][0] * unflattenedA[2][0] + unflattenedA[2][1] * unflattenedA[2][1] + unflattenedA[2][2] * unflattenedA[2][2]);
         // check scale values are non NaN and non infinite
         if (isNaN(s_x) || isNaN(s_y) || isNaN(s_z) || !isFinite(s_x) || !isFinite(s_y) || !isFinite(s_z)) {
             console.log("Invalid scale values")
@@ -46,9 +49,9 @@ export class MatDecompose extends BehaveEngineNode {
         }
 
         const B = [
-            [a[0][0]/ s_x, a[0][1]/ s_x, a[0][2]/ s_x],
-            [a[1][0]/ s_y, a[1][1]/ s_y, a[1][2]/ s_y],
-            [a[2][0]/ s_z, a[2][1]/ s_z, a[2][2]/ s_z]
+            [unflattenedA[0][0]/ s_x, unflattenedA[0][1]/ s_x, unflattenedA[0][2]/ s_x],
+            [unflattenedA[1][0]/ s_y, unflattenedA[1][1]/ s_y, unflattenedA[1][2]/ s_y],
+            [unflattenedA[2][0]/ s_z, unflattenedA[2][1]/ s_z, unflattenedA[2][2]/ s_z]
         ]
 
         // get B determinant and check that it is around 1
@@ -59,7 +62,7 @@ export class MatDecompose extends BehaveEngineNode {
             return result;
         }
 
-        result.translation.value = [a[3][0], a[3][1], a[3][2]];
+        result.translation.value = [unflattenedA[3][0], unflattenedA[3][1], unflattenedA[3][2]];
 
         // detemine scale signs based on detB sign
         if (detB > 0) {

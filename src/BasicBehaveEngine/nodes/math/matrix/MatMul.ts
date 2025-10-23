@@ -24,63 +24,63 @@ export class MatMul extends BehaveEngineNode {
 
         if (typeA === "float4x4") {
             const matA = new Float32Array([
-                a[0][0], a[0][1], a[0][2], a[0][3],
-                a[1][0], a[1][1], a[1][2], a[1][3],
-                a[2][0], a[2][1], a[2][2], a[2][3],
-                a[3][0], a[3][1], a[3][2], a[3][3]
+                a[0], a[1], a[2], a[3],
+                a[4], a[5], a[6], a[7],
+                a[8], a[9], a[10], a[11],
+                a[12], a[13], a[14], a[15]
             ]);
             const matB = new Float32Array([
-                b[0][0], b[0][1], b[0][2], b[0][3],
-                b[1][0], b[1][1], b[1][2], b[1][3],
-                b[2][0], b[2][1], b[2][2], b[2][3],
-                b[3][0], b[3][1], b[3][2], b[3][3]
+                b[0], b[1], b[2], b[3],
+                b[4], b[5], b[6], b[7],
+                b[8], b[9], a[10], a[11],
+                b[12], b[13], b[14], b[15]
             ]);
 
             const result = glMatrix.mat4.create();
             glMatrix.mat4.multiply(result, matA, matB);
 
             return {'value': {value: [
-                [result[0], result[1], result[2], result[3]],
-                [result[4], result[5], result[6], result[7]],
-                [result[8], result[9], result[10], result[11]],
-                [result[12], result[13], result[14], result[15]]
+                result[0], result[1], result[2], result[3],
+                result[4], result[5], result[6], result[7],
+                result[8], result[9], result[10], result[11],
+                result[12], result[13], result[14], result[15]
             ], type: typeIndexA}};
         } else if (typeA === "float3x3") {
             const matA = new Float32Array([
-                a[0][0], a[0][1], a[0][2],
-                a[1][0], a[1][1], a[1][2],
-                a[2][0], a[2][1], a[2][2]
+                a[0], a[1], a[2],
+                a[3], a[4], a[5],
+                a[6], a[7], a[8]
             ]);
             const matB = new Float32Array([
-                b[0][0], b[0][1], b[0][2],
-                b[1][0], b[1][1], b[1][2],
-                b[2][0], b[2][1], b[2][2]
+                b[0], b[1], b[2],
+                b[3], b[4], b[5],
+                b[6], b[7], b[8]
             ]);
 
             const result = glMatrix.mat3.create();
             glMatrix.mat3.multiply(result, matA, matB);
 
             return {'value': {value: [
-                [result[0], result[1], result[2]],
-                [result[3], result[4], result[5]],
-                [result[6], result[7], result[8]]
+                result[0], result[1], result[2],
+                result[3], result[4], result[5],
+                result[6], result[7], result[8]
             ], type: typeIndexA}};
         } else if (typeA === "float2x2") {
             const matA = new Float32Array([
-                a[0][0], a[0][1],
-                a[1][0], a[1][1]
+                a[0], a[1],
+                a[2], a[3]
             ]);
             const matB = new Float32Array([
-                b[0][0], b[0][1],
-                b[1][0], b[1][1]
+                b[0], b[1],
+                b[2], b[3]
             ]);
 
             const result = glMatrix.mat2.create();
             glMatrix.mat2.multiply(result, matA, matB);
 
             return {'value': {value: [
-                [result[0], result[1]],
-                [result[2], result[3]]
+                result[0], result[1],
+                result[2], result[3]
             ], type: typeIndexA}}
         } else {
             throw Error(`Invalid type ${typeA}`)

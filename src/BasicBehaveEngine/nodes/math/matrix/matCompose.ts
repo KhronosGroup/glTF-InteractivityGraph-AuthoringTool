@@ -40,12 +40,12 @@ export class MatCompose extends BehaveEngineNode {
         resultMatrix[12] = translation[0];
         resultMatrix[13] = translation[1];
         resultMatrix[14] = translation[2];
-
-        // Convert to 2D array format
-        const val = Array(4).fill(0).map((_, i) => 
-            Array(4).fill(0).map((_, j) => resultMatrix[i * 4 + j])
-        );
-        
+        const val = [
+            resultMatrix[0], resultMatrix[1], resultMatrix[2], resultMatrix[3],
+            resultMatrix[4], resultMatrix[5], resultMatrix[6], resultMatrix[7],
+            resultMatrix[8], resultMatrix[9], resultMatrix[10], resultMatrix[11],
+            resultMatrix[12], resultMatrix[13], resultMatrix[14], resultMatrix[15]
+        ]
 
         return {'value': {value: val, type: this.getTypeIndex("float4x4")}}
     }

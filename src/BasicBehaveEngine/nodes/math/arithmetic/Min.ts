@@ -49,23 +49,23 @@ export class Min extends BehaveEngineNode {
                 break
             case "float2x2":
                 val = [
-                    [Math.min(a[0][0], b[0][0]), Math.min(a[0][1], b[0][1])],
-                    [Math.min(a[1][0], b[1][0]), Math.min(a[1][1], b[1][1])],
+                    Math.min(a[0], b[0]), Math.min(a[1], b[1]),
+                    Math.min(a[2], b[2]), Math.min(a[3], b[3]),
                 ]
                 break
             case "float3x3":
                 val = [
-                    [Math.min(a[0][0], b[0][0]), Math.min(a[0][1], b[0][1]), Math.min(a[0][2], b[0][2])],
-                    [Math.min(a[1][0], b[1][0]), Math.min(a[1][1], b[1][1]), Math.min(a[1][2], b[1][2])],
-                    [Math.min(a[2][0], b[2][0]), Math.min(a[2][1], b[2][1]), Math.min(a[2][2], b[2][2])],
+                    Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.min(a[2], b[2]),
+                    Math.min(a[3], b[3]), Math.min(a[4], b[4]), Math.min(a[5], b[5]),
+                    Math.min(a[6], b[6]), Math.min(a[7], b[7]), Math.min(a[8], b[8]),
                 ]
                 break
             case "float4x4":
                 val = [
-                    [Math.min(a[0][0], b[0][0]), Math.min(a[0][1], b[0][1]), Math.min(a[0][2], b[0][2]), Math.min(a[0][3], b[0][3])],
-                    [Math.min(a[1][0], b[1][0]), Math.min(a[1][1], b[1][1]), Math.min(a[1][2], b[1][2]), Math.min(a[1][3], b[1][3])],
-                    [Math.min(a[2][0], b[2][0]), Math.min(a[2][1], b[2][1]), Math.min(a[2][2], b[2][2]), Math.min(a[2][3], b[2][3])],
-                    [Math.min(a[3][0], b[3][0]), Math.min(a[3][1], b[3][1]), Math.min(a[3][2], b[3][2]), Math.min(a[3][3], b[3][3])],
+                    Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.min(a[2], b[2]), Math.min(a[3], b[3]),
+                    Math.min(a[4], b[4]), Math.min(a[5], b[5]), Math.min(a[6], b[6]), Math.min(a[7], b[7]),
+                    Math.min(a[8], b[8]), Math.min(a[9], b[9]), Math.min(a[10], b[10]), Math.min(a[11], b[11]),
+                    Math.min(a[12], b[12]), Math.min(a[13], b[13]), Math.min(a[14], b[14]), Math.min(a[15], b[15]),
                 ]
                 break
             default:

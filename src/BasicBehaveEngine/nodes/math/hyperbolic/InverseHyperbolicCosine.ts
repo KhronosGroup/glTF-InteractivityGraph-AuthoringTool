@@ -43,23 +43,23 @@ export class InverseHyperbolicCosine extends BehaveEngineNode {
                 break
             case "float2x2":
                 val = [
-                    [Math.acosh(a[0][0]), Math.acosh(a[0][1])],
-                    [Math.acosh(a[1][0]), Math.acosh(a[1][1])],
+                    Math.acosh(a[0]), Math.acosh(a[1]),
+                    Math.acosh(a[2]), Math.acosh(a[3]),
                 ]
                 break
             case "float3x3":
                 val = [
-                    [Math.acosh(a[0][0]), Math.acosh(a[0][1]), Math.acosh(a[0][2])],
-                    [Math.acosh(a[1][0]), Math.acosh(a[1][1]), Math.acosh(a[1][2])],
-                    [Math.acosh(a[2][0]), Math.acosh(a[2][1]), Math.acosh(a[2][2])],
+                    Math.acosh(a[0]), Math.acosh(a[1]), Math.acosh(a[2]),
+                    Math.acosh(a[3]), Math.acosh(a[4]), Math.acosh(a[5]),
+                    Math.acosh(a[6]), Math.acosh(a[7]), Math.acosh(a[8]),
                 ]
                 break
             case "float4x4":
                 val = [
-                    [Math.acosh(a[0][0]), Math.acosh(a[0][1]), Math.acosh(a[0][2]), Math.acosh(a[0][3])],
-                    [Math.acosh(a[1][0]), Math.acosh(a[1][1]), Math.acosh(a[1][2]), Math.acosh(a[1][3])],
-                    [Math.acosh(a[2][0]), Math.acosh(a[2][1]), Math.acosh(a[2][2]), Math.acosh(a[2][3])],
-                    [Math.acosh(a[3][0]), Math.acosh(a[3][1]), Math.acosh(a[3][2]), Math.acosh(a[3][3])],
+                    Math.acosh(a[0]), Math.acosh(a[1]), Math.acosh(a[2]), Math.acosh(a[3]),
+                    Math.acosh(a[4]), Math.acosh(a[5]), Math.acosh(a[6]), Math.acosh(a[7]),
+                    Math.acosh(a[8]), Math.acosh(a[9]), Math.acosh(a[10]), Math.acosh(a[11]),
+                    Math.acosh(a[12]), Math.acosh(a[13]), Math.acosh(a[14]), Math.acosh(a[15]),
                 ]
                 break
             default:

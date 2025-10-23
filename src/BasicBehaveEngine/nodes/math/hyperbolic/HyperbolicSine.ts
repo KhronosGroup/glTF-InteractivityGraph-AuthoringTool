@@ -43,23 +43,23 @@ export class HyperbolicSine extends BehaveEngineNode {
                 break
             case "float2x2":
                 val = [
-                    [Math.sinh(a[0][0]), Math.sinh(a[0][1])],
-                    [Math.sinh(a[1][0]), Math.sinh(a[1][1])],
+                    Math.sinh(a[0]), Math.sinh(a[1]),
+                    Math.sinh(a[2]), Math.sinh(a[3]),
                 ]
                 break
             case "float3x3":
                 val = [
-                    [Math.sinh(a[0][0]), Math.sinh(a[0][1]), Math.sinh(a[0][2])],
-                    [Math.sinh(a[1][0]), Math.sinh(a[1][1]), Math.sinh(a[1][2])],
-                    [Math.sinh(a[2][0]), Math.sinh(a[2][1]), Math.sinh(a[2][2])],
+                    Math.sinh(a[0]), Math.sinh(a[1]), Math.sinh(a[2]),
+                    Math.sinh(a[3]), Math.sinh(a[4]), Math.sinh(a[5]),
+                    Math.sinh(a[6]), Math.sinh(a[7]), Math.sinh(a[8]),
                 ]
                 break
             case "float4x4":
                 val = [
-                    [Math.sinh(a[0][0]), Math.sinh(a[0][1]), Math.sinh(a[0][2]), Math.sinh(a[0][3])],
-                    [Math.sinh(a[1][0]), Math.sinh(a[1][1]), Math.sinh(a[1][2]), Math.sinh(a[1][3])],
-                    [Math.sinh(a[2][0]), Math.sinh(a[2][1]), Math.sinh(a[2][2]), Math.sinh(a[2][3])],
-                    [Math.sinh(a[3][0]), Math.sinh(a[3][1]), Math.sinh(a[3][2]), Math.sinh(a[3][3])],
+                    Math.sinh(a[0]), Math.sinh(a[1]), Math.sinh(a[2]), Math.sinh(a[3]),
+                    Math.sinh(a[4]), Math.sinh(a[5]), Math.sinh(a[6]), Math.sinh(a[7]),
+                    Math.sinh(a[8]), Math.sinh(a[9]), Math.sinh(a[10]), Math.sinh(a[11]),
+                    Math.sinh(a[12]), Math.sinh(a[13]), Math.sinh(a[14]), Math.sinh(a[15]),
                 ]
                 break
             default:

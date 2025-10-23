@@ -9,6 +9,10 @@ export class Clamp extends BehaveEngineNode {
         this.validateValues(this.values);
     }
 
+    clamp(a: number, b: number, c: number): number {
+        return Math.min(Math.max(a,Math.min(b,c)), Math.max(b,c));
+    }
+
     override processNode(flowSocket?: string) {
         const {a, b, c} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
         this.graphEngine.processNodeStarted(this);
@@ -26,48 +30,68 @@ export class Clamp extends BehaveEngineNode {
         switch (typeA) {
             case "int":
             case "float":
-                val = [Math.min(Math.max(a,Math.min(b,c)), Math.max(b,c))];
+                val = [this.clamp(a,b,c)];
                 break;
             case "float2":
                 val = [
-                    Math.min(Math.max(a[0],Math.min(b[0],c[0])), Math.max(b[0],c[0])),
-                    Math.min(Math.max(a[1],Math.min(b[1],c[1])), Math.max(b[1],c[1]))
+                    this.clamp(a[0],b[0],c[0]),
+                    this.clamp(a[1],b[1],c[1])
                 ]
                 break;
             case "float3":
                 val = [
-                    Math.min(Math.max(a[0],Math.min(b[0],c[0])), Math.max(b[0],c[0])),
-                    Math.min(Math.max(a[1],Math.min(b[1],c[1])), Math.max(b[1],c[1])),
-                    Math.min(Math.max(a[2],Math.min(b[2],c[2])), Math.max(b[2],c[2]))
+                    this.clamp(a[0],b[0],c[0]),
+                    this.clamp(a[1],b[1],c[1]),
+                    this.clamp(a[2],b[2],c[2])
                 ]
                 break;
             case "float4":
                 val = [
-                    Math.min(Math.max(a[0],Math.min(b[0],c[0])), Math.max(b[0],c[0])),
-                    Math.min(Math.max(a[1],Math.min(b[1],c[1])), Math.max(b[1],c[1])),
-                    Math.min(Math.max(a[2],Math.min(b[2],c[2])), Math.max(b[2],c[2])),
-                    Math.min(Math.max(a[3],Math.min(b[3],c[3])), Math.max(b[3],c[3]))
+                    this.clamp(a[0],b[0],c[0]),
+                    this.clamp(a[1],b[1],c[1]),
+                    this.clamp(a[2],b[2],c[2]),
+                    this.clamp(a[3],b[3],c[3])
                 ]
                 break
             case "float2x2":
                 val = [
-                    [Math.min(Math.max(a[0][0],Math.min(b[0][0],c[0][0])), Math.max(b[0][0],c[0][0]))],
-                    [Math.min(Math.max(a[1][0],Math.min(b[1][0],c[1][0])), Math.max(b[1][0],c[1][0]))],
+                    this.clamp(a[0],b[0],c[0]),
+                    this.clamp(a[1],b[1],c[1]),
+                    this.clamp(a[2],b[2],c[2]),
+                    this.clamp(a[3],b[3],c[3]),
                 ]
                 break
             case "float3x3":
                 val = [
-                    [Math.min(Math.max(a[0][0],Math.min(b[0][0],c[0][0])), Math.max(b[0][0],c[0][0]))],
-                    [Math.min(Math.max(a[1][0],Math.min(b[1][0],c[1][0])), Math.max(b[1][0],c[1][0]))],
-                    [Math.min(Math.max(a[2][0],Math.min(b[2][0],c[2][0])), Math.max(b[2][0],c[2][0]))],
+                    this.clamp(a[0],b[0],c[0]),
+                    this.clamp(a[1],b[1],c[1]),
+                    this.clamp(a[2],b[2],c[2]),
+                    this.clamp(a[3],b[3],c[3]),
+                    this.clamp(a[4],b[4],c[4]),
+                    this.clamp(a[5],b[5],c[5]),
+                    this.clamp(a[6],b[6],c[6]),
+                    this.clamp(a[7],b[7],c[7]),
+                    this.clamp(a[8],b[8],c[8]),
                 ]
                 break
             case "float4x4":
                 val = [
-                    [Math.min(Math.max(a[0][0],Math.min(b[0][0],c[0][0])), Math.max(b[0][0],c[0][0]))],
-                    [Math.min(Math.max(a[1][0],Math.min(b[1][0],c[1][0])), Math.max(b[1][0],c[1][0]))],
-                    [Math.min(Math.max(a[2][0],Math.min(b[2][0],c[2][0])), Math.max(b[2][0],c[2][0]))],
-                    [Math.min(Math.max(a[3][0],Math.min(b[3][0],c[3][0])), Math.max(b[3][0],c[3][0]))],
+                    this.clamp(a[0],b[0],c[0]),
+                    this.clamp(a[1],b[1],c[1]),
+                    this.clamp(a[2],b[2],c[2]),
+                    this.clamp(a[3],b[3],c[3]),
+                    this.clamp(a[4],b[4],c[4]),
+                    this.clamp(a[5],b[5],c[5]),
+                    this.clamp(a[6],b[6],c[6]),
+                    this.clamp(a[7],b[7],c[7]),
+                    this.clamp(a[8],b[8],c[8]),
+                    this.clamp(a[9],b[9],c[9]),
+                    this.clamp(a[10],b[10],c[10]),
+                    this.clamp(a[11],b[11],c[11]),
+                    this.clamp(a[12],b[12],c[12]),
+                    this.clamp(a[13],b[13],c[13]),
+                    this.clamp(a[14],b[14],c[14]),
+                    this.clamp(a[15],b[15],c[15]),
                 ]
                 break
             default:

@@ -74,30 +74,23 @@ export class Receive extends BehaveEngineNode {
             case "float4":
                 return this.parseMaybeJSON(val[0])
             case "float2x2":
-                return this.parseMaybeJSON(val[0], 2);
+                return this.parseMaybeJSON(val[0]);
             case "float3x3":
-                return this.parseMaybeJSON(val[0], 3);
+                return this.parseMaybeJSON(val[0]);
             case "float4x4":
-                return this.parseMaybeJSON(val[0], 4);
+                return this.parseMaybeJSON(val[0]);
             default:
                 return val
         }
     }
 
-    parseMaybeJSON(input: any, matrixWidth?: number): any {
+    parseMaybeJSON(input: any): any {
         try {
             let inputCopy = input;
             if (typeof input === "string") {
                 inputCopy = JSON.parse(input);
             }
-            if (matrixWidth && inputCopy.length === matrixWidth * matrixWidth) {
-                // If the input is a flat array with the correct length, convert it to a 2D array
-                const matrix: number[][] = [];
-                for (let i = 0; i < matrixWidth; i++) {
-                    matrix[i] = inputCopy.slice(i * matrixWidth, (i + 1) * matrixWidth);
-                }
-                return matrix;
-            }
+
             // Create copy of array, otherwise use JSON.parse for copying objects.
             // This avoids issues with Float32Array that are parsed incorrectly via the JSON functions.
             if (inputCopy.slice) {

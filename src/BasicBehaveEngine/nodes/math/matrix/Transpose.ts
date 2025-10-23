@@ -1,4 +1,5 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../../BehaveEngineNode";
+import { flattenMatrix, unflattenMatrix } from "../../../matrixUtils";
 
 export class Transpose extends BehaveEngineNode {
     REQUIRED_VALUES = {a: {}}
@@ -18,16 +19,18 @@ export class Transpose extends BehaveEngineNode {
         if (typeA !== "float4x4" && typeA !== "float3x3" && typeA !== "float2x2") {
             throw Error("Invalid type")
         }
-        let dimension = Number(typeA.charAt(typeA.length - 1))
-        let val: number[][] = [];
+        const dimension = Number(typeA.charAt(typeA.length - 1))
+        const val: number[][] = [];
+        const unflattenedA = unflattenMatrix(a, dimension);
 
         for (let col = 0; col < dimension; col++) {
             val.push([])
             for (let row = 0; row < dimension; row++) {
-                val[col].push(a[row][col])
+                val[col].push(unflattenedA[row][col])
             }
         }
+        const flattenedVal = flattenMatrix(val);
 
-        return {'value': {value: val, type: typeIndexA}}
+        return {'value': {value: flattenedVal, type: typeIndexA}}
     }
 }

@@ -43,23 +43,23 @@ export class HyperbolicCosine extends BehaveEngineNode {
                 break
             case "float2x2":
                 val = [
-                    [Math.cosh(a[0][0]), Math.cosh(a[0][1])],
-                    [Math.cosh(a[1][0]), Math.cosh(a[1][1])],
+                    Math.cosh(a[0]), Math.cosh(a[1]),
+                    Math.cosh(a[2]), Math.cosh(a[3]),
                 ]
                 break
             case "float3x3":
                 val = [
-                    [Math.cosh(a[0][0]), Math.cosh(a[0][1]), Math.cosh(a[0][2])],
-                    [Math.cosh(a[1][0]), Math.cosh(a[1][1]), Math.cosh(a[1][2])],
-                    [Math.cosh(a[2][0]), Math.cosh(a[2][1]), Math.cosh(a[2][2])],
+                    Math.cosh(a[0]), Math.cosh(a[1]), Math.cosh(a[2]),
+                    Math.cosh(a[3]), Math.cosh(a[4]), Math.cosh(a[5]),
+                    Math.cosh(a[6]), Math.cosh(a[7]), Math.cosh(a[8]),
                 ]
                 break
             case "float4x4":
                 val = [
-                    [Math.cosh(a[0][0]), Math.cosh(a[0][1]), Math.cosh(a[0][2]), Math.cosh(a[0][3])],
-                    [Math.cosh(a[1][0]), Math.cosh(a[1][1]), Math.cosh(a[1][2]), Math.cosh(a[1][3])],
-                    [Math.cosh(a[2][0]), Math.cosh(a[2][1]), Math.cosh(a[2][2]), Math.cosh(a[2][3])],
-                    [Math.cosh(a[3][0]), Math.cosh(a[3][1]), Math.cosh(a[3][2]), Math.cosh(a[3][3])],
+                    Math.cosh(a[0]), Math.cosh(a[1]), Math.cosh(a[2]), Math.cosh(a[3]),
+                    Math.cosh(a[4]), Math.cosh(a[5]), Math.cosh(a[6]), Math.cosh(a[7]),
+                    Math.cosh(a[8]), Math.cosh(a[9]), Math.cosh(a[10]), Math.cosh(a[11]),
+                    Math.cosh(a[12]), Math.cosh(a[13]), Math.cosh(a[14]), Math.cosh(a[15]),
                 ]
                 break
             default:

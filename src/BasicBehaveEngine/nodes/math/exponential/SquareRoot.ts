@@ -43,23 +43,23 @@ export class SquareRoot extends BehaveEngineNode {
                 break
             case "float2x2":
                 val = [
-                    [Math.sqrt(a[0][0]), Math.sqrt(a[0][1])],
-                    [Math.sqrt(a[1][0]), Math.sqrt(a[1][1])],
+                    Math.sqrt(a[0]), Math.sqrt(a[1]),
+                    Math.sqrt(a[2]), Math.sqrt(a[3]),
                 ]
                 break
             case "float3x3":
                 val = [
-                    [Math.sqrt(a[0][0]), Math.sqrt(a[0][1]), Math.sqrt(a[0][2])],
-                    [Math.sqrt(a[1][0]), Math.sqrt(a[1][1]), Math.sqrt(a[1][2])],
-                    [Math.sqrt(a[2][0]), Math.sqrt(a[2][1]), Math.sqrt(a[2][2])],
+                    Math.sqrt(a[0]), Math.sqrt(a[1]), Math.sqrt(a[2]),
+                    Math.sqrt(a[3]), Math.sqrt(a[4]), Math.sqrt(a[5]),
+                    Math.sqrt(a[6]), Math.sqrt(a[7]), Math.sqrt(a[8]),
                 ]
                 break
             case "float4x4":
                 val = [
-                    [Math.sqrt(a[0][0]), Math.sqrt(a[0][1]), Math.sqrt(a[0][2]), Math.sqrt(a[0][3])],
-                    [Math.sqrt(a[1][0]), Math.sqrt(a[1][1]), Math.sqrt(a[1][2]), Math.sqrt(a[1][3])],
-                    [Math.sqrt(a[2][0]), Math.sqrt(a[2][1]), Math.sqrt(a[2][2]), Math.sqrt(a[2][3])],
-                    [Math.sqrt(a[3][0]), Math.sqrt(a[3][1]), Math.sqrt(a[3][2]), Math.sqrt(a[3][3])],
+                    Math.sqrt(a[0]), Math.sqrt(a[1]), Math.sqrt(a[2]), Math.sqrt(a[3]),
+                    Math.sqrt(a[4]), Math.sqrt(a[5]), Math.sqrt(a[6]), Math.sqrt(a[7]),
+                    Math.sqrt(a[8]), Math.sqrt(a[9]), Math.sqrt(a[10]), Math.sqrt(a[11]),
+                    Math.sqrt(a[12]), Math.sqrt(a[13]), Math.sqrt(a[14]), Math.sqrt(a[15]),
                 ]
                 break
             default:

@@ -43,23 +43,23 @@ export class Floor extends BehaveEngineNode {
                 break;
             case "float2x2":
                 val = [
-                    [Math.floor(a[0][0]), Math.floor(a[0][1])],
-                    [Math.floor(a[1][0]), Math.floor(a[1][1])],
+                    Math.floor(a[0]), Math.floor(a[1]),
+                    Math.floor(a[2]), Math.floor(a[3]),
                 ]
                 break;
             case "float3x3":
                 val = [
-                    [Math.floor(a[0][0]), Math.floor(a[0][1]), Math.floor(a[0][2])],
-                    [Math.floor(a[1][0]), Math.floor(a[1][1]), Math.floor(a[1][2])],
-                    [Math.floor(a[2][0]), Math.floor(a[2][1]), Math.floor(a[2][2])],
+                    Math.floor(a[0]), Math.floor(a[1]), Math.floor(a[2]),
+                    Math.floor(a[3]), Math.floor(a[4]), Math.floor(a[5]),
+                    Math.floor(a[6]), Math.floor(a[7]), Math.floor(a[8]),
                 ]
                 break;
             case "float4x4":
                 val = [
-                    [Math.floor(a[0][0]), Math.floor(a[0][1]), Math.floor(a[0][2]), Math.floor(a[0][3])],
-                    [Math.floor(a[1][0]), Math.floor(a[1][1]), Math.floor(a[1][2]), Math.floor(a[1][3])],
-                    [Math.floor(a[2][0]), Math.floor(a[2][1]), Math.floor(a[2][2]), Math.floor(a[2][3])],
-                    [Math.floor(a[3][0]), Math.floor(a[3][1]), Math.floor(a[3][2]), Math.floor(a[3][3])],
+                    Math.floor(a[0]), Math.floor(a[1]), Math.floor(a[2]), Math.floor(a[3]),
+                    Math.floor(a[4]), Math.floor(a[5]), Math.floor(a[6]), Math.floor(a[7]),
+                    Math.floor(a[8]), Math.floor(a[9]), Math.floor(a[10]), Math.floor(a[11]),
+                    Math.floor(a[12]), Math.floor(a[13]), Math.floor(a[14]), Math.floor(a[15]),
                 ]
                 break;
             default:

@@ -19,15 +19,15 @@ export class Extract3x3 extends BehaveEngineNode {
         }
 
         return {
-            '0': {value: [a[0][0]], type: this.getTypeIndex("float")},
-            '1': {value: [a[0][1]], type: this.getTypeIndex("float")},
-            '2': {value: [a[0][2]], type: this.getTypeIndex("float")},
-            '3': {value: [a[1][0]], type: this.getTypeIndex("float")},
-            '4': {value: [a[1][1]], type: this.getTypeIndex("float")},
-            '5': {value: [a[1][2]], type: this.getTypeIndex("float")},
-            '6': {value: [a[2][0]], type: this.getTypeIndex("float")},
-            '7': {value: [a[2][1]], type: this.getTypeIndex("float")},
-            '8': {value: [a[2][2]], type: this.getTypeIndex("float")}
+            '0': {value: [a[0]], type: this.getTypeIndex("float")},
+            '1': {value: [a[1]], type: this.getTypeIndex("float")},
+            '2': {value: [a[2]], type: this.getTypeIndex("float")},
+            '3': {value: [a[3]], type: this.getTypeIndex("float")},
+            '4': {value: [a[4]], type: this.getTypeIndex("float")},
+            '5': {value: [a[5]], type: this.getTypeIndex("float")},
+            '6': {value: [a[6]], type: this.getTypeIndex("float")},
+            '7': {value: [a[7]], type: this.getTypeIndex("float")},
+            '8': {value: [a[8]], type: this.getTypeIndex("float")}
         };
     }
 }

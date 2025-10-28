@@ -1,11 +1,14 @@
 {
-  "name": "@khronosgroup/khr-interactivity-authoring-engine",
+  "name": "@khronosgroup/gltf-interactivity-sample-engine",
   "version": "0.1.0",
   "main": "build/index.ts",
   "browser": "build/index.js",
   "types": "build/index.d.ts",
   "type": "module",
-  "files": ["build/**/*.js", "build/**/*d.ts"],
+  "files": [
+    "build/**/*.js",
+    "build/**/*d.ts"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/KhronosGroup/glTF-InteractivityGraph-AuthoringTool.git"

@@ -1839,6 +1839,11 @@ const mathVectorNodeSpecs: IInteractivityNode[] = [
                     typeOptions: floatVectorTypes,
                     type: 3,
                     value: [undefined, undefined]
+                },
+                isValid: {
+                    typeOptions: [0],
+                    type: 0,
+                    value: [undefined]
                 }
             }
         }

@@ -26,15 +26,15 @@ export class MatDecompose extends BehaveEngineNode {
             'translation': {value: [0, 0, 0], type: this.getTypeIndex("float3")},
             'rotation': {value: [0, 0, 0, 1], type: this.getTypeIndex("float4")},
             'scale': {value: [1, 1, 1], type: this.getTypeIndex("float3")},
-            'isValid': {value: true, type: this.getTypeIndex("bool")}
+            'isValid': {value: [true], type: this.getTypeIndex("bool")}
         }
 
         const unflattenedA = unflattenMatrix(a, 4);
 
         // check last row of matrix for valid transform matrix structure
         if (unflattenedA[0][3] !== 0 || unflattenedA[1][3] !== 0 || unflattenedA[2][3] !== 0 || unflattenedA[3][3] !== 1) {
-            console.log("Invalid matrix structure")
-            result.isValid.value = false;
+            console.log("Invalid matrix structure", unflattenedA[0][3], unflattenedA[1][3], unflattenedA[2][3], unflattenedA[3][3])
+            result.isValid.value[0] = false;
             return result;
         }
 
@@ -43,8 +43,8 @@ export class MatDecompose extends BehaveEngineNode {
         const s_z = Math.sqrt(unflattenedA[2][0] * unflattenedA[2][0] + unflattenedA[2][1] * unflattenedA[2][1] + unflattenedA[2][2] * unflattenedA[2][2]);
         // check scale values are non NaN and non infinite
         if (isNaN(s_x) || isNaN(s_y) || isNaN(s_z) || !isFinite(s_x) || !isFinite(s_y) || !isFinite(s_z)) {
-            console.log("Invalid scale values")
-            result.isValid.value = false;
+            console.log("Invalid scale values", s_x, s_y, s_z)
+            result.isValid.value[0] = false;
             return result;
         }
 
@@ -57,8 +57,8 @@ export class MatDecompose extends BehaveEngineNode {
         // get B determinant and check that it is around 1
         const detB = B[0][0] * (B[1][1] * B[2][2] - B[1][2] * B[2][1]) - B[0][1] * (B[1][0] * B[2][2] - B[1][2] * B[2][0]) + B[0][2] * (B[1][0] * B[2][1] - B[1][1] * B[2][0]);
         if (Math.abs( 1 - Math.abs(detB)) > 1e-6) {
-            console.log("Invalid determinant")
-            result.isValid.value = false;
+            console.log("Invalid determinant", detB)
+            result.isValid.value[0] = false;
             return result;
         }
 

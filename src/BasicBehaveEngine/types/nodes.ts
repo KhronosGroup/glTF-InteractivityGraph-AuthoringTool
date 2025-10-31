@@ -1953,12 +1953,12 @@ const mathVectorNodeSpecs: IInteractivityNode[] = [
         description: "Transform a vector by a 4x4 matrix",
         values: {
             input: {
-                vector: {
+                a: {
                     typeOptions: [3,4,5],
                     type: 3,
                     value: [undefined, undefined]
                 },
-                matrix: {
+                b: {
                     typeOptions: floatNxNTypes,
                     type: 6,
                     value: [undefined, undefined,

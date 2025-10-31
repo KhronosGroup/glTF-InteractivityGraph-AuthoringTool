@@ -119,6 +119,9 @@ import { DebugLog } from "./nodes/experimental/Debug";
 import { QuatAngleBetween } from "./nodes/math/quaternion/QuatAngleBetween";
 import { cubicBezier, linearFloat, slerpFloat4 } from "./easingUtils";
 import { VariableSetMultiple } from "./nodes/variable/VariableSetMultiple";
+import { Determinant } from "./nodes/math/matrix/Determinant";
+import { Transform } from "./nodes/math/vector/Transform";
+import { Transpose } from "./nodes/math/matrix/Transpose";
 
 
 export class BasicBehaveEngine implements IBehaveEngine {
@@ -609,6 +612,9 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/quatFromDirections", QuatFromDirections);
         this.registerBehaveEngineNode("math/matDecompose", MatDecompose);
         this.registerBehaveEngineNode("math/matCompose", MatCompose);
+        this.registerBehaveEngineNode("math/determinant", Determinant);
+        this.registerBehaveEngineNode("math/transform", Transform);
+        this.registerBehaveEngineNode("math/transpose", Transpose);
         this.registerBehaveEngineNode("math/matMul", MatMul);
         this.registerBehaveEngineNode("math/inverse", Inverse);
         this.registerBehaveEngineNode("debug/log", DebugLog);

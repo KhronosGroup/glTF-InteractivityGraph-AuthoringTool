@@ -30,7 +30,7 @@ export class Transform extends BehaveEngineNode {
         for (let col = 0; col < dimension; col++) {
             let sum = 0;
             for (let row = 0; row < dimension; row++) {
-                sum += unflattenedB[row][col] * a[row];
+                sum += unflattenedB[col][row] * a[row];
             }
             val.push(sum);
         }

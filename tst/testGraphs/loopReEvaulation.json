@@ -151,13 +151,13 @@
 		{
 			"declaration": 3,
 			"values": {
-				"value": {
+				"1": {
 					"node": 2,
 					"socket": "value"
 				}
 			},
 			"configuration": {
-				"variable": {
+				"variables": {
 					"value": [
 						"1"
 					]
@@ -228,7 +228,7 @@
 		{
 			"declaration": 3,
 			"values": {
-				"value": {
+				"0": {
 					"value": [
 						false
 					],
@@ -239,7 +239,7 @@
 				}
 			},
 			"configuration": {
-				"variable": {
+				"variables": {
 					"value": [
 						"0"
 					]

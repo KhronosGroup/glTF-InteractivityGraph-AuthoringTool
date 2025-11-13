@@ -324,13 +324,13 @@
 		{
 			"declaration": 9,
 			"values": {
-				"value": {
+				"0": {
 					"socket": "value",
 					"node": 4
 				}
 			},
 			"configuration": {
-				"variable": {
+				"variables": {
 					"value": [
 						"0"
 					]

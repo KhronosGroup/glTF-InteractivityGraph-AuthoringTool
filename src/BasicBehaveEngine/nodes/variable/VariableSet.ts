@@ -1,10 +1,8 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class VariableSet extends BehaveEngineNode {
-    REQUIRED_CONFIGURATIONS = {variable: {}}
-    REQUIRED_VALUES = {value: {}}
-
-    _variable: number;
+    REQUIRED_CONFIGURATIONS = {variables: {}}
+    _variables: number[];
 
     constructor(props: IBehaviourNodeProps) {
         super(props);
@@ -12,21 +10,31 @@ export class VariableSet extends BehaveEngineNode {
         this.validateValues(this.values);
         this.validateConfigurations(this.configuration);
 
-        const {variable} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
-        this._variable = variable[0];
+        const {variables} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
+        if (typeof variables[0] === "string") {
+            this._variables = JSON.parse(variables);
+        } else {
+            this._variables = variables;
+        }
+
+        if (!Array.isArray(this._variables)) {
+            this._variables = [this._variables];
+        }
     }
 
     override processNode(flowSocket?:string) {
         this.graphEngine.clearValueEvaluationCache();
-        const {value} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const vals = this.evaluateAllValues(this._variables.map(variable => variable.toString()));
+        
         this.graphEngine.processNodeStarted(this);
-
-        this.graphEngine.clearVariableInterpolation(this._variable);
-
-        if (Array.isArray(value)) {
-            this.variables[this._variable].value = value;
-        } else {
-            this.variables[this._variable].value = [value];
+        for (const variableId of this._variables) {
+            this.graphEngine.clearVariableInterpolation(variableId);
+            const value = vals[variableId.toString()];
+            if (Array.isArray(value)) {
+                this.variables[variableId].value = value;
+            } else {
+                this.variables[variableId].value = [value];
+            }
         }
 
         super.processNode(flowSocket);

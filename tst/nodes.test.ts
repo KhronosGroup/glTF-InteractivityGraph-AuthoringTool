@@ -8,7 +8,6 @@ import {Sequence} from "../src/BasicBehaveEngine/nodes/flow/Sequence";
 import {ForLoop} from "../src/BasicBehaveEngine/nodes/flow/ForLoop";
 import {OnTickNode} from "../src/BasicBehaveEngine/nodes/lifecycle/onTick";
 import {DoN} from "../src/BasicBehaveEngine/nodes/flow/DoN";
-import {VariableSet} from "../src/BasicBehaveEngine/nodes/variable/VariableSet";
 import {PointerSet} from "../src/BasicBehaveEngine/nodes/pointer/PointerSet";
 import {OnStartNode} from "../src/BasicBehaveEngine/nodes/lifecycle/onStart";
 import {Switch} from "../src/BasicBehaveEngine/nodes/flow/Switch";
@@ -18,7 +17,7 @@ import {WaitAll} from "../src/BasicBehaveEngine/nodes/flow/WaitAll";
 import {MultiGate} from "../src/BasicBehaveEngine/nodes/flow/MultiGate";
 import {Throttle} from "../src/BasicBehaveEngine/nodes/flow/Throttle";
 import {VariableGet} from "../src/BasicBehaveEngine/nodes/variable/VariableGet";
-import {VariableSetMultiple} from "../src/BasicBehaveEngine/nodes/variable/VariableSetMultiple";
+import {VariableSet} from "../src/BasicBehaveEngine/nodes/variable/VariableSet";
 import {Euler} from "../src/BasicBehaveEngine/nodes/math/constants/Euler";
 import {Pi} from "../src/BasicBehaveEngine/nodes/math/constants/Pi";
 import {AbsoluteValue} from "../src/BasicBehaveEngine/nodes/math/arithmetic/AbsoluteValue";
@@ -445,28 +444,15 @@ describe('nodes', () => {
     });
 
     it('variable/set', async () => {
-        const variables: IInteractivityVariable[] = [{ value: [42], type: 1 }];
-        const variableSet: VariableSet = new VariableSet({
-            ...defaultProps,
-            configuration: {variable: { value: [0] }},
-            variables: variables,
-            values: {value: { value: [10], type: 1 }},
-        });
-
-        await variableSet.processNode('in');
-        expect(variables[0].value![0]).toBe(10);
-    });
-
-    it('variable/setMultiple', async () => {
         const variables: IInteractivityVariable[] = [{ value: [42], type: 1  }, { value: [false], type: 0 }];
-        const variableSetMultiple: VariableSetMultiple = new VariableSetMultiple({
+        const variableSet: VariableSet = new VariableSet({
             ...defaultProps,
             configuration: {variables: { value: [0, 1] }},
             variables: variables,
             values: {0: { value: [10], type: 1 }, 1: { value: [true], type: 0 }},
         });
 
-        await variableSetMultiple.processNode('in');
+        await variableSet.processNode('in');
         expect(variables[0].value![0]).toBe(10);
         expect(variables[1].value![0]).toBe(true);
     });
@@ -510,28 +496,28 @@ describe('nodes', () => {
         });
 
         const res = matCompose.processNode();
-        expect(res['value']!.value[0][0]).toBe(2);
-        expect(res['value']!.value[1][0]).toBe(0);
-        expect(res['value']!.value[2][0]).toBe(0);
-        expect(res['value']!.value[3][0]).toBe(1);
-        expect(res['value']!.value[0][1]).toBe(0);
-        expect(res['value']!.value[1][1]).toBe(2);
-        expect(res['value']!.value[2][1]).toBe(0);
-        expect(res['value']!.value[3][1]).toBe(2);
-        expect(res['value']!.value[0][2]).toBe(0);
-        expect(res['value']!.value[1][2]).toBe(0);
-        expect(res['value']!.value[2][2]).toBe(2);
-        expect(res['value']!.value[3][2]).toBe(3);
-        expect(res['value']!.value[0][3]).toBe(0);
-        expect(res['value']!.value[1][3]).toBe(0);
-        expect(res['value']!.value[2][3]).toBe(0);
-        expect(res['value']!.value[3][3]).toBe(1);
+        expect(res['value']!.value[0]).toBe(2);
+        expect(res['value']!.value[1]).toBe(0);
+        expect(res['value']!.value[2]).toBe(0);
+        expect(res['value']!.value[3]).toBe(0);
+        expect(res['value']!.value[4]).toBe(0);
+        expect(res['value']!.value[5]).toBe(2);
+        expect(res['value']!.value[6]).toBe(0);
+        expect(res['value']!.value[7]).toBe(0);
+        expect(res['value']!.value[8]).toBe(0);
+        expect(res['value']!.value[9]).toBe(0);
+        expect(res['value']!.value[10]).toBe(2);
+        expect(res['value']!.value[11]).toBe(0);
+        expect(res['value']!.value[12]).toBe(1);
+        expect(res['value']!.value[13]).toBe(2);
+        expect(res['value']!.value[14]).toBe(3);
+        expect(res['value']!.value[15]).toBe(1);
     });
 
     it('math/matDecompose',  () => {
         const matDecompose: MatDecompose = new MatDecompose({
             ...defaultProps,
-            values: {a: { value: [[2,0,0,0], [0,2,0,0], [0,0,2,0], [1,2,3,1]], type: 8 }},
+            values: {a: { value: [2,0,0,0, 0,2,0,0, 0,0,2,0, 1,2,3,1], type: 8 }},
         });
 
         const res = matDecompose.processNode();
@@ -545,7 +531,7 @@ describe('nodes', () => {
         expect(res['scale']!.value[0]).toBe(2);
         expect(res['scale']!.value[1]).toBe(2);
         expect(res['scale']!.value[2]).toBe(2);
-        expect(res['isValid']!.value).toBe(true);
+        expect(res['isValid']!.value[0]).toBe(true);
 
     });
 
@@ -846,12 +832,12 @@ describe('nodes', () => {
     });
 
     it("math/extract2x2", () => {
-        let extract2x2: Extract2x2 = new Extract2x2({
+        const extract2x2: Extract2x2 = new Extract2x2({
             ...defaultProps,
-            values: {a: { value: [[-10.5, 5.5], [1, 2]], type: 6}}
+            values: {a: { value: [-10.5, 5.5, 1, 2], type: 6}}
         });
 
-        let val = extract2x2.processNode();
+        const val = extract2x2.processNode();
         expect(val['0'].value[0]).toBe(-10.5);
         expect(val['1'].value[0]).toBe(5.5);
         expect(val['2'].value[0]).toBe(1);
@@ -859,12 +845,12 @@ describe('nodes', () => {
     });
 
     it("math/extract3x3", () => {
-        let extract3x3: Extract3x3 = new Extract3x3({
+        const extract3x3: Extract3x3 = new Extract3x3({
             ...defaultProps,
-            values: {a: { value: [[-10.5, 5.5, 0.5], [1, 2, 3], [4, 5, 6]], type: 7}}
+            values: {a: { value: [-10.5, 5.5, 0.5, 1, 2, 3, 4, 5, 6], type: 7}}
         });
 
-        let val = extract3x3.processNode();
+        const val = extract3x3.processNode();
         expect(val['0'].value[0]).toBe(-10.5);
         expect(val['1'].value[0]).toBe(5.5);
         expect(val['2'].value[0]).toBe(0.5);
@@ -877,12 +863,12 @@ describe('nodes', () => {
     });
 
     it("math/extract4x4", () => {
-        let extract4x4: Extract4x4 = new Extract4x4({
+        const extract4x4: Extract4x4 = new Extract4x4({
             ...defaultProps,
-            values: {a: { value: [[-10.5, 5.5, 4, 6], [1,2,3,4], [5,6,7,8], [9, 10, 11, 12]], type: 8}}
+            values: {a: { value: [-10.5, 5.5, 4, 6, 1,2,3,4, 5,6,7,8, 9, 10, 11, 12], type: 8}}
         });
 
-        let val = extract4x4.processNode();
+        const val = extract4x4.processNode();
         expect(val['0'].value[0]).toBe(-10.5);
         expect(val['1'].value[0]).toBe(5.5);
         expect(val['2'].value[0]).toBe(4);
@@ -938,72 +924,96 @@ describe('nodes', () => {
     });
 
     it("math/combine2x2", () => {
-        let combine2x2: Combine2x2 = new Combine2x2({
+        const combine2x2: Combine2x2 = new Combine2x2({
             ...defaultProps,
             values: {a: { value: [-10.5], type: 2}, b: { value: [5.5], type: 2}, c: { value: [0.5], type: 2}, d: { value: [7.5], type: 2}}
         });
 
-        let val = combine2x2.processNode();
-        expect(val['value'].value[0][0]).toBe(-10.5);
-        expect(val['value'].value[1][0]).toBe(5.5);
-        expect(val['value'].value[0][1]).toBe(0.5);
-        expect(val['value'].value[1][1]).toBe(7.5);
+        const val = combine2x2.processNode();
+        expect(val['value'].value[0]).toBe(-10.5);
+        expect(val['value'].value[1]).toBe(0.5);
+        expect(val['value'].value[2]).toBe(5.5);
+        expect(val['value'].value[3]).toBe(7.5);
     });
 
     it("math/combine3x3", () => {
-        let combine3x3: Combine3x3 = new Combine3x3({
+        const combine3x3: Combine3x3 = new Combine3x3({
             ...defaultProps,
             values: {a: { value: [-10.5], type: 2}, b: { value: [5.5], type: 2}, c: { value: [0.5], type: 2}, d: { value: [7.5], type: 2}, e: { value: [-10], type: 2}, f: { value: [5], type: 2}, g: { value: [0], type: 2}, h: { value: [7], type: 2}, i: { value: [10.5], type: 2}}
         });
 
-        let val = combine3x3.processNode();
-        expect(val['value'].value[0][0]).toBe(-10.5);
-        expect(val['value'].value[1][0]).toBe(5.5);
-        expect(val['value'].value[2][0]).toBe(0.5);
-        expect(val['value'].value[0][1]).toBe(7.5);
-        expect(val['value'].value[1][1]).toBe(-10);
-        expect(val['value'].value[2][1]).toBe(5);
-        expect(val['value'].value[0][2]).toBe(0);
-        expect(val['value'].value[1][2]).toBe(7);
-        expect(val['value'].value[2][2]).toBe(10.5);
+        const val = combine3x3.processNode();
+        expect(val['value'].value[0]).toBe(-10.5);
+        expect(val['value'].value[1]).toBe(7.5);
+        expect(val['value'].value[2]).toBe(0);
+        expect(val['value'].value[3]).toBe(5.5);
+        expect(val['value'].value[4]).toBe(-10);
+        expect(val['value'].value[5]).toBe(7);
+        expect(val['value'].value[6]).toBe(0.5);
+        expect(val['value'].value[7]).toBe(5);
+        expect(val['value'].value[8]).toBe(10.5);
     });
 
     it("math/combine4x4", () => {
-        let combine4x4: Combine4x4 = new Combine4x4({
+        const combine4x4: Combine4x4 = new Combine4x4({
             ...defaultProps,
-            values: {a: { value: [-10.5], type: 2}, b: { value: [5.5], type: 2}, c: { value: [0.5], type: 2}, d: { value: [7.5], type: 2}, e: { value: [-10], type: 2}, f: { value: [5], type: 2}, g: { value: [0], type: 2}, h: { value: [7], type: 2}, i: { value: [10.5], type: 2}, j: { value: [5.8], type: 2}, k: { value: [9.5], type: 2}, l: { value: [2.5], type: 2}, m: { value: [-1.5], type: 2}, n: { value: [5.7], type: 2}, o: { value: [6.5], type: 2}, p: { value: [7.7], type: 2}}
+            values: {
+                a: { value: [-10.5], type: 2},
+                b: { value: [5.5], type: 2},
+                c: { value: [0.5], type: 2},
+                d: { value: [7.5], type: 2},
+                e: { value: [-10], type: 2},
+                f: { value: [5], type: 2},
+                g: { value: [0], type: 2},
+                h: { value: [7], type: 2},
+                i: { value: [10.5], type: 2},
+                j: { value: [5.8], type: 2},
+                k: { value: [9.5], type: 2},
+                l: { value: [2.5], type: 2},
+                m: { value: [-1.5], type: 2},
+                n: { value: [5.7], type: 2},
+                o: { value: [6.5], type: 2},
+                p: { value: [7.7], type: 2}
+            }
         });
 
-        let val = combine4x4.processNode();
-        expect(val['value'].value[0][0]).toBe(-10.5);
-        expect(val['value'].value[1][0]).toBe(5.5);
-        expect(val['value'].value[2][0]).toBe(0.5);
-        expect(val['value'].value[3][0]).toBe(7.5);
-        expect(val['value'].value[0][1]).toBe(-10);
-        expect(val['value'].value[1][1]).toBe(5);
-        expect(val['value'].value[2][1]).toBe(0);
-        expect(val['value'].value[3][1]).toBe(7);
-        expect(val['value'].value[0][2]).toBe(10.5);
-        expect(val['value'].value[1][2]).toBe(5.8);
-        expect(val['value'].value[2][2]).toBe(9.5);
-        expect(val['value'].value[3][2]).toBe(2.5);
-        expect(val['value'].value[0][3]).toBe(-1.5);
-        expect(val['value'].value[1][3]).toBe(5.7);
-        expect(val['value'].value[2][3]).toBe(6.5);
-        expect(val['value'].value[3][3]).toBe(7.7);
+        const val = combine4x4.processNode();
+        // a-p are passed in row major: [a b c d e f g h i j k l m n o p]
+        // but combine4x4 returns column-major, so indices become:
+        //  0  4  8 12
+        //  1  5  9 13
+        //  2  6 10 14
+        //  3  7 11 15
+        // So, to check:
+        expect(val['value'].value[0]).toBe(-10.5);  // a
+        expect(val['value'].value[4]).toBe(5.5);    // b
+        expect(val['value'].value[8]).toBe(0.5);    // c
+        expect(val['value'].value[12]).toBe(7.5);    // d
+        expect(val['value'].value[1]).toBe(-10);    // e
+        expect(val['value'].value[5]).toBe(5);      // f
+        expect(val['value'].value[9]).toBe(0);      // g
+        expect(val['value'].value[13]).toBe(7);      // h
+        expect(val['value'].value[2]).toBe(10.5);   // i
+        expect(val['value'].value[6]).toBe(5.8);    // j
+        expect(val['value'].value[10]).toBe(9.5);   // k
+        expect(val['value'].value[14]).toBe(2.5);   // l
+        expect(val['value'].value[3]).toBe(-1.5);  // m
+        expect(val['value'].value[7]).toBe(5.7);   // n
+        expect(val['value'].value[11]).toBe(6.5);   // o
+        expect(val['value'].value[15]).toBe(7.7);   // p
     });
 
     it("math/inverse", () => {
-        let inverse: Inverse = new Inverse({
+        const inverse: Inverse = new Inverse({
             ...defaultProps,
-            values: {a: { value: [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]], type: 8}}
+            values: {a: { value: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], type: 8}}
         });
 
-        let val = inverse.processNode();
-        expect(val['value'].value[0][0]).toBe(1);
-        expect(val['value'].value[1][1]).toBe(1);
-        expect(val['value'].value[2][2]).toBe(1);
-        expect(val['value'].value[3][3]).toBe(1);
+        const val = inverse.processNode();
+        expect(val['value'].value[0]).toBe(1);
+        expect(val['value'].value[5]).toBe(1);
+        expect(val['value'].value[10]).toBe(1);
+        expect(val['value'].value[15]).toBe(1);
     });
 
     it("math/select", () => {
@@ -1027,16 +1037,16 @@ describe('nodes', () => {
     });
 
     it("math/switch", () => {
-        let mathSwitch: MathSwitch = new MathSwitch({
+         const mathSwitch: MathSwitch = new MathSwitch({
             ...defaultProps,
             configuration: {cases: { value: [0, 1]}},
             values: {0: { value: [-10.5], type: 2}, 1: { value: [5.5], type: 2}, default: { value: [3], type: 2}, selection: { value: [0], type: 1}}
         });
 
-        let val = mathSwitch.processNode();
+        const val = mathSwitch.processNode();
         expect(val['value'].value[0]).toBe(-10.5);
         mathSwitch!.values['selection'].value![0] = 12;
-        let val2 = mathSwitch.processNode();
+        const val2 = mathSwitch.processNode();
         expect(val2['value'].value[0]).toBe(3);
     });
 
@@ -1733,10 +1743,10 @@ describe('nodes', () => {
         const transform: Transform = new Transform({
             ...defaultProps,
             values: {a: { value: [1,2,3,4], type: 5 }, b: { value: [
-                        [1, 2, 3, 4],
-                        [5, 6, 7, 8],
-                        [9, 10, 11, 12],
-                        [13, 14, 15, 16],
+                        1, 5, 9, 13,
+                        2, 6, 10, 14,
+                        3, 7, 11, 15,
+                        4, 8, 12, 16,
                     ],
                     type: 8
                 }
@@ -1812,10 +1822,10 @@ describe('nodes', () => {
         const transpose: Transpose = new Transpose({
             ...defaultProps,
             values: {a: { value: [
-                        [1, 2, 3, 4],
-                        [5, 6, 7, 8],
-                        [9, 10, 11, 12],
-                        [13, 14, 15, 16],
+                        1, 5, 9, 13,
+                        2, 6, 10, 14,
+                        3, 7, 11, 15,
+                        4, 8, 12, 16,
                     ],
                     type: 8
                 }
@@ -1824,20 +1834,20 @@ describe('nodes', () => {
 
         const val = transpose.processNode();
 
-        expect(val['value'].value[0][0]).toBe(1);
-        expect(val['value'].value[0][1]).toBe(5);
-        expect(val['value'].value[3][2]).toBe(12);
-        expect(val['value'].value[3][0]).toBe(4);
+        expect(val['value'].value[0]).toBe(1);
+        expect(val['value'].value[4]).toBe(5);
+        expect(val['value'].value[8]).toBe(9);
+        expect(val['value'].value[12]).toBe(13);
     });
 
     it("math/determinant", () => {
         const determinant: Determinant = new Determinant({
             ...defaultProps,
             values: {a: { value: [
-                        [1, 3, 1, 4],
-                        [3, 9, 5, 15],
-                        [0, 2, 1, 1],
-                        [0, 4, 2, 3],
+                        1, 3, 1, 4,
+                        3, 9, 5, 15,
+                        0, 2, 1, 1,
+                        0, 4, 2, 3,
                     ],
                     type: 8
                 }
@@ -1853,18 +1863,18 @@ describe('nodes', () => {
         const matmul: MatMul = new MatMul({
             ...defaultProps,
             values: {a: { value: [
-                        [1, 2, 3, 4],
-                        [5, 6, 7, 8],
-                        [9, 10, 11, 12],
-                        [13, 14, 15, 16],
+                        1, 5, 9, 13,
+                        2, 6, 10, 14,
+                        3, 7, 11, 15,
+                        4, 8, 12, 16,
                     ],
                     type: 8
                 },
                 b: { value: [
-                        [1, 2, 3, 4],
-                        [5, 6, 7, 8],
-                        [9, 10, 11, 12],
-                        [13, 14, 15, 16],
+                        1, 5, 9, 13,
+                        2, 6, 10, 14,
+                        3, 7, 11, 15,
+                        4, 8, 12, 16,
                     ],
                     type: 8
                 }
@@ -1873,10 +1883,10 @@ describe('nodes', () => {
 
         const val = matmul.processNode();
 
-        expect(val['value'].value[0][0]).toBe(90);
-        expect(val['value'].value[1][2]).toBe(254);
-        expect(val['value'].value[3][3]).toBe(600);
-        expect(val['value'].value[2][0]).toBe(314);
+        expect(val['value'].value[0]).toBe(90);
+        expect(val['value'].value[9]).toBe(254);
+        expect(val['value'].value[15]).toBe(600);
+        expect(val['value'].value[2]).toBe(314);
     });
 
     it("math/isInf", () => {

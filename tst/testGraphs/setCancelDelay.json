@@ -77,7 +77,7 @@
 		{
 			"declaration": 2,
 			"values": {
-				"value": {
+				"1": {
 					"value": [
 						true
 					],
@@ -88,7 +88,7 @@
 				}
 			},
 			"configuration": {
-				"variable": {
+				"variables": {
 					"value": [
 						"1"
 					]
@@ -135,7 +135,7 @@
 		{
 			"declaration": 2,
 			"values": {
-				"value": {
+				"0": {
 					"value": [
 						true
 					],
@@ -146,7 +146,7 @@
 				}
 			},
 			"configuration": {
-				"variable": {
+				"variables": {
 					"value": [
 						"0"
 					]

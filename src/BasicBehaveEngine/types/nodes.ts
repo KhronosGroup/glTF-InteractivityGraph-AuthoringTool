@@ -341,9 +341,6 @@ export const knownDeclarations: IInteractivityDeclaration[] = [
         op: "variable/interpolate"
     },
     {
-        op: "variable/setMultiple"
-    },
-    {
         op: "pointer/set"
     },
     {
@@ -3217,30 +3214,6 @@ const variableNodeSpecs: IInteractivityNode[] = [
     {
         op: "variable/set",
         declaration: knownDeclarations.findIndex(declaration => declaration.op === "variable/set"),
-        description: "Set a variable to a value",
-        configuration: {
-            variable: {
-                value: [undefined],
-            }
-        },
-        flows: {
-            input: { 
-                in: {
-                    node: undefined,
-                    socket: undefined
-                }
-            },
-            output: {
-                out: {
-                    node: undefined,
-                    socket: undefined
-                }
-            }
-        }
-    },
-    {
-        op: "variable/setMultiple",
-        declaration: knownDeclarations.findIndex(declaration => declaration.op === "variable/setMultiple"),
         description: "Set multiple variables to a value",
         configuration: {
             variables: {

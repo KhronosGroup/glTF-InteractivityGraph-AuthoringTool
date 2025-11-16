@@ -74,7 +74,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     }, [inputValues]);
 
     const onChangeType = useCallback((evt: { target: { value: any; }; }) => {
-        const socketId = (evt.target as HTMLInputElement).id.replace("-typeDropDown", "");
+        const socketId = (evt.target as HTMLInputElement).id.replace("typeDropDown-", "");
         const curParam = inputValues[socketId];
         setInputValues({...inputValues, [socketId]: {value: curParam.value, typeOptions:curParam.typeOptions, type:evt.target.value}});
     }, [inputValues]);
@@ -526,7 +526,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                     <div key={socket} className={"flow-node-socket"}>
                                         <label htmlFor={socket}>{socket}</label>
                                         <input id={`in-${socket}`} name={socket} onChange={onChangeParameter} defaultValue={inputValues[socket].value} style={{display: props.data.linked && props.data.linked[socket] ? "none" : "block"}}/>
-                                        <select id={`${socket}-typeDropDown`} onChange={onChangeType} defaultValue={inputValues[socket].type} style={{display: props.data.linked && props.data.linked[socket] ? "none" : "block"}}>
+                                        <select id={`$typeDropDown-${socket}`} onChange={onChangeType} defaultValue={inputValues[socket].type} style={{display: props.data.linked && props.data.linked[socket] ? "none" : "block"}}>
                                             {(value.typeOptions || []).map((type, index) => (
                                                 <option key={index} value={type}>
                                                     {standardTypes[type].name}

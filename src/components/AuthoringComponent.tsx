@@ -112,7 +112,7 @@ export const AuthoringComponent = () => {
             if (inputField !== null) {
                 inputField.style.display = "none";
             }
-            const typeDropdown = targetNode.querySelector(`#${vals.targetHandle}-typeDropDown`) as HTMLInputElement;
+            const typeDropdown = targetNode.querySelector(`#typeDropDown-${vals.targetHandle}`) as HTMLInputElement;
             if (typeDropdown !== null) {
                 typeDropdown.style.display = "none";
             }

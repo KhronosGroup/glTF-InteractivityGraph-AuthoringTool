@@ -663,10 +663,10 @@ export class BabylonDecorator extends ADecorator {
             matrix.setTranslation(new Vector3(node.position.x, node.position.y, node.position.z));
             
             return [
-                [matrix.m[0], matrix.m[1], matrix.m[2], matrix.m[3]],
-                [matrix.m[4], matrix.m[5], matrix.m[6], matrix.m[7]], 
-                [matrix.m[8], matrix.m[9], matrix.m[10], matrix.m[11]],
-                [matrix.m[12], matrix.m[13], matrix.m[14], matrix.m[15]]
+                matrix.m[0], matrix.m[1], matrix.m[2], matrix.m[3],
+                matrix.m[4], matrix.m[5], matrix.m[6], matrix.m[7], 
+                matrix.m[8], matrix.m[9], matrix.m[10], matrix.m[11],
+                matrix.m[12], matrix.m[13], matrix.m[14], matrix.m[15]
             ];
         }, (path, value) => {
             //no-op

@@ -32,7 +32,7 @@ export class MatMul extends BehaveEngineNode {
             const matB = new Float32Array([
                 b[0], b[1], b[2], b[3],
                 b[4], b[5], b[6], b[7],
-                b[8], b[9], a[10], a[11],
+                b[8], b[9], b[10], b[11],
                 b[12], b[13], b[14], b[15]
             ]);
 

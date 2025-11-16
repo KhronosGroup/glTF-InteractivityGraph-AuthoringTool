@@ -681,10 +681,10 @@ export class BabylonDecorator extends ADecorator {
             // x by -1
             // TODO what is the correct way to undo babylon's gltf -> babylon coordinate system conversion?
             return [
-                [-globalMatrix[0], globalMatrix[1], globalMatrix[2], globalMatrix[3]],
-                [-globalMatrix[4], globalMatrix[5], globalMatrix[6], globalMatrix[7]], 
-                [-globalMatrix[8], globalMatrix[9], globalMatrix[10], globalMatrix[11]],
-                [-globalMatrix[12], globalMatrix[13], globalMatrix[14], globalMatrix[15]]
+                -globalMatrix[0], globalMatrix[1], globalMatrix[2], globalMatrix[3],
+                -globalMatrix[4], globalMatrix[5], globalMatrix[6], globalMatrix[7], 
+                -globalMatrix[8], globalMatrix[9], globalMatrix[10], globalMatrix[11],
+                -globalMatrix[12], globalMatrix[13], globalMatrix[14], globalMatrix[15]
             ];
         }, (path, value) => {
             //no-op

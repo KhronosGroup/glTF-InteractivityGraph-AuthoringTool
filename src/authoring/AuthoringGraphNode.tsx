@@ -218,16 +218,14 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
             const v: IInteractivityVariable = graph.variables[variableId];
             const valueToSet: IInteractivityValue =  {typeOptions: [v.type], type: v.type, value: [undefined]}
 
-            if (nodeType === "variable/set" || nodeType === "variable/interpolate") {
+            if (nodeType === "variable/interpolate") {
                 inputValuesToSet["value"] = valueToSet;
             } else if (nodeType === "variable/get") {
                 outputValuesToSet["value"] = valueToSet;
             }
         }
         if (updatedConfiguration.variables !== undefined) {
-            console.log(updatedConfiguration);
             let variableIds = updatedConfiguration.variables.value || "";
-            console.log(variableIds)
             // Allow input formats in the UI, such as:
             // - 0,1, (while typing)
             // - [0,1,2 (while typing)
@@ -240,7 +238,6 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                 if (!variablesIdString.startsWith("[")) variablesIdString = `[${variablesIdString}`;
                 if (!variablesIdString.endsWith("]")) variablesIdString = `${variablesIdString}]`;
                 try {
-                    console.log("Variable ID string", variablesIdString)
                     variableIds = JSON.parse(variablesIdString);
                 } catch (e) {
                     console.error("Couldn't parse configuration array string: ", variablesIdString, e);

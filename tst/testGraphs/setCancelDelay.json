@@ -90,7 +90,7 @@
 			"configuration": {
 				"variables": {
 					"value": [
-						"1"
+						1
 					]
 				}
 			},
@@ -148,7 +148,7 @@
 			"configuration": {
 				"variables": {
 					"value": [
-						"0"
+						0
 					]
 				}
 			},

@@ -693,7 +693,7 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/nodes/${maxGltfNode}/mesh`, (path) => {
             const parts: string[] = path.split("/");
             const node = this.world.glTFNodes[Number(parts[2])];
-            return this.world.meshes.indexOf(node);
+            return [this.world.meshes.indexOf(node)];
         }, (path, value) => {
             //no-op
         }, "int", true);
@@ -709,7 +709,7 @@ export class BabylonDecorator extends ADecorator {
             const mesh = this.world.meshes[Number(parts[2])];
             const primitive = mesh.subMeshes[Number(parts[4])];
             primitive.materialIndex = value;
-            primitive._mesh.material = this.world.materials[value]
+            primitive._mesh.material = this.world.materials[value];
         }, "int", false);
 
         this.registerJsonPointer(`/animations/${maxAnimations}/extensions/KHR_interactivity/isPlaying`, (path) => {

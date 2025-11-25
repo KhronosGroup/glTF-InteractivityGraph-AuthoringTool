@@ -702,8 +702,8 @@ export class BabylonDecorator extends ADecorator {
             const parts: string[] = path.split("/");
             const mesh = this.world.meshes[Number(parts[2])];
             const primitive = mesh.subMeshes[Number(parts[4])];
-            console.log("results", mesh, primitive, this.world.materials.indexOf(primitive.material));
-            return primitive.materialIndex
+            console.log("results", mesh, primitive, this.world.materials.indexOf(primitive._mesh.material));
+            return [this.world.materials.indexOf(primitive._mesh.material)];
         }, (path, value) => {
             const parts: string[] = path.split("/");
             const mesh = this.world.meshes[Number(parts[2])];

@@ -74,6 +74,10 @@ export abstract class ADecorator implements IBehaveEngine {
         this.behaveEngine.playEventQueue();
     }
 
+    executeEventQueueTick() {
+        this.behaveEngine.executeEventQueueTick();
+    }
+
     dispatchCustomEvent(name: string, vals: any) {
         this.behaveEngine.dispatchCustomEvent(name, vals);
     }

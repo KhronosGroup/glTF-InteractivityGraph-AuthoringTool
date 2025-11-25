@@ -129,6 +129,8 @@ export class BasicBehaveEngine implements IBehaveEngine {
     private eventBus: IEventBus;
     protected onTickNodeIndices: number[];
     private _lastTickTime: number;
+    private _pauseTickTime: number;
+    private _pauseDuration : number;
     private _scheduledDelays: NodeJS.Timeout[];
     protected nodes: IInteractivityNode[];
     protected _variables: IInteractivityVariable[];
@@ -152,6 +154,8 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.valueEvaluationCache = new Map<string, IInteractivityValue>();
         this.onTickNodeIndices = [];
         this._lastTickTime = NaN;
+        this._pauseTickTime = NaN;
+        this._pauseDuration = 0;
         this.eventBus = eventBus;
         this._variables = [];
         this.events = [];
@@ -167,7 +171,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
     }
 
     public get lastTickTime() {
-        return this._lastTickTime;
+        return this._lastTickTime - this._pauseDuration;
     }
 
     public get fps() {
@@ -328,6 +332,8 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.hoverableNodesIndices.clear();
         this.selectableNodesIndices.clear();
         this.lastHoveredNodeIndices.clear();
+        this._pauseDuration = 0;
+        this._pauseTickTime = NaN;
         try {
             this.validateGraph(behaveGraph);
         } catch (e) {
@@ -407,6 +413,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
     }
 
     public pauseEventQueue = () => {
+        this._pauseTickTime = performance.now();
         if (this._timerID !== null) {
             clearTimeout(this._timerID);
             this._timerID = null;
@@ -463,10 +470,10 @@ export class BasicBehaveEngine implements IBehaveEngine {
         callback: () => void
     ) => {
         this.clearPointerInterpolation(path);
-        const startTime = performance.now();
+        const startTime = this.lastTickTime;
 
         const action = async () => {
-            const elapsedDuration = (performance.now() - startTime) / 1000;
+            const elapsedDuration = (this.lastTickTime - startTime) / 1000;
             const t = Math.min(elapsedDuration / duration, 1);
             const p = cubicBezier(t, {x: 0, y:0}, {x: p1[0], y:p1[1]}, {x: p2[0], y:p2[1]}, {x: 1, y:1});
             if (valueType === "float3") {
@@ -656,8 +663,18 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.eventBus.addEvent({behaveNode: nodeToPush, inSocketId: flow.socket});
     }
 
-    private executeEventQueue = () => {
+    public executeEventQueueTick = () => {
+        this.executeEventQueue(true);
+    };
+
+    private executeEventQueue = (manualStep = false) => {
         // process events in queue
+        this._lastTickTime = performance.now();
+        if (!isNaN(this._pauseTickTime)) {
+            this._pauseDuration += this._lastTickTime - this._pauseTickTime;
+            this._pauseTickTime = NaN;
+        }
+
         const eventQueueCopy = [...this.eventBus.getEventList()];
         this.eventBus.clearEventList();
         while (eventQueueCopy.length > 0) {
@@ -679,7 +696,6 @@ export class BasicBehaveEngine implements IBehaveEngine {
         }
 
         // process onTick nodes
-        this._lastTickTime = Date.now() / 1000;
         for (const onTickNodeIndex of this.onTickNodeIndices) {
             const tickFlow: IInteractivityFlow = { node: onTickNodeIndex, socket: "tick"}
             const tickNode: BehaveEngineNode = this.idToBehaviourNodeMap.get(Number(tickFlow.node))!;
@@ -688,6 +704,9 @@ export class BasicBehaveEngine implements IBehaveEngine {
         }
         if (this._timerID !== null) {
             clearTimeout(this._timerID);
+        }
+        if (manualStep) {
+            return;
         }
         this._timerID = setTimeout(() => {
             this.executeEventQueue()

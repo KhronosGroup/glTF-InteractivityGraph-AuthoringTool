@@ -45,10 +45,10 @@ export class VariableInterpolate extends BehaveEngineNode {
         }
         const initialValue = this.variables[this._variable].value![0]!;
         const targetValue = value;
-        const startTime = Date.now();
+        const startTime = this.graphEngine.lastTickTime;
 
         const interpolationAction = () => {
-            const elapsedDuration = (Date.now() - startTime) / 1000;
+            const elapsedDuration = (this.graphEngine.lastTickTime - startTime) / 1000;
             const t = Math.min(elapsedDuration / duration, 1);
             const p = cubicBezier(t, {x: 0, y:0}, {x: p1[0], y:p1[1]}, {x: p2[0], y:p2[1]}, {x: 1, y:1});
 

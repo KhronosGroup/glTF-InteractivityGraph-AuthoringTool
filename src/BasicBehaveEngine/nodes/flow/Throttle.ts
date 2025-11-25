@@ -30,7 +30,7 @@ export class Throttle extends BehaveEngineNode {
                 this.processFlow(this.flows.err);
             }
         } else {
-            const now = Date.now();
+            const now = this.graphEngine.lastTickTime;
             if (!isNaN(this._lastRemainingTime)) {
                 const timeSinceLastCall = now - this._lastSuccessfulCall;
                 if (timeSinceLastCall <= duration * 1000) {

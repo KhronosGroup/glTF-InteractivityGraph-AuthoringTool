@@ -128,6 +128,11 @@ export interface IBehaveEngine {
     playEventQueue: () => void;
 
     /**
+     * Executes the engine for one tick. Can be used for manual/renderer controlled stepping.
+     */
+    executeEventQueueTick: () => void;
+
+    /**
      * Emit a custom event with a specified name and values.
      * @param name - The name of the custom event to emit.
      * @param params - The values to be passed to the custom event callback functions.

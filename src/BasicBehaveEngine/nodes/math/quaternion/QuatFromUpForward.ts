@@ -26,10 +26,7 @@ export class QuatFromUpForward extends BehaveEngineNode {
         }
 
         const fwd = glMatrix.vec3.fromValues(forward[0], forward[1], forward[2]);
-        if (glMatrix.vec3.len(fwd) < 1e-6) {
-            throw Error("forward vector must be non-zero");
-        }
-
+    
         const upVec = glMatrix.vec3.fromValues(up[0], up[1], up[2]);
 
         const right = glMatrix.vec3.create();
@@ -53,8 +50,7 @@ export class QuatFromUpForward extends BehaveEngineNode {
 
         const trueUp = glMatrix.vec3.create();
         glMatrix.vec3.cross(trueUp, fwd, right);
-        glMatrix.vec3.normalize(trueUp, trueUp);
-
+     
         const m = glMatrix.mat3.create();
         // Set columns of rotation matrix: right, up, forward
         m[0] = right[0]; m[1] = right[1]; m[2] = right[2];

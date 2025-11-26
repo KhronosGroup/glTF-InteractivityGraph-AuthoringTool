@@ -121,6 +121,8 @@ import { MatDecompose } from '../src/BasicBehaveEngine/nodes/math/matrix/matDeco
 import { MathSwitch } from '../src/BasicBehaveEngine/nodes/math/special/MathSwitch';
 import { DebugLog } from '../src/BasicBehaveEngine/nodes/experimental/Debug';
 import { QuatAngleBetween } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatAngleBetween';
+import { QuatFromUpForward } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatFromUpForward';
+import * as glMatrix from 'gl-matrix';
 
 describe('nodes', () => {
     let executionLog: string;
@@ -636,6 +638,63 @@ describe('nodes', () => {
 
         const val = pi.processNode();
         expect(val['value'].value[0]).toBe(Math.PI);
+    });
+
+    it("math/quatFromUpForward identity", () => {
+        const node = new QuatFromUpForward({
+            ...defaultProps,
+            declaration: {
+                op: "math/quatFromUpForward",
+                inputValueSockets: {},
+                outputValueSockets: {},
+            },
+            values: {
+                up: { value: [0, 1, 0], type: 4 },
+                forward: { value: [0, 0, 1], type: 4 },
+            }
+        });
+        const res = node.processNode();
+        const q = res['value']!.value as number[];
+        expect(Math.abs(q[0])).toBeLessThan(1e-6);
+        expect(Math.abs(q[1])).toBeLessThan(1e-6);
+        expect(Math.abs(q[2])).toBeLessThan(1e-6);
+        expect(Math.abs(q[3] - 1)).toBeLessThan(1e-6);
+    });
+
+    it("math/quatFromUpForward colinear up/forward", () => {
+        const node = new QuatFromUpForward({
+            ...defaultProps,
+            declaration: {
+                op: "math/quatFromUpForward",
+                inputValueSockets: {},
+                outputValueSockets: {},
+            },
+            values: {
+                up: { value: [0, 1, 0], type: 4 },
+                forward: { value: [0, 1, 0], type: 4 },
+            }
+        });
+        const res = node.processNode();
+        const q = res['value']!.value as number[];
+
+        const qv = glMatrix.quat.fromValues(q[0], q[1], q[2], q[3]);
+        glMatrix.quat.normalize(qv, qv);
+
+        const basisForward = glMatrix.vec3.fromValues(0, 0, 1);
+        const basisUp = glMatrix.vec3.fromValues(0, 1, 0);
+
+        const rotatedForward = glMatrix.vec3.create();
+        glMatrix.vec3.transformQuat(rotatedForward, basisForward, qv);
+        expect(Math.abs(rotatedForward[0] - 0)).toBeLessThan(1e-5);
+        expect(Math.abs(rotatedForward[1] - 1)).toBeLessThan(1e-5);
+        expect(Math.abs(rotatedForward[2] - 0)).toBeLessThan(1e-5);
+
+        const rotatedUp = glMatrix.vec3.create();
+        glMatrix.vec3.transformQuat(rotatedUp, basisUp, qv);
+        const dot = glMatrix.vec3.dot(rotatedUp, glMatrix.vec3.fromValues(0,1,0));
+        expect(Math.abs(glMatrix.vec3.dot(rotatedUp, rotatedForward))).toBeLessThan(1e-5);
+        expect(Math.abs(glMatrix.vec3.len(rotatedUp) - 1)).toBeLessThan(1e-5);
+        expect(dot).toBeLessThan(1); // should not remain exactly unchanged unless rotation is identity
     });
 
     it("math/nan", () => {

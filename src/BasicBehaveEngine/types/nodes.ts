@@ -435,6 +435,12 @@ export const knownDeclarations: IInteractivityDeclaration[] = [
     },
     {
         op: "math/quatFromDirections"
+    },
+    {
+        op: "math/quatFromUpForward"
+    },
+    {
+        op: "math/quatSlerp"
     }
 ]
 
@@ -661,6 +667,63 @@ const mathQuaternionNodeSpecs: IInteractivityNode[] = [
                 b: {
                     typeOptions: [4],
                     type: 4,
+                    value: [undefined]
+                }
+            },
+            output: {
+                value: {
+                    typeOptions: [5],
+                    type: 5,
+                    value: [undefined]
+                }
+            }
+        }
+    },
+    {
+        op: "math/quatFromUpForward",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/quatFromUpForward"),
+        description: "Create a quaternion from an up vector and a forward direction",
+        values: {
+            input: {
+                up: {
+                    typeOptions: [4],
+                    type: 4,
+                    value: [undefined]
+                },
+                forward: {
+                    typeOptions: [4],
+                    type: 4,
+                    value: [undefined]
+                }
+            },
+            output: {
+                value: {
+                    typeOptions: [5],
+                    type: 5,
+                    value: [undefined]
+                }
+            }
+        }
+    },
+    {
+        op: "math/quatSlerp",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/quatSlerp"),
+        description: "Spherical linear interpolation between two quaternions",
+        values: {
+            input: {
+                a: {
+                    typeOptions: [5],
+                    type: 5,
+                    value: [undefined]
+                },
+                b: {
+                    typeOptions: [5],
+                    type: 5,
+                    value: [undefined]
+                },
+                c: {
+                    typeOptions: [2],
+                    type: 2,
                     value: [undefined]
                 }
             },

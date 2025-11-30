@@ -11,7 +11,8 @@ import {
     TargetCamera, Node,
     PickingInfo,
     IPointerEvent,
-    TransformNode
+    TransformNode,
+    Material
 } from "@babylonjs/core";
 import {Vector3} from "@babylonjs/core/Maths/math.vector";
 import {cubicBezier, easeFloat, easeFloat3, easeFloat4, linearFloat, slerpFloat4} from "../BasicBehaveEngine/easingUtils";
@@ -283,6 +284,26 @@ export class BabylonDecorator extends ADecorator {
         //TODO: find babylon mapping for /materials/{}/normalTexture/scale
 
         //TODO: find babylon mapping for /materials/{}/occlusionTexture/strength
+
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/extensions/KHR_materials_emissive_strength/emissiveStrength`, (path) => {
+            const parts: string[] = path.split("/");
+            const emissiveStrength = (this.world.materials[Number(parts[2])]).emissiveIntensity;
+            return emissiveStrength === undefined ? [NaN] : [emissiveStrength];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const material = this.world.materials[Number(parts[2])];
+            material.emissiveIntensity = value;
+        }, "float", false);
+
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/extensions/KHR_materials_transmission/transmissionFactor`, (path) => {
+            const parts: string[] = path.split("/");
+            const transmissionFactor = (this.world.materials[Number(parts[2])] as PBRMaterial).subSurface.refractionIntensity;
+            return transmissionFactor === undefined ? [NaN] : [transmissionFactor];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const material = this.world.materials[Number(parts[2])];
+            material.subSurface.refractionIntensity = value;
+        }, "float", false);
 
 
         // BASE COLOR TEXTURE TRANSFORM

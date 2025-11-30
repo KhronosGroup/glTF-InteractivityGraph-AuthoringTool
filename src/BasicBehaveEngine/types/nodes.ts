@@ -487,7 +487,8 @@ export const standardTypes: IInteractivityValueType[] = [
     }
 ]
 
-const floatNTypes = [2,3,4,5,6,8];
+// 0: bool, 1: int, 2: float, 3: float2, 4: float3, 5: float4, 6: float2x2, 7: float3x3, 8: float4x4
+const floatNTypes = [2,3,4,5];
 const floatNxNTypes = [6,7,8];
 const floatVectorTypes = [3,4,5];
 export const anyType = [0,1,2,3,4,5,6,7,8,9];
@@ -2617,12 +2618,12 @@ const mathComparisonNodeSpecs: IInteractivityNode[] = [
         values: {
             input: {
                 a: {
-                    typeOptions: [0, 1, ...floatNTypes],
+                    typeOptions: [0, 1, ...floatNTypes, ...floatNxNTypes],
                     type: 0,
                     value: [undefined]
                 },
                 b: {
-                    typeOptions: [0, 1, ...floatNTypes],
+                    typeOptions: [0, 1, ...floatNTypes, ...floatNxNTypes],
                     type: 0,
                     value: [undefined]
                 },
@@ -2643,12 +2644,12 @@ const mathComparisonNodeSpecs: IInteractivityNode[] = [
         values: {
             input: {
                 a: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, 2],
                     type: 1,
                     value: [undefined]
                 },
                 b: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, 2],
                     type: 1,
                     value: [undefined]
                 },
@@ -2669,12 +2670,12 @@ const mathComparisonNodeSpecs: IInteractivityNode[] = [
         values: {
             input: {
                 a: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, 2],
                     type: 1,
                     value: [undefined]
                 },
                 b: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, 2],
                     type: 1,
                     value: [undefined]
                 },
@@ -2695,12 +2696,12 @@ const mathComparisonNodeSpecs: IInteractivityNode[] = [
         values: {
             input: {
                 a: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, 2],
                     type: 1,
                     value: [undefined]
                 },
                 b: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, 2],
                     type: 1,
                     value: [undefined]
                 },
@@ -2721,12 +2722,12 @@ const mathComparisonNodeSpecs: IInteractivityNode[] = [
         values: {
             input: {
                 a: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, 2],
                     type: 1,
                     value: [undefined]
                 },
                 b: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, 2],
                     type: 1,
                     value: [undefined]
                 },
@@ -2750,14 +2751,14 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
         values: {
             input: {
                 a: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, ...floatNTypes, ...floatNxNTypes],
                     type: 1,
                     value: [undefined]
                 }
             },
             output: {
                 value: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, ...floatNTypes, ...floatNxNTypes],
                     type: 1,
                     value: [undefined]
                 }
@@ -2771,14 +2772,14 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
         values: {
             input: {
                 a: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, ...floatNTypes, ...floatNxNTypes],
                     type: 1,
                     value: [undefined]
                 }
             },
             output: {
                 value: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, ...floatNTypes, ...floatNxNTypes],
                     type: 1,
                     value: [undefined]
                 }
@@ -2792,14 +2793,14 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
         values: {
             input: {
                 a: {
-                    typeOptions: floatNTypes,
+                    typeOptions: [...floatNTypes, ...floatNxNTypes],
                     type: 2,
                     value: [undefined]
                 }
             },
             output: {
                 value: {
-                    typeOptions: floatNTypes,
+                    typeOptions: [...floatNTypes, ...floatNxNTypes],
                     type: 2,
                     value: [undefined]
                 }
@@ -2813,14 +2814,14 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
         values: {
             input: {
                 a: {
-                    typeOptions: floatNTypes,
+                    typeOptions: [...floatNTypes, ...floatNxNTypes],
                     type: 2,
                     value: [undefined]
                 }
             },
             output: {
                 value: {
-                    typeOptions: floatNTypes,
+                    typeOptions: [...floatNTypes, ...floatNxNTypes],
                     type: 2,
                     value: [undefined]
                 }
@@ -2834,14 +2835,14 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
         values: {
             input: {
                 a: {
-                    typeOptions: floatNTypes,
+                    typeOptions: [...floatNTypes, ...floatNxNTypes],
                     type: 2,
                     value: [undefined]
                 }
             },
             output: {
                 value: {
-                    typeOptions: floatNTypes,
+                    typeOptions: [...floatNTypes, ...floatNxNTypes],
                     type: 2,
                     value: [undefined]
                 }
@@ -2855,14 +2856,14 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
         values: {
             input: {
                 a: {
-                    typeOptions: floatNTypes,
+                    typeOptions: [...floatNTypes, ...floatNxNTypes],
                     type: 2,
                     value: [undefined]
                 }
             },
             output: {
                 value: {
-                    typeOptions: floatNTypes,
+                    typeOptions: [...floatNTypes, ...floatNxNTypes],
                     type: 2,
                     value: [undefined]
                 }
@@ -2876,14 +2877,14 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
         values: {
             input: {
                 a: {
-                    typeOptions: floatNTypes,
+                    typeOptions: [...floatNTypes, ...floatNxNTypes],
                     type: 2,
                     value: [undefined]
                 }
             },
             output: {
                 value: {
-                    typeOptions: floatNTypes,
+                    typeOptions: [...floatNTypes, ...floatNxNTypes],
                     type: 2,
                     value: [undefined]
                 }
@@ -2897,14 +2898,14 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
         values: {
             input: {
                 a: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, ...floatNTypes, ...floatNxNTypes],
                     type: 1,
                     value: [undefined]
                 }
             },
             output: {
                 value: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, ...floatNTypes, ...floatNxNTypes],
                     type: 1,
                     value: [undefined]
                 }
@@ -2918,19 +2919,19 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
         values: {
             input: {
                 a: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, ...floatNTypes, ...floatNxNTypes],
                     type: 1,
                     value: [undefined]
                 },
                 b: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, ...floatNTypes, ...floatNxNTypes],
                     type: 1,
                     value: [undefined]
                 }
             },
             output: {
                 value: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, ...floatNTypes, ...floatNxNTypes],
                     type: 1,
                     value: [undefined]
                 }
@@ -2944,19 +2945,19 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
         values: {
             input: {
                 a: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, ...floatNTypes, ...floatNxNTypes],
                     type: 1,
                     value: [undefined]
                 },
                 b: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, ...floatNTypes, ...floatNxNTypes],
                     type: 1,
                     value: [undefined]
                 }
             },
             output: {
                 value: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, ...floatNTypes, ...floatNxNTypes],
                     type: 1,
                     value: [undefined]
                 }
@@ -2970,19 +2971,19 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
         values: {
             input: {
                 a: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, ...floatNTypes, ...floatNxNTypes],
                     type: 1,
                     value: [undefined]
                 },
                 b: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, ...floatNTypes, ...floatNxNTypes],
                     type: 1,
                     value: [undefined]
                 }
             },
             output: {
                 value: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, ...floatNTypes, ...floatNxNTypes],
                     type: 1,
                     value: [undefined]
                 }
@@ -2996,19 +2997,19 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
         values: {
             input: {
                 a: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, ...floatNTypes, ...floatNxNTypes],
                     type: 1,
                     value: [undefined]
                 },
                 b: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, ...floatNTypes, ...floatNxNTypes],
                     type: 1,
                     value: [undefined]
                 }
             },
             output: {
                 value: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, ...floatNTypes, ...floatNxNTypes],
                     type: 1,
                     value: [undefined]
                 }
@@ -3022,19 +3023,19 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
         values: {
             input: {
                 a: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, ...floatNTypes, ...floatNxNTypes],
                     type: 1,
                     value: [undefined]
                 },
                 b: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, ...floatNTypes, ...floatNxNTypes],
                     type: 1,
                     value: [undefined]
                 }
             },
             output: {
                 value: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, ...floatNTypes, ...floatNxNTypes],
                     type: 1,
                     value: [undefined]
                 }
@@ -3048,19 +3049,19 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
         values: {
             input: {
                 a: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, ...floatNTypes, ...floatNxNTypes],
                     type: 1,
                     value: [undefined]
                 },
                 b: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, ...floatNTypes, ...floatNxNTypes],
                     type: 1,
                     value: [undefined]
                 }
             },
             output: {
                 value: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, ...floatNTypes, ...floatNxNTypes],
                     type: 1,
                     value: [undefined]
                 }
@@ -3074,19 +3075,19 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
         values: {
             input: {
                 a: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, ...floatNTypes, ...floatNxNTypes],
                     type: 1,
                     value: [undefined]
                 },
                 b: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, ...floatNTypes, ...floatNxNTypes],
                     type: 1,
                     value: [undefined]
                 }
             },
             output: {
                 value: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, ...floatNTypes, ...floatNxNTypes],
                     type: 1,
                     value: [undefined]
                 }
@@ -3100,24 +3101,24 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
         values: {
             input: {
                 a: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, ...floatNTypes, ...floatNxNTypes],
                     type: 1,
                     value: [undefined]
                 },
                 b: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, ...floatNTypes, ...floatNxNTypes],
                     type: 1,
                     value: [undefined]
                 },
                 c: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, ...floatNTypes, ...floatNxNTypes],
                     type: 1,
                     value: [undefined]
                 }
             },
             output: {
                 value: {
-                    typeOptions: [1, ...floatNTypes],
+                    typeOptions: [1, ...floatNTypes, ...floatNxNTypes],
                     type: 1,
                     value: [undefined]
                 }
@@ -3131,14 +3132,14 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
         values: {
             input: {
                 a: {
-                    typeOptions: floatNTypes,
+                    typeOptions: [...floatNTypes, ...floatNxNTypes],
                     type: 2,
                     value: [undefined]
                 }
             },
             output: {
                 value: {
-                    typeOptions: floatNTypes,
+                    typeOptions: [...floatNTypes, ...floatNxNTypes],    
                     type: 2,
                     value: [undefined]
                 }
@@ -3152,24 +3153,24 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
         values: {
             input: {
                 a: {
-                    typeOptions: floatNTypes,
+                    typeOptions: [...floatNTypes, ...floatNxNTypes],
                     type: 2,
                     value: [undefined]
                 },
                 b: {
-                    typeOptions: floatNTypes,
+                    typeOptions: [...floatNTypes, ...floatNxNTypes],
                     type: 2,
                     value: [undefined]
                 },
                 c: {
-                    typeOptions: floatNTypes,
+                    typeOptions: [...floatNTypes, ...floatNxNTypes],
                     type: 2,
                     value: [undefined]
                 }
             },
             output: {
                 value: {
-                    typeOptions: floatNTypes,
+                    typeOptions: [...floatNTypes, ...floatNxNTypes],
                     type: 2,
                     value: [undefined]
                 }

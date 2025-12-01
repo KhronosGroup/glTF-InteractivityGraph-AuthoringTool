@@ -18,6 +18,7 @@ export class Throttle extends BehaveEngineNode {
 
     override processNode(flowSocket?: string) {
         if (flowSocket === "reset") {
+            this._lastRemainingTime = NaN;
             this.outValues.lastRemainingTime = { value: [NaN], type: this.getTypeIndex('float')};
             return;
         }

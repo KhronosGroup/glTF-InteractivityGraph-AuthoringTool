@@ -121,10 +121,13 @@ export const BabylonEngineComponent = () => {
         container.materials = container.materials.sort((a, b) => {
             const aPointer = a._internalMetadata?.gltf?.pointers?.[0] ?? "";
             const bPointer = b._internalMetadata?.gltf?.pointers?.[0] ?? "";
-            if (aPointer < bPointer) return -1;
-            if (aPointer > bPointer) return 1;
+            const aIndex = Number(aPointer.split('/')[2]);
+            const bIndex = Number(bPointer.split('/')[2]);
+            if (aIndex < bIndex) return -1;
+            if (aIndex > bIndex) return 1;
             return 0;
         });
+        console.log(container.materials);
         //TODO: the true meshes of glTF are not the ones babylon exposes as objects (these are instantiated node meshes) we should find a way to pass the mesh itself and not the instantiation via a node
         // or else we have cases where two nodes refere to the single mesh => we will have 2 meshes where really we only truly have one in glTF
         return {

@@ -159,10 +159,6 @@ export class BehaveEngineNode {
 
             let valueToReturn: any;
             let typeIndex: number;
-            if (val.socket === "hoverNodeIndex") {
-                console.log(dependentNode.outValues)
-                console.log(val.socket!)
-            }
             if (dependentNode.outValues !== undefined && dependentNode.outValues[val.socket!] !== undefined) {
                 //socket has already been evaluated so return it
                 valueToReturn = dependentNode.outValues[val.socket!].value;

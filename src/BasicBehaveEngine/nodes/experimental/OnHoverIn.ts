@@ -14,7 +14,7 @@ export class OnHoverIn extends BehaveEngineNode {
         this._nodeIndex = Number(nodeIndex[0]);
         this._stopPropagation = stopPropagation[0];
 
-        this.outValues.selectedNodeIndex = {
+        this.outValues.hoverNodeIndex = {
             type: this.getTypeIndex('int'),
             value: [-1],
         };
@@ -30,7 +30,7 @@ export class OnHoverIn extends BehaveEngineNode {
         const callback = (selectedNodeIndex: number | undefined, controllerIndex: number, firstCommonHoverNodeIndex: number | undefined) => {
             const hoverInformation = this.graphEngine.hoverableNodesIndices.get(this._nodeIndex);
             if (hoverInformation) {
-                this.outValues.selectedNodeIndex = {
+                this.outValues.hoverNodeIndex = {
                     type: this.getTypeIndex('int'),
                     value: [selectedNodeIndex ?? -1],
                 };

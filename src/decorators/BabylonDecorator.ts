@@ -192,8 +192,6 @@ export class BabylonDecorator extends ADecorator {
             if (activeCamera === null || !(activeCamera instanceof TargetCamera)) {
                 return [NaN, NaN, NaN, NaN]
             }
-
-            console.log(`Camera rotation: ${activeCamera.absoluteRotation.x}, ${activeCamera.absoluteRotation.y}, ${activeCamera.absoluteRotation.z}, ${activeCamera.absoluteRotation.w}`)
             return [activeCamera.absoluteRotation.x, -1 *activeCamera.absoluteRotation.y, activeCamera.absoluteRotation.z, activeCamera.absoluteRotation.w]
         }, (path, value) => {
             //no-op
@@ -662,24 +660,10 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/nodes/${maxGltfNode}/matrix`, (path) => {
             const parts: string[] = path.split("/");
             const node = this.world.glTFNodes[Number(parts[2])];
-
-
-            console.log(node.scaling, node.rotationQuaternion, node.position)
-            
-            
-            console.log(node.scaling, node.rotationQuaternion, node.position)
             
             const scaleMatrix = Matrix.Scaling(node.scaling.x, node.scaling.y, node.scaling.z);
             const rotationMatrix = Matrix.FromQuaternionToRef(node.rotationQuaternion, Matrix.Identity());
-
-
-            console.log(scaleMatrix, rotationMatrix)
        
-            
-            
-            console.log(scaleMatrix, rotationMatrix)
-       
-            
             const matrix: Matrix = scaleMatrix.multiply(rotationMatrix);
             matrix.setTranslation(new Vector3(node.position.x, node.position.y, node.position.z));
             

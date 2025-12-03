@@ -122,6 +122,7 @@ import { MathSwitch } from '../src/BasicBehaveEngine/nodes/math/special/MathSwit
 import { DebugLog } from '../src/BasicBehaveEngine/nodes/experimental/Debug';
 import { QuatAngleBetween } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatAngleBetween';
 import { QuatFromUpForward } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatFromUpForward';
+import { QuatSlerp } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatSlerp';
 import * as glMatrix from 'gl-matrix';
 
 describe('nodes', () => {
@@ -2386,6 +2387,24 @@ describe('nodes', () => {
         expect(isCloseToVal(val['value'].value[1], 0.5)).toBe(true);
         expect(isCloseToVal(val['value'].value[2], 0.5)).toBe(true);
         expect(isCloseToVal(val['value'].value[3], 0.5)).toBe(true);
+    });
+
+    it("math/quatSlerp", () => {
+        const quatSlerp: QuatSlerp = new QuatSlerp({
+            ...defaultProps,
+            values: {
+                a: { value: [0, 0, 0, 1], type: 5 },
+                b: { value: [0, 0.7071068, 0, 0.7071068], type: 5 },
+                c: { value: [0.5], type: 2 }
+            }
+        });
+
+        const res = quatSlerp.processNode();
+        const v = res['value'].value;
+        expect(isCloseToVal(v[0], 0.0)).toBe(true);
+        expect(isCloseToVal(v[1], 0.3826834)).toBe(true);
+        expect(isCloseToVal(v[2], 0.0)).toBe(true);
+        expect(isCloseToVal(v[3], 0.9238795)).toBe(true);
     });
 });
 

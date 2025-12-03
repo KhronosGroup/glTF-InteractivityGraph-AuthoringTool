@@ -438,6 +438,9 @@ export const knownDeclarations: IInteractivityDeclaration[] = [
     },
     {
         op: "math/quatFromUpForward"
+    },
+    {
+        op: "math/quatSlerp"
     }
 ]
 
@@ -691,6 +694,37 @@ const mathQuaternionNodeSpecs: IInteractivityNode[] = [
                 forward: {
                     typeOptions: [4],
                     type: 4,
+                    value: [undefined]
+                }
+            },
+            output: {
+                value: {
+                    typeOptions: [5],
+                    type: 5,
+                    value: [undefined]
+                }
+            }
+        }
+    },
+    {
+        op: "math/quatSlerp",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/quatSlerp"),
+        description: "Spherical linear interpolation between two quaternions",
+        values: {
+            input: {
+                a: {
+                    typeOptions: [5],
+                    type: 5,
+                    value: [undefined]
+                },
+                b: {
+                    typeOptions: [5],
+                    type: 5,
+                    value: [undefined]
+                },
+                c: {
+                    typeOptions: [2],
+                    type: 2,
                     value: [undefined]
                 }
             },

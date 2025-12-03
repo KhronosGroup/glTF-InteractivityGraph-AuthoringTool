@@ -117,6 +117,7 @@ import { MathSwitch } from "./nodes/math/special/MathSwitch";
 import { Inverse } from "./nodes/math/matrix/Inverse";
 import { DebugLog } from "./nodes/experimental/Debug";
 import { QuatAngleBetween } from "./nodes/math/quaternion/QuatAngleBetween";
+import { QuatSlerp } from "./nodes/math/quaternion/QuatSlerp";
 import { QuatFromUpForward } from "./nodes/math/quaternion/QuatFromUpForward";
 import { cubicBezier, linearFloat, slerpFloat4 } from "./easingUtils";
 import { Determinant } from "./nodes/math/matrix/Determinant";
@@ -614,6 +615,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/quatConjugate", QuatConjugate);
         this.registerBehaveEngineNode("math/quatFromAxisAngle", QuatFromAxisAngle);
         this.registerBehaveEngineNode("math/quatAngleBetween", QuatAngleBetween);
+        this.registerBehaveEngineNode("math/quatSlerp", QuatSlerp);
         this.registerBehaveEngineNode("math/quatToAxisAngle", QuatToAxisAngle);
         this.registerBehaveEngineNode("math/quatFromDirections", QuatFromDirections);
         this.registerBehaveEngineNode("math/quatFromUpForward", QuatFromUpForward);

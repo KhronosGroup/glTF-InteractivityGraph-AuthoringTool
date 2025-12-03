@@ -26,7 +26,6 @@ import {Nullable} from "@babylonjs/core/types.js";
 import { OnHoverIn } from "../BasicBehaveEngine/nodes/experimental/OnHoverIn";
 import { OnHoverOut } from "../BasicBehaveEngine/nodes/experimental/OnHoverOut";
 import { IInteractivityFlow } from "../BasicBehaveEngine/types/InteractivityGraph";
-import * as glMatrix from "gl-matrix";
 
 export class BabylonDecorator extends ADecorator {
     scene: Scene;
@@ -38,6 +37,7 @@ export class BabylonDecorator extends ADecorator {
         super(behaveEngine);
         this.world = world;
         this.scene = scene;
+        this.scene.useRightHandedSystem = true;
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         this.behaveEngine.extractBehaveGraphFromScene = this.extractBehaveGraphFromScene
@@ -98,10 +98,10 @@ export class BabylonDecorator extends ADecorator {
                 let pos : [number, number, number] = [hit.pickedMesh.position.x, hit.pickedMesh.position.y, hit.pickedMesh.position.z];
                     if (hit.pickedPoint != null) {
                         // Babylon.js uses a left-handed coordinate system, so we negate the x value to convert to right-handed
-                        pos = [-hit.pickedPoint.x, hit.pickedPoint.y, hit.pickedPoint.z];
+                        pos = [hit.pickedPoint.x, hit.pickedPoint.y, hit.pickedPoint.z];
                     }
                 const hitNodeIndex = this.world.glTFNodes.findIndex((value: { uniqueId: number; }) => value.uniqueId === hit.pickedMesh!.uniqueId);                
-                this.select(hitNodeIndex, 0, pos, [-ray.origin.x, ray.origin.y, ray.origin.z]);
+                this.select(hitNodeIndex, 0, pos, [ray.origin.x, ray.origin.y, ray.origin.z]);
             }
         });
 
@@ -192,7 +192,7 @@ export class BabylonDecorator extends ADecorator {
             if (activeCamera === null || !(activeCamera instanceof TargetCamera)) {
                 return [NaN, NaN, NaN, NaN]
             }
-            return [activeCamera.absoluteRotation.x, -1 *activeCamera.absoluteRotation.y, activeCamera.absoluteRotation.z, activeCamera.absoluteRotation.w]
+            return [activeCamera.absoluteRotation.x, activeCamera.absoluteRotation.y, activeCamera.absoluteRotation.z, activeCamera.absoluteRotation.w]
         }, (path, value) => {
             //no-op
         }, "float4", true)
@@ -204,7 +204,7 @@ export class BabylonDecorator extends ADecorator {
             }
 
             console.log(`Camera position: ${activeCamera.position.x}, ${activeCamera.position.y}, ${activeCamera.position.z}`)
-            return [-1 * activeCamera.position.x, activeCamera.position.y, activeCamera.position.z]
+            return [activeCamera.position.x, activeCamera.position.y, activeCamera.position.z]
         }, (path, value) => {
             //no-op
         }, "float3", true)
@@ -686,10 +686,10 @@ export class BabylonDecorator extends ADecorator {
             // x by -1
             // TODO what is the correct way to undo babylon's gltf -> babylon coordinate system conversion?
             return [
-                -globalMatrix[0], globalMatrix[1], globalMatrix[2], globalMatrix[3],
-                -globalMatrix[4], globalMatrix[5], globalMatrix[6], globalMatrix[7], 
-                -globalMatrix[8], globalMatrix[9], globalMatrix[10], globalMatrix[11],
-                -globalMatrix[12], globalMatrix[13], globalMatrix[14], globalMatrix[15]
+                globalMatrix[0], globalMatrix[1], globalMatrix[2], globalMatrix[3],
+                globalMatrix[4], globalMatrix[5], globalMatrix[6], globalMatrix[7], 
+                globalMatrix[8], globalMatrix[9], globalMatrix[10], globalMatrix[11],
+                globalMatrix[12], globalMatrix[13], globalMatrix[14], globalMatrix[15]
             ];
         }, (path, value) => {
             //no-op

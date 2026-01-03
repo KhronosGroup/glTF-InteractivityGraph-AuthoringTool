@@ -5,6 +5,7 @@ import {
     AnimationGroup,
     ArcRotateCamera,
     DirectionalLight,
+    FramingBehavior,
     Engine,
     HemisphericLight, Material,
     Mesh,
@@ -82,11 +83,27 @@ export const BabylonEngineComponent = () => {
             })
     }
 
+    const setupCamera = () => {
+        const camera = sceneRef.current!.activeCamera as ArcRotateCamera;
+        // Enable camera's behaviors
+        camera.useFramingBehavior = true;
+
+        const framingBehavior = camera.getBehaviorByName("Framing") as FramingBehavior;
+        framingBehavior.framingTime = 0;
+        framingBehavior.elevationReturnTime = -1;
+
+        camera.pinchPrecision = 200 / camera.radius;
+        camera.upperRadiusLimit = 5 * camera.radius;
+
+        camera.wheelDeltaPercentage = 0.01;
+        camera.pinchDeltaPercentage = 0.01;
+    }
+
     const createScene = () => {
         // Create a scene
         sceneRef.current = new Scene(engineRef.current!);
         sceneRef.current?.createDefaultCamera(true, true, true);
-
+        setupCamera();
         canvasRef.current!.addEventListener("wheel", (e: any) => {
             e.preventDefault();
             e.stopPropagation();
@@ -324,7 +341,10 @@ export const BabylonEngineComponent = () => {
                 <Button variant="outline-light" disabled={fileUploaded == null} onClick={() => exportKHRInteractivityGLB()}>
                     Download glb
                 </Button>
-                <Button data-testid={"frame-btn"} hidden={true} onClick={() => autoFrame()}>Auto Frame</Button>
+                <Spacer width={16} height={0}/>
+                <Button data-testid={"frame-btn"} variant="outline-light" onClick={() => autoFrame()}>
+                    Auto Frame
+                </Button>
             </div>
 
             <canvas ref={canvasRef} style={{ width: '100%', height: '700px' }} data-testid={"babylon-engine-canvas"} />

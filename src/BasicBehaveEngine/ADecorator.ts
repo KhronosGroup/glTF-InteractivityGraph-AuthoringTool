@@ -1,6 +1,11 @@
 import {IBehaveEngine, IEventQueueItem, IInterpolateAction} from "./IBehaveEngine";
 import {BehaveEngineNode} from "./BehaveEngineNode";
 import {IInteractivityFlow, IInteractivityValue} from "./types/InteractivityGraph";
+import { ApplyImpulse } from "./nodes/rigid_body/ApplyImpulse";
+import { ApplyPointImpulse } from "./nodes/rigid_body/ApplyPointImpulse";
+import { RayCast } from "./nodes/rigid_body/RayCast";
+import { TriggerEntered } from "./nodes/rigid_body/TriggerEntered";
+import { TriggerExited } from "./nodes/rigid_body/TriggerExited";
 
 export abstract class ADecorator implements IBehaveEngine {
 
@@ -17,6 +22,32 @@ export abstract class ADecorator implements IBehaveEngine {
     abstract registerJsonPointer: (jsonPtr: string, getterCallback: (path: string) => any, setterCallback: (path: string, value: any) => void, typeName: string, readOnly: boolean) => void;
     abstract getWorld: () => any;
     abstract getParentNodeIndex: (nodeIndex: number) => number | undefined;
+    abstract startAnimation: (animationIndex: number, startTime: number, endTime: number, speed: number, callback: () => void) => void;
+    abstract stopAnimation: (animationIndex: number) => void;
+    abstract stopAnimationAt: (animationIndex: number, stopTime: number, callback: () => void) => void
+
+    registerRigidBodyNodes() {
+        this.behaveEngine.registerBehaveEngineNode("rigid_body/applyImpulse", ApplyImpulse);
+        this.behaveEngine.registerBehaveEngineNode("rigid_body/applyPointImpulse", ApplyPointImpulse);
+        this.behaveEngine.registerBehaveEngineNode("rigid_body/rayCast", RayCast);
+        this.behaveEngine.registerBehaveEngineNode("event/rigid_body_triggerEntered", TriggerEntered);
+        this.behaveEngine.registerBehaveEngineNode("event/rigid_body_triggerExited", TriggerExited);
+    }
+
+    
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    applyImpulseToRigidBody(nodeIndex: number, linearImpulse: [number, number, number], angularImpulse: [number, number, number]): void {
+        // Overwrite with application logic here
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    applyPointImpulseToRigidBody(nodeIndex: number, linearImpulse: [number, number, number], angularImpulse: [number, number, number]): void {
+        // Overwrite with application logic here
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    rayCastRigidBodies(rayStart: [number, number, number], rayEnd: [number, number, number], collisionFilterIndex: number): {hitNodeIndex: number, hitPoint: [number, number, number] | undefined, hitNormal: [number, number, number] | undefined} {
+        // Overwrite with application logic here
+        return { hitNodeIndex: -1, hitPoint: undefined, hitNormal: undefined };
+    }
 
     hoverOn(nodeIndex: number | undefined, controllerIndex: number) {
         this.behaveEngine.hoverOn(nodeIndex, controllerIndex);

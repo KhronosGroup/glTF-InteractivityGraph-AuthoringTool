@@ -1,4 +1,4 @@
-import {IBehaveEngine, IEventBus, IEventQueueItem, IHoverInformation, IInterpolateAction} from "./IBehaveEngine";
+import {IBehaveEngine, IEventBus, IEventQueueItem, IHoverInformation, IInterpolateAction, IRigidBodyTriggerInformation} from "./IBehaveEngine";
 import {JsonPtrTrie} from "./JsonPtrTrie";
 import {BehaveEngineNode, IBehaviourNodeProps} from "./BehaveEngineNode";
 import {OnStartNode} from "./nodes/lifecycle/onStart";
@@ -146,6 +146,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
     public hoverableNodesIndices: Map<number, IHoverInformation>;
     public selectableNodesIndices: Map<number, (selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) => void>;
     public lastHoveredNodeIndices: Map<number, number | undefined>;
+    public rigidBodyTriggerNodeIndices: Map<number, IRigidBodyTriggerInformation>;
 
 
     constructor(fps: number, eventBus: IEventBus) {
@@ -168,6 +169,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.hoverableNodesIndices = new Map<number, IHoverInformation>();
         this.lastHoveredNodeIndices = new Map<number, number>();
         this.selectableNodesIndices = new Map<number, (selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) => void>();
+        this.rigidBodyTriggerNodeIndices = new Map<number, IRigidBodyTriggerInformation>();
 
         this.registerKnownBehaviorNodes();
     }
@@ -182,6 +184,50 @@ export class BasicBehaveEngine implements IBehaveEngine {
 
     public get variables() {
         return this._variables;
+    }
+
+    public startAnimation() {
+        // Implemented by decorators
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public stopAnimation(animationIndex: number) {
+        // Implemented by decorators
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public stopAnimationAt(animationIndex: number, stopTime: number , callback: () => void) {
+        // Implemented by decorators
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public applyImpulseToRigidBody(nodeIndex: number, linearImpulse: [number, number, number], angularImpulse: [number, number, number]) {
+        // Implemented by decorators
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public applyPointImpulseToRigidBody(nodeIndex: number, linearImpulse: [number, number, number], angularImpulse: [number, number, number]) {
+        // Implemented by decorators
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public rayCastRigidBodies(rayStart: [number, number, number], rayEnd: [number, number, number], collisionFilterIndex: number): {hitNodeIndex: number, hitPoint: [number, number, number] | undefined, hitNormal: [number, number, number] | undefined} {
+        // Implemented by decorators
+        return {hitNodeIndex: -1, hitPoint: undefined, hitNormal: undefined};
+    }
+
+    public triggerEntered(colliderNodeIndex: number, motionNodeIndex: number | undefined) {
+        const callback = this.rigidBodyTriggerNodeIndices.get(colliderNodeIndex)?.triggerEntered;
+        if (callback) {
+            callback(colliderNodeIndex, motionNodeIndex);
+        }
+    }
+
+    public triggerExited(colliderNodeIndex: number, motionNodeIndex: number | undefined) {
+        const callback = this.rigidBodyTriggerNodeIndices.get(colliderNodeIndex)?.triggerExited;
+        if (callback) {
+            callback(colliderNodeIndex, motionNodeIndex);
+        }
     }
 
     public select(selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) {

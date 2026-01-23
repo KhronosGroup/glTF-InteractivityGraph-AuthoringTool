@@ -359,6 +359,102 @@ export const knownDeclarations: IInteractivityDeclaration[] = [
         op: "animation/stopAt"
     },
     {
+        op: "rigid_body/applyImpulse",
+        extension: "KHR_physics_rigid_bodies",
+        inputValueSockets: {
+            nodeIndex: {
+                type: 1,
+                value: [undefined]
+            },
+            linearImpulse: {
+                type: 4,
+                value: [0,0,0]
+            },
+            angularImpulse: {
+                type: 4,
+                value: [0,0,0]
+            }
+        }
+    },
+    {
+        op: "rigid_body/applyPointImpulse",
+        extension: "KHR_physics_rigid_bodies",
+        inputValueSockets: {
+            nodeIndex: {
+                type: 1,
+                value: [undefined]
+            },
+            linearImpulse: {
+                type: 4,
+                value: [undefined, undefined, undefined]
+            },
+            angularImpulse: {
+                type: 4,
+                value: [undefined, undefined, undefined]
+            }
+        }
+    },
+    {
+        op: "rigid_body/rayCast",
+        extension: "KHR_physics_rigid_bodies",
+        inputValueSockets: {
+            rayStart: {
+                type: 4,
+                value: [undefined, undefined, undefined]
+            },
+            rayEnd: {
+                type: 4,
+                value: [undefined, undefined, undefined]
+            },
+            collisionFilterIndex: {
+                type: 1,
+                value: [-1]
+            }
+        },
+        outputValueSockets: {
+            hitNodeIndex: {
+                type: 1,
+                value: [undefined]
+            },
+            hitFraction: {
+                type: 2,
+                value: [undefined]
+            },
+            hitNormal: {    
+                type: 4,
+                value: [undefined, undefined, undefined]
+            }
+        }
+    },
+    {
+        op: "event/rigid_body_triggerEntered",
+        extension: "KHR_physics_rigid_bodies",
+        outputValueSockets: {
+            colliderNodeIndex: {
+                type: 1,
+                value: [undefined]
+            },
+            motionNodeIndex: {
+                type: 1,
+                value: [-1]
+            }
+        }
+    },
+    {
+        op: "event/rigid_body_triggerExited",
+        extension: "KHR_physics_rigid_bodies",
+        outputValueSockets: {
+            colliderNodeIndex: {
+                type: 1,
+                value: [undefined]
+            },
+            motionNodeIndex: {
+                type: 1,
+                value: [-1]
+            }
+        }
+    },
+    {
         op: "event/onSelect",
         extension: "KHR_node_selectability",
         outputValueSockets: {
@@ -849,6 +945,196 @@ const selectabilityNodeSpecs: IInteractivityNode[] = [
                     typeOptions: [4],
                     type: 4,
                     value: [undefined]
+                }
+            }
+        }
+    }
+]
+
+const rigidBodyNodeSpecs: IInteractivityNode[] = [
+    {
+        op: "rigid_body/applyImpulse",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "rigid_body/applyImpulse"),
+        description: "Apply an impulse to a rigid body",
+        flows: {
+            input: {
+                in: {
+                    node: undefined,
+                    socket: undefined
+                }
+            }
+        },
+        values: {
+            input: {
+                nodeIndex: {
+                    typeOptions: [1],
+                    type: 1,
+                    value: [undefined]
+                },
+                linearImpulse: {
+                    typeOptions: [4],
+                    type: 4,
+                    value: [0,0,0]
+                },
+                angularImpulse: {
+                    typeOptions: [4],
+                    type: 4,
+                    value: [0,0,0]
+                }
+            }
+        }
+    },
+    {
+        op: "rigid_body/applyPointImpulse",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "rigid_body/applyPointImpulse"),
+        description: "Apply a point impulse to a rigid body",
+        flows: {
+            input: {
+                in: {
+                    node: undefined,
+                    socket: undefined
+                }
+            }
+        },
+        values: {
+            input: {
+                nodeIndex: {
+                    typeOptions: [1],
+                    type: 1,
+                    value: [undefined]
+                },
+                linearImpulse: {
+                    typeOptions: [4],
+                    type: 4,
+                    value: [undefined, undefined, undefined]
+                },
+                angularImpulse: {
+                    typeOptions: [4],
+                    type: 4,
+                    value: [undefined, undefined, undefined]
+                }
+            }
+        }
+    },
+    {
+        op: "rigid_body/rayCast",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "rigid_body/rayCast"),
+        description: "Perform a ray segment intersection against colliders in the scene",
+        flows: {
+            input: {
+                in: {
+                    node: undefined,
+                    socket: undefined
+                }
+            },
+            output: {
+                hit: {
+                    node: undefined,
+                    socket: undefined
+                },
+                miss: {
+                    node: undefined,
+                    socket: undefined
+                }
+            }
+        },
+        values: {
+            input: {
+                rayStart: {
+                    typeOptions: [4],
+                    type: 4,
+                    value: [undefined, undefined, undefined]
+                },
+                rayEnd: {
+                    typeOptions: [4],
+                    type: 4,
+                    value: [undefined, undefined, undefined]
+                },
+                collisionFilterIndex: {
+                    typeOptions: [1],
+                    type: 1,
+                    value: [-1]
+                },
+            },
+            output: {
+                hitNodeIndex: {
+                    typeOptions: [1],
+                    type: 1,
+                    value: [undefined]
+                },
+                hitFraction: {
+                    typeOptions: [2],
+                    type: 2,
+                    value: [undefined]
+                },
+                hitNormal: {
+                    typeOptions: [4],
+                    type: 4,
+                    value: [undefined, undefined, undefined]
+                }
+            }
+        }
+    },
+    {
+        op: "event/rigid_body_triggerEntered",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "event/rigid_body_triggerEntered"),
+        description: "Trigger entered event",
+        configuration: {
+            nodeIndex: {
+                value: [undefined]
+            }
+        },
+        flows: {
+            output: {
+                out: {
+                    node: undefined,
+                    socket: undefined
+                }
+            }
+        },
+        values: {
+            output: {
+                colliderNodeIndex: {
+                    typeOptions: [1],
+                    type: 1,
+                    value: [undefined]
+                },
+                motionNodeIndex: {
+                    typeOptions: [1],
+                    type: 1,
+                    value: [-1]
+                }
+            }
+        }
+    },
+    {
+        op: "event/rigid_body_triggerExited",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "event/rigid_body_triggerExited"),
+        description: "Trigger exited event",
+        configuration: {
+            nodeIndex: {
+                value: [undefined]
+            }
+        },
+        flows: {
+            output: {
+                out: {
+                    node: undefined,
+                    socket: undefined
+                }
+            }
+        },
+        values: {
+            output: {
+                colliderNodeIndex: {
+                    typeOptions: [1],
+                    type: 1,
+                    value: [undefined]
+                },
+                motionNodeIndex: {
+                    typeOptions: [1],
+                    type: 1,
+                    value: [-1]
                 }
             }
         }
@@ -3994,7 +4280,7 @@ export const interactivityNodeSpecs: IInteractivityNode[] = [
     ...mathSpecialNodeSpecs,...lifecycleNodeSpecs, ...flowNodeSpecs, ...variableNodeSpecs, ...mathHyperbolicNodeSpecs,
     ...mathExponentialNodeSpecs, ...mathVectorNodeSpecs, ...mathMatrixNodeSpecs, ...mathSwizzleNodeSpecs, ...mathIntegerBitwiseNodeSpecs,
     ...mathTypeConversionNodeSpecs, ...pointerNodeSpecs, ...animationNodeSpecs, ...selectabilityNodeSpecs, ...customNodeSpecs, ...hoverabilityNodeSpecs,
-    ...mathQuaternionNodeSpecs,...debugNodeSpecs
+    ...mathQuaternionNodeSpecs,...debugNodeSpecs, ...rigidBodyNodeSpecs
 ];
 
 export const createNoOpNode = (declaration: IInteractivityDeclaration): IInteractivityNode => {

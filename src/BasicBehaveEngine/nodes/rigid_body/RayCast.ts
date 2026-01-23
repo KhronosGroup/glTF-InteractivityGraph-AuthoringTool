@@ -1,0 +1,34 @@
+import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
+
+export class RayCast extends BehaveEngineNode {
+    REQUIRED_VALUES = {rayStart: {}, rayEnd: {}, collisionFilterIndex: {}}
+
+    constructor(props: IBehaviourNodeProps) {
+        super(props);
+        this.name = "RayCast";
+        this.validateValues(this.values);
+
+    }
+
+    override processNode(flowSocket?: string): void {
+        this.graphEngine.clearValueEvaluationCache();
+        const {rayStart, rayEnd, collisionFilterIndex} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+
+        this.graphEngine.processNodeStarted(this);
+
+        const hitResult = this.graphEngine.rayCastRigidBodies(rayStart, rayEnd, collisionFilterIndex);
+        if (hitResult.hitNodeIndex !== -1) {
+            // Do we have to update the out values to indicate no hit?
+            if (this.flows.miss) {
+                this.processFlow(this.flows.miss);
+            }
+        } else {
+            this.outValues.hitNodeIndex = { value: [hitResult.hitNodeIndex], type: this.getTypeIndex('int')};
+            this.outValues.hitPoint = { value: hitResult.hitPoint, type: this.getTypeIndex('vec3')};
+            this.outValues.hitNormal = { value: hitResult.hitNormal, type: this.getTypeIndex('vec3')};
+            if (this.flows.hit) {
+                this.processFlow(this.flows.hit);
+            }
+        }
+    }
+}

@@ -192,7 +192,12 @@ export class BabylonDecorator extends ADecorator {
             if (activeCamera === null || !(activeCamera instanceof TargetCamera)) {
                 return [NaN, NaN, NaN, NaN]
             }
-            return [activeCamera.absoluteRotation.x, -1 *activeCamera.absoluteRotation.y, activeCamera.absoluteRotation.z, activeCamera.absoluteRotation.w]
+
+            let rotation = new Quaternion(activeCamera.absoluteRotation.x, activeCamera.absoluteRotation.y, activeCamera.absoluteRotation.z, activeCamera.absoluteRotation.w);
+            // Quaternion representing a 180-degree rotation around Y: (x=0, y=1, z=0, w=0)
+            const rot180Y = new Quaternion(0, 1, 0, 0);
+            rotation = rot180Y.multiply(rotation);
+            return [rotation.x, -1 * rotation.y, rotation.z, rotation.w]
         }, (path, value) => {
             //no-op
         }, "float4", true)

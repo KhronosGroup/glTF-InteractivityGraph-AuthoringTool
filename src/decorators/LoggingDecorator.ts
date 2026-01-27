@@ -20,6 +20,18 @@ export class LoggingDecorator extends ADecorator {
         this.registerKnownPointers();
     }
 
+    startAnimation = (animationIndex: number, startTime: number, endTime: number, speed: number, callback: () => void) => {
+        // Not implemented
+    };
+
+    stopAnimation = (animationIndex: number) => {
+        // Not implemented
+    }
+
+    stopAnimationAt = (animationIndex: number, stopTime: number, callback: () => void) => {
+        // Not implemented
+    }
+
     processAddingNodeToQueue = (flow: IInteractivityFlow) => {
         this.addToLog(`Adding ${JSON.stringify(flow)} flow to queue`);
     }

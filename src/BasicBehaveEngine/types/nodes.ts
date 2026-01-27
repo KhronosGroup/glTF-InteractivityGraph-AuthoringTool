@@ -384,11 +384,11 @@ export const knownDeclarations: IInteractivityDeclaration[] = [
                 type: 1,
                 value: [undefined]
             },
-            linearImpulse: {
+            impulse: {
                 type: 4,
                 value: [undefined, undefined, undefined]
             },
-            angularImpulse: {
+            position: {
                 type: 4,
                 value: [undefined, undefined, undefined]
             }
@@ -1003,12 +1003,12 @@ const rigidBodyNodeSpecs: IInteractivityNode[] = [
                     type: 1,
                     value: [undefined]
                 },
-                linearImpulse: {
+                impulse: {
                     typeOptions: [4],
                     type: 4,
                     value: [undefined, undefined, undefined]
                 },
-                angularImpulse: {
+                position: {
                     typeOptions: [4],
                     type: 4,
                     value: [undefined, undefined, undefined]

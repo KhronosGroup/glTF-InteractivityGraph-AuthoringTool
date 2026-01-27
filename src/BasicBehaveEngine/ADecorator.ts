@@ -40,13 +40,21 @@ export abstract class ADecorator implements IBehaveEngine {
         // Overwrite with application logic here
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    applyPointImpulseToRigidBody(nodeIndex: number, linearImpulse: [number, number, number], angularImpulse: [number, number, number]): void {
+    applyPointImpulseToRigidBody(nodeIndex: number, impulse: [number, number, number], position: [number, number, number]): void {
         // Overwrite with application logic here
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     rayCastRigidBodies(rayStart: [number, number, number], rayEnd: [number, number, number], collisionFilterIndex: number): {hitNodeIndex: number, hitPoint: [number, number, number] | undefined, hitNormal: [number, number, number] | undefined} {
         // Overwrite with application logic here
         return { hitNodeIndex: -1, hitPoint: undefined, hitNormal: undefined };
+    }
+
+    rigidBodyTriggerEntered(colliderNodeIndex: number, motionNodeIndex: number | undefined) {
+        this.behaveEngine.rigidBodyTriggerEntered(colliderNodeIndex, motionNodeIndex);
+    }
+
+    rigidBodyTriggerExited(colliderNodeIndex: number, motionNodeIndex: number | undefined) {
+        this.behaveEngine.rigidBodyTriggerExited(colliderNodeIndex, motionNodeIndex);
     }
 
     hoverOn(nodeIndex: number | undefined, controllerIndex: number) {

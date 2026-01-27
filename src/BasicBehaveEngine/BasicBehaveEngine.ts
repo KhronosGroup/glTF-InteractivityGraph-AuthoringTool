@@ -206,7 +206,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public applyPointImpulseToRigidBody(nodeIndex: number, linearImpulse: [number, number, number], angularImpulse: [number, number, number]) {
+    public applyPointImpulseToRigidBody(nodeIndex: number, impulse: [number, number, number], position: [number, number, number]) {
         // Implemented by decorators
     }
 
@@ -216,14 +216,14 @@ export class BasicBehaveEngine implements IBehaveEngine {
         return {hitNodeIndex: -1, hitPoint: undefined, hitNormal: undefined};
     }
 
-    public triggerEntered(colliderNodeIndex: number, motionNodeIndex: number | undefined) {
+    public rigidBodyTriggerEntered(colliderNodeIndex: number, motionNodeIndex: number | undefined) {
         const callback = this.rigidBodyTriggerNodeIndices.get(colliderNodeIndex)?.triggerEntered;
         if (callback) {
             callback(colliderNodeIndex, motionNodeIndex);
         }
     }
 
-    public triggerExited(colliderNodeIndex: number, motionNodeIndex: number | undefined) {
+    public rigidBodyTriggerExited(colliderNodeIndex: number, motionNodeIndex: number | undefined) {
         const callback = this.rigidBodyTriggerNodeIndices.get(colliderNodeIndex)?.triggerExited;
         if (callback) {
             callback(colliderNodeIndex, motionNodeIndex);

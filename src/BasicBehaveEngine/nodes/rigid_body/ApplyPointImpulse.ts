@@ -1,7 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class ApplyPointImpulse extends BehaveEngineNode {
-    REQUIRED_VALUES = {nodeIndex: {}, linearImpulse: {}, angularImpulse: {}}
+    REQUIRED_VALUES = {nodeIndex: {}, impulse: {}, position: {}}
 
     constructor(props: IBehaviourNodeProps) {
         super(props);
@@ -11,10 +11,10 @@ export class ApplyPointImpulse extends BehaveEngineNode {
 
     override processNode(flowSocket?: string): void {
         this.graphEngine.clearValueEvaluationCache();
-        const {nodeIndex, linearImpulse, angularImpulse} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const {nodeIndex, impulse, position} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
 
         this.graphEngine.processNodeStarted(this);
 
-        this.graphEngine.applyPointImpulseToRigidBody(nodeIndex, linearImpulse, angularImpulse);
+        this.graphEngine.applyPointImpulseToRigidBody(nodeIndex, impulse, position);
     }
 }

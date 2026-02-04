@@ -49,12 +49,12 @@ export abstract class ADecorator implements IBehaveEngine {
         return { hitNodeIndex: -1, hitPoint: undefined, hitNormal: undefined };
     }
 
-    rigidBodyTriggerEntered(colliderNodeIndex: number, motionNodeIndex: number | undefined) {
-        this.behaveEngine.rigidBodyTriggerEntered(colliderNodeIndex, motionNodeIndex);
+    rigidBodyTriggerEntered(nodeIndex: number, colliderNodeIndex: number, motionNodeIndex: number | undefined) {
+        this.behaveEngine.rigidBodyTriggerEntered(nodeIndex, colliderNodeIndex, motionNodeIndex);
     }
 
-    rigidBodyTriggerExited(colliderNodeIndex: number, motionNodeIndex: number | undefined) {
-        this.behaveEngine.rigidBodyTriggerExited(colliderNodeIndex, motionNodeIndex);
+    rigidBodyTriggerExited(nodeIndex: number, colliderNodeIndex: number, motionNodeIndex: number | undefined) {
+        this.behaveEngine.rigidBodyTriggerExited(nodeIndex, colliderNodeIndex, motionNodeIndex);
     }
 
     hoverOn(nodeIndex: number | undefined, controllerIndex: number) {

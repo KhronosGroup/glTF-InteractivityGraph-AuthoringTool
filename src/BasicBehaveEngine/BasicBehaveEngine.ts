@@ -216,15 +216,15 @@ export class BasicBehaveEngine implements IBehaveEngine {
         return {hitNodeIndex: -1, hitPoint: undefined, hitNormal: undefined};
     }
 
-    public rigidBodyTriggerEntered(colliderNodeIndex: number, motionNodeIndex: number | undefined) {
-        const callback = this.rigidBodyTriggerNodeIndices.get(colliderNodeIndex)?.triggerEntered;
+    public rigidBodyTriggerEntered(nodeIndex: number, colliderNodeIndex: number, motionNodeIndex: number | undefined) {
+        const callback = this.rigidBodyTriggerNodeIndices.get(nodeIndex)?.triggerEntered;
         if (callback) {
             callback(colliderNodeIndex, motionNodeIndex);
         }
     }
 
-    public rigidBodyTriggerExited(colliderNodeIndex: number, motionNodeIndex: number | undefined) {
-        const callback = this.rigidBodyTriggerNodeIndices.get(colliderNodeIndex)?.triggerExited;
+    public rigidBodyTriggerExited(nodeIndex: number, colliderNodeIndex: number, motionNodeIndex: number | undefined) {
+        const callback = this.rigidBodyTriggerNodeIndices.get(nodeIndex)?.triggerExited;
         if (callback) {
             callback(colliderNodeIndex, motionNodeIndex);
         }

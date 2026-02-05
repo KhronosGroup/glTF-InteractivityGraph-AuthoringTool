@@ -10,7 +10,7 @@ export class TriggerEntered extends BehaveEngineNode {
         this.validateConfigurations(this.configuration);
 
         const {nodeIndex} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
-        this._nodeIndex = nodeIndex[0];
+        this._nodeIndex = Number(nodeIndex[0]);
 
         this.outValues.colliderNodeIndex = {
             type: this.getTypeIndex('int'),

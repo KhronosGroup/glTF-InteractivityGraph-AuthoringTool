@@ -1,7 +1,7 @@
-import {useCallback, useContext, useEffect, useState} from "react";
-import { Handle, Position} from "reactflow";
+import { useCallback, useContext, useEffect, useState } from "react";
+import { Handle, Position } from "reactflow";
 
-import {RenderIf} from "../components/RenderIf";
+import { RenderIf } from "../components/RenderIf";
 import { IInteractivityFlow, IInteractivityValue, IInteractivityNode, IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityVariable } from "../BasicBehaveEngine/types/InteractivityGraph";
 import { anyType, interactivityNodeSpecs, standardTypes } from "../BasicBehaveEngine/types/nodes";
 import { InteractivityGraphContext } from "../InteractivityGraphContext";
@@ -27,7 +27,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     const [inputValues, setInputValues] = useState<Record<string, IInteractivityValue>>({});
     const [outputValues, setOutputValues] = useState<Record<string, IInteractivityValue>>({});
     const [configuration, setConfiguration] = useState<Record<string, IInteractivityConfigurationValue>>({});
-    const {graph} = useContext(InteractivityGraphContext);
+    const { graph } = useContext(InteractivityGraphContext);
     const uid = props.data.uid;
     const [node, setNode] = useState<IInteractivityNode | null>(null);
 
@@ -70,20 +70,21 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     const onChangeParameter = useCallback((evt: { target: { value: any; }; }) => {
         const socketId = (evt.target as HTMLInputElement).id.replace("in-", "");
         const curParam = inputValues[socketId];
-        setInputValues({...inputValues, [socketId]: {value: castParameter(evt.target.value, standardTypes[curParam.type!]!.name!), typeOptions:curParam.typeOptions, type:curParam.type}});
+        setInputValues({ ...inputValues, [socketId]: { value: castParameter(evt.target.value, standardTypes[curParam.type!]!.name!), typeOptions: curParam.typeOptions, type: curParam.type } });
     }, [inputValues]);
 
     const onChangeType = useCallback((evt: { target: { value: any; }; }) => {
         const socketId = (evt.target as HTMLInputElement).id.replace("typeDropDown-", "");
         const curParam = inputValues[socketId];
-        setInputValues({...inputValues, [socketId]: {value: curParam.value, typeOptions:curParam.typeOptions, type:evt.target.value}});
+        const newParam: IInteractivityValue = { value: [undefined], typeOptions: curParam.typeOptions, type: evt.target.value }
+        setInputValues({ ...inputValues, [socketId]: newParam });
     }, [inputValues]);
 
     const onChangeConfiguration = useCallback((evt: { target: { value: any; }; }) => {
         const configurationId = (evt.target as HTMLInputElement).id;
         // TODO: how can I properly pares the value for config without knowing type
-        setConfiguration({...configuration, [configurationId]: {value: [evt.target.value]}});
-        evaluateConfigurationWhichChangeSockets({...configuration, [configurationId]: {value: [evt.target.value]}}, inputValues, outputValues, inputFlows, outputFlows);
+        setConfiguration({ ...configuration, [configurationId]: { value: [evt.target.value] } });
+        evaluateConfigurationWhichChangeSockets({ ...configuration, [configurationId]: { value: [evt.target.value] } }, inputValues, outputValues, inputFlows, outputFlows);
     }, [inputValues, outputValues, inputFlows, outputFlows, node]);
 
     const parsePath = (path: string): string[] => {
@@ -104,10 +105,10 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     }
 
 
-    const evaluateConfigurationWhichChangeSockets = useCallback((updatedConfiguration: Record<string, IInteractivityConfigurationValue>, 
+    const evaluateConfigurationWhichChangeSockets = useCallback((updatedConfiguration: Record<string, IInteractivityConfigurationValue>,
         inputValues: Record<string, IInteractivityValue>,
-        outputValues: Record<string, IInteractivityValue>, 
-        inputFlows: Record<string, IInteractivityFlow>, 
+        outputValues: Record<string, IInteractivityValue>,
+        inputFlows: Record<string, IInteractivityFlow>,
         outputFlows: Record<string, IInteractivityFlow>) => {
         //TODO: this function is quite a mess with lots of branches and has often been the root cause of the bugs in the authroing tool overwriting sockets, think of a better way to do this
         const nodeType = node?.op;
@@ -147,7 +148,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                     console.error("Couldn't parse configuration array string: ", casesesString, e);
                     cases = [];
                 }
-            }            
+            }
             if (nodeType === "flow/switch") {
                 for (let i = 0; i < cases.length; i++) {
                     const outputFlow: IInteractivityFlow = {
@@ -166,17 +167,17 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                     inputValuesToSet[`${cases[i]}`] = inputValue;
                 }
             }
-            
+
         }
         if (updatedConfiguration.event !== undefined && updatedConfiguration.event.value?.[0] != null) {
             const customEventId = Number(updatedConfiguration.event.value?.[0]);
             const ce: IInteractivityEvent = props.data.events[customEventId];
 
-            if (ce.values === undefined) {return}
+            if (ce.values === undefined) { return }
 
             for (const key of Object.keys(ce.values)) {
                 const currentValue = inputValues[key];
-                const type = ce.values[key].type;  
+                const type = ce.values[key].type;
                 const value: IInteractivityValue = {
                     value: [undefined],
                     typeOptions: [type],
@@ -190,33 +191,33 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                 }
             }
 
-            
+
         }
         if (updatedConfiguration.pointer !== undefined) {
             const vals = parsePath(updatedConfiguration.pointer.value?.[0] || "");
             for (let i = 0; i < vals.length; i++) {
-                const value: IInteractivityValue = {value: [undefined], typeOptions: [1], type: 1}
+                const value: IInteractivityValue = { value: [undefined], typeOptions: [1], type: 1 }
                 inputValuesToSet[vals[i]] = value;
             }
         }
         if (updatedConfiguration.message !== undefined) {
             const vals = parsePath(updatedConfiguration.message.value?.[0] || "");
             for (let i = 0; i < vals.length; i++) {
-                const value: IInteractivityValue = {value: [undefined], typeOptions: anyType, type: 0}
+                const value: IInteractivityValue = { value: [undefined], typeOptions: anyType, type: 0 }
                 inputValuesToSet[vals[i]] = value;
             }
         }
         if (updatedConfiguration.easingType !== undefined) {
             if (updatedConfiguration.easingType.value?.[0] === "0") {
                 // CUBIC BEZIER
-                inputValuesToSet["cp1"] = {value: [NaN, NaN], typeOptions: [2], type: 2};
-                inputValuesToSet["cp2"] = {value: [NaN, NaN], typeOptions: [2], type: 2};
+                inputValuesToSet["cp1"] = { value: [NaN, NaN], typeOptions: [2], type: 2 };
+                inputValuesToSet["cp2"] = { value: [NaN, NaN], typeOptions: [2], type: 2 };
             }
         }
         if (updatedConfiguration.variable !== undefined && updatedConfiguration.variable.value?.[0] != null) {
             const variableId = Number(updatedConfiguration.variable.value?.[0] || 0);
             const v: IInteractivityVariable = graph.variables[variableId];
-            const valueToSet: IInteractivityValue =  {typeOptions: [v.type], type: v.type, value: [undefined]}
+            const valueToSet: IInteractivityValue = { typeOptions: [v.type], type: v.type, value: [undefined] }
 
             if (nodeType === "variable/interpolate") {
                 inputValuesToSet["value"] = valueToSet;
@@ -249,7 +250,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                     continue
                 }
                 const v: IInteractivityVariable = graph.variables[variableId];
-                const valueToSet: IInteractivityValue =  {typeOptions: [v.type], type: v.type, value: [undefined]}
+                const valueToSet: IInteractivityValue = { typeOptions: [v.type], type: v.type, value: [undefined] }
 
                 inputValuesToSet[variableId] = valueToSet;
             }
@@ -257,14 +258,14 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         if (updatedConfiguration.type !== undefined) {
             const typeId = Number(updatedConfiguration.type.value?.[0] || 0);
             if (nodeType === "pointer/get") {
-                outputValuesToSet["value"] = {typeOptions: [typeId], type: typeId, value: [undefined]};
+                outputValuesToSet["value"] = { typeOptions: [typeId], type: typeId, value: [undefined] };
             } else {
                 const noValuePresent = inputValues["value"] === undefined;
                 const inlineValuePresent = inputValues["value"] !== undefined && inputValues["value"].node === undefined;
 
                 // only wipe if the value is undefined or the value is inlined but the types are different
                 if (noValuePresent || (inlineValuePresent && inputValues["value"].type !== typeId)) {
-                    const value: IInteractivityValue =  {typeOptions: [typeId], type: typeId, value: [undefined]}
+                    const value: IInteractivityValue = { typeOptions: [typeId], type: typeId, value: [undefined] }
                     inputValuesToSet["value"] = value;
                 }
             }
@@ -272,12 +273,12 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         if (updatedConfiguration.stopMode !== undefined) {
             if (updatedConfiguration.stopMode.value?.[0] === "1") {
                 // EXACT FRAME TIME
-                inputValuesToSet["stopTime"] = {value: [NaN], typeOptions: [2], type: 2};
+                inputValuesToSet["stopTime"] = { value: [NaN], typeOptions: [2], type: 2 };
             }
         }
 
         const nodeSpec: IInteractivityNode | undefined = interactivityNodeSpecs.find(node => node.op === nodeType);
-        
+
         const nodeSpecInputValues: Record<string, IInteractivityValue> = nodeSpec?.values?.input || {};
         const nodeSpecOutputValues: Record<string, IInteractivityValue> = nodeSpec?.values?.output || {};
         const nodeSpecInputFlows: Record<string, IInteractivityFlow> = nodeSpec?.flows?.input || {};
@@ -358,7 +359,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         }
     }
 
-    const getHeaderColor = (name:string) => {
+    const getHeaderColor = (name: string) => {
         const category = name.split("/")[0];
         switch (category) {
             case "flow":
@@ -382,13 +383,13 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
 
     return (
         <div className={"flow-node"}>
-            <div style={{background: getHeaderColor(node?.op || ""), padding: 16, marginBottom: 8}}>
+            <div style={{ background: getHeaderColor(node?.op || ""), padding: 16, marginBottom: 8 }}>
                 <h2>
                     {node?.op}
                 </h2>
             </div>
 
-            <div style={{padding: 16}}>
+            <div style={{ padding: 16 }}>
                 <RenderIf shouldShow={Object.keys(configuration).length > 0}>
                     {/* configuration */}
                     <div>
@@ -439,7 +440,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                     if (Number(event.target.value) === -1) {
                                         return
                                     }
-                                    
+
                                     onChangeConfiguration(event)
                                 }}>
                                     <option key={-1} value={-1}>--NO SELECTION--</option>
@@ -454,21 +455,21 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                         }
                         {
                             Object.keys(configuration)
-                            .filter((configurationId) => configurationId !== "event" && configurationId !== "variable" && configurationId !== "type")
-                            .map((configurationId) => {
-                                return (
-                                    <div key={configurationId}>
-                                        <label htmlFor={configurationId}>{configurationId}</label>
-                                        <input id={configurationId} name={configurationId} defaultValue={configuration[configurationId].value} onChange={onChangeConfiguration}/>
-                                    </div>
-                                )
-                            })
+                                .filter((configurationId) => configurationId !== "event" && configurationId !== "variable" && configurationId !== "type")
+                                .map((configurationId) => {
+                                    return (
+                                        <div key={configurationId}>
+                                            <label htmlFor={configurationId}>{configurationId}</label>
+                                            <input id={configurationId} name={configurationId} defaultValue={configuration[configurationId].value} onChange={onChangeConfiguration} />
+                                        </div>
+                                    )
+                                })
                         }
                     </div>
                 </RenderIf>
 
                 <RenderIf shouldShow={Object.keys(inputFlows).length > 0 || Object.keys(outputFlows).length > 0}>
-                    <hr/>
+                    <hr />
                     {/*flows*/}
                     <div className={"flow-node-row"}>
                         {/*inputFlows*/}
@@ -477,7 +478,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                 return (
                                     <div key={socket} className={"flow-node-socket"}>
                                         <label htmlFor={socket}>{socket}</label>
-                                        <Handle type="target" position={Position.Left} id={socket} style={{left:-12}} />
+                                        <Handle type="target" position={Position.Left} id={socket} style={{ left: -12 }} />
                                     </div>
                                 )
                             })}
@@ -489,7 +490,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                 return (
                                     <div key={socket} className={"flow-node-socket"}>
                                         <label htmlFor={socket}>{socket}</label>
-                                        <Handle type="source" position={Position.Right} id={socket} style={{right:-12}} />
+                                        <Handle type="source" position={Position.Right} id={socket} style={{ right: -12 }} />
                                     </div>
                                 )
                             })}
@@ -500,7 +501,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                         socket: undefined
                                     }
                                     const outFlowSocketName = Object.keys(outputFlows).length;
-                                    setOutputFlows({...outputFlows, [outFlowSocketName]: outputFlow});
+                                    setOutputFlows({ ...outputFlows, [outFlowSocketName]: outputFlow });
                                 }}>+</p>
                             </RenderIf>
                         </div>
@@ -508,12 +509,12 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                 </RenderIf>
 
                 <RenderIf shouldShow={props.data.isNoOp === true}>
-                    <Handle type="target" position={Position.Left} id={"in"} style={{left:4}} />
+                    <Handle type="target" position={Position.Left} id={"in"} style={{ left: 4 }} />
                     <p>NoOp</p>
                 </RenderIf>
 
                 <RenderIf shouldShow={Object.keys(inputValues).length > 0 || Object.keys(outputValues).length > 0}>
-                    <hr/>
+                    <hr />
                     {/*values*/}
                     <div className={"flow-node-row"}>
                         {/*inputValues*/}
@@ -522,17 +523,18 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                 return (
                                     <div key={socket} className={"flow-node-socket"}>
                                         <label htmlFor={socket}>{socket}</label>
-                                        <input id={`in-${socket}`} name={socket} onChange={onChangeParameter} defaultValue={inputValues[socket].value} style={{display: props.data.linked && props.data.linked[socket] ? "none" : "block"}}/>
-                                        <select id={`$typeDropDown-${socket}`} onChange={onChangeType} defaultValue={inputValues[socket].type} style={{display: props.data.linked && props.data.linked[socket] ? "none" : "block"}}>
+                                        <input id={`in-${socket}`} name={socket} onChange={onChangeParameter} defaultValue={inputValues[socket].value} style={{ display: props.data.linked && props.data.linked[socket] ? "none" : "block" }} />
+                                        <select id={`typeDropDown-${socket}`} onChange={onChangeType} defaultValue={inputValues[socket].type} style={{ display: props.data.linked && props.data.linked[socket] ? "none" : "block" }}>
                                             {(value.typeOptions || []).map((type, index) => (
                                                 <option key={index} value={type}>
                                                     {standardTypes[type].name}
                                                 </option>
                                             ))}
                                         </select>
-                                        <Handle type="target" position={Position.Left} id={socket} style={{left:-12}} />
+                                        <Handle type="target" position={Position.Left} id={socket} style={{ left: -12 }} />
                                     </div>
-                                )})}
+                                )
+                            })}
                         </div>
 
                         {/*outputValues*/}
@@ -541,7 +543,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                 return (
                                     <div key={socket} className={"flow-node-socket"}>
                                         <label htmlFor={socket}>{socket}</label>
-                                        <Handle type="source" position={Position.Right} id={socket} style={{right:-12}} />
+                                        <Handle type="source" position={Position.Right} id={socket} style={{ right: -12 }} />
                                     </div>
                                 )
                             })}

@@ -17,7 +17,7 @@ export class RayCast extends BehaveEngineNode {
         this.graphEngine.processNodeStarted(this);
 
         const hitResult = this.graphEngine.rayCastRigidBodies(rayStart, rayEnd, collisionFilterIndex);
-        if (hitResult.hitNodeIndex !== -1) {
+        if (hitResult.hitNodeIndex < 0) {
             // Do we have to update the out values to indicate no hit?
             if (this.flows.miss) {
                 this.processFlow(this.flows.miss);

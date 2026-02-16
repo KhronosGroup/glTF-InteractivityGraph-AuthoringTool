@@ -208,7 +208,7 @@ export interface IBehaveEngine {
     // Physics:
     applyImpulseToRigidBody: (nodeIndex: number, linearImpulse: [number, number, number], angularImpulse: [number, number, number]) => void;
     applyPointImpulseToRigidBody: (nodeIndex: number, impulse: [number, number, number], position: [number, number, number]) => void;
-    rayCastRigidBodies(rayStart: [number, number, number], rayEnd: [number, number, number], collisionFilterIndex: number): {hitNodeIndex: number, hitPoint: [number, number, number] | undefined, hitNormal: [number, number, number] | undefined};
+    rayCastRigidBodies(rayStart: [number, number, number], rayEnd: [number, number, number], collisionFilterIndex: number): {hitNodeIndex: number, hitFraction: number | undefined, hitNormal: [number, number, number] | undefined};
     rigidBodyTriggerEntered(nodeIndex: number, colliderNodeIndex: number, motionNodeIndex: number | undefined): void;
     rigidBodyTriggerExited(nodeIndex: number, colliderNodeIndex: number, motionNodeIndex: number | undefined): void;
 }

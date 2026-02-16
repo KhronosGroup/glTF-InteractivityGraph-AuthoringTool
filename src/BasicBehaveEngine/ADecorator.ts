@@ -44,9 +44,9 @@ export abstract class ADecorator implements IBehaveEngine {
         // Overwrite with application logic here
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    rayCastRigidBodies(rayStart: [number, number, number], rayEnd: [number, number, number], collisionFilterIndex: number): {hitNodeIndex: number, hitPoint: [number, number, number] | undefined, hitNormal: [number, number, number] | undefined} {
+    rayCastRigidBodies(rayStart: [number, number, number], rayEnd: [number, number, number], collisionFilterIndex: number): {hitNodeIndex: number, hitFraction: number | undefined, hitNormal: [number, number, number] | undefined} {
         // Overwrite with application logic here
-        return { hitNodeIndex: -1, hitPoint: undefined, hitNormal: undefined };
+        return { hitNodeIndex: -1, hitFraction: undefined, hitNormal: undefined };
     }
 
     rigidBodyTriggerEntered(nodeIndex: number, colliderNodeIndex: number, motionNodeIndex: number | undefined) {

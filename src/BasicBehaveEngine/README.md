@@ -145,7 +145,7 @@ The following functions need to be implemented and need to overwrite their count
 ```typescript
 applyImpulseToRigidBody(nodeIndex: number, linearImpulse: [number, number, number], angularImpulse: [number, number, number])
 applyPointImpulseToRigidBody(nodeIndex: number, impulse: [number, number, number], position: [number, number, number])
-rayCastRigidBodies(rayStart: [number, number, number], rayEnd: [number, number, number], collisionFilterIndex: number): {hitNodeIndex: number, hitPoint: [number, number, number] | undefined, hitNormal: [number, number, number] | undefined}
+rayCastRigidBodies(rayStart: [number, number, number], rayEnd: [number, number, number], collisionFilterIndex: number): {hitNodeIndex: number, hitFraction: number | undefined, hitNormal: [number, number, number] | undefined}
 
 this.behaveEngine.applyImpulseToRigidBody = this.applyImpulseToRigidBody;
 this.behaveEngine.applyPointImpulseToRigidBody = this.applyPointImpulseToRigidBody;
@@ -153,7 +153,7 @@ this.behaveEngine.rayCastRigidBodies = this.rayCastRigidBodies;
 ```
 
 If a ray cast result in a miss, `{hitNodeIndex: -1}` should be returned.
-The full interactivity node definitions and explanations can be accessed [here](https://github.com/eoineoineoin/glTF_Physics/tree/master/extensions/2.0/Khronos/KHR_physics_rigid_bodies#interaction-with-khr_interactivity).
+The full interactivity node definitions and explanations can be [read in the spec](https://github.com/eoineoineoin/glTF_Physics/tree/master/extensions/2.0/Khronos/KHR_physics_rigid_bodies#interaction-with-khr_interactivity).
 
 
 ### Debugging

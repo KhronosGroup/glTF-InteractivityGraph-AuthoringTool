@@ -24,7 +24,7 @@ export class RayCast extends BehaveEngineNode {
             }
         } else {
             this.outValues.hitNodeIndex = { value: [hitResult.hitNodeIndex], type: this.getTypeIndex('int')};
-            this.outValues.hitPoint = { value: hitResult.hitPoint, type: this.getTypeIndex('vec3')};
+            this.outValues.hitFraction = { value: [hitResult.hitFraction], type: this.getTypeIndex('float')};
             this.outValues.hitNormal = { value: hitResult.hitNormal, type: this.getTypeIndex('vec3')};
             if (this.flows.hit) {
                 this.processFlow(this.flows.hit);

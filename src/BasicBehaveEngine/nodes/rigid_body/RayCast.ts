@@ -7,6 +7,9 @@ export class RayCast extends BehaveEngineNode {
         super(props);
         this.name = "RayCast";
         this.validateValues(this.values);
+        this.outValues.hitNodeIndex = { value: [-1], type: this.getTypeIndex('int')};
+        this.outValues.hitFraction = { value: [NaN], type: this.getTypeIndex('float')};
+        this.outValues.hitNormal = { value: [NaN, NaN, NaN], type: this.getTypeIndex('vec3')};
 
     }
 

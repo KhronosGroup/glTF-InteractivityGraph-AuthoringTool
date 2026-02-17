@@ -408,7 +408,7 @@ export const knownDeclarations: IInteractivityDeclaration[] = [
             },
             collisionFilterIndex: {
                 type: 1,
-                value: [-1]
+                value: [undefined]
             }
         },
         outputValueSockets: {
@@ -436,7 +436,7 @@ export const knownDeclarations: IInteractivityDeclaration[] = [
             },
             motionNodeIndex: {
                 type: 1,
-                value: [-1]
+                value: [undefined]
             }
         }
     },
@@ -450,7 +450,7 @@ export const knownDeclarations: IInteractivityDeclaration[] = [
             },
             motionNodeIndex: {
                 type: 1,
-                value: [-1]
+                value: [undefined]
             }
         }
     },
@@ -1053,7 +1053,7 @@ const rigidBodyNodeSpecs: IInteractivityNode[] = [
                 collisionFilterIndex: {
                     typeOptions: [1],
                     type: 1,
-                    value: [-1]
+                    value: [undefined]
                 },
             },
             output: {
@@ -1102,7 +1102,7 @@ const rigidBodyNodeSpecs: IInteractivityNode[] = [
                 motionNodeIndex: {
                     typeOptions: [1],
                     type: 1,
-                    value: [-1]
+                    value: [undefined]
                 }
             }
         }
@@ -1134,7 +1134,7 @@ const rigidBodyNodeSpecs: IInteractivityNode[] = [
                 motionNodeIndex: {
                     typeOptions: [1],
                     type: 1,
-                    value: [-1]
+                    value: [undefined]
                 }
             }
         }

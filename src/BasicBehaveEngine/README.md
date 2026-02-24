@@ -14,8 +14,9 @@ This README provides an overview and instructions for connecting the BasicBehave
     - [Events](#events)
     - [Animations](#animations)
     - [KHR\_selectability and KHR\_hoverability](#khr_selectability-and-khr_hoverability)
+    - [KHR\_physics\_rigid\_bodies](#khr_physics_rigid_bodies)
     - [Debugging](#debugging)
-    - [Imporant Notes About Tool Execution](#imporant-notes-about-tool-execution)
+    - [Important Notes About Tool Execution](#important-notes-about-tool-execution)
   - [Development](#development)
     - [Prerequisites](#prerequisites)
     - [Installation](#installation)
@@ -124,6 +125,37 @@ hoverOn(hoveredNodeIndex: number | undefined, controllerIndex: number);
 ```
 `hoveredNodeIndex` can be undefined if nothing is hover over.
 
+### KHR_physics_rigid_bodies
+
+To implement KHR_physics_rigid_bodies register the nodes using:
+```typescript
+this.registerRigidBodyNodes();
+```
+
+You can pass a trigger enter and exit events via:
+```typescript
+rigidBodyTriggerEntered(nodeIndex: number, colliderNodeIndex: number, motionNodeIndex: number | undefined);
+
+rigidBodyTriggerExited(nodeIndex: number, colliderNodeIndex: number, motionNodeIndex: number | undefined);
+```
+
+`nodeIndex` describes the node index of the trigger, `colliderNodeIndex` describes the node index of the collider and `motionNodeIndex` describes the index of the motion which might be attached to the collider or one of it parents. This should be called with undefined, if no motion is found (in case of a static collider).
+
+The following functions need to be implemented and need to overwrite their counterparts in the behave engine:
+```typescript
+applyImpulseToRigidBody(nodeIndex: number, linearImpulse: [number, number, number], angularImpulse: [number, number, number])
+applyPointImpulseToRigidBody(nodeIndex: number, impulse: [number, number, number], position: [number, number, number])
+rayCastRigidBodies(rayStart: [number, number, number], rayEnd: [number, number, number], collisionFilterIndex: number): {hitNodeIndex: number, hitFraction: number | undefined, hitNormal: [number, number, number] | undefined}
+
+this.behaveEngine.applyImpulseToRigidBody = this.applyImpulseToRigidBody;
+this.behaveEngine.applyPointImpulseToRigidBody = this.applyPointImpulseToRigidBody;
+this.behaveEngine.rayCastRigidBodies = this.rayCastRigidBodies;
+```
+
+If a ray cast result in a miss, `{hitNodeIndex: -1}` should be returned.
+The full interactivity node definitions and explanations can be [read in the spec](https://github.com/eoineoineoin/glTF_Physics/tree/master/extensions/2.0/Khronos/KHR_physics_rigid_bodies#interaction-with-khr_interactivity).
+
+
 ### Debugging
 The following functions of the BasicBehaveEngine can be used to perform debugging/logging etc.
 ```typescript
@@ -138,7 +170,7 @@ this.behaveEngine.processExecutingNextNode = (flow: IInteractivityFlow) => void 
 };
 ```
 
-### Imporant Notes About Tool Execution
+### Important Notes About Tool Execution
 1. The tool passes around JSON for the execution graph. Be aware that the engine does not necessarily create deep copies of arrays or objects. Modifying these from outside the engine might create undefined/unexpected behavior. Make sure to not modify passed values or create deep copies.
 2. The engine expects matrices in 2D structure e.g. `[[1.0, 0.0],[0.0, 1.0]]`. This needs to be considered for e.g. registering worldMatrix or matrix
 

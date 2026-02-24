@@ -6,6 +6,11 @@ export interface IHoverInformation {
     callbackHoverOut?: (selectedNodeIndex: number | undefined, controllerIndex: number, firstCommonHoverNodeIndex: number | undefined) => void;
 }
 
+export interface IRigidBodyTriggerInformation {
+    triggerEntered?: (colliderNodeIndex: number, motionNodeIndex: number | undefined) => void;
+    triggerExited?: (colliderNodeIndex: number, motionNodeIndex: number | undefined) => void;
+}
+
 /**
  * Interface representing the Behave Engine, which provides methods for interacting with a behavioral graph engine.
  */
@@ -194,6 +199,18 @@ export interface IBehaveEngine {
     getEventList: () => IEventQueueItem[];
     clearEventList: () => void;
     addEvent: (event: IEventQueueItem) => void;
+
+    // Animations:
+    stopAnimation: (animationIndex: number) => void;
+    stopAnimationAt:  (animationIndex: number, stopTime: number , callback: () => void) => void;
+    startAnimation: (animationIndex: number, startTime: number, endTime: number, speed: number,  callback: () => void) => void;
+
+    // Physics:
+    applyImpulseToRigidBody: (nodeIndex: number, linearImpulse: [number, number, number], angularImpulse: [number, number, number]) => void;
+    applyPointImpulseToRigidBody: (nodeIndex: number, impulse: [number, number, number], position: [number, number, number]) => void;
+    rayCastRigidBodies(rayStart: [number, number, number], rayEnd: [number, number, number], collisionFilterIndex: number): {hitNodeIndex: number, hitFraction: number | undefined, hitNormal: [number, number, number] | undefined};
+    rigidBodyTriggerEntered(nodeIndex: number, colliderNodeIndex: number, motionNodeIndex: number | undefined): void;
+    rigidBodyTriggerExited(nodeIndex: number, colliderNodeIndex: number, motionNodeIndex: number | undefined): void;
 }
 
 export interface IEventQueueItem {

@@ -21,7 +21,9 @@ export class RayCast extends BehaveEngineNode {
 
         const hitResult = this.graphEngine.rayCastRigidBodies(rayStart, rayEnd, collisionFilterIndex);
         if (hitResult.hitNodeIndex < 0) {
-            // Do we have to update the out values to indicate no hit?
+            this.outValues.hitNodeIndex = { value: [-1], type: this.getTypeIndex('int')};
+            this.outValues.hitFraction = { value: [NaN], type: this.getTypeIndex('float')};
+            this.outValues.hitNormal = { value: [NaN, NaN, NaN], type: this.getTypeIndex('vec3')};
             if (this.flows.miss) {
                 this.processFlow(this.flows.miss);
             }

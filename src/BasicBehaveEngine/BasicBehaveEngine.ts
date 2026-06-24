@@ -124,6 +124,7 @@ import { Determinant } from "./nodes/math/matrix/Determinant";
 import { Transform } from "./nodes/math/vector/Transform";
 import { Transpose } from "./nodes/math/matrix/Transpose";
 import { RefEquality } from "./nodes/ref/Equality";
+import { EventStopPropagation } from "./nodes/event/StopPropagation";
 
 
 export class BasicBehaveEngine implements IBehaveEngine {
@@ -148,6 +149,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
     public selectableNodesIndices: Map<number, (selectedNodeRef: any, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) => void>;
     public lastHoveredNodeIndices: Map<number, number | undefined>;
     public rigidBodyTriggerNodeIndices: Map<number, IRigidBodyTriggerInformation>;
+    public propagationCancelled: Set<number>;
 
     constructor(fps: number, eventBus: IEventBus) {
         this.registry = new Map<string, any>();
@@ -170,6 +172,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.lastHoveredNodeIndices = new Map<number, number>();
         this.selectableNodesIndices = new Map<number, (selectedNodeRef: any, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) => void>();
         this.rigidBodyTriggerNodeIndices = new Map<number, IRigidBodyTriggerInformation>();
+        this.propagationCancelled = new Set<number>();
 
         this.registerKnownBehaviorNodes();
     }
@@ -382,10 +385,15 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.eventBus.clearCustomEventListeners();
     }
 
+    public queueFunctionCall = (func: () => void): void => {
+        this.eventBus.addEvent({func});
+    }
+
     public loadBehaveGraph = (behaveGraph: any, runGraph = true) => {
         this.hoverableNodesIndices.clear();
         this.selectableNodesIndices.clear();
         this.lastHoveredNodeIndices.clear();
+        this.propagationCancelled.clear();
         this._pauseDuration = 0;
         this._pauseTickTime = NaN;
         try {
@@ -680,6 +688,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/inverse", Inverse);
         this.registerBehaveEngineNode("debug/log", DebugLog);
         this.registerBehaveEngineNode("ref/equality", RefEquality);
+        this.registerBehaveEngineNode("event/stopPropagation", EventStopPropagation);
     }
 
     protected validateGraph = (behaviorGraph: any) => {
@@ -732,6 +741,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
             this._pauseTickTime = NaN;
         }
 
+        this.propagationCancelled.clear();
         const eventQueueCopy = [...this.eventBus.getEventList()];
         this.eventBus.clearEventList();
         while (eventQueueCopy.length > 0) {

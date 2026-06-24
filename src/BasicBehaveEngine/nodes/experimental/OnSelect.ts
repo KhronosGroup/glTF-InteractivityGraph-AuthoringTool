@@ -1,18 +1,16 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class OnSelect extends BehaveEngineNode {
-    REQUIRED_CONFIGURATIONS = {stopPropagation: {defaultValue: [false]}, nodeIndex: {defaultValue: [-1]}}
+    REQUIRED_CONFIGURATIONS = {nodeIndex: {defaultValue: [-1]}}
     _nodeIndex: number;
-    _stopPropagation: boolean;
     constructor(props: IBehaviourNodeProps) {
         super(props);
         this.name = 'OnSelect';
         this.validateValues(this.values);
         this.validateConfigurations(this.configuration);
 
-        const {nodeIndex, stopPropagation} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
+        const {nodeIndex} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
         this._nodeIndex = nodeIndex[0];
-        this._stopPropagation = stopPropagation[0];
 
         this.outValues.selectionPoint = {
             type: this.getTypeIndex('float3'),
@@ -60,10 +58,12 @@ export class OnSelect extends BehaveEngineNode {
             
             this.addEventToWorkQueue(this.flows.out);
 
-            if (!this._stopPropagation) {
-                const parentNodeIndex = this.graphEngine.getParentNodeIndex(this._nodeIndex);
-                this.graphEngine.alertOnSelect(selectedNodeRef, controllerIndex, selectionPoint, selectionRayOrigin, parentNodeIndex);
-            }
+            this.graphEngine.queueFunctionCall(() => {
+                if (!this.graphEngine.propagationCancelled.has(this._nodeIndex)) {
+                    const parentNodeIndex = this.graphEngine.getParentNodeIndex(this._nodeIndex);
+                    this.graphEngine.alertOnSelect(selectedNodeRef, controllerIndex, selectionPoint, selectionRayOrigin, parentNodeIndex);
+                }
+            });
         }
         this.graphEngine.selectableNodesIndices.set(Number(this._nodeIndex), callback);
     }

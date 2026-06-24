@@ -123,6 +123,7 @@ import { cubicBezier, linearFloat, slerpFloat4 } from "./easingUtils";
 import { Determinant } from "./nodes/math/matrix/Determinant";
 import { Transform } from "./nodes/math/vector/Transform";
 import { Transpose } from "./nodes/math/matrix/Transpose";
+import { RefEquality } from "./nodes/ref/Equality";
 
 
 export class BasicBehaveEngine implements IBehaveEngine {
@@ -144,10 +145,9 @@ export class BasicBehaveEngine implements IBehaveEngine {
     private valueEvaluationCache: Map<string, IInteractivityValue>;
     private _timerID: NodeJS.Timeout | null;
     public hoverableNodesIndices: Map<number, IHoverInformation>;
-    public selectableNodesIndices: Map<number, (selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) => void>;
+    public selectableNodesIndices: Map<number, (selectedNodeRef: any, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) => void>;
     public lastHoveredNodeIndices: Map<number, number | undefined>;
     public rigidBodyTriggerNodeIndices: Map<number, IRigidBodyTriggerInformation>;
-
 
     constructor(fps: number, eventBus: IEventBus) {
         this.registry = new Map<string, any>();
@@ -168,7 +168,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this._timerID = null;
         this.hoverableNodesIndices = new Map<number, IHoverInformation>();
         this.lastHoveredNodeIndices = new Map<number, number>();
-        this.selectableNodesIndices = new Map<number, (selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) => void>();
+        this.selectableNodesIndices = new Map<number, (selectedNodeRef: any, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) => void>();
         this.rigidBodyTriggerNodeIndices = new Map<number, IRigidBodyTriggerInformation>();
 
         this.registerKnownBehaviorNodes();
@@ -211,6 +211,12 @@ export class BasicBehaveEngine implements IBehaveEngine {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public resolveRef(ref: any): any {
+        // Implemented by decorators
+        return ref;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public rayCastRigidBodies(rayStart: [number, number, number], rayEnd: [number, number, number], collisionFilterIndex: number): {hitNodeIndex: number, hitFraction: number | undefined, hitNormal: [number, number, number] | undefined} {
         // Implemented by decorators
         return {hitNodeIndex: -1, hitFraction: undefined, hitNormal: undefined};
@@ -230,15 +236,15 @@ export class BasicBehaveEngine implements IBehaveEngine {
         }
     }
 
-    public select(selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) {
-        this.alertOnSelect(selectedNodeIndex, controllerIndex, selectionPoint, selectionRayOrigin, selectedNodeIndex);
+    public select(selectedNodeRef: any, selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) {
+        this.alertOnSelect(selectedNodeRef, controllerIndex, selectionPoint, selectionRayOrigin, selectedNodeIndex);
     }
 
-    public alertOnSelect(selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined, currentNodeIndex: number | undefined) {
+    public alertOnSelect(selectedNodeRef: any, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined, currentNodeIndex: number | undefined) {
         while (currentNodeIndex !== undefined) {
             const callback = this.selectableNodesIndices.get(currentNodeIndex);
             if (callback !== undefined) {
-                callback(selectedNodeIndex, controllerIndex, selectionPoint, selectionRayOrigin);
+                callback(selectedNodeRef, controllerIndex, selectionPoint, selectionRayOrigin);
                 return;
             }
             currentNodeIndex = this.getParentNodeIndex(currentNodeIndex);
@@ -274,22 +280,22 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.lastHoveredNodeIndices.set(controllerIndex, nodeIndex);
     }
 
-    public alertOnHoverIn(selectedNodeIndex: number | undefined, controllerIndex: number, currentHoverNodeIndex: number | undefined, firstCommonHoverNodeIndex: number | undefined) {
+    public alertOnHoverIn(selectedNodeRef: unknown, controllerIndex: number, currentHoverNodeIndex: number | undefined, firstCommonHoverNodeIndex: number | undefined) {
         while (currentHoverNodeIndex !== undefined && currentHoverNodeIndex !== firstCommonHoverNodeIndex) {
             const hoverInformation = this.hoverableNodesIndices.get(currentHoverNodeIndex);
             if (hoverInformation?.callbackHoverIn !== undefined) {
-                hoverInformation.callbackHoverIn(selectedNodeIndex, controllerIndex, firstCommonHoverNodeIndex);
+                hoverInformation.callbackHoverIn(selectedNodeRef, controllerIndex, firstCommonHoverNodeIndex);
                 break;
             }
             currentHoverNodeIndex = this.getParentNodeIndex(currentHoverNodeIndex);
         }
     }
 
-    public alertOnHoverOut(selectedNodeIndex: number | undefined, controllerIndex: number, currentHoverNodeIndex: number | undefined, firstCommonHoverNodeIndex: number | undefined) {
+    public alertOnHoverOut(selectedNodeRef: unknown, controllerIndex: number, currentHoverNodeIndex: number | undefined, firstCommonHoverNodeIndex: number | undefined) {
         while (currentHoverNodeIndex !== undefined && currentHoverNodeIndex !== firstCommonHoverNodeIndex) {
             const hoverInformation = this.hoverableNodesIndices.get(currentHoverNodeIndex);
             if (hoverInformation?.callbackHoverOut !== undefined) {
-                hoverInformation.callbackHoverOut(selectedNodeIndex, controllerIndex, firstCommonHoverNodeIndex);
+                hoverInformation.callbackHoverOut(selectedNodeRef, controllerIndex, firstCommonHoverNodeIndex);
                 break;
             }
             currentHoverNodeIndex = this.getParentNodeIndex(currentHoverNodeIndex);
@@ -426,7 +432,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
                 types: behaveGraph.types,
                 graphEngine: this,
                 declaration: nodeDeclaration,
-                addEventToWorkQueue: this.addEventToWorkQueue
+                addEventToWorkQueue: this.addEventToWorkQueue,
             };
             const nodeType = nodeDeclaration.op;
             let behaviourNode: BehaveEngineNode;
@@ -673,6 +679,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/matMul", MatMul);
         this.registerBehaveEngineNode("math/inverse", Inverse);
         this.registerBehaveEngineNode("debug/log", DebugLog);
+        this.registerBehaveEngineNode("ref/equality", RefEquality);
     }
 
     protected validateGraph = (behaviorGraph: any) => {

@@ -6,7 +6,11 @@ export class PointerGet extends BehaveEngineNode {
 
     _pointer: string;
     _pointerVals: Record<string, IInteractivityValue>;
+    _pointerIndices: Record<string, IInteractivityValue>;
     _typeIndex: number;
+
+    resolveRef: (ref: any) => any;
+
     constructor(props: IBehaviourNodeProps) {
         super(props);
         this.name = "PointerGet";
@@ -16,15 +20,25 @@ export class PointerGet extends BehaveEngineNode {
         const {pointer, type} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
         this._pointer = pointer[0];
         this._typeIndex = type[0];
-        const valIds = this.parsePath(this._pointer);
-        const generatedParams: Record<string, IInteractivityValue> = {};
+
+        const valIds = this.parsePathVals(this._pointer);
+        const generatedVals: Record<string, IInteractivityValue> = {};
         for (let i = 0; i < valIds.length; i++) {
-            generatedParams[valIds[i]] = {value: [undefined], type: 1};
+            generatedVals[valIds[i]] = {value: [undefined], type: 1};
         }
-        this._pointerVals = generatedParams;
+        this._pointerVals = generatedVals;
+
+        const indexIds = this.parsePathIndices(this._pointer);
+        const generatedIndices: Record<string, IInteractivityValue> = {};
+        for (let i = 0; i < indexIds.length; i++) {
+            generatedIndices[indexIds[i]] = {value: [undefined], type: 1};
+        }
+        this._pointerIndices = generatedIndices;
+
+        this.resolveRef = props.graphEngine.resolveRef;
     }
 
-    parsePath(path: string): string[] {
+    parsePathVals(path: string): string[] {
         const regex = /{([^}]+)}/g;
         const match = path.match(regex);
         const keys: string[] = [];
@@ -41,17 +55,40 @@ export class PointerGet extends BehaveEngineNode {
         return keys;
     }
 
-    populatePath(path: string, vals: any): string {
+    parsePathIndices(path: string): string[] {
+        const regex = /\[([^\]]+)\]/g;
+        const match = path.match(regex);
+        const keys: string[] = [];
+
+        if (!match) {
+            return keys;
+        }
+
+        for (const m of match) {
+            const key = m.slice(1, -1); // remove the square brackets from the match
+            keys.push(key)
+        }
+
+        return keys;
+    }
+
+    populatePath(path: string, vals: Record<string, any>, indices: Record<string, any>): string {
         let pathCopy = path
         for (const val of Object.keys(vals)) {
-            pathCopy = pathCopy.replace(`{${val}}`, vals[val]);
+            const ref = vals[val];
+            const resolvedVal = this.resolveRef(ref);
+            pathCopy = pathCopy.replace(`{${val}}`, resolvedVal);
+        }
+        for (const index of Object.keys(indices)) {
+            pathCopy = pathCopy.replace(`[${index}]`, indices[index]);
         }
         return pathCopy;
     }
 
     override processNode(flowSocket?: string) {
-        const vals = this.evaluateAllValues(Object.keys(this._pointerVals));
-        const populatedPath = this.populatePath(this._pointer, vals)
+        const configValues = this.evaluateAllValues(Object.keys(this._pointerVals));
+        const configIndices = this.evaluateAllValues(Object.keys(this._pointerIndices));
+        const populatedPath = this.populatePath(this._pointer, configValues, configIndices);
         this.graphEngine.processNodeStarted(this);
 
         if (this.graphEngine.isValidJsonPtr(populatedPath)) {

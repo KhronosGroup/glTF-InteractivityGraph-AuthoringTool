@@ -53,6 +53,10 @@ export class LoggingDecorator extends ADecorator {
         return undefined;
     }
 
+    resolveRef = (ref: any): any => {
+        return ref;
+    }
+
     registerJsonPointer = (jsonPtr: string, getterCallback: (path: string) => any, setterCallback: (path: string, value: any) => void, typeName: string, readOnly: boolean) => {
         this.behaveEngine.registerJsonPointer(jsonPtr, getterCallback, setterCallback, typeName, readOnly);
     };

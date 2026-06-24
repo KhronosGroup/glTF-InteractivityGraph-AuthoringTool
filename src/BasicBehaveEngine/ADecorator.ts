@@ -25,6 +25,7 @@ export abstract class ADecorator implements IBehaveEngine {
     abstract startAnimation: (animationIndex: number, startTime: number, endTime: number, speed: number, callback: () => void) => void;
     abstract stopAnimation: (animationIndex: number) => void;
     abstract stopAnimationAt: (animationIndex: number, stopTime: number, callback: () => void) => void
+    abstract resolveRef: (ref: any) => any;
 
     registerRigidBodyNodes() {
         this.behaveEngine.registerBehaveEngineNode("rigid_body/applyImpulse", ApplyImpulse);
@@ -61,8 +62,8 @@ export abstract class ADecorator implements IBehaveEngine {
         this.behaveEngine.hoverOn(nodeIndex, controllerIndex);
     }
 
-    select(selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) {
-        this.behaveEngine.select(selectedNodeIndex, controllerIndex, selectionPoint, selectionRayOrigin);
+    select(selectedNodeRef: any, selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) {
+        this.behaveEngine.select(selectedNodeRef, selectedNodeIndex, controllerIndex, selectionPoint, selectionRayOrigin);
     }
 
     getEventList() {

@@ -7,7 +7,11 @@ export class PointerSet extends BehaveEngineNode {
 
     _pointer: string;
     _pointerVals: Record<string, IInteractivityValue>;
+    _pointerIndices: Record<string, IInteractivityValue>;
     _typeIndex: number;
+
+    resolveRef: (ref: any) => any;
+
     constructor(props: IBehaviourNodeProps) {
         super(props);
         this.name = "PointerSet";
@@ -17,27 +21,25 @@ export class PointerSet extends BehaveEngineNode {
         const {pointer, type} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
         this._pointer = pointer[0];
         this._typeIndex = type[0];
-        const valIds = this.parsePath(this._pointer);
+        
+        const valIds = this.parsePathVals(this._pointer);
         const generatedVals: Record<string, IInteractivityValue> = {};
         for (let i = 0; i < valIds.length; i++) {
             generatedVals[valIds[i]] = {value: [undefined], type: 1};
         }
-
-        //create a test path with all 0's to check if the path is read only
-        const readOnlyTestValues: Record<string, number> = {};
-        for (let i = 0; i < valIds.length; i++) {
-            readOnlyTestValues[valIds[i]] = 0;
-        }
-        const readOnlyTestPath = this.populatePath(this._pointer, readOnlyTestValues);
-        const isReadOnly = this.graphEngine.isReadOnly(readOnlyTestPath);
-        if (isReadOnly) {
-            throw new Error(`Path ${this._pointer} is read only but is included in a pointer/set configuration`);
-        }
-        
         this._pointerVals = generatedVals;
+
+        const indexIds = this.parsePathIndices(this._pointer);
+        const generatedIndices: Record<string, IInteractivityValue> = {};
+        for (let i = 0; i < indexIds.length; i++) {
+            generatedIndices[indexIds[i]] = {value: [undefined], type: 1};
+        }
+        this._pointerIndices = generatedIndices;
+
+        this.resolveRef = props.graphEngine.resolveRef;
     }
 
-    parsePath(path: string): string[] {
+    parsePathVals(path: string): string[] {
         const regex = /{([^}]+)}/g;
         const match = path.match(regex);
         const keys: string[] = [];
@@ -54,10 +56,32 @@ export class PointerSet extends BehaveEngineNode {
         return keys;
     }
 
-    populatePath(path: string, vals: any): string {
+    parsePathIndices(path: string): string[] {
+        const regex = /\[([^\]]+)\]/g;
+        const match = path.match(regex);
+        const keys: string[] = [];
+
+        if (!match) {
+            return keys;
+        }
+
+        for (const m of match) {
+            const key = m.slice(1, -1); // remove the square brackets from the match
+            keys.push(key)
+        }
+
+        return keys;
+    }
+
+    populatePath(path: string, vals: Record<string, any>, indices: Record<string, any>): string {
         let pathCopy = path
         for (const val of Object.keys(vals)) {
-            pathCopy = pathCopy.replace(`{${val}}`, vals[val]);
+            const ref = vals[val];
+            const resolvedVal = this.resolveRef(ref);
+            pathCopy = pathCopy.replace(`{${val}}`, resolvedVal);
+        }
+        for (const index of Object.keys(indices)) {
+            pathCopy = pathCopy.replace(`[${index}]`, indices[index]);
         }
         return pathCopy;
     }
@@ -65,8 +89,9 @@ export class PointerSet extends BehaveEngineNode {
     override processNode(flowSocket?: string) {
         this.graphEngine.clearValueEvaluationCache();
         const configValues = this.evaluateAllValues(Object.keys(this._pointerVals));
+        const configIndices = this.evaluateAllValues(Object.keys(this._pointerIndices));
         const requiredValues = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
-        const populatedPath = this.populatePath(this._pointer, configValues)
+        const populatedPath = this.populatePath(this._pointer, configValues, configIndices);
         const targetValue = requiredValues.value;
         this.graphEngine.processNodeStarted(this);
 

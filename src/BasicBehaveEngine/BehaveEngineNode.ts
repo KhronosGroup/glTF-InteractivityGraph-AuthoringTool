@@ -215,6 +215,8 @@ export class BehaveEngineNode {
 
     protected getDefualtValueForType(type: string): any {
         switch (type) {
+            case "ref":
+                return null;
             case "bool":
                 return [false];
             case "int":
@@ -254,6 +256,8 @@ export class BehaveEngineNode {
                 return val;
             case "float4x4":
                 return val;
+            case "ref":
+                return val[0];
             default:
                 return val
         }

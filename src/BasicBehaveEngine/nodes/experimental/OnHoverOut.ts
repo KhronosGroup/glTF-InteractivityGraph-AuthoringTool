@@ -14,9 +14,9 @@ export class OnHoverOut extends BehaveEngineNode {
         this._nodeIndex = Number(nodeIndex[0]);
         this._stopPropagation = stopPropagation[0];
 
-        this.outValues.hoverNodeIndex = {
-            type: this.getTypeIndex('int'),
-            value: [-1],
+        this.outValues.hoverNodeRef = {
+            type: this.getTypeIndex('ref'),
+            value: [null],
         };
         this.outValues.controllerIndex = {
             type: this.getTypeIndex('int'),
@@ -27,12 +27,12 @@ export class OnHoverOut extends BehaveEngineNode {
     }
 
     setUpOnHoverOut() {
-        const callback = (selectedNodeIndex: number | undefined, controllerIndex: number, firstCommonHoverNodeIndex: number | undefined) => {
+        const callback = (selectedNodeRef: unknown, controllerIndex: number, firstCommonHoverNodeIndex: number | undefined) => {
             const hoverInformation = this.graphEngine.hoverableNodesIndices.get(this._nodeIndex);
             if (hoverInformation) {
-                this.outValues.hoverNodeIndex = {
-                    type: this.getTypeIndex('int'),
-                    value: [selectedNodeIndex ?? -1],
+                this.outValues.hoverNodeRef = {
+                    type: this.getTypeIndex('ref'),
+                    value: [selectedNodeRef ?? null],
                 };
                 this.outValues.controllerIndex = {
                     type: this.getTypeIndex('int'),
@@ -44,7 +44,7 @@ export class OnHoverOut extends BehaveEngineNode {
 
             if (!this._stopPropagation) {
                 const parentNodeIndex = this.graphEngine.getParentNodeIndex(this._nodeIndex);
-                this.graphEngine.alertOnHoverOut(selectedNodeIndex, controllerIndex, parentNodeIndex, firstCommonHoverNodeIndex);
+                this.graphEngine.alertOnHoverOut(selectedNodeRef, controllerIndex, parentNodeIndex, firstCommonHoverNodeIndex);
             }
         }
         const hoverInformation = this.graphEngine.hoverableNodesIndices.get(this._nodeIndex);

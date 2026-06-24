@@ -2,8 +2,8 @@ import { IInteractivityFlow, IInteractivityValue } from "./types/InteractivityGr
 import {BehaveEngineNode} from "./BehaveEngineNode";
 
 export interface IHoverInformation {
-    callbackHoverIn?: (selectedNodeIndex: number | undefined, controllerIndex: number, firstCommonHoverNodeIndex: number | undefined) => void;
-    callbackHoverOut?: (selectedNodeIndex: number | undefined, controllerIndex: number, firstCommonHoverNodeIndex: number | undefined) => void;
+    callbackHoverIn?: (selectedNodeRef: unknown, controllerIndex: number, firstCommonHoverNodeIndex: number | undefined) => void;
+    callbackHoverOut?: (selectedNodeRef: unknown, controllerIndex: number, firstCommonHoverNodeIndex: number | undefined) => void;
 }
 
 export interface IRigidBodyTriggerInformation {
@@ -40,6 +40,13 @@ export interface IBehaveEngine {
     registerKnownPointers: () => void;
 
     /**
+     * Resolve a reference to its actual value within the Behave Engine.
+     * @param ref - The reference to be resolved.
+     * @returns The resolved value.
+     */
+    resolveRef: (ref: any) => any;
+
+    /**
      * Get the parent node index of a given node index.
      * @param nodeIndex - The index of the node whose parent index is to be retrieved.
      * @returns The parent node index, or undefined if the node has no parent.
@@ -55,12 +62,13 @@ export interface IBehaveEngine {
 
     /**
      * Trigger a selection event on a specified node index and controller index.
+     * @param selectedNodeRef - The reference to the selected node.
      * @param selectedNodeIndex - The index of the selected node.
      * @param controllerIndex - The index of the controller.
      * @param selectionPoint - The position in world space where the collision happened.
      * @param selectionRayOrigin - The origin of the selection ray.
      */
-    select: (selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) => void;
+    select: (selectedNodeRef: any, selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) => void;
 
     isSlerpPath: (path: string) => boolean;
 

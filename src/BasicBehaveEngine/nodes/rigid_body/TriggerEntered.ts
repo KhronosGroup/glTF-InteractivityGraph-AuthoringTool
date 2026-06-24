@@ -12,12 +12,12 @@ export class TriggerEntered extends BehaveEngineNode {
         const {nodeIndex} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
         this._nodeIndex = Number(nodeIndex[0]);
 
-        this.outValues.colliderNodeIndex = {
-            type: this.getTypeIndex('int'),
+        this.outValues.colliderNode = {
+            type: this.getTypeIndex('ref'),
             value: [-1],
         };
-        this.outValues.motionNodeIndex = {
-            type: this.getTypeIndex('int'),
+        this.outValues.motionNode = {
+            type: this.getTypeIndex('ref'),
             value: [-1],
         };
 
@@ -26,14 +26,14 @@ export class TriggerEntered extends BehaveEngineNode {
     }
 
     setUpOnTriggerEntered() {
-        const callback = (colliderNodeIndex: number, motionNodeIndex: number | undefined) => {
-            this.outValues.colliderNodeIndex = {
-                type: this.getTypeIndex('int'),
-                value: [colliderNodeIndex],
+        const callback = (colliderNodeRef: number, motionNodeRef: number | undefined) => {
+            this.outValues.colliderNode = {
+                type: this.getTypeIndex('ref'),
+                value: [colliderNodeRef],
             };
-            this.outValues.motionNodeIndex = {
-                type: this.getTypeIndex('int'),
-                value: [motionNodeIndex ?? -1],
+            this.outValues.motionNode = {
+                type: this.getTypeIndex('ref'),
+                value: [motionNodeRef ?? -1],
             };
 
             console.log("TriggerEntered", {node: this._nodeIndex, outValues: this.outValues});

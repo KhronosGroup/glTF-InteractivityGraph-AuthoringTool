@@ -406,8 +406,8 @@ export const ThreeEngineComponent: React.FC<ThreeEngineComponentProps> = ({ mode
         
         if ((!behaveGraph.nodes || behaveGraph.nodes.length === 0 || shouldOverride) && extractedBehaveGraph) {
             // Use the graph from the loaded file
-            loadGraphFromJson(extractedBehaveGraph);
-            threeEngineRef.current.loadBehaveGraph(getExecutableGraph());
+            loadGraphFromJson(JSON.parse(JSON.stringify(extractedBehaveGraph)));
+            threeEngineRef.current.loadBehaveGraph(extractedBehaveGraph);
         } else {
             // Use the graph from the authoring tool
             threeEngineRef.current.loadBehaveGraph(behaveGraph);

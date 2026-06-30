@@ -58,10 +58,6 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
 
         createScene();
 
-        if (modelUrl) {
-            loadModelFromUrl(modelUrl);
-        }
-
         // Run the render loop
         engineRef.current?.runRenderLoop(() => {
             sceneRef.current?.render();
@@ -74,6 +70,12 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
             babylonEngineRef.current?.clearCustomEventListeners();
         };
     }, []);
+
+    useEffect(() => {
+        if (modelUrl && engineRef.current) {
+            loadModelFromUrl(modelUrl);
+        }
+    }, [modelUrl]);
 
     useEffect(() => {
         if (fileUploaded !== null) {
@@ -208,8 +210,8 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
         const extractedBehaveGraph = babylonEngineRef.current.extractBehaveGraphFromScene()
         try {
             if ((!behaveGraph.nodes || behaveGraph.nodes.length === 0 || shouldOverride) && extractedBehaveGraph) {
-                loadGraphFromJson(extractedBehaveGraph);
-                babylonEngineRef.current.loadBehaveGraph(getExecutableGraph());
+                loadGraphFromJson(JSON.parse(JSON.stringify(extractedBehaveGraph)));
+                babylonEngineRef.current.loadBehaveGraph(extractedBehaveGraph);
             } else {
                 babylonEngineRef.current.loadBehaveGraph(behaveGraph);
             }
@@ -357,8 +359,8 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
             
             const extractedBehaveGraph = babylonEngineRef.current.extractBehaveGraphFromScene();
             if (extractedBehaveGraph) {
-                loadGraphFromJson(extractedBehaveGraph);
-                babylonEngineRef.current.loadBehaveGraph(getExecutableGraph());
+                loadGraphFromJson(JSON.parse(JSON.stringify(extractedBehaveGraph)));
+                babylonEngineRef.current.loadBehaveGraph(extractedBehaveGraph);
             } else {
                 babylonEngineRef.current.loadBehaveGraph(getExecutableGraph());
             }

@@ -1,0 +1,23 @@
+{
+    "preset": "ts-jest/presets/default-esm",
+    "testEnvironment": "node",
+    "moduleDirectories": [
+        "node_modules",
+        "src"
+    ],
+    "transform": {
+        "^.+\\.tsx?$": [
+            "ts-jest",
+            {
+                "useESM": true
+            }
+        ]
+    },
+    "verbose": true,
+    "testMatch": [
+        "**/*.asset.ts"
+    ],
+    "moduleNameMapper": {
+        "^uuid$": "uuid"
+    }
+}

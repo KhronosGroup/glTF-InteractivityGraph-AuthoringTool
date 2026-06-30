@@ -9,6 +9,7 @@ import { Spacer } from "../Spacer";
 import { InteractivityGraphContext } from "../../InteractivityGraphContext";
 import { DOMEventBus } from "../../BasicBehaveEngine/eventBuses/DOMEventBus";
 import { KHR_interactivity_three } from "../../loaderExtensions/KHR_interactivity";
+import { computeExtensionDiagnostics } from "../../diagnostics";
 import { ThreeDecorator } from "../../decorators/ThreeDecorator";
 import { BasicBehaveEngine } from "../../BasicBehaveEngine/BasicBehaveEngine";
 import { WebGLRenderer, Scene, PerspectiveCamera, AnimationMixer, Clock, Group, AnimationClip, SRGBColorSpace, AmbientLight, DirectionalLight, Box3, Vector3, Object3D, Material, Mesh } from "three";
@@ -43,7 +44,7 @@ export const ThreeEngineComponent: React.FC<ThreeEngineComponentProps> = ({ mode
     const [loadedModel, setLoadedModel] = useState<Group | null>(null);
     const [animations, setAnimations] = useState<AnimationClip[]>([]);
 
-    const { getExecutableGraph, loadGraphFromJson } = useContext(InteractivityGraphContext);
+    const { getExecutableGraph, loadGraphFromJson, setDiagnosticsForCategory } = useContext(InteractivityGraphContext);
 
     useEffect(() => {
         // Create the js renderer
@@ -401,6 +402,13 @@ export const ThreeEngineComponent: React.FC<ThreeEngineComponentProps> = ({ mode
             threeEngineRef.current.setupPointerEvents(rendererRef.current.domElement);
         }
         
+        // Surface any glb extensions this tool does not support
+        const parserJson: any = parser?.json;
+        setDiagnosticsForCategory(
+            "extension",
+            computeExtensionDiagnostics(parserJson?.extensionsUsed, parserJson?.extensionsRequired)
+        );
+
         // Extract the behave graph from the scene (if present from GLTFLoader)
         const extractedBehaveGraph = threeEngineRef.current.extractBehaveGraphFromScene();
         

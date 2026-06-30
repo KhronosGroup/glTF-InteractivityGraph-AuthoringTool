@@ -3,10 +3,14 @@ import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityGraph, II
 import { createNoOpNode, interactivityNodeSpecs, standardTypes } from './BasicBehaveEngine/types/nodes';
 import { v4 as uuidv4 } from 'uuid';
 import { Edge, Node } from 'reactflow';
+import { DiagnosticCategory, IGraphDiagnostic } from './diagnostics';
 interface InteractivityGraphContextType {
     graph: IInteractivityGraph,
     needsSyncingToAuthor: boolean,
     setNeedsSyncingToAuthor: (needsSyncing: boolean) => void,
+    diagnostics: IGraphDiagnostic[],
+    setDiagnosticsForCategory: (category: DiagnosticCategory, diagnostics: IGraphDiagnostic[]) => void,
+    clearDiagnostics: () => void,
     getAuthorGraph: (graph: IInteractivityGraph) => [Node[], Edge[], IInteractivityEvent[], IInteractivityVariable[]],
     getExecutableGraph: () => any,
     loadGraphFromJson: (json: any) => void,
@@ -30,6 +34,9 @@ const initialContext: InteractivityGraphContextType = {
     graph: initialGraph,
     needsSyncingToAuthor: false,
     setNeedsSyncingToAuthor: () => {return null},
+    diagnostics: [],
+    setDiagnosticsForCategory: () => {return null},
+    clearDiagnostics: () => {return null},
     getAuthorGraph: (graph: IInteractivityGraph) => {return [[], [], [], []]},
     getExecutableGraph: () => {return null},
     loadGraphFromJson: () => {return null},
@@ -48,6 +55,18 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
     const graphRef = useRef<IInteractivityGraph>(initialGraph);
 
     const [needsSyncingToAuthor, setNeedsSyncingToAuthor] = useState(false);
+    const [diagnostics, setDiagnostics] = useState<IGraphDiagnostic[]>([]);
+
+    // Replace all diagnostics belonging to a single category, leaving other categories untouched.
+    // This lets independent producers (glb extension checks vs. graph node-op checks) manage their
+    // own diagnostics regardless of the order in which they run during a load.
+    const setDiagnosticsForCategory = (category: DiagnosticCategory, categoryDiagnostics: IGraphDiagnostic[]) => {
+        setDiagnostics(prev => [...prev.filter(d => d.category !== category), ...categoryDiagnostics]);
+    };
+
+    const clearDiagnostics = () => {
+        setDiagnostics([]);
+    };
 
     const getAuthorGraph = (graph: IInteractivityGraph): [Node[], Edge[], IInteractivityEvent[], IInteractivityVariable[]] => {
         // TODO: THIS IS NOT JSON WE SHOULD NOT ALLOW FOR NANS OR INFINITIES
@@ -239,12 +258,21 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
     const getUpdatedTypeIndex = (oldType: {signature: string, extensions?: any}): number => {
       const oldTypeSignature = oldType.signature;
       if (oldTypeSignature === "custom") {
-        const typeExtensions = JSON.stringify(Object.keys(oldType.extensions).sort())
+        const typeExtensions = JSON.stringify(Object.keys(oldType.extensions || {}).sort())
         return standardTypes.findIndex(type => type.signature === "custom" && JSON.stringify(Object.keys(type.extensions).sort()) == typeExtensions)
       } else {
         return standardTypes.findIndex(type => type.signature === oldTypeSignature);
       }
-    }  
+    }
+
+    // human-readable label for a graph type entry (custom types are identified by their extension key)
+    const getTypeLabel = (type: {signature: string, extensions?: any}): string => {
+      if (type.signature === "custom") {
+        const extensionKeys = Object.keys(type.extensions || {});
+        return extensionKeys.length > 0 ? extensionKeys.join(", ") : "custom";
+      }
+      return type.signature;
+    }
     const loadGraphFromJson = (json: any) => {
         const graph: IInteractivityGraph = {
             declarations: json.declarations,
@@ -253,6 +281,23 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
             events: json.events,
             types: standardTypes
         };
+
+        // surface any graph data types this tool does not recognise (mapped to an invalid -1 index)
+        const unsupportedTypes = new Set<string>();
+        if (Array.isArray(json.types)) {
+            for (const type of json.types) {
+                if (getUpdatedTypeIndex(type) === -1) {
+                    unsupportedTypes.add(getTypeLabel(type));
+                }
+            }
+        }
+        const typeDiagnostics: IGraphDiagnostic[] = [...unsupportedTypes].map((label) => ({
+            severity: 'warning',
+            category: 'type',
+            title: `Unsupported data type: ${label}`,
+            detail: `This graph declares the data type "${label}", which this tool does not recognise. Values using it may not display or execute correctly.`,
+        }));
+        setDiagnosticsForCategory('type', typeDiagnostics);
 
         // translate the types to be the standard types
         for (const declaration of graph.declarations) {
@@ -285,6 +330,8 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
 
         const loadedNodes: IInteractivityNode[] = [];
         const uuids = [];
+        // track unsupported node operations (op -> number of nodes using it) so we can surface them
+        const unsupportedOps = new Map<string, number>();
         for (let i = 0; i < json.nodes.length; i++) {
             uuids.push(uuidv4());
         }
@@ -296,6 +343,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
             if (templateNode === undefined) {
                 templateNode = createNoOpNode(json.declarations[node.declaration]);
                 isNoOp = true;
+                unsupportedOps.set(nodeOp, (unsupportedOps.get(nodeOp) ?? 0) + 1);
             }
             
             const copyOfTemplateNode: IInteractivityNode = JSON.parse(JSON.stringify(templateNode));
@@ -349,6 +397,16 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
 
         graph.nodes = loadedNodes;
         graphRef.current = graph;
+
+        // surface any node operations this tool does not implement (loaded as inert NoOp nodes)
+        const opDiagnostics: IGraphDiagnostic[] = [...unsupportedOps.entries()].map(([op, count]) => ({
+            severity: 'warning',
+            category: 'operation',
+            title: `Unsupported node operation: ${op}`,
+            detail: `${count} node${count > 1 ? 's' : ''} in this graph use "${op}", which this tool does not implement. ${count > 1 ? 'They are' : 'It is'} shown as a NoOp node and will not execute.`,
+        }));
+        setDiagnosticsForCategory('operation', opDiagnostics);
+
         setNeedsSyncingToAuthor(true);
     }
 
@@ -515,6 +573,9 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         graph: graphRef.current,
         needsSyncingToAuthor: needsSyncingToAuthor,
         setNeedsSyncingToAuthor: setNeedsSyncingToAuthor,
+        diagnostics: diagnostics,
+        setDiagnosticsForCategory: setDiagnosticsForCategory,
+        clearDiagnostics: clearDiagnostics,
         getAuthorGraph: getAuthorGraph,
         loadGraphFromJson: loadGraphFromJson,
         getExecutableGraph: getExecutableGraph,

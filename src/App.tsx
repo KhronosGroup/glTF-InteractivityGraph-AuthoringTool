@@ -9,6 +9,7 @@ import {Tab, Tabs} from "react-bootstrap";
 import {Spacer} from "./components/Spacer";
 import { InteractivityGraphProvider } from './InteractivityGraphContext';
 import { SampleSidebar } from './components/SampleSidebar';
+import { DiagnosticsPanel } from './components/DiagnosticsPanel';
 
 // Storage key for persisting the engine type
 const ENGINE_TYPE_STORAGE_KEY = 'interactivity-graph-engine-type';
@@ -141,6 +142,8 @@ export const App = () => {
         <EngineSelector setEngineType={handleEngineTypeChange} currentEngineType={engineType} />
 
         <SampleSidebar onSelectModel={handleModelUrlChange} />
+
+        <DiagnosticsPanel />
 
         <Spacer width={0} height={32}/>
 

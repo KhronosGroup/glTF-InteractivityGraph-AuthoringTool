@@ -24,6 +24,7 @@ import {BasicBehaveEngine} from "../../BasicBehaveEngine/BasicBehaveEngine";
 import {GLTFFileLoader, GLTFLoaderAnimationStartMode} from "@babylonjs/loaders";
 import { InteractivityGraphContext } from "../../InteractivityGraphContext";
 import { DOMEventBus } from "../../BasicBehaveEngine/eventBuses/DOMEventBus";
+import { computeExtensionDiagnostics } from "../../diagnostics";
 
 enum BabylonEngineModal {
     CUSTOM_EVENT = "CUSTOM_EVENT",
@@ -50,7 +51,17 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
     const [fileUploaded, setFileUploaded] = useState<string | null>(null);
     const [clickedHotSpot, setClickedHotSpot] = useState<string | null>(null);
 
-    const {getExecutableGraph, loadGraphFromJson} = useContext(InteractivityGraphContext);
+    const {getExecutableGraph, loadGraphFromJson, setDiagnosticsForCategory} = useContext(InteractivityGraphContext);
+
+    // Inspect the loaded glb's declared extensions (stashed on the scene metadata by the
+    // KHR_interactivity loader extension) and surface any this tool does not support.
+    const reportGlbExtensionDiagnostics = () => {
+        const metadata = sceneRef.current?.metadata;
+        setDiagnosticsForCategory(
+            "extension",
+            computeExtensionDiagnostics(metadata?.gltfExtensionsUsed, metadata?.gltfExtensionsRequired)
+        );
+    };
 
     useEffect(() => {
         // Create the Babylon.js engines
@@ -145,6 +156,7 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
         });
         const container = await SceneLoader.LoadAssetContainerAsync("", url, sceneRef.current, undefined, ".glb");
         container.addAllToScene();
+        reportGlbExtensionDiagnostics();
 
         sceneRef.current?.createDefaultCamera(true, true, true);
         // Sort materials by _internalMetadata.gltf.pointer
@@ -340,9 +352,10 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
             
             const container = await SceneLoader.LoadAssetContainerAsync("", url, sceneRef.current, undefined, ".glb");
             container.addAllToScene();
-            
+            reportGlbExtensionDiagnostics();
+
             sceneRef.current?.createDefaultCamera(true, true, true);
-            
+
             const worldInfo = {
                 glTFNodes: buildGlTFNodeLayout(container.rootNodes[0]), 
                 animations: container.animationGroups, 

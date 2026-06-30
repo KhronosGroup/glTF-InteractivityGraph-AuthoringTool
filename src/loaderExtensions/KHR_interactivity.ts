@@ -21,10 +21,14 @@ export class KHR_interactivity implements IGLTFLoaderExtension {
 
     public onLoading(): void {
         console.log(this._loader?.gltf);
-        const graphIndex = this._loader?.gltf.extensions?.KHR_interactivity?.graph;
-        const interactivityGraph = this._loader?.gltf.extensions?.KHR_interactivity?.graphs[graphIndex];
+        const gltf = this._loader?.gltf;
+        const graphIndex = gltf?.extensions?.KHR_interactivity?.graph;
+        const interactivityGraph = gltf?.extensions?.KHR_interactivity?.graphs?.[graphIndex];
         this._loader.babylonScene.metadata = this._loader.babylonScene.metadata || {};
         this._loader.babylonScene.metadata.behaveGraph = interactivityGraph;
+        // record the glb's declared extensions so the UI can warn about unsupported ones
+        this._loader.babylonScene.metadata.gltfExtensionsUsed = gltf?.extensionsUsed ?? [];
+        this._loader.babylonScene.metadata.gltfExtensionsRequired = gltf?.extensionsRequired ?? [];
     }
 }
 

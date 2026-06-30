@@ -34,9 +34,11 @@ GLTFLoader.RegisterExtension(KHR_INTERACTIVITY_EXTENSION_NAME, (loader) => {
     return new KHR_interactivity(loader);
 });
 
+interface BabylonEngineComponentProps {
+    modelUrl?: string | null;
+}
 
-
-export const BabylonEngineComponent = () => {
+export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ modelUrl }) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const engineRef = useRef<Engine | null>(null);
     const sceneRef = useRef<Scene>();
@@ -55,6 +57,10 @@ export const BabylonEngineComponent = () => {
         engineRef.current = new Engine(canvasRef.current, true);
 
         createScene();
+
+        if (modelUrl) {
+            loadModelFromUrl(modelUrl);
+        }
 
         // Run the render loop
         engineRef.current?.runRenderLoop(() => {
@@ -120,9 +126,15 @@ export const BabylonEngineComponent = () => {
         sceneRef.current?.dispose();
         createScene();
 
-        const file = fileInputRef.current!.files![0]
-
-        const url = URL.createObjectURL(file);
+        let url: string;
+        if (modelUrl) {
+            url = modelUrl;
+        } else if (fileInputRef.current?.files?.[0]) {
+            url = URL.createObjectURL(fileInputRef.current.files[0]);
+        } else {
+            console.warn("No model URL or file provided for Babylon engine");
+            return { nodes: [], animations: [], materials: [], meshes: [] };
+        }
 
         SceneLoader.OnPluginActivatedObservable.add( (loader) => {
             if (loader.name === "gltf") {

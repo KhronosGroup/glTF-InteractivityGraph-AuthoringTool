@@ -64,7 +64,6 @@ export class ThreeDecorator extends ADecorator {
         // @ts-ignore
         this.behaveEngine.startAnimation = this.startAnimation;
 
-        this.behaveEngine.animateProperty = this.animateProperty;
         this.behaveEngine.animateCubicBezier = this.animateCubicBezier;
         this.behaveEngine.getWorld = this.getWorld;
 
@@ -93,6 +92,23 @@ export class ThreeDecorator extends ADecorator {
 
     getWorld = (): any => {
         return this.world;
+    }
+
+    getParentNodeIndex = (nodeIndex: number) => {
+        const node = this.world.glTFNodes[nodeIndex];
+        if (!node || !node.parent) {
+            return undefined;
+        }
+
+        const parentNodeIndex = this.world.glTFNodes.findIndex((value: Object3D) => value.uuid === node.parent.uuid);
+        return parentNodeIndex !== -1 ? parentNodeIndex : undefined;
+    }
+
+    resolveRef = (ref: any): any => {
+        if (ref == null || ref === "") {
+            return -1;
+        }
+        return String(ref).split("/").pop();
     }
 
     public extractBehaveGraphFromScene = (): any => {

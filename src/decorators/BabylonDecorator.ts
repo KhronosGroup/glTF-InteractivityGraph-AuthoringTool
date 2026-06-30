@@ -124,7 +124,10 @@ export class BabylonDecorator extends ADecorator {
     }
 
     resolveRef = (ref: any): any => {
-        return ref;
+        if (ref == null || ref === "") {
+            return -1;
+        }
+        return String(ref).split("/").pop();
     }
 
     getWorld = (): any => {
@@ -317,7 +320,7 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/pbrMetallicRoughness/baseColorTexture/extensions/KHR_texture_transform/offset`, (path) => {
             const parts: string[] = path.split("/");
             const baseColorTexture = this.world.materials[Number(parts[2])].albedoTexture;
-            if (baseColorTexture === null) {
+            if (baseColorTexture == null) {
                 return [NaN, NaN];
             }
 
@@ -325,7 +328,7 @@ export class BabylonDecorator extends ADecorator {
         }, (path, value) => {
             const parts: string[] = path.split("/");
             const baseColorTexture = this.world.materials[Number(parts[2])].albedoTexture;
-            if (baseColorTexture !== null) {
+            if (baseColorTexture != null) {
                 baseColorTexture.uOffset = value[0];
                 baseColorTexture.vOffset = value[1];
             }
@@ -334,7 +337,7 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/pbrMetallicRoughness/baseColorTexture/extensions/KHR_texture_transform/scale`, (path) => {
             const parts: string[] = path.split("/");
             const baseColorTexture = this.world.materials[Number(parts[2])].albedoTexture;
-            if (baseColorTexture === null) {
+            if (baseColorTexture == null) {
                 return [NaN, NaN];
             }
 
@@ -342,7 +345,7 @@ export class BabylonDecorator extends ADecorator {
         }, (path, value) => {
             const parts: string[] = path.split("/");
             const baseColorTexture = this.world.materials[Number(parts[2])].albedoTexture;
-            if (baseColorTexture !== null) {
+            if (baseColorTexture != null) {
                 baseColorTexture.uScale = value[0];
                 baseColorTexture.vScale = value[1];
             }
@@ -351,7 +354,7 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/pbrMetallicRoughness/baseColorTexture/extensions/KHR_texture_transform/rotation`, (path) => {
             const parts: string[] = path.split("/");
             const baseColorTexture = this.world.materials[Number(parts[2])].albedoTexture;
-            if (baseColorTexture === null) {
+            if (baseColorTexture == null) {
                 return [NaN];
             }
 
@@ -360,7 +363,7 @@ export class BabylonDecorator extends ADecorator {
         }, (path, value) => {
             const parts: string[] = path.split("/");
             const baseColorTexture = this.world.materials[Number(parts[2])].albedoTexture;
-            if (baseColorTexture !== null) {
+            if (baseColorTexture != null) {
                 // is negated in babylon's loading so negating when setting https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/loaders/src/glTF/2.0/Extensions/KHR_texture_transform.ts#L73
                 baseColorTexture.wAng = -1 * value[0];
             }
@@ -370,7 +373,7 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/pbrMetallicRoughness/metallicRoughnessTexture/extensions/KHR_texture_transform/offset`, (path) => {
             const parts: string[] = path.split("/");
             const metallicTexture = this.world.materials[Number(parts[2])].metallicTexture;
-            if (metallicTexture === null) {
+            if (metallicTexture == null) {
                 return [NaN, NaN];
             }
 
@@ -378,7 +381,7 @@ export class BabylonDecorator extends ADecorator {
         }, (path, value) => {
             const parts: string[] = path.split("/");
             const metallicTexture = this.world.materials[Number(parts[2])].metallicTexture;
-            if (metallicTexture !== null) {
+            if (metallicTexture != null) {
                 metallicTexture.uOffset = value[0];
                 metallicTexture.vOffset = value[1];
             }
@@ -387,7 +390,7 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/pbrMetallicRoughness/metallicRoughnessTexture/extensions/KHR_texture_transform/scale`, (path) => {
             const parts: string[] = path.split("/");
             const metallicTexture = this.world.materials[Number(parts[2])].metallicTexture;
-            if (metallicTexture === null) {
+            if (metallicTexture == null) {
                 return [NaN, NaN];
             }
 
@@ -395,7 +398,7 @@ export class BabylonDecorator extends ADecorator {
         }, (path, value) => {
             const parts: string[] = path.split("/");
             const metallicTexture = this.world.materials[Number(parts[2])].metallicTexture;
-            if (metallicTexture !== null) {
+            if (metallicTexture != null) {
                 metallicTexture.uScale = value[0];
                 metallicTexture.vScale = value[1];
             }
@@ -404,7 +407,7 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/pbrMetallicRoughness/metallicRoughnessTexture/extensions/KHR_texture_transform/rotation`, (path) => {
             const parts: string[] = path.split("/");
             const metallicTexture = this.world.materials[Number(parts[2])].metallicTexture;
-            if (metallicTexture === null) {
+            if (metallicTexture == null) {
                 return [NaN];
             }
 
@@ -413,7 +416,7 @@ export class BabylonDecorator extends ADecorator {
         }, (path, value) => {
             const parts: string[] = path.split("/");
             const metallicTexture = this.world.materials[Number(parts[2])].metallicTexture;
-            if (metallicTexture !== null) {
+            if (metallicTexture != null) {
                 // is negated in babylon's loading so negating when setting https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/loaders/src/glTF/2.0/Extensions/KHR_texture_transform.ts#L73
                 metallicTexture.wAng = -1 * value[0];
             }
@@ -423,7 +426,7 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/normalTexture/extensions/KHR_texture_transform/offset`, (path) => {
             const parts: string[] = path.split("/");
             const normalTexture = this.world.materials[Number(parts[2])].normalTexture;
-            if (normalTexture === null) {
+            if (normalTexture == null) {
                 return [NaN, NaN];
             }
 
@@ -431,7 +434,7 @@ export class BabylonDecorator extends ADecorator {
         }, (path, value) => {
             const parts: string[] = path.split("/");
             const normalTexture = this.world.materials[Number(parts[2])].normalTexture;
-            if (normalTexture !== null) {
+            if (normalTexture != null) {
                 normalTexture.uOffset = value[0];
                 normalTexture.vOffset = value[1];
             }
@@ -440,7 +443,7 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/normalTexture/extensions/KHR_texture_transform/scale`, (path) => {
             const parts: string[] = path.split("/");
             const normalTexture = this.world.materials[Number(parts[2])].normalTexture;
-            if (normalTexture === null) {
+            if (normalTexture == null) {
                 return [NaN, NaN];
             }
 
@@ -448,7 +451,7 @@ export class BabylonDecorator extends ADecorator {
         }, (path, value) => {
             const parts: string[] = path.split("/");
             const normalTexture = this.world.materials[Number(parts[2])].normalTexture;
-            if (normalTexture !== null) {
+            if (normalTexture != null) {
                 normalTexture.uScale = value[0];
                 normalTexture.vScale = value[1];
             }
@@ -457,7 +460,7 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/normalTexture/extensions/KHR_texture_transform/rotation`, (path) => {
             const parts: string[] = path.split("/");
             const normalTexture = this.world.materials[Number(parts[2])].normalTexture;
-            if (normalTexture === null) {
+            if (normalTexture == null) {
                 return [NaN];
             }
 
@@ -466,7 +469,7 @@ export class BabylonDecorator extends ADecorator {
         }, (path, value) => {
             const parts: string[] = path.split("/");
             const normalTexture = this.world.materials[Number(parts[2])].normalTexture;
-            if (normalTexture !== null) {
+            if (normalTexture != null) {
                 // is negated in babylon's loading so negating when setting https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/loaders/src/glTF/2.0/Extensions/KHR_texture_transform.ts#L73
                 normalTexture.wAng = -1 * value[0];
             }
@@ -476,7 +479,7 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/occlusionTexture/extensions/KHR_texture_transform/offset`, (path) => {
             const parts: string[] = path.split("/");
             const occlusionTexture = this.world.materials[Number(parts[2])].occlusionTexture;
-            if (occlusionTexture === null) {
+            if (occlusionTexture == null) {
                 return [NaN, NaN];
             }
 
@@ -484,7 +487,7 @@ export class BabylonDecorator extends ADecorator {
         }, (path, value) => {
             const parts: string[] = path.split("/");
             const occlusionTexture = this.world.materials[Number(parts[2])].occlusionTexture;
-            if (occlusionTexture !== null) {
+            if (occlusionTexture != null) {
                 occlusionTexture.uOffset = value[0];
                 occlusionTexture.vOffset = value[1];
             }
@@ -493,7 +496,7 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/occlusionTexture/extensions/KHR_texture_transform/scale`, (path) => {
             const parts: string[] = path.split("/");
             const occlusionTexture = this.world.materials[Number(parts[2])].occlusionTexture;
-            if (occlusionTexture === null) {
+            if (occlusionTexture == null) {
                 return [NaN, NaN];
             }
 
@@ -501,7 +504,7 @@ export class BabylonDecorator extends ADecorator {
         }, (path, value) => {
             const parts: string[] = path.split("/");
             const occlusionTexture = this.world.materials[Number(parts[2])].occlusionTexture;
-            if (occlusionTexture !== null) {
+            if (occlusionTexture != null) {
                 occlusionTexture.uScale = value[0];
                 occlusionTexture.vScale = value[1];
             }
@@ -510,7 +513,7 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/occlusionTexture/extensions/KHR_texture_transform/rotation`, (path) => {
             const parts: string[] = path.split("/");
             const occlusionTexture = this.world.materials[Number(parts[2])].occlusionTexture;
-            if (occlusionTexture === null) {
+            if (occlusionTexture == null) {
                 return [NaN];
             }
 
@@ -519,7 +522,7 @@ export class BabylonDecorator extends ADecorator {
         }, (path, value) => {
             const parts: string[] = path.split("/");
             const occlusionTexture = this.world.materials[Number(parts[2])].occlusionTexture;
-            if (occlusionTexture !== null) {
+            if (occlusionTexture != null) {
                 // is negated in babylon's loading so negating when setting https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/loaders/src/glTF/2.0/Extensions/KHR_texture_transform.ts#L73
                 occlusionTexture.wAng = -1 * value[0];
             }
@@ -529,7 +532,7 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/emissiveTexture/extensions/KHR_texture_transform/offset`, (path) => {
             const parts: string[] = path.split("/");
             const emissiveTexture = this.world.materials[Number(parts[2])].emissiveTexture;
-            if (emissiveTexture === null) {
+            if (emissiveTexture == null) {
                 return [NaN, NaN];
             }
 
@@ -537,7 +540,7 @@ export class BabylonDecorator extends ADecorator {
         }, (path, value) => {
             const parts: string[] = path.split("/");
             const emissiveTexture = this.world.materials[Number(parts[2])].emissiveTexture;
-            if (emissiveTexture !== null) {
+            if (emissiveTexture != null) {
                 emissiveTexture.uOffset = value[0];
                 emissiveTexture.vOffset = value[1];
             }
@@ -546,7 +549,7 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/emissiveTexture/extensions/KHR_texture_transform/scale`, (path) => {
             const parts: string[] = path.split("/");
             const emissiveTexture = this.world.materials[Number(parts[2])].emissiveTexture;
-            if (emissiveTexture === null) {
+            if (emissiveTexture == null) {
                 return [NaN, NaN];
             }
 
@@ -554,7 +557,7 @@ export class BabylonDecorator extends ADecorator {
         }, (path, value) => {
             const parts: string[] = path.split("/");
             const emissiveTexture = this.world.materials[Number(parts[2])].emissiveTexture;
-            if (emissiveTexture !== null) {
+            if (emissiveTexture != null) {
                 emissiveTexture.uScale = value[0];
                 emissiveTexture.vScale = value[1];
             }
@@ -563,7 +566,7 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/emissiveTexture/extensions/KHR_texture_transform/rotation`, (path) => {
             const parts: string[] = path.split("/");
             const emissiveTexture = this.world.materials[Number(parts[2])].emissiveTexture;
-            if (emissiveTexture === null) {
+            if (emissiveTexture == null) {
                 return [NaN];
             }
 
@@ -572,7 +575,7 @@ export class BabylonDecorator extends ADecorator {
         }, (path, value) => {
             const parts: string[] = path.split("/");
             const emissiveTexture = this.world.materials[Number(parts[2])].emissiveTexture;
-            if (emissiveTexture !== null) {
+            if (emissiveTexture != null) {
                 // is negated in babylon's loading so negating when setting https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/loaders/src/glTF/2.0/Extensions/KHR_texture_transform.ts#L73
                 emissiveTexture.wAng = -1 * value[0];
             }
@@ -707,10 +710,24 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/nodes/${maxGltfNode}/mesh`, (path) => {
             const parts: string[] = path.split("/");
             const node = this.world.glTFNodes[Number(parts[2])];
-            return [this.world.meshes.indexOf(node)];
+            const mesh = this.world.meshes.includes(node)
+                ? node
+                : node.getChildMeshes?.()[0];
+            const meshIndex = this.world.meshes.indexOf(mesh);
+            return [meshIndex === -1 ? null : `/meshes/${meshIndex}`];
         }, (path, value) => {
             //no-op
-        }, "int", true);
+        }, "ref", true);
+
+        this.registerJsonPointer(`/nodes/${maxGltfNode}/children/${maxGltfNode}`, (path) => {
+            const parts: string[] = path.split("/");
+            const node = this.world.glTFNodes[Number(parts[2])];
+            const child = node.getChildren()[Number(parts[4])];
+            const childIndex = this.world.glTFNodes.indexOf(child);
+            return [childIndex === -1 ? null : `/nodes/${childIndex}`];
+        }, (path, value) => {
+            //no-op
+        }, "ref", true);
 
         this.registerJsonPointer(`/meshes/${maxGltfNode}/primitives/${maxGltfNode}/material`, (path) => {
             const parts: string[] = path.split("/");

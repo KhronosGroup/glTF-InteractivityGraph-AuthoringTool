@@ -2,14 +2,22 @@ import { useCallback, useContext, useEffect, useState } from "react";
 import { Handle, Position } from "reactflow";
 
 import { RenderIf } from "../components/RenderIf";
-import { IInteractivityFlow, IInteractivityValue, IInteractivityNode, IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityVariable } from "../BasicBehaveEngine/types/InteractivityGraph";
+import { IInteractivityFlow, IInteractivityValue, IInteractivityNode, IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityVariable, InteractivityValueType } from "../BasicBehaveEngine/types/InteractivityGraph";
 import { anyType, interactivityNodeSpecs, standardTypes } from "../BasicBehaveEngine/types/nodes";
 import { InteractivityGraphContext } from "../InteractivityGraphContext";
-
-require("../css/flowNodes.css");
+import { getMessageTemplateSocketIds, getPathTemplateSockets } from "./pathTemplate";
+import "../css/flowNodes.css";
 
 export interface IAuthoringGraphNodeProps {
     data: any
+}
+
+const getStandardTypeIndex = (signature: InteractivityValueType): number => {
+    const index = standardTypes.findIndex((type) => type.signature === signature);
+    if (index === -1) {
+        throw new Error(`Missing standard KHR_interactivity type ${signature}`);
+    }
+    return index;
 }
 
 /**
@@ -86,24 +94,6 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         setConfiguration({ ...configuration, [configurationId]: { value: [evt.target.value] } });
         evaluateConfigurationWhichChangeSockets({ ...configuration, [configurationId]: { value: [evt.target.value] } }, inputValues, outputValues, inputFlows, outputFlows);
     }, [inputValues, outputValues, inputFlows, outputFlows, node]);
-
-    const parsePath = (path: string): string[] => {
-        const regex = /{([^}]+)}/g;
-        const match = path.match(regex);
-        const keys: string[] = [];
-
-        if (!match) {
-            return keys;
-        }
-
-        for (const m of match) {
-            const key = m.slice(1, -1); // remove the curly braces from the match
-            keys.push(key)
-        }
-
-        return keys;
-    }
-
 
     const evaluateConfigurationWhichChangeSockets = useCallback((updatedConfiguration: Record<string, IInteractivityConfigurationValue>,
         inputValues: Record<string, IInteractivityValue>,
@@ -194,14 +184,17 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
 
         }
         if (updatedConfiguration.pointer !== undefined) {
-            const vals = parsePath(updatedConfiguration.pointer.value?.[0] || "");
-            for (let i = 0; i < vals.length; i++) {
-                const value: IInteractivityValue = { value: [undefined], typeOptions: [1], type: 1 }
-                inputValuesToSet[vals[i]] = value;
+            const sockets = getPathTemplateSockets(updatedConfiguration.pointer.value?.[0] || "");
+            const intTypeIndex = getStandardTypeIndex(InteractivityValueType.INT);
+            const refTypeIndex = getStandardTypeIndex(InteractivityValueType.REF);
+            for (const socket of sockets) {
+                const type = socket.kind === "index" ? intTypeIndex : refTypeIndex;
+                const value: IInteractivityValue = { value: [undefined], typeOptions: [type], type }
+                inputValuesToSet[socket.id] = value;
             }
         }
         if (updatedConfiguration.message !== undefined) {
-            const vals = parsePath(updatedConfiguration.message.value?.[0] || "");
+            const vals = getMessageTemplateSocketIds(updatedConfiguration.message.value?.[0] || "");
             for (let i = 0; i < vals.length; i++) {
                 const value: IInteractivityValue = { value: [undefined], typeOptions: anyType, type: 0 }
                 inputValuesToSet[vals[i]] = value;
@@ -527,7 +520,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                         <select id={`typeDropDown-${socket}`} onChange={onChangeType} defaultValue={inputValues[socket].type} style={{ display: props.data.linked && props.data.linked[socket] ? "none" : "block" }}>
                                             {(value.typeOptions || []).map((type, index) => (
                                                 <option key={index} value={type}>
-                                                    {standardTypes[type].name}
+                                                    {standardTypes[type]?.name ?? standardTypes[type]?.signature ?? String(type)}
                                                 </option>
                                             ))}
                                         </select>

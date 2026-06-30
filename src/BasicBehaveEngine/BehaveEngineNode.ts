@@ -144,6 +144,10 @@ export class BehaveEngineNode {
     }
 
     private evaluateValue(key: string, val: IInteractivityValue): any {
+        if (val === undefined) {
+            throw new Error(`Value ${key} is missing for ${this.name}`);
+        }
+
         if (val.value != null) {
             const typeName = this.getType(val.type!);
             return this.parseType(typeName, val.value);
@@ -170,6 +174,9 @@ export class BehaveEngineNode {
             } else {
                 //this node has not been evaluated yet, so we need to process it in order to get the output
                 const dependentNodeValues = dependentNode.processNode();
+                if (dependentNodeValues === undefined || dependentNodeValues[val.socket!] === undefined) {
+                    throw new Error(`Output socket ${val.socket} is missing on ${dependentNode.name}`);
+                }
                 const dependentValue = dependentNodeValues[val.socket!];
 
                 typeIndex = dependentValue.type

@@ -99,11 +99,17 @@ export class PointerGet extends BehaveEngineNode {
 
         if (this.graphEngine.isValidJsonPtr(populatedPath)) {
             const typeName = this.graphEngine.getPathtypeName(populatedPath);
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            const typeIndex = this.getTypeIndex(typeName!);
+            const configuredTypeName = this.getType(this._typeIndex);
+
+            if (typeName !== configuredTypeName) {
+                return {
+                    'value':{value: this.getDefualtValueForType(configuredTypeName), type: this._typeIndex},
+                    'isValid':{value: [false], type: this.getTypeIndex('bool')}
+                };
+            }
 
             return {
-                'value':{value: this.graphEngine.getPathValue(populatedPath), type: typeIndex},
+                'value':{value: this.graphEngine.getPathValue(populatedPath), type: this._typeIndex},
                 'isValid':{value: [true], type: this.getTypeIndex('bool')}
             };
         } else {
@@ -123,4 +129,3 @@ export class PointerGet extends BehaveEngineNode {
         }
     }
 }
-

@@ -17,7 +17,7 @@ export class Equality extends BehaveEngineNode {
         const typeIndexB = this.values['b'].type!
         const typeB: string = this.getType(typeIndexB);
         if (typeA !== typeB) {
-            throw Error("input types not equivalent")
+            throw Error(`input types not equivalent: a=${typeA}, b=${typeB}, values=${JSON.stringify(this.values)}`)
         }
         let val: boolean;
 

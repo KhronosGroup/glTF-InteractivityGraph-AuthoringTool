@@ -4,10 +4,13 @@ export class OnTickNode extends BehaveEngineNode {
     _startTime = NaN;
     _lastTickTime = NaN;
     _floatTypeIndex = -1;
+    _refTypeIndex = -1;
     constructor(props: IBehaviourNodeProps) {
         super(props);
         this.name = "OnTick";
         this._floatTypeIndex = this.getTypeIndex('float');
+        this._refTypeIndex = this.getTypeIndex('ref');
+        this.outValues.event = { value: [`/extensions/KHR_interactivity/events/${this.events.length + 1}`], type: this._refTypeIndex };
         this.outValues.timeSinceStart = { value: [NaN], type: this._floatTypeIndex };
         this.outValues.timeSinceLastTick = { value: [NaN], type: this._floatTypeIndex };
     }

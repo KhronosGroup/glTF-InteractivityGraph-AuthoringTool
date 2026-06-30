@@ -399,6 +399,17 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.eventBus.addEvent({func});
     }
 
+    private registerGraphEventPointers = (): void => {
+        const eventCountWithLifecycleEvents = (this.events?.length ?? 0) + 2;
+        this.registerJsonPointer(
+            `/extensions/KHR_interactivity/events/${eventCountWithLifecycleEvents}`,
+            (path) => [path],
+            () => undefined,
+            "ref",
+            true
+        );
+    }
+
     public loadBehaveGraph = (behaveGraph: any, runGraph = true) => {
         this.hoverableNodesIndices.clear();
         this.selectableNodesIndices.clear();
@@ -417,6 +428,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.events = behaveGraph.events;
         this.types = behaveGraph.types;
         this.idToBehaviourNodeMap.clear();
+        this.registerGraphEventPointers();
 
         const defaultProps = {
             idToBehaviourNodeMap: this.idToBehaviourNodeMap,

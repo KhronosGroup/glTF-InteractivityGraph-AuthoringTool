@@ -123,6 +123,7 @@ import { DebugLog } from '../src/BasicBehaveEngine/nodes/experimental/Debug';
 import { QuatAngleBetween } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatAngleBetween';
 import { QuatFromUpForward } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatFromUpForward';
 import { QuatSlerp } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatSlerp';
+import { RefEquality } from '../src/BasicBehaveEngine/nodes/ref/Equality';
 import * as glMatrix from 'gl-matrix';
 
 describe('nodes', () => {
@@ -2013,6 +2014,24 @@ describe('nodes', () => {
         eq = new Equality({
             ...defaultProps,
             values: {a: { value: [-10.5, 0.5, 9] , type: 4}, b: { value: [-10.5, 0.5, 9] , type: 4}}
+        });
+
+        val = eq.processNode()['value'].value;
+        expect(val[0]).toBe(true);
+    });
+
+    it("ref/eq", () => {
+        let eq: RefEquality = new RefEquality({
+            ...defaultProps,
+            values: {a: { value: ["/meshes/0"], type: 9}, b: { value: ["/nodes/0"], type: 9}}
+        });
+
+        let val = eq.processNode()['value'].value;
+        expect(val[0]).toBe(false);
+
+        eq = new RefEquality({
+            ...defaultProps,
+            values: {a: { value: ["/meshes/0"], type: 9}, b: { value: ["/meshes/0"], type: 9}}
         });
 
         val = eq.processNode()['value'].value;

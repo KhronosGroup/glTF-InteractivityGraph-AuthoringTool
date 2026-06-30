@@ -104,6 +104,9 @@ export const knownDeclarations: IInteractivityDeclaration[] = [
         op: "math/random"
     },
     {
+        op: "ref/eq"
+    },
+    {
         op: "math/rad"
     },
     {
@@ -590,6 +593,10 @@ export const standardTypes: IInteractivityValueType[] = [
         signature: InteractivityValueType.FLOAT4X4
     },
     {
+        name: "ref",
+        signature: InteractivityValueType.REF
+    },
+    {
         name: "AMZN_interactivity_string",
         signature: InteractivityValueType.CUSTOM,
         extensions: {
@@ -598,11 +605,11 @@ export const standardTypes: IInteractivityValueType[] = [
     }
 ]
 
-// 0: bool, 1: int, 2: float, 3: float2, 4: float3, 5: float4, 6: float2x2, 7: float3x3, 8: float4x4
+// 0: bool, 1: int, 2: float, 3: float2, 4: float3, 5: float4, 6: float2x2, 7: float3x3, 8: float4x4, 9: ref, 10: AMZN_interactivity_string
 const floatNTypes = [2,3,4,5];
 const floatNxNTypes = [6,7,8];
 const floatVectorTypes = [3,4,5];
-export const anyType = [0,1,2,3,4,5,6,7,8,9];
+export const anyType = [0,1,2,3,4,5,6,7,8,9,10];
 
 const customNodeSpecs: IInteractivityNode[] = [
     {
@@ -3900,6 +3907,16 @@ const lifecycleNodeSpecs: IInteractivityNode[] = [
                     socket: undefined
                 }
             }
+        },
+        values: {
+            output: {
+                event: {
+                    typeOptions: [9],
+                    type: 9,
+                    description: "Reference to this event",
+                    value: [undefined]
+                }
+            }
         }
     },
     {
@@ -3916,6 +3933,12 @@ const lifecycleNodeSpecs: IInteractivityNode[] = [
         },
         values: {
             output: {
+                event: {
+                    typeOptions: [9],
+                    type: 9,
+                    description: "Reference to this event",
+                    value: [undefined]
+                },
                 timeSinceStart: {
                     typeOptions: [2],
                     type: 2,
@@ -3945,6 +3968,16 @@ const lifecycleNodeSpecs: IInteractivityNode[] = [
                 out: {
                     node: undefined,
                     socket: undefined
+                }
+            }
+        },
+        values: {
+            output: {
+                event: {
+                    typeOptions: [9],
+                    type: 9,
+                    description: "Reference to this event",
+                    value: [undefined]
                 }
             }
         }
@@ -4220,10 +4253,10 @@ const flowNodeSpecs: IInteractivityNode[] = [
                 }
             },
             output: {
-                lastDelayIndex: {
-                    typeOptions: [1],
-                    type: 1,
-                    value: [-1]
+                lastDelay: {
+                    typeOptions: [9],
+                    type: 9,
+                    value: [null]
                 }
             }
         }
@@ -4248,7 +4281,7 @@ const flowNodeSpecs: IInteractivityNode[] = [
         },
         values: {
             input: {
-                delayIndex: {
+                delay: {
                     typeOptions: [1],
                     type: 1,
                     value: [undefined]
@@ -4383,12 +4416,41 @@ const debugNodeSpecs: IInteractivityNode[] = [
     }
 ]
 
+const refNodeSpecs: IInteractivityNode[] = [
+    {
+        op: "ref/eq",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "ref/eq"),
+        description: "Compare two references",
+        values: {
+            input: {
+                a: {
+                    typeOptions: [9],
+                    type: 9,
+                    value: [undefined]
+                },
+                b: {
+                    typeOptions: [9],
+                    type: 9,
+                    value: [undefined]
+                },
+            },
+            output: {
+                value: {
+                    typeOptions: [0],
+                    type: 0,
+                    value: [undefined]
+                }
+            }
+        }
+    }
+]
+
 export const interactivityNodeSpecs: IInteractivityNode[] = [
     ...mathConstantNodeSpecs, ...mathArithmeticNodeSpecs, ...mathComparisonNodeSpecs, ...mathTrigNodeSpecs,
     ...mathSpecialNodeSpecs,...lifecycleNodeSpecs, ...flowNodeSpecs, ...variableNodeSpecs, ...mathHyperbolicNodeSpecs,
     ...mathExponentialNodeSpecs, ...mathVectorNodeSpecs, ...mathMatrixNodeSpecs, ...mathSwizzleNodeSpecs, ...mathIntegerBitwiseNodeSpecs,
     ...mathTypeConversionNodeSpecs, ...pointerNodeSpecs, ...animationNodeSpecs, ...selectabilityNodeSpecs, ...customNodeSpecs, ...hoverabilityNodeSpecs,
-    ...mathQuaternionNodeSpecs,...debugNodeSpecs, ...rigidBodyNodeSpecs
+    ...mathQuaternionNodeSpecs,...debugNodeSpecs, ...rigidBodyNodeSpecs, ...refNodeSpecs
 ];
 
 export const createNoOpNode = (declaration: IInteractivityDeclaration): IInteractivityNode => {

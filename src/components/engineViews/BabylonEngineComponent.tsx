@@ -194,11 +194,15 @@ export const BabylonEngineComponent = () => {
         babylonEngineRef.current = new BabylonDecorator(new BasicBehaveEngine(60, eventBus), world, scene)
 
         const extractedBehaveGraph = babylonEngineRef.current.extractBehaveGraphFromScene()
-        if ((!behaveGraph.nodes || behaveGraph.nodes.length === 0 || shouldOverride) && extractedBehaveGraph) {
-            loadGraphFromJson(extractedBehaveGraph);
-            babylonEngineRef.current.loadBehaveGraph(getExecutableGraph());
-        } else {
-            babylonEngineRef.current.loadBehaveGraph(behaveGraph);
+        try {
+            if ((!behaveGraph.nodes || behaveGraph.nodes.length === 0 || shouldOverride) && extractedBehaveGraph) {
+                loadGraphFromJson(extractedBehaveGraph);
+                babylonEngineRef.current.loadBehaveGraph(getExecutableGraph());
+            } else {
+                babylonEngineRef.current.loadBehaveGraph(behaveGraph);
+            }
+        } catch (error) {
+            console.warn("KHR_interactivity graph execution stopped", error);
         }
     }
 
@@ -358,11 +362,11 @@ export const BabylonEngineComponent = () => {
                     >
                         {getExecutableGraph().events?.map((customEvent: any, index: number) => {
                             return (
-                                <Tab title={customEvent.id} eventKey={index + 1}>
+                                <Tab key={customEvent.id ?? index} title={customEvent.id} eventKey={index + 1}>
                                     <Row style={{textAlign: "left"}}>
                                         {Object.keys(customEvent.values).map((val: any) => {
                                             return (
-                                                <Col md={12}>
+                                                <Col key={val} md={12}>
                                                     <Form.Group>
                                                         <Form.Label>{val}</Form.Label>
                                                         <Form.Control id={val} type="text"/>

@@ -225,7 +225,12 @@ export class GenericTestDecorator extends ADecorator {
     startAnimation = (_animationIndex: number, _startTime: number, _endTime: number, _speed: number, callback: () => void): void => callback();
     stopAnimation = (_animationIndex: number): void => {};
     stopAnimationAt = (_animationIndex: number, _stopTime: number, callback: () => void): void => callback();
-    resolveRef = (ref: any): any => ref;
+    resolveRef = (ref: any): any => {
+        if (ref == null || ref === "") {
+            return -1;
+        }
+        return String(ref).split("/").pop();
+    };
     getWorld = (): any => this.world;
     getParentNodeIndex = (nodeIndex: number): number | undefined => this.world.parents[nodeIndex];
     registerJsonPointer = (jsonPtr: string, getter: (path: string) => any, setter: (path: string, value: any) => void, typeName: string, readOnly: boolean): void => {
@@ -239,6 +244,7 @@ export class GenericTestDecorator extends ADecorator {
         const animationCount = this.world.animations.length;
         const lightCount = this.world.lights.length;
         const maxWeights = Math.max(1, ...this.world.nodes.map((node: any) => node.weights?.length ?? 0));
+        const maxChildren = Math.max(1, ...this.world.nodes.map((node: any) => node.children?.length ?? 0));
         const maxPrimitiveCount = Math.max(1, ...this.world.meshes.map((mesh: any) => mesh.primitives?.length ?? 0));
 
         this.pointer("/nodes.length", () => [nodeCount], () => {}, "int", true);
@@ -250,7 +256,11 @@ export class GenericTestDecorator extends ADecorator {
         this.pointer(`/nodes/${nodeCount}/rotation`, (p) => this.node(p).rotation, (p, v) => this.node(p).rotation = v, "float4");
         this.pointer(`/nodes/${nodeCount}/matrix`, (p) => this.node(p).matrix, () => {}, "float4x4", true);
         this.pointer(`/nodes/${nodeCount}/globalMatrix`, (p) => this.node(p).globalMatrix, () => {}, "float4x4", true);
-        this.pointer(`/nodes/${nodeCount}/mesh`, (p) => [this.node(p).mesh ?? -1], () => {}, "int", true);
+        this.pointer(`/nodes/${nodeCount}/mesh`, (p) => this.node(p).mesh == null ? [null] : [`/meshes/${this.node(p).mesh}`], () => {}, "ref", true);
+        this.pointer(`/nodes/${nodeCount}/children/${maxChildren}`, (p) => {
+            const childIndex = this.node(p).children?.[this.part(p, 4)];
+            return childIndex == null ? [null] : [`/nodes/${childIndex}`];
+        }, () => {}, "ref", true);
         this.pointer(`/nodes/${nodeCount}/weights/${maxWeights}`, (p) => [this.node(p).weights[this.part(p, 4)] ?? 0], (p, v) => this.node(p).weights[this.part(p, 4)] = scalar(v), "float");
         this.pointer(`/nodes/${nodeCount}/extensions/KHR_node_visibility/visible`, (p) => [this.node(p).visible], (p, v) => this.node(p).visible = scalar(v), "bool");
         this.pointer(`/nodes/${nodeCount}/extensions/KHR_node_selectability/selectable`, (p) => [this.node(p).selectable], (p, v) => this.node(p).selectable = scalar(v), "bool");
@@ -330,6 +340,7 @@ export function createGenericWorldFromGltf(gltf: any): any {
             matrix: node.matrix ?? identityMatrix(),
             globalMatrix: node.matrix ?? identityMatrix(),
             mesh: node.mesh,
+            children: node.children ?? [],
             weights: node.weights ?? [],
             visible: node.extensions?.KHR_node_visibility?.visible ?? true,
             selectable: node.extensions?.KHR_node_selectability?.selectable ?? true,

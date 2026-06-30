@@ -54,7 +54,10 @@ export class LoggingDecorator extends ADecorator {
     }
 
     resolveRef = (ref: any): any => {
-        return ref;
+        if (ref == null || ref === "") {
+            return -1;
+        }
+        return String(ref).split("/").pop();
     }
 
     registerJsonPointer = (jsonPtr: string, getterCallback: (path: string) => any, setterCallback: (path: string, value: any) => void, typeName: string, readOnly: boolean) => {

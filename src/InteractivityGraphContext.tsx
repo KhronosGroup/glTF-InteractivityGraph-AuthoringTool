@@ -331,7 +331,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
                     copyOfTemplateNode.configuration = copyOfTemplateNode.configuration || {};
                     copyOfTemplateNode.configuration[key] = node.configuration[key];
                     if (key === "type") {
-                      const newTypeIndex = getUpdatedTypeIndex(json.types[node.configuration[key].value])
+                      const newTypeIndex = getUpdatedTypeIndex(json.types[node.configuration[key].value[0]])
                       copyOfTemplateNode.configuration[key].value = [newTypeIndex];
                     }
                 }

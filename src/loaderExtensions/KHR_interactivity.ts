@@ -1,5 +1,6 @@
 import { GLTFLoader, IGLTFLoaderExtension } from '@babylonjs/loaders/glTF/2.0';
 import { GLTFParser } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { buildGltfObjectModel } from '../authoring/gltfObjectModel';
 
 export const KHR_INTERACTIVITY_EXTENSION_NAME = 'KHR_interactivity';
 export const KHR_NODE_VISIBILITY_EXTENSION_NAME = 'KHR_node_visibility';
@@ -29,6 +30,8 @@ export class KHR_interactivity implements IGLTFLoaderExtension {
         // record the glb's declared extensions so the UI can warn about unsupported ones
         this._loader.babylonScene.metadata.gltfExtensionsUsed = gltf?.extensionsUsed ?? [];
         this._loader.babylonScene.metadata.gltfExtensionsRequired = gltf?.extensionsRequired ?? [];
+        // snapshot the addressable objects (nodes/meshes/materials/...) for the ref-value picker
+        this._loader.babylonScene.metadata.gltfObjectModel = buildGltfObjectModel(gltf);
     }
 }
 

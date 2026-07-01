@@ -10,6 +10,7 @@ import { InteractivityGraphContext } from "../../InteractivityGraphContext";
 import { DOMEventBus } from "../../BasicBehaveEngine/eventBuses/DOMEventBus";
 import { KHR_interactivity_three } from "../../loaderExtensions/KHR_interactivity";
 import { computeExtensionDiagnostics } from "../../diagnostics";
+import { buildGltfObjectModel } from "../../authoring/gltfObjectModel";
 import { ThreeDecorator } from "../../decorators/ThreeDecorator";
 import { BasicBehaveEngine } from "../../BasicBehaveEngine/BasicBehaveEngine";
 import { WebGLRenderer, Scene, PerspectiveCamera, AnimationMixer, Clock, Group, AnimationClip, SRGBColorSpace, AmbientLight, DirectionalLight, Box3, Vector3, Object3D, Material, Mesh } from "three";
@@ -44,7 +45,7 @@ export const ThreeEngineComponent: React.FC<ThreeEngineComponentProps> = ({ mode
     const [loadedModel, setLoadedModel] = useState<Group | null>(null);
     const [animations, setAnimations] = useState<AnimationClip[]>([]);
 
-    const { getExecutableGraph, loadGraphFromJson, setDiagnosticsForCategory } = useContext(InteractivityGraphContext);
+    const { getExecutableGraph, loadGraphFromJson, setDiagnosticsForCategory, setGltfObjectModel } = useContext(InteractivityGraphContext);
 
     useEffect(() => {
         // Create the js renderer
@@ -402,12 +403,15 @@ export const ThreeEngineComponent: React.FC<ThreeEngineComponentProps> = ({ mode
             threeEngineRef.current.setupPointerEvents(rendererRef.current.domElement);
         }
         
-        // Surface any glb extensions this tool does not support
+        // Surface any glb extensions this tool does not support and publish the object snapshot
         const parserJson: any = parser?.json;
         setDiagnosticsForCategory(
             "extension",
             computeExtensionDiagnostics(parserJson?.extensionsUsed, parserJson?.extensionsRequired)
         );
+        if (parserJson) {
+            setGltfObjectModel(buildGltfObjectModel(parserJson));
+        }
 
         // Extract the behave graph from the scene (if present from GLTFLoader)
         const extractedBehaveGraph = threeEngineRef.current.extractBehaveGraphFromScene();

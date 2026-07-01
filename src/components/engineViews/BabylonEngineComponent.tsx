@@ -51,16 +51,20 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
     const [fileUploaded, setFileUploaded] = useState<string | null>(null);
     const [clickedHotSpot, setClickedHotSpot] = useState<string | null>(null);
 
-    const {getExecutableGraph, loadGraphFromJson, setDiagnosticsForCategory} = useContext(InteractivityGraphContext);
+    const {getExecutableGraph, loadGraphFromJson, setDiagnosticsForCategory, setGltfObjectModel} = useContext(InteractivityGraphContext);
 
     // Inspect the loaded glb's declared extensions (stashed on the scene metadata by the
-    // KHR_interactivity loader extension) and surface any this tool does not support.
+    // KHR_interactivity loader extension) and surface any this tool does not support. Also publish
+    // the addressable-object snapshot for the ref-value picker.
     const reportGlbExtensionDiagnostics = () => {
         const metadata = sceneRef.current?.metadata;
         setDiagnosticsForCategory(
             "extension",
             computeExtensionDiagnostics(metadata?.gltfExtensionsUsed, metadata?.gltfExtensionsRequired)
         );
+        if (metadata?.gltfObjectModel) {
+            setGltfObjectModel(metadata.gltfObjectModel);
+        }
     };
 
     useEffect(() => {

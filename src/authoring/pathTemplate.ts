@@ -80,6 +80,31 @@ export const parsePathTemplate = (path: string): PathTemplateParseResult => {
 
 export const getPathTemplateSockets = (path: string): PathTemplateSocket[] => parsePathTemplate(path).sockets;
 
+/**
+ * Rewrite a single template slot to the given kind, swapping its delimiters:
+ * index -> [id], ref -> {id}. The slot is matched by its decoded id; the original
+ * encoded id is preserved in the output. Segments that are not the target slot are
+ * left untouched. Returns the path unchanged if the slot is not found.
+ */
+export const setPathTemplateSlotKind = (path: string, slotId: string, kind: PathTemplateSocketKind): string => {
+    const [open, close] = kind === "index" ? ["[", "]"] : ["{", "}"];
+    return path
+        .split("/")
+        .map((segment) => {
+            const isIndex = segment.startsWith("[") && segment.endsWith("]");
+            const isRef = segment.startsWith("{") && segment.endsWith("}");
+            if (!isIndex && !isRef) {
+                return segment;
+            }
+            const encodedId = segment.slice(1, -1);
+            if (decodeJsonPointerToken(encodedId) !== slotId) {
+                return segment;
+            }
+            return `${open}${encodedId}${close}`;
+        })
+        .join("/");
+};
+
 export const getMessageTemplateSocketIds = (message: string): string[] => {
     const socketIds: string[] = [];
     let state = 0;

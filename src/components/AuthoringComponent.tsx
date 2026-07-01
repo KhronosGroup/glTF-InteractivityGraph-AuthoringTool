@@ -17,6 +17,7 @@ import {Spacer} from "./Spacer";
 import {interactivityNodeSpecs, knownDeclarations, standardTypes} from "../BasicBehaveEngine/types/nodes";
 import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityNode, IInteractivityVariable } from '../BasicBehaveEngine/types/InteractivityGraph';
 import { InteractivityGraphContext } from '../InteractivityGraphContext';
+import { FLOW_COLOR, getColorForTypeIndex } from '../authoring/socketColors';
 
 const nodeTypes = interactivityNodeSpecs.reduce((nodes, node) => {
     nodes[knownDeclarations[node.declaration].op] = (props: any) => {
@@ -119,7 +120,7 @@ export const AuthoringComponent = () => {
         }
 
 
-        if (sourceIsFlow || targetIsFlow) { 
+        if (sourceIsFlow || targetIsFlow) {
             if (sourceNode.op === "flow/sequence") {
                 // if the source node is a flow/sequence, we need to dyanmically add outflows since they are not defined in the template
                 sourceNode.flows = sourceNode.flows || {};
@@ -130,8 +131,45 @@ export const AuthoringComponent = () => {
             targetNode!.values!.input![vals.targetHandle!] = {node: sourceNode.uid, socket: vals.sourceHandle!}
         }
 
-        setEdges((eds: any) => addEdge(vals, eds));
+        // color the wiring by the source socket type (or flow color for flow connections)
+        const edgeColor = sourceIsFlow
+            ? FLOW_COLOR
+            : getColorForTypeIndex(sourceNode.values?.output?.[vals.sourceHandle!]?.type);
+        setEdges((eds: any) => addEdge({ ...vals, style: { stroke: edgeColor, strokeWidth: 2 } }, eds));
     }, [nodes, graph]);
+
+    // recolor a node's outgoing value edges to match its current output socket types
+    // (called by nodes when a type changes, e.g. via the type dropdown or Pointer Type config)
+    const recolorEdges = useCallback((nodeId: string) => {
+        setEdges((eds: Edge[]) => eds.map((edge) => {
+            if (edge.source !== nodeId) {
+                return edge;
+            }
+            const sourceNode = graph.nodes.find(n => n.uid === nodeId);
+            if (sourceNode === undefined) {
+                return edge;
+            }
+            // flow edges keep the flow color
+            if (sourceNode.flows?.output?.[edge.sourceHandle!] !== undefined) {
+                return edge;
+            }
+            const stroke = getColorForTypeIndex(sourceNode.values?.output?.[edge.sourceHandle!]?.type);
+            if ((edge.style as any)?.stroke === stroke) {
+                return edge;
+            }
+            return { ...edge, style: { ...(edge.style || {}), stroke, strokeWidth: 2 } };
+        }));
+    }, [graph]);
+
+    // when a dynamic flow output socket (flow/sequence, flow/multiGate) is renamed, retarget any
+    // edge leaving that socket so the wiring survives the rename
+    const renameFlowSocket = useCallback((nodeId: string, oldName: string, newName: string) => {
+        setEdges((eds: Edge[]) => eds.map((edge) =>
+            (edge.source === nodeId && edge.sourceHandle === oldName)
+                ? { ...edge, sourceHandle: newName }
+                : edge
+        ));
+    }, []);
 
     const onEdgesDelete = useCallback((edges: Edge[]) => {
         console.log("edges", edges);
@@ -179,7 +217,7 @@ export const AuthoringComponent = () => {
             id: uid,
             type: nodeType,
             position: position,
-            data: {events: graph.events, variables: graph.variables, types: standardTypes, uid: uid, op: nodeType}
+            data: {events: graph.events, variables: graph.variables, types: standardTypes, uid: uid, op: nodeType, recolorEdges: recolorEdges, renameFlowSocket: renameFlowSocket}
         };
 
         const declaration: IInteractivityDeclaration = knownDeclarations.find(node => node.op === nodeType)!;
@@ -199,6 +237,8 @@ export const AuthoringComponent = () => {
             const loadedNodes: Node[] = result[0];
             for (const node of loadedNodes) {
                 node.data.op = node.type;
+                node.data.recolorEdges = recolorEdges;
+                node.data.renameFlowSocket = renameFlowSocket;
                 const declarationIndex = knownDeclarations.findIndex(declaration => declaration.op === node.data.op);
                 if (declarationIndex === -1) {
                     node.type = "NoOp";

@@ -4,6 +4,10 @@ import { createNoOpNode, interactivityNodeSpecs, standardTypes } from './BasicBe
 import { v4 as uuidv4 } from 'uuid';
 import { Edge, Node } from 'reactflow';
 import { DiagnosticCategory, IGraphDiagnostic } from './diagnostics';
+import { FLOW_COLOR, getColorForTypeIndex } from './authoring/socketColors';
+import { GltfObjectModel } from './authoring/gltfObjectModel';
+
+const edgeStyle = (color: string) => ({ stroke: color, strokeWidth: 2 });
 interface InteractivityGraphContextType {
     graph: IInteractivityGraph,
     needsSyncingToAuthor: boolean,
@@ -11,6 +15,8 @@ interface InteractivityGraphContextType {
     diagnostics: IGraphDiagnostic[],
     setDiagnosticsForCategory: (category: DiagnosticCategory, diagnostics: IGraphDiagnostic[]) => void,
     clearDiagnostics: () => void,
+    gltfObjectModel: GltfObjectModel | null,
+    setGltfObjectModel: (model: GltfObjectModel | null) => void,
     getAuthorGraph: (graph: IInteractivityGraph) => [Node[], Edge[], IInteractivityEvent[], IInteractivityVariable[]],
     getExecutableGraph: () => any,
     loadGraphFromJson: (json: any) => void,
@@ -37,6 +43,8 @@ const initialContext: InteractivityGraphContextType = {
     diagnostics: [],
     setDiagnosticsForCategory: () => {return null},
     clearDiagnostics: () => {return null},
+    gltfObjectModel: null,
+    setGltfObjectModel: () => {return null},
     getAuthorGraph: (graph: IInteractivityGraph) => {return [[], [], [], []]},
     getExecutableGraph: () => {return null},
     loadGraphFromJson: () => {return null},
@@ -67,6 +75,8 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
     const clearDiagnostics = () => {
         setDiagnostics([]);
     };
+
+    const [gltfObjectModel, setGltfObjectModel] = useState<GltfObjectModel | null>(null);
 
     const getAuthorGraph = (graph: IInteractivityGraph): [Node[], Edge[], IInteractivityEvent[], IInteractivityVariable[]] => {
         // TODO: THIS IS NOT JSON WE SHOULD NOT ALLOW FOR NANS OR INFINITIES
@@ -120,12 +130,16 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
             for (const [key, value] of Object.entries(interactivityNode.values.input || {})) {
               if (value.node !== undefined) {
                 // if the value is derived from the output of another node, create an edge linking to that node
+                // color the edge by the source output socket's data type
+                const sourceNode = graph.nodes.find(n => n.uid === value.node);
+                const sourceType = sourceNode?.values?.output?.[value.socket!]?.type;
                 edges.push({
                   id: uuidv4(),
                   source: String(value.node),
                   sourceHandle: value.socket,
                   target: String(interactivityNode.uid!),
                   targetHandle: key,
+                  style: edgeStyle(getColorForTypeIndex(sourceType)),
                 });
                 node.data.linked[key] = true;
               } else if (value.value !== undefined) {
@@ -146,6 +160,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
                 sourceHandle: key,
                 target: String(value.node),
                   targetHandle: value.socket,
+                  style: edgeStyle(FLOW_COLOR),
                 });
               }
             }
@@ -576,6 +591,8 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         diagnostics: diagnostics,
         setDiagnosticsForCategory: setDiagnosticsForCategory,
         clearDiagnostics: clearDiagnostics,
+        gltfObjectModel: gltfObjectModel,
+        setGltfObjectModel: setGltfObjectModel,
         getAuthorGraph: getAuthorGraph,
         loadGraphFromJson: loadGraphFromJson,
         getExecutableGraph: getExecutableGraph,

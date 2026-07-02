@@ -554,6 +554,24 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
             .filter((id) => Number.isInteger(id) && id >= 0);
     };
 
+    // variable/set keys its input value sockets by the numeric variable id (see
+    // updatedConfiguration.variables handling above); show the variable's name instead so the
+    // sockets stay identifiable without cross-referencing the "variables" config chips.
+    const isVariableSetNode = node?.op === "variable/set";
+    const MAX_SOCKET_LABEL_LENGTH = 30;
+    const getInputSocketFullLabel = (socket: string): string => {
+        if (isVariableSetNode) {
+            const variable = graph.variables[Number(socket)] as (IInteractivityVariable & { id?: string }) | undefined;
+            const name = variable?.name ?? variable?.id;
+            if (name) { return name; }
+        }
+        return socket;
+    };
+    const getInputSocketLabel = (socket: string): string => {
+        const label = getInputSocketFullLabel(socket);
+        return label.length > MAX_SOCKET_LABEL_LENGTH ? `${label.slice(0, MAX_SOCKET_LABEL_LENGTH - 1)}…` : label;
+    };
+
     const isPointerNode = node?.op?.startsWith("pointer/") ?? false;
     // flow/sequence and flow/multiGate have user-managed, renamable output flow sockets
     const isDynamicFlowNode = node?.op === "flow/sequence" || node?.op === "flow/multiGate";
@@ -803,7 +821,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                 return (
                                     <div key={socket} className={"flow-node-socket"}>
                                         <div className={"flow-node-socket-head"}>
-                                            <label htmlFor={socket}>{socket}</label>
+                                            <label htmlFor={socket} title={isVariableSetNode ? `${getInputSocketFullLabel(socket)} (variable #${socket})` : undefined}>{getInputSocketLabel(socket)}</label>
                                             {isTypeEditable ? (
                                                 <span className={"flow-node-type-badge flow-node-type-badge--editable nodrag"} style={{ background: getColorForTypeIndex(inputType) }} title={"Change type"}>
                                                     {getTypeLabel(inputType)}

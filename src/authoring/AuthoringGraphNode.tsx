@@ -549,6 +549,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
             source = cleaned === "" ? [] : cleaned.split(",");
         }
         return source
+            .filter((id) => id != null)
             .map((id) => Number(id))
             .filter((id) => Number.isInteger(id) && id >= 0);
     };

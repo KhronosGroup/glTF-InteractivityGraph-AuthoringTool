@@ -380,7 +380,8 @@
 
 .vars-config-chips {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: flex-start;
     gap: 4px;
     flex: 1;
     min-width: 0;

@@ -34,6 +34,10 @@ const refSelectButtonStyle: CSSProperties = {
 // control). Pinning `top` to the socket-head's center keeps the dot on the same Y as the
 // type badge instead of drifting down when a value input is rendered below the head.
 const SOCKET_HEAD_CENTER = 8;
+// flow/sequence and flow/multiGate render their renamable output name as a 24px-tall input
+// (.flow-node-flow-name) instead of a plain label, which makes that socket-head row taller and
+// shifts its visual center down from SOCKET_HEAD_CENTER.
+const FLOW_NAME_HEAD_CENTER = 12;
 const handleStyle = (color: string, side: "left" | "right", top: number | undefined = SOCKET_HEAD_CENTER): CSSProperties => ({
     background: color,
     width: 11,
@@ -805,7 +809,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                                 <label htmlFor={socket}>{socket}</label>
                                             )}
                                         </div>
-                                        <Handle type="source" position={Position.Right} id={socket} style={handleStyle(FLOW_COLOR, "right")} />
+                                        <Handle type="source" position={Position.Right} id={socket} style={handleStyle(FLOW_COLOR, "right", isDynamicFlowNode ? FLOW_NAME_HEAD_CENTER : SOCKET_HEAD_CENTER)} />
                                     </div>
                                 )
                             })}

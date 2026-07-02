@@ -18,6 +18,7 @@ import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityNode, IIn
 import { InteractivityGraphContext } from '../InteractivityGraphContext';
 import { FLOW_COLOR, getColorForTypeIndex } from '../authoring/socketColors';
 import { TypedValueInput } from '../authoring/TypedValueInput';
+import '../css/flowNodes.css';
 
 const nodeTypes = interactivityNodeSpecs.reduce((nodes, node) => {
     nodes[knownDeclarations[node.declaration].op] = (props: any) => {
@@ -507,17 +508,41 @@ export const AuthoringComponent = () => {
     )
 }
 
+const getNodeCategory = (nodeType: string): string => {
+    const slashIndex = nodeType.indexOf("/");
+    if (slashIndex === -1) {
+        return "Other";
+    }
+    const category = nodeType.substring(0, slashIndex);
+    return category.charAt(0).toUpperCase() + category.slice(1);
+}
+
+const nodeTypesByCategory = Object.keys(nodeTypes).reduce((categories, nodeType) => {
+    const category = getNodeCategory(nodeType);
+    (categories[category] = categories[category] ?? []).push(nodeType);
+    return categories;
+}, {} as {[category: string]: string[]});
+
+const sortedNodeCategories = Object.keys(nodeTypesByCategory).sort((a, b) => a.localeCompare(b));
+
 const NodePickerComponent = (props: {onAddNode: any, closeModal: any, mousePos: any}) => {
     const [filter, setFilter] = useState("");
+    const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
     const selectNode = (nodeType: string) => {
         props.onAddNode(nodeType, {x: props.mousePos.x, y: props.mousePos.y});
         props.closeModal()
     }
 
+    const toggleCategory = (category: string) => {
+        setActiveCategory(activeCategory === category ? null : category);
+    }
+
+    const normalizedFilter = filter.trim().toLowerCase();
+
     return (
-        <Panel id={"node-picker-panel"} position={"top-center"} style={{border: "1px solid gray", background: "white", textAlign: "left", zIndex: 10}}>
-            <Container style={{padding: 0}}>
+        <Panel id={"node-picker-panel"} position={"top-center"} style={{border: "1px solid gray", background: "white", textAlign: "left", zIndex: 10, width: "min(820px, 75%)"}}>
+            <Container fluid style={{padding: 0}}>
                 <h3 style={{textAlign: "center", paddingTop: 8}}>
                     Add Node
                 </h3>
@@ -526,17 +551,44 @@ const NodePickerComponent = (props: {onAddNode: any, closeModal: any, mousePos: 
                     data-testid={"node-picker-search"}
                     style={{margin: "0 auto", width: "90%"}}
                     type="text"
+                    autoFocus={true}
                     onChange={(e) => setFilter(e.target.value)}
                     value={filter}
                     placeholder="Search nodes..."
                 />
-                <div style={{ height: "128px", overflowY:"scroll", marginTop: 8, width: "100%"}}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, margin: "10px auto 0", width: "90%" }}>
                     {
-                        Object.entries(nodeTypes).map((value, index) => {
+                        sortedNodeCategories.map(category => (
+                            <Button
+                                key={category}
+                                size={"sm"}
+                                variant={activeCategory === category ? "primary" : "outline-primary"}
+                                onClick={() => toggleCategory(category)}
+                                data-testid={`node-picker-category-${category}`}
+                            >
+                                {category}
+                            </Button>
+                        ))
+                    }
+                </div>
+                <div style={{ columnWidth: 200, columnGap: 24, maxHeight: "40vh", overflowY: "auto", marginTop: 16, padding: "0 16px 8px" }}>
+                    {
+                        sortedNodeCategories.map(category => {
+                            const nodesInCategory = nodeTypesByCategory[category].filter(nodeType =>
+                                normalizedFilter === "" || nodeType.toLowerCase().includes(normalizedFilter)
+                            );
+                            const shouldShowCategory = nodesInCategory.length > 0 && (activeCategory === null || activeCategory === category);
                             return (
-                                <RenderIf key={value[0]} shouldShow={filter === "" || value[0].toLowerCase().includes(filter.toLowerCase())}>
-                                    <hr style={{ borderTop: '1px solid #777', margin: '16px 0' }} />
-                                    <p style={{marginLeft: 8}} onClick={() => selectNode(value[0])} data-testid={`node-picker-${value[0]}`}>{value[0]}</p>
+                                <RenderIf key={category} shouldShow={shouldShowCategory}>
+                                    <div style={{ breakInside: "avoid", marginBottom: 16 }}>
+                                        <div style={{ fontWeight: "bold", color: "#555" }}>{category}</div>
+                                        <hr style={{ borderTop: '1px solid #777', margin: '4px 0 8px' }} />
+                                        {
+                                            nodesInCategory.map(nodeType => (
+                                                <p key={nodeType} className="node-picker-item" style={{overflowWrap: "anywhere"}} onClick={() => selectNode(nodeType)} data-testid={`node-picker-${nodeType}`}>{nodeType}</p>
+                                            ))
+                                        }
+                                    </div>
                                 </RenderIf>
                             )
                         })

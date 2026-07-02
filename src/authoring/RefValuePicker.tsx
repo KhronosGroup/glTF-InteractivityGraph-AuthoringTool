@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Modal } from "react-bootstrap";
 import { InteractivityGraphContext } from "../InteractivityGraphContext";
+import { RenderIf } from "../components/RenderIf";
 import { GltfObjectNode, REF_CATEGORIES, RefCategory, isGltfObjectModelEmpty } from "./gltfObjectModel";
 
 export interface RefValuePickerProps {
@@ -9,6 +10,10 @@ export interface RefValuePickerProps {
     currentValue?: string;
     /** socket name (e.g. "material") used to preselect the matching category */
     hintSocket?: string;
+    /** when set, restricts the picker to a single category and hides the category sidebar */
+    onlyCategoryId?: RefCategory["id"];
+    /** modal title, defaults to "Select object reference" */
+    title?: string;
     onClose: () => void;
     /** called with the selected JSON pointer, e.g. "/materials/2" */
     onSelect: (pointer: string) => void;
@@ -27,14 +32,14 @@ const rowStyle = (selected: boolean, depth = 0): React.CSSProperties => ({
     gap: 6,
 });
 
-export const RefValuePicker: React.FC<RefValuePickerProps> = ({ show, currentValue, hintSocket, onClose, onSelect }) => {
+export const RefValuePicker: React.FC<RefValuePickerProps> = ({ show, currentValue, hintSocket, onlyCategoryId, title, onClose, onSelect }) => {
     const { gltfObjectModel } = useContext(InteractivityGraphContext);
 
     // categories that actually have entries in the loaded model
     const availableCategories = useMemo<RefCategory[]>(() => {
         if (!gltfObjectModel) return [];
-        return REF_CATEGORIES.filter((category) => gltfObjectModel[category.id].length > 0);
-    }, [gltfObjectModel]);
+        return REF_CATEGORIES.filter((category) => gltfObjectModel[category.id].length > 0 && (!onlyCategoryId || category.id === onlyCategoryId));
+    }, [gltfObjectModel, onlyCategoryId]);
 
     // preselect the category whose name matches the socket (e.g. "material" -> Materials)
     const hintedCategoryId = useMemo<RefCategory["id"] | null>(() => {
@@ -128,7 +133,7 @@ export const RefValuePicker: React.FC<RefValuePickerProps> = ({ show, currentVal
     return (
         <Modal show={show} onHide={onClose} size="lg" centered>
             <Modal.Header closeButton>
-                <Modal.Title style={{ fontSize: 18 }}>Select object reference</Modal.Title>
+                <Modal.Title style={{ fontSize: 18 }}>{title ?? "Select object reference"}</Modal.Title>
             </Modal.Header>
             <Modal.Body style={{ padding: 0 }}>
                 {isGltfObjectModelEmpty(gltfObjectModel) ? (
@@ -156,27 +161,29 @@ export const RefValuePicker: React.FC<RefValuePickerProps> = ({ show, currentVal
                         </div>
                         <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
                             {/* categories */}
-                            <div style={{ width: 180, borderRight: "1px solid #eee", overflowY: "auto", padding: 8 }}>
-                                {availableCategories.map((category) => (
-                                    <div
-                                        key={category.id}
-                                        onClick={() => setActiveCategoryId(category.id)}
-                                        style={{
-                                            padding: "8px 10px",
-                                            cursor: "pointer",
-                                            borderRadius: 6,
-                                            marginBottom: 2,
-                                            fontWeight: activeCategory?.id === category.id ? 700 : 400,
-                                            background: activeCategory?.id === category.id ? "#eef2f8" : "transparent",
-                                            display: "flex",
-                                            justifyContent: "space-between",
-                                        }}
-                                    >
-                                        <span>{category.label}</span>
-                                        <span style={{ color: "#999", fontSize: 12 }}>{gltfObjectModel![category.id].length}</span>
-                                    </div>
-                                ))}
-                            </div>
+                            <RenderIf shouldShow={!onlyCategoryId}>
+                                <div style={{ width: 180, borderRight: "1px solid #eee", overflowY: "auto", padding: 8 }}>
+                                    {availableCategories.map((category) => (
+                                        <div
+                                            key={category.id}
+                                            onClick={() => setActiveCategoryId(category.id)}
+                                            style={{
+                                                padding: "8px 10px",
+                                                cursor: "pointer",
+                                                borderRadius: 6,
+                                                marginBottom: 2,
+                                                fontWeight: activeCategory?.id === category.id ? 700 : 400,
+                                                background: activeCategory?.id === category.id ? "#eef2f8" : "transparent",
+                                                display: "flex",
+                                                justifyContent: "space-between",
+                                            }}
+                                        >
+                                            <span>{category.label}</span>
+                                            <span style={{ color: "#999", fontSize: 12 }}>{gltfObjectModel![category.id].length}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </RenderIf>
 
                             {/* object list / tree */}
                             <div style={{ flex: 1, overflowY: "auto", padding: 8 }}>

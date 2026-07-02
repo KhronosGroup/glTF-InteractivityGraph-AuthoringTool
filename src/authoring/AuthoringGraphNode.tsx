@@ -99,6 +99,8 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     const [node, setNode] = useState<IInteractivityNode | null>(null);
     // which ref input socket currently has the object picker open (null = closed)
     const [refPickerSocket, setRefPickerSocket] = useState<string | null>(null);
+    // whether the node-index configuration's node picker dialog is open
+    const [showNodeIndexPicker, setShowNodeIndexPicker] = useState(false);
 
     useEffect(() => {
         const node: IInteractivityNode = graph.nodes.find(node => node.uid === uid)!;
@@ -212,6 +214,17 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                 newConfiguration.type = { value: [typeIndex] };
             }
         }
+        setConfiguration(newConfiguration);
+        evaluateConfigurationWhichChangeSockets(newConfiguration, inputValues, outputValues, inputFlows, outputFlows);
+    }, [configuration, inputValues, outputValues, inputFlows, outputFlows]);
+
+    // nodeIndex config (event/onSelect, event/onHoverIn/Out, rigid_body triggers, ...): store the
+    // picked glTF node index. Also settable via free-text entry, so accepts a raw number.
+    const onChangeNodeIndex = useCallback((index: number) => {
+        const newConfiguration: Record<string, IInteractivityConfigurationValue> = {
+            ...configuration,
+            nodeIndex: { value: [index] },
+        };
         setConfiguration(newConfiguration);
         evaluateConfigurationWhichChangeSockets(newConfiguration, inputValues, outputValues, inputFlows, outputFlows);
     }, [configuration, inputValues, outputValues, inputFlows, outputFlows]);
@@ -697,6 +710,26 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                             </div>
                         }
                         {
+                            (configuration.nodeIndex !== undefined) &&
+                            <div className={"flow-node-field"}>
+                                <label htmlFor="nodeIndex">nodeIndex</label>
+                                <div style={{ display: "flex", gap: 4 }}>
+                                    <input
+                                        id="nodeIndex"
+                                        name="nodeIndex"
+                                        type="number"
+                                        className={"flow-node-control"}
+                                        style={{ flex: 1, minWidth: 0 }}
+                                        value={String(configuration.nodeIndex.value?.[0] ?? -1)}
+                                        onChange={(event) => onChangeNodeIndex(Number(event.target.value))}
+                                    />
+                                    <button type="button" onClick={() => setShowNodeIndexPicker(true)} style={refSelectButtonStyle} title={"Select a node"}>
+                                        Select…
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                        {
                             (configuration.type !== undefined) &&
                             <div className={"flow-node-field"}>
                                 <label htmlFor="type">{isPointerNode ? "Pointer Type" : "type"}</label>
@@ -719,7 +752,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                         }
                         {
                             Object.keys(configuration)
-                                .filter((configurationId) => configurationId !== "event" && configurationId !== "variable" && configurationId !== "variables" && configurationId !== "type" && configurationId !== "pointer")
+                                .filter((configurationId) => configurationId !== "event" && configurationId !== "variable" && configurationId !== "variables" && configurationId !== "type" && configurationId !== "pointer" && configurationId !== "nodeIndex")
                                 .map((configurationId) => {
                                     return (
                                         <div key={configurationId} className={"flow-node-field"}>
@@ -932,6 +965,15 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                 hintSocket={refPickerSocket ?? undefined}
                 onClose={() => setRefPickerSocket(null)}
                 onSelect={(pointer) => { if (refPickerSocket) { setSocketRefValue(refPickerSocket, pointer); } }}
+            />
+
+            <RefValuePicker
+                show={showNodeIndexPicker}
+                currentValue={`/nodes/${configuration.nodeIndex?.value?.[0] ?? -1}`}
+                onlyCategoryId={"nodes"}
+                title={"Select node"}
+                onClose={() => setShowNodeIndexPicker(false)}
+                onSelect={(pointer) => onChangeNodeIndex(Number(pointer.replace("/nodes/", "")))}
             />
         </div>
     )

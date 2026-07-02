@@ -45,11 +45,13 @@ export const RefValuePicker: React.FC<RefValuePickerProps> = ({ show, currentVal
     }, [hintSocket, availableCategories]);
 
     const [activeCategoryId, setActiveCategoryId] = useState<RefCategory["id"] | null>(null);
+    const [search, setSearch] = useState("");
 
-    // when the picker opens, jump to the hinted category
+    // when the picker opens, jump to the hinted category and clear any previous search
     useEffect(() => {
         if (show) {
             setActiveCategoryId(hintedCategoryId);
+            setSearch("");
         }
     }, [show, hintedCategoryId]);
 
@@ -60,18 +62,29 @@ export const RefValuePicker: React.FC<RefValuePickerProps> = ({ show, currentVal
         onClose();
     };
 
+    const matchesSearch = (name: string, index: number) => {
+        const query = search.trim().toLowerCase();
+        if (!query) return true;
+        return name.toLowerCase().includes(query) || String(index).includes(query);
+    };
+
     const renderNodeTree = (nodes: GltfObjectNode[], rootIndices: number[]) => {
         const byIndex = new Map(nodes.map((n) => [n.index, n]));
-        const rows: React.ReactNode[] = [];
         const visited = new Set<number>();
+        const filtering = search.trim().length > 0;
 
-        const walk = (nodeIndex: number, depth: number) => {
-            if (visited.has(nodeIndex)) return; // guard against malformed cyclic hierarchies
+        // returns the rows for this node's subtree, or [] to prune branches with no matches
+        const buildRows = (nodeIndex: number, depth: number): React.ReactNode[] => {
+            if (visited.has(nodeIndex)) return []; // guard against malformed cyclic hierarchies
             visited.add(nodeIndex);
             const node = byIndex.get(nodeIndex);
-            if (!node) return;
+            if (!node) return [];
+            const childRows = node.children.flatMap((child) => buildRows(child, depth + 1));
+            if (filtering && !matchesSearch(node.name, node.index) && childRows.length === 0) {
+                return []; // neither this node nor any descendant matches
+            }
             const pointer = `/nodes/${node.index}`;
-            rows.push(
+            const row = (
                 <div
                     key={node.index}
                     style={rowStyle(currentValue === pointer, depth)}
@@ -81,23 +94,22 @@ export const RefValuePicker: React.FC<RefValuePickerProps> = ({ show, currentVal
                     <span>{node.name}</span>
                 </div>
             );
-            for (const child of node.children) {
-                walk(child, depth + 1);
-            }
+            return [row, ...childRows];
         };
 
-        for (const root of rootIndices) {
-            walk(root, 0);
-        }
-        return rows;
+        return rootIndices.flatMap((root) => buildRows(root, 0));
     };
 
     const renderList = (category: RefCategory) => {
         if (!gltfObjectModel) return null;
         if (category.tree) {
-            return renderNodeTree(gltfObjectModel.nodes, gltfObjectModel.rootNodes);
+            const rows = renderNodeTree(gltfObjectModel.nodes, gltfObjectModel.rootNodes);
+            return rows.length > 0 ? rows : <div style={{ padding: 8, color: "#999", fontSize: 13 }}>No matches</div>;
         }
-        const objects = gltfObjectModel[category.id];
+        const objects = gltfObjectModel[category.id].filter((object) => matchesSearch(object.name, object.index));
+        if (objects.length === 0) {
+            return <div style={{ padding: 8, color: "#999", fontSize: 13 }}>No matches</div>;
+        }
         return objects.map((object) => {
             const pointer = `${category.pointerPrefix}/${object.index}`;
             return (
@@ -124,33 +136,52 @@ export const RefValuePicker: React.FC<RefValuePickerProps> = ({ show, currentVal
                         No model loaded. Load a glb in the viewer to pick object references.
                     </div>
                 ) : (
-                    <div style={{ display: "flex", height: 420 }}>
-                        {/* categories */}
-                        <div style={{ width: 180, borderRight: "1px solid #eee", overflowY: "auto", padding: 8 }}>
-                            {availableCategories.map((category) => (
-                                <div
-                                    key={category.id}
-                                    onClick={() => setActiveCategoryId(category.id)}
-                                    style={{
-                                        padding: "8px 10px",
-                                        cursor: "pointer",
-                                        borderRadius: 6,
-                                        marginBottom: 2,
-                                        fontWeight: activeCategory?.id === category.id ? 700 : 400,
-                                        background: activeCategory?.id === category.id ? "#eef2f8" : "transparent",
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                    }}
-                                >
-                                    <span>{category.label}</span>
-                                    <span style={{ color: "#999", fontSize: 12 }}>{gltfObjectModel![category.id].length}</span>
-                                </div>
-                            ))}
+                    <div style={{ display: "flex", flexDirection: "column", height: 420 }}>
+                        <div style={{ padding: 8, borderBottom: "1px solid #eee" }}>
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Search by name or index..."
+                                autoFocus
+                                style={{
+                                    width: "100%",
+                                    boxSizing: "border-box",
+                                    padding: "6px 8px",
+                                    fontSize: 13,
+                                    border: "1px solid #ccc",
+                                    borderRadius: 4,
+                                }}
+                            />
                         </div>
+                        <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
+                            {/* categories */}
+                            <div style={{ width: 180, borderRight: "1px solid #eee", overflowY: "auto", padding: 8 }}>
+                                {availableCategories.map((category) => (
+                                    <div
+                                        key={category.id}
+                                        onClick={() => setActiveCategoryId(category.id)}
+                                        style={{
+                                            padding: "8px 10px",
+                                            cursor: "pointer",
+                                            borderRadius: 6,
+                                            marginBottom: 2,
+                                            fontWeight: activeCategory?.id === category.id ? 700 : 400,
+                                            background: activeCategory?.id === category.id ? "#eef2f8" : "transparent",
+                                            display: "flex",
+                                            justifyContent: "space-between",
+                                        }}
+                                    >
+                                        <span>{category.label}</span>
+                                        <span style={{ color: "#999", fontSize: 12 }}>{gltfObjectModel![category.id].length}</span>
+                                    </div>
+                                ))}
+                            </div>
 
-                        {/* object list / tree */}
-                        <div style={{ flex: 1, overflowY: "auto", padding: 8 }}>
-                            {activeCategory && renderList(activeCategory)}
+                            {/* object list / tree */}
+                            <div style={{ flex: 1, overflowY: "auto", padding: 8 }}>
+                                {activeCategory && renderList(activeCategory)}
+                            </div>
                         </div>
                     </div>
                 )}

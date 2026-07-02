@@ -551,9 +551,77 @@ const NodePickerComponent = (props: {onAddNode: any, closeModal: any, mousePos: 
     );
 }
 
+const JsonTreeNode = (props: {value: any, name?: string, defaultCollapsed?: boolean, isLast?: boolean}) => {
+    const {value, name, isLast} = props;
+    const isObject = value !== null && typeof value === "object";
+    const [collapsed, setCollapsed] = useState(props.defaultCollapsed ?? false);
+
+    const keyLabel = name !== undefined
+        ? <span style={{color: "#a626a4"}}>{`"${name}"`}: </span>
+        : null;
+
+    if (!isObject) {
+        let display: string;
+        let color: string;
+        if (typeof value === "string") { display = `"${value}"`; color = "#50a14f"; }
+        else if (typeof value === "number") { display = String(value); color = "#986801"; }
+        else if (typeof value === "boolean") { display = String(value); color = "#0184bc"; }
+        else { display = "null"; color = "#a0a1a7"; }
+        return (
+            <div style={{whiteSpace: "pre"}}>
+                {keyLabel}<span style={{color}}>{display}</span>{isLast ? "" : ","}
+            </div>
+        );
+    }
+
+    const isArray = Array.isArray(value);
+    const entries: [string, any][] = isArray
+        ? (value as any[]).map((v, i) => [String(i), v])
+        : Object.entries(value);
+    const open = isArray ? "[" : "{";
+    const close = isArray ? "]" : "}";
+
+    if (entries.length === 0) {
+        return (
+            <div style={{whiteSpace: "pre"}}>
+                {keyLabel}<span>{open}{close}</span>{isLast ? "" : ","}
+            </div>
+        );
+    }
+
+    return (
+        <div style={{whiteSpace: "pre"}}>
+            <div style={{cursor: "pointer"}} onClick={() => setCollapsed(!collapsed)}>
+                <span style={{display: "inline-block", width: 14, color: "#a0a1a7"}}>{collapsed ? "▶" : "▼"}</span>
+                {keyLabel}<span>{open}</span>
+                {collapsed && <span style={{color: "#a0a1a7"}}>{isArray ? ` ${entries.length} items ` : ` … `}{close}{isLast ? "" : ","}</span>}
+            </div>
+            {!collapsed && (
+                <>
+                    <div style={{paddingLeft: 18}}>
+                        {entries.map(([k, v], i) => (
+                            <JsonTreeNode
+                                key={k}
+                                name={isArray ? undefined : k}
+                                value={v}
+                                isLast={i === entries.length - 1}
+                            />
+                        ))}
+                    </div>
+                    <div style={{whiteSpace: "pre"}}>
+                        <span style={{display: "inline-block", width: 14}} />
+                        <span>{close}</span>{isLast ? "" : ","}
+                    </div>
+                </>
+            )}
+        </div>
+    );
+}
+
 const JSONViewComponent = (props: {closeModal: any}) => {
     const [copied, setCopied] = useState(false);
     const {getExecutableGraph} = useContext(InteractivityGraphContext);
+    const graph = getExecutableGraph();
     const copyToClipboard = async () => {
         const jsonString = JSON.stringify(getExecutableGraph(), undefined, '\t');
         await navigator.clipboard.writeText(jsonString);
@@ -566,9 +634,22 @@ const JSONViewComponent = (props: {closeModal: any}) => {
 
     return (
         <Panel id={"show-json-view-panel"} position={"top-center"} style={{border:"1px solid gray", background: "white", zIndex: 10}}>
-            <Container style={{padding: 16}}>
+            <Container style={{padding: 16, width: "80vw", maxWidth: 1000}}>
                 <h3>JSON View</h3>
-                <pre style={{textAlign: "left", overflow:"scroll", height: 400, width: 400}}>{JSON.stringify(getExecutableGraph(), undefined, ' ')}</pre>
+                <div style={{
+                    textAlign: "left",
+                    overflow: "auto",
+                    height: "40vh",
+                    maxHeight: "calc(100vh - 220px)",
+                    border: "1px solid #ccc",
+                    borderRadius: 4,
+                    padding: 8,
+                    background: "#fafafa",
+                    fontFamily: "monospace",
+                    fontSize: 13,
+                }}>
+                    <JsonTreeNode value={graph} isLast={true} />
+                </div>
                 <Row style={{ marginTop: 16 }}>
                     <Col xs={12} md={6}>
                         <Button variant={"outline-primary"}  style={{width: "100%"}} onClick={copyToClipboard}>

@@ -1,5 +1,5 @@
 import { CSSProperties, useCallback, useContext, useEffect, useState } from "react";
-import { Handle, Position } from "reactflow";
+import { Handle, Position, useUpdateNodeInternals } from "reactflow";
 
 import { RenderIf } from "../components/RenderIf";
 import { IInteractivityFlow, IInteractivityValue, IInteractivityNode, IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityVariable, InteractivityValueType } from "../BasicBehaveEngine/types/InteractivityGraph";
@@ -10,6 +10,8 @@ import { PointerConfigField } from "./PointerConfigField";
 import { getStandardTypeIndexForSignature } from "./pointerCatalogue";
 import { FLOW_COLOR, getColorForTypeIndex, getTypeLabel } from "./socketColors";
 import { RefValuePicker } from "./RefValuePicker";
+import { VariablesConfigField } from "./VariablesConfigField";
+import { CustomEventSendMonitor, CustomEventReceiveTrigger } from "./CustomEventControls";
 import "../css/flowNodes.css";
 
 const refSelectButtonStyle: CSSProperties = {
@@ -25,14 +27,19 @@ const refSelectButtonStyle: CSSProperties = {
     padding: "0 8px",
 };
 
-// shared handle styling: a colored dot whose color encodes the socket type (or flow)
-const handleStyle = (color: string, side: "left" | "right"): CSSProperties => ({
+// shared handle styling: a colored dot whose color encodes the socket type (or flow).
+// By default reactflow centers the handle vertically over the whole socket (head + input
+// control). Pinning `top` to the socket-head's center keeps the dot on the same Y as the
+// type badge instead of drifting down when a value input is rendered below the head.
+const SOCKET_HEAD_CENTER = 8;
+const handleStyle = (color: string, side: "left" | "right", top: number | undefined = SOCKET_HEAD_CENTER): CSSProperties => ({
     background: color,
     width: 11,
     height: 11,
     border: "2px solid #ffffff",
     boxShadow: "0 0 0 1px rgba(0,0,0,0.25)",
     [side]: -13,
+    ...(top !== undefined ? { top } : {}),
 });
 
 export interface IAuthoringGraphNodeProps {
@@ -45,6 +52,27 @@ const getStandardTypeIndex = (signature: InteractivityValueType): number => {
         throw new Error(`Missing standard KHR_interactivity type ${signature}`);
     }
     return index;
+}
+
+// Vector/matrix socket types get one edit field per component, laid out as rows x cols.
+// glTF stores matrices column-major, so the field shown at visual (row r, col c) maps to the
+// flat value index c * rows + r. For vectors (rows === 1) this collapses to plain index c.
+const VECTOR_MATRIX_LAYOUTS: Partial<Record<InteractivityValueType, { rows: number; cols: number }>> = {
+    [InteractivityValueType.FLOAT2]: { rows: 1, cols: 2 },
+    [InteractivityValueType.FLOAT3]: { rows: 1, cols: 3 },
+    [InteractivityValueType.FLOAT4]: { rows: 1, cols: 4 },
+    [InteractivityValueType.FLOAT2X2]: { rows: 2, cols: 2 },
+    [InteractivityValueType.FLOAT3X3]: { rows: 3, cols: 3 },
+    [InteractivityValueType.FLOAT4X4]: { rows: 4, cols: 4 },
+};
+
+// component labels used as tooltips: vectors read x/y/z/w, matrices read m<row><col>
+const VECTOR_COMPONENT_LABELS = ["x", "y", "z", "w"];
+const getComponentTitle = (layout: { rows: number; cols: number }, row: number, col: number): string => {
+    if (layout.rows === 1) {
+        return VECTOR_COMPONENT_LABELS[col] ?? `[${col}]`;
+    }
+    return `m${row}${col}`;
 }
 
 /**
@@ -63,6 +91,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     const [outputValues, setOutputValues] = useState<Record<string, IInteractivityValue>>({});
     const [configuration, setConfiguration] = useState<Record<string, IInteractivityConfigurationValue>>({});
     const { graph } = useContext(InteractivityGraphContext);
+    const updateNodeInternals = useUpdateNodeInternals();
     const uid = props.data.uid;
     const [node, setNode] = useState<IInteractivityNode | null>(null);
     // which ref input socket currently has the object picker open (null = closed)
@@ -106,10 +135,27 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         }
     }, [configuration, node]);
 
+    // Adding/renaming flow sockets changes the Handle ids, but reactflow caches each node's
+    // handle geometry. Refresh it so edges retargeted to the new socket id re-attach instead of
+    // detaching (see the "Couldn't create edge for source handle id" note in AuthoringComponent).
+    useEffect(() => {
+        updateNodeInternals(uid);
+    }, [uid, updateNodeInternals, Object.keys(inputFlows).join(","), Object.keys(outputFlows).join(",")]);
+
     const onChangeParameter = useCallback((evt: { target: { value: any; }; }) => {
         const socketId = (evt.target as HTMLInputElement).id.replace("in-", "");
         const curParam = inputValues[socketId];
         setInputValues({ ...inputValues, [socketId]: { value: castParameter(evt.target.value, standardTypes[curParam.type!]!.name!), typeOptions: curParam.typeOptions, type: curParam.type } });
+    }, [inputValues]);
+
+    // update a single component of a vector/matrix socket at the given flat value index,
+    // leaving the other components untouched. Empty input is stored as NaN (unset).
+    const onChangeComponent = useCallback((socket: string, index: number, raw: string) => {
+        const curParam = inputValues[socket];
+        if (!curParam) { return; }
+        const arr = Array.isArray(curParam.value) ? [...curParam.value] : [];
+        arr[index] = raw === "" ? NaN : Number(raw);
+        setInputValues({ ...inputValues, [socket]: { value: arr, typeOptions: curParam.typeOptions, type: curParam.type } });
     }, [inputValues]);
 
     // set a ref socket's static value (a JSON pointer string) from the picker or manual entry
@@ -146,6 +192,17 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                 newConfiguration.type = { value: [typeIndex] };
             }
         }
+        setConfiguration(newConfiguration);
+        evaluateConfigurationWhichChangeSockets(newConfiguration, inputValues, outputValues, inputFlows, outputFlows);
+    }, [configuration, inputValues, outputValues, inputFlows, outputFlows]);
+
+    // multi-variable config (variable/set): store the selection as a plain array of variable ids
+    // and re-evaluate so each selected variable gets its input value socket.
+    const onChangeVariables = useCallback((ids: number[]) => {
+        const newConfiguration: Record<string, IInteractivityConfigurationValue> = {
+            ...configuration,
+            variables: { value: ids },
+        };
         setConfiguration(newConfiguration);
         evaluateConfigurationWhichChangeSockets(newConfiguration, inputValues, outputValues, inputFlows, outputFlows);
     }, [configuration, inputValues, outputValues, inputFlows, outputFlows]);
@@ -417,18 +474,20 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         }
     }
 
-    // Determine the effective type of an input socket. If the socket has no type of its own
-    // (e.g. an untyped/NoOp socket), follow its link to the source node's output socket, which
-    // should carry a concrete type.
-    const resolveSocketType = (value: IInteractivityValue): number | undefined => {
-        if (value?.type !== undefined) {
-            return value.type;
+    // Determine the effective type of an input socket. A wired socket takes its type from the
+    // connected source output socket (auto-detected), so its own type/typeOptions are ignored.
+    // The connection lives on the shared graph model (mutated on connect), which may be ahead of
+    // this node's local `value` state. Fall back to the socket's own type when unconnected.
+    const resolveSocketType = (socket: string, value: IInteractivityValue): number | undefined => {
+        const link = node?.values?.input?.[socket] ?? value;
+        if (link?.node !== undefined) {
+            const sourceNode = graph.nodes.find(n => n.uid === link.node);
+            const sourceType = sourceNode?.values?.output?.[link.socket!]?.type;
+            if (sourceType !== undefined) {
+                return sourceType;
+            }
         }
-        if (value?.node !== undefined) {
-            const sourceNode = graph.nodes.find(n => n.uid === value.node);
-            return sourceNode?.values?.output?.[value.socket!]?.type;
-        }
-        return undefined;
+        return value?.type;
     }
 
     const getHeaderColor = (name: string) => {
@@ -453,9 +512,33 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         }
     }
 
+    // parse the currently-selected variable ids for the multi-variable config (variable/set).
+    // The stored value may be a plain number array (["0", "1"] / [0, 1]) or, from legacy text
+    // entry, a single comma/bracket-delimited string in value[0]; normalise both to number[].
+    const getSelectedVariableIds = (): number[] => {
+        const raw = configuration.variables?.value;
+        if (!Array.isArray(raw)) { return []; }
+        let source: any[] = raw;
+        if (typeof raw[0] === "string" && (raw[0].includes(",") || raw[0].includes("["))) {
+            const cleaned = raw[0].replace(/[[\]\s]/g, "");
+            source = cleaned === "" ? [] : cleaned.split(",");
+        }
+        return source
+            .map((id) => Number(id))
+            .filter((id) => Number.isInteger(id) && id >= 0);
+    };
+
     const isPointerNode = node?.op?.startsWith("pointer/") ?? false;
     // flow/sequence and flow/multiGate have user-managed, renamable output flow sockets
     const isDynamicFlowNode = node?.op === "flow/sequence" || node?.op === "flow/multiGate";
+
+    // the custom event a event/send or event/receive node is currently configured to use (if any).
+    // configuration.event holds the selected index into the graph's events list (-1 / undefined = none)
+    const configuredEventIndex = configuration.event?.value?.[0];
+    const configuredEvent: IInteractivityEvent | undefined =
+        configuredEventIndex != null && Number(configuredEventIndex) >= 0
+            ? props.data.events?.[Number(configuredEventIndex)]
+            : undefined;
 
     // add a new output flow socket with a unique numeric name
     const addOutputFlow = () => {
@@ -528,11 +611,26 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                     <option key={-1} value={-1}>--NO SELECTION--</option>
                                     {
 
-                                        props.data.variables.map((v: any, index: number) => (
-                                            <option key={index} value={index}>{v.name || v.id}</option>
-                                        ))
+                                        graph.variables.map((v: any, index: number) => {
+                                            const name = v.name ?? v.id;
+                                            const label = name ? `${name} (#${index})` : `variable #${index}`;
+                                            return (
+                                                <option key={index} value={index}>{`${label} — ${getTypeLabel(v.type)}`}</option>
+                                            );
+                                        })
                                     }
                                 </select>
+                            </div>
+                        }
+                        {
+                            (configuration.variables !== undefined) &&
+                            <div className={"flow-node-field"}>
+                                <label htmlFor="variables">variables</label>
+                                <VariablesConfigField
+                                    variables={graph.variables}
+                                    selectedIds={getSelectedVariableIds()}
+                                    onChange={onChangeVariables}
+                                />
                             </div>
                         }
                         {
@@ -569,7 +667,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                         }
                         {
                             Object.keys(configuration)
-                                .filter((configurationId) => configurationId !== "event" && configurationId !== "variable" && configurationId !== "type" && configurationId !== "pointer")
+                                .filter((configurationId) => configurationId !== "event" && configurationId !== "variable" && configurationId !== "variables" && configurationId !== "type" && configurationId !== "pointer")
                                 .map((configurationId) => {
                                     return (
                                         <div key={configurationId} className={"flow-node-field"}>
@@ -633,7 +731,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                 </RenderIf>
 
                 <RenderIf shouldShow={props.data.isNoOp === true}>
-                    <Handle type="target" position={Position.Left} id={"in"} style={handleStyle(FLOW_COLOR, "left")} />
+                    <Handle type="target" position={Position.Left} id={"in"} style={handleStyle(FLOW_COLOR, "left", undefined)} />
                     <p>NoOp</p>
                 </RenderIf>
 
@@ -644,14 +742,35 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                         {/*inputValues*/}
                         <div>
                             {Object.entries(inputValues).map(([socket, value]) => {
-                                const inputType = resolveSocketType(value);
-                                const isRefSocket = standardTypes[value.type ?? -1]?.signature === InteractivityValueType.REF;
-                                const isLinked = props.data.linked && props.data.linked[socket];
+                                const isLinked = (props.data.linked && props.data.linked[socket]) || node?.values?.input?.[socket]?.node !== undefined;
+                                const inputType = resolveSocketType(socket, value);
+                                const signature = standardTypes[value.type ?? -1]?.signature;
+                                const isRefSocket = signature === InteractivityValueType.REF;
+                                // vector/matrix sockets render a grid of per-component fields
+                                const vecLayout = signature ? VECTOR_MATRIX_LAYOUTS[signature] : undefined;
+                                // the type badge doubles as the type selector when the socket accepts
+                                // more than one type, isn't the pointer node's fixed value socket, and
+                                // isn't wired to an output (a connection dictates the type automatically)
+                                const isTypeEditable = (value.typeOptions?.length ?? 0) > 1 && !(isPointerNode && socket === "value") && !isLinked;
                                 return (
                                     <div key={socket} className={"flow-node-socket"}>
                                         <div className={"flow-node-socket-head"}>
                                             <label htmlFor={socket}>{socket}</label>
-                                            <span className={"flow-node-type-badge"} style={{ background: getColorForTypeIndex(inputType) }}>{getTypeLabel(inputType)}</span>
+                                            {isTypeEditable ? (
+                                                <span className={"flow-node-type-badge flow-node-type-badge--editable nodrag"} style={{ background: getColorForTypeIndex(inputType) }} title={"Change type"}>
+                                                    {getTypeLabel(inputType)}
+                                                    <span className={"flow-node-type-badge-arrow"}>▾</span>
+                                                    <select id={`typeDropDown-${socket}`} className={"flow-node-type-badge-select"} onChange={onChangeType} value={value.type}>
+                                                        {(value.typeOptions || []).map((type, index) => (
+                                                            <option key={index} value={type}>
+                                                                {standardTypes[type]?.name ?? standardTypes[type]?.signature ?? String(type)}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </span>
+                                            ) : (
+                                                <span className={"flow-node-type-badge"} style={{ background: getColorForTypeIndex(inputType) }}>{getTypeLabel(inputType)}</span>
+                                            )}
                                         </div>
                                         {isRefSocket ? (
                                             <div style={{ display: isLinked ? "none" : "flex", gap: 4 }}>
@@ -668,18 +787,33 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                                     Select…
                                                 </button>
                                             </div>
+                                        ) : vecLayout ? (
+                                            <div
+                                                className={"flow-node-vec-grid nodrag"}
+                                                style={{ display: isLinked ? "none" : "grid", gridTemplateColumns: `repeat(${vecLayout.cols}, 46px)`, gap: 4 }}
+                                            >
+                                                {Array.from({ length: vecLayout.rows }).flatMap((_, row) =>
+                                                    Array.from({ length: vecLayout.cols }).map((__, col) => {
+                                                        const idx = col * vecLayout.rows + row;
+                                                        const compVal = inputValues[socket].value?.[idx];
+                                                        return (
+                                                            <input
+                                                                key={idx}
+                                                                type="number"
+                                                                step="any"
+                                                                className={"flow-node-vec-cell"}
+                                                                title={getComponentTitle(vecLayout, row, col)}
+                                                                placeholder={getComponentTitle(vecLayout, row, col)}
+                                                                value={compVal === undefined || (typeof compVal === "number" && Number.isNaN(compVal)) ? "" : compVal}
+                                                                onChange={(e) => onChangeComponent(socket, idx, e.target.value)}
+                                                            />
+                                                        );
+                                                    })
+                                                )}
+                                            </div>
                                         ) : (
                                             <input id={`in-${socket}`} name={socket} onChange={onChangeParameter} defaultValue={inputValues[socket].value} style={{ display: isLinked ? "none" : "block" }} />
                                         )}
-                                        {(value.typeOptions?.length ?? 0) > 1 && !(isPointerNode && socket === "value") &&
-                                            <select id={`typeDropDown-${socket}`} onChange={onChangeType} defaultValue={inputValues[socket].type} style={{ display: props.data.linked && props.data.linked[socket] ? "none" : "block" }}>
-                                                {(value.typeOptions || []).map((type, index) => (
-                                                    <option key={index} value={type}>
-                                                        {standardTypes[type]?.name ?? standardTypes[type]?.signature ?? String(type)}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        }
                                         <Handle type="target" position={Position.Left} id={socket} style={handleStyle(getColorForTypeIndex(inputType), "left")} />
                                     </div>
                                 )
@@ -701,6 +835,18 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                             })}
                         </div>
                     </div>
+                </RenderIf>
+
+                {/* event/send: live chronology of when this custom event fires (spam-aggregated per frame) */}
+                <RenderIf shouldShow={node?.op === "event/send" && configuredEvent !== undefined}>
+                    <hr />
+                    <CustomEventSendMonitor event={configuredEvent!} />
+                </RenderIf>
+
+                {/* event/receive: manual trigger with per-argument inputs */}
+                <RenderIf shouldShow={node?.op === "event/receive" && configuredEvent !== undefined}>
+                    <hr />
+                    <CustomEventReceiveTrigger event={configuredEvent!} />
                 </RenderIf>
             </div>
 

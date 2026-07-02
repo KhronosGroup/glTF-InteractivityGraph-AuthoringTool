@@ -113,6 +113,43 @@
     box-shadow: 0 0 0 2px rgba(61, 89, 135, 0.15);
 }
 
+/* per-component vector/matrix editor: a grid of small number fields */
+.flow-node-vec-grid {
+    width: fit-content;
+}
+
+/* higher specificity than `.flow-node-socket input` so the fixed 140px width is overridden */
+.flow-node-vec-grid .flow-node-vec-cell {
+    box-sizing: border-box;
+    width: 46px;
+    height: 26px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 0 4px;
+    font-size: 12px;
+    font-family: monospace;
+    text-align: right;
+    background: white;
+    color: #222;
+}
+
+.flow-node-vec-grid .flow-node-vec-cell:focus {
+    outline: none;
+    border-color: #3d5987;
+    box-shadow: 0 0 0 2px rgba(61, 89, 135, 0.15);
+}
+
+/* hide the number-input spinners so cells stay compact and consistent */
+.flow-node-vec-grid .flow-node-vec-cell::-webkit-outer-spin-button,
+.flow-node-vec-grid .flow-node-vec-cell::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.flow-node-vec-grid .flow-node-vec-cell {
+    -moz-appearance: textfield;
+}
+
 .flow-node-row {
     display: flex;
     flex-direction: row;
@@ -172,6 +209,43 @@
     white-space: nowrap;
 }
 
+/* editable variant: the badge itself acts as the type selector */
+.flow-node-type-badge--editable {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+}
+
+.flow-node-type-badge--editable:hover {
+    filter: brightness(1.08);
+}
+
+.flow-node-type-badge-arrow {
+    font-size: 11px;
+    line-height: 1;
+    font-weight: 900;
+    margin-left: 1px;
+    padding-left: 4px;
+    border-left: 1px solid rgba(255, 255, 255, 0.55);
+    opacity: 1;
+}
+
+/* transparent native select overlaying the badge; keeps the OS dropdown behaviour */
+.flow-node-type-badge-select {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: none;
+    opacity: 0;
+    cursor: pointer;
+}
+
 /* output column: right-align labels so they sit next to their handles */
 .flow-node-outputs .flow-node-socket {
     align-items: flex-end;
@@ -199,4 +273,324 @@
 
 .flow-node-add:hover {
     background: #eef5ff;
+}
+
+/* hover "×" button to remove an edge (see DeletableEdge). Positioned by an inline transform
+   at the edge midpoint; visibility is driven by the component's hover/selected state. */
+.edge-delete-btn {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid #d05c65;
+    border-radius: 50%;
+    background: white;
+    color: #d05c65;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    transition: opacity 0.1s ease, transform 0.1s ease;
+}
+
+.edge-delete-btn:hover {
+    background: #d05c65;
+    color: white;
+}
+
+/* make the whole edge easier to grab for hover/select/reconnect */
+.react-flow__edge-interaction {
+    cursor: pointer;
+}
+
+/* ---- variables multi-select config (variable/set) ---- */
+
+.vars-config {
+    position: relative;
+    width: 100%;
+}
+
+/* clickable summary box: shows selected variables as chips + a dropdown arrow */
+.vars-config-trigger {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 30px;
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 3px 8px;
+    background: white;
+    cursor: pointer;
+}
+
+.vars-config-trigger:hover {
+    border-color: #3d5987;
+}
+
+.vars-config-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+}
+
+.vars-config-placeholder {
+    color: #999;
+    font-size: 13px;
+    line-height: 22px;
+}
+
+.vars-config-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #eef2f8;
+    border: 1px solid #d5deeb;
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 12px;
+    color: #222;
+}
+
+.vars-config-chip-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.vars-config-chip-x {
+    cursor: pointer;
+    color: #888;
+    font-weight: 700;
+    line-height: 1;
+    padding-left: 1px;
+}
+
+.vars-config-chip-x:hover {
+    color: #d05c65;
+}
+
+.vars-config-arrow {
+    color: #666;
+    font-size: 11px;
+    font-weight: 900;
+    flex-shrink: 0;
+}
+
+/* dropdown list of every declared variable as a checkbox row */
+.vars-config-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 20;
+    max-height: 200px;
+    overflow-y: auto;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 4px;
+}
+
+.vars-config-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #222;
+}
+
+.vars-config-option:hover {
+    background: #eef2f8;
+}
+
+.vars-config-option input {
+    cursor: pointer;
+    margin: 0;
+}
+
+.vars-config-option-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.vars-config-option-type {
+    font-size: 10px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    flex-shrink: 0;
+}
+
+.vars-config-empty {
+    padding: 8px;
+    color: #999;
+    font-size: 13px;
+    font-style: italic;
+}
+
+/* ---- custom event controls (event/send monitor + event/receive trigger) ---- */
+
+/* event/send: live fire chronology */
+.flow-node-event-monitor {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.flow-node-event-monitor-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.flow-node-event-monitor-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* small dot that flashes each frame the event fires */
+.flow-node-event-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #cbcbcb;
+    flex-shrink: 0;
+}
+
+.flow-node-event-dot.is-live {
+    background: #f8a848;
+    animation: flow-node-event-flash 0.35s ease-out;
+}
+
+@keyframes flow-node-event-flash {
+    0% { transform: scale(1.8); box-shadow: 0 0 0 4px rgba(248, 168, 72, 0.45); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(248, 168, 72, 0); }
+}
+
+.flow-node-event-clear {
+    margin-left: auto;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: white;
+    color: #666;
+    font-size: 11px;
+    padding: 1px 8px;
+    cursor: pointer;
+}
+
+.flow-node-event-clear:hover:not(:disabled) {
+    background: #f3f3f3;
+}
+
+.flow-node-event-clear:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.flow-node-event-log {
+    max-height: 132px;
+    overflow-y: auto;
+    border: 1px solid #e2e2e2;
+    border-radius: 6px;
+    background: #1c1c1c;
+    padding: 4px 6px;
+    font-family: monospace;
+    font-size: 11px;
+}
+
+.flow-node-event-log-empty {
+    color: #888;
+    font-style: italic;
+}
+
+.flow-node-event-log-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    padding: 1px 0;
+    white-space: nowrap;
+}
+
+.flow-node-event-log-time {
+    color: #7fd0ff;
+    flex-shrink: 0;
+}
+
+.flow-node-event-log-count {
+    color: #f8a848;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.flow-node-event-log-detail {
+    color: #b9e69b;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* event/receive: manual trigger UI */
+.flow-node-event-trigger {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.flow-node-event-trigger .flow-node-field > label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.flow-node-event-arg-type {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #ffffff;
+    background: #868484;
+    border-radius: 4px;
+    padding: 1px 5px;
+}
+
+.flow-node-event-trigger-btn {
+    height: 32px;
+    border: 1px solid #f8a848;
+    border-radius: 6px;
+    background: #f8a848;
+    color: #1c1c1c;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.flow-node-event-trigger-btn:hover {
+    filter: brightness(1.06);
+}
+
+.flow-node-event-trigger-btn.is-flash {
+    animation: flow-node-event-btn-flash 0.22s ease-out;
+}
+
+@keyframes flow-node-event-btn-flash {
+    0% { transform: scale(0.96); box-shadow: 0 0 0 4px rgba(248, 168, 72, 0.5); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(248, 168, 72, 0); }
 }

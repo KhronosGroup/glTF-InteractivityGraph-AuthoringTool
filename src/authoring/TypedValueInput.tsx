@@ -28,6 +28,25 @@ const refBtnStyle: React.CSSProperties = {
     padding: "0 8px",
 };
 
+export interface BoolSwitchProps {
+    checked: boolean;
+    onChange: (checked: boolean) => void;
+    className?: string;
+    style?: React.CSSProperties;
+}
+
+// checkbox used everywhere a "bool" typed value is edited (node config values,
+// socket default values, variable/event defaults).
+export const BoolSwitch = ({ checked, onChange, className, style }: BoolSwitchProps) => (
+    <input
+        type="checkbox"
+        className={["flow-node-control", "nodrag", className].filter(Boolean).join(" ")}
+        style={{ width: 18, height: 18, cursor: "pointer", ...style }}
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+    />
+);
+
 export interface TypedValueInputProps {
     typeIndex: number;
     value: any;
@@ -50,15 +69,7 @@ export const TypedValueInput = ({ typeIndex, value, onChange }: TypedValueInputP
 
     if (signature === InteractivityValueType.BOOLEAN) {
         const checked = Array.isArray(value) ? Boolean(value[0]) : false;
-        return (
-            <input
-                type="checkbox"
-                className={"flow-node-control"}
-                style={{ width: 18, height: 18, cursor: "pointer" }}
-                checked={checked}
-                onChange={(e) => onChange([e.target.checked])}
-            />
-        );
+        return <BoolSwitch checked={checked} onChange={(next) => onChange([next])} />;
     }
 
     if (signature === InteractivityValueType.INT) {

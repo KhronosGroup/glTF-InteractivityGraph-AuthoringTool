@@ -10,6 +10,7 @@ import { PointerConfigField } from "./PointerConfigField";
 import { getStandardTypeIndexForSignature } from "./pointerCatalogue";
 import { FLOW_COLOR, getColorForTypeIndex, getTypeLabel } from "./socketColors";
 import { RefValuePicker } from "./RefValuePicker";
+import { BoolSwitch } from "./TypedValueInput";
 import { VariablesConfigField } from "./VariablesConfigField";
 import { InterpolationCurveField, ControlPoint } from "./InterpolationCurveField";
 import { CustomEventSendMonitor, CustomEventReceiveTrigger, PointerEventMonitor } from "./CustomEventControls";
@@ -158,6 +159,13 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         const arr = Array.isArray(curParam.value) ? [...curParam.value] : [];
         arr[index] = raw === "" ? NaN : Number(raw);
         setInputValues({ ...inputValues, [socket]: { value: arr, typeOptions: curParam.typeOptions, type: curParam.type } });
+    }, [inputValues]);
+
+    // set a bool socket's static value from the TRUE/FALSE switch
+    const onChangeBoolean = useCallback((socket: string, checked: boolean) => {
+        const curParam = inputValues[socket];
+        if (!curParam) { return; }
+        setInputValues({ ...inputValues, [socket]: { value: [checked], typeOptions: curParam.typeOptions, type: curParam.type } });
     }, [inputValues]);
 
     // apply an easing preset to an interpolate node: set both p1 and p2 float2 control-point
@@ -812,6 +820,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                 const inputType = resolveSocketType(socket, value);
                                 const signature = standardTypes[value.type ?? -1]?.signature;
                                 const isRefSocket = signature === InteractivityValueType.REF;
+                                const isBoolSocket = signature === InteractivityValueType.BOOLEAN;
                                 // vector/matrix sockets render a grid of per-component fields
                                 const vecLayout = signature ? VECTOR_MATRIX_LAYOUTS[signature] : undefined;
                                 // the type badge doubles as the type selector when the socket accepts
@@ -876,6 +885,13 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                                         );
                                                     })
                                                 )}
+                                            </div>
+                                        ) : isBoolSocket ? (
+                                            <div style={{ display: isLinked ? "none" : "block", textAlign: "left" }}>
+                                                <BoolSwitch
+                                                    checked={Array.isArray(value.value) ? Boolean(value.value[0]) : false}
+                                                    onChange={(checked) => onChangeBoolean(socket, checked)}
+                                                />
                                             </div>
                                         ) : (
                                             <input id={`in-${socket}`} name={socket} onChange={onChangeParameter} defaultValue={inputValues[socket].value} style={{ display: isLinked ? "none" : "block" }} />

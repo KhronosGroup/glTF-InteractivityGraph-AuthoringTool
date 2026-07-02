@@ -13,10 +13,14 @@
 }
 
 .flow-node-header {
-    padding: 12px 16px;
+    padding: 6px 8px;
     margin-bottom: 8px;
     border-top-left-radius: 4px;
     border-top-right-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
 }
 
 .flow-node-header h2 {
@@ -24,6 +28,38 @@
     font-weight: 700;
     margin: 0;
     color: #1c1c1c;
+}
+
+/* "x" button to remove the node entirely; only shown while hovering the node so it doesn't
+   clutter the header at rest (see .edge-delete-btn for the equivalent on edges) */
+.flow-node-delete-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    border: 0px solid rgba(0, 0, 0, 0.35);
+    border-radius: 6px;
+    background: #ffc3c8;
+    color: #1c1c1c;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.1s ease, background 0.1s ease, color 0.1s ease;
+}
+
+.flow-node:hover .flow-node-delete-btn {
+    opacity: 1;
+}
+
+.flow-node-delete-btn:hover {
+    background: #d05c65;
+    border-color: #d05c65;
+    color: white;
 }
 
 .flow-node-body {

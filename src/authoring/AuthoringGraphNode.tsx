@@ -573,6 +573,14 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                 <h2>
                     {node?.op}
                 </h2>
+                <button
+                    type="button"
+                    className={"flow-node-delete-btn nodrag nopan"}
+                    title={"Delete node"}
+                    onClick={(e) => { e.stopPropagation(); deleteElements({ nodes: [{ id: uid }] }); }}
+                >
+                    ×
+                </button>
             </div>
 
             <div className={"flow-node-body"}>

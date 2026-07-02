@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useContext } from "react";
-import { Button, Col, Container, Form, Modal, Row, Tab, Tabs } from "react-bootstrap";
+import { Button, Container, Modal } from "react-bootstrap";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTF, GLTFLoader, GLTFParser } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
@@ -8,7 +8,7 @@ import { KTX2Loader } from "three/examples/jsm/loaders/KTX2Loader.js";
 import { Spacer } from "../Spacer";
 import { InteractivityGraphContext } from "../../InteractivityGraphContext";
 import { DOMEventBus } from "../../BasicBehaveEngine/eventBuses/DOMEventBus";
-import { attachPointerEventLogging } from "../../authoring/CustomEventControls";
+import { attachPointerEventLogging, SendCustomEventPanel } from "../../authoring/CustomEventControls";
 import { KHR_interactivity_three } from "../../loaderExtensions/KHR_interactivity";
 import { computeExtensionDiagnostics } from "../../diagnostics";
 import { buildGltfObjectModel } from "../../authoring/gltfObjectModel";
@@ -36,7 +36,6 @@ export const ThreeEngineComponent: React.FC<ThreeEngineComponentProps> = ({ mode
     const threeLoaderRef = useRef<GLTFLoader | null>(null);
     const resizeObserverRef = useRef<ResizeObserver | null>(null);
     const animationFrameRef = useRef<number | null>(null);
-    const [activeKey, setActiveKey] = useState("1");
     const [graphRunning, setGraphRunning] = useState(false);
     const [openModal, setOpenModal] = useState<ThreeEngineModal>(ThreeEngineModal.NONE);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -630,50 +629,14 @@ export const ThreeEngineComponent: React.FC<ThreeEngineComponentProps> = ({ mode
 
             <div ref={containerRef} style={{ width: '100%', height: '700px' }} />
 
-            <Modal show={openModal === ThreeEngineModal.CUSTOM_EVENT}>
+            <Modal size="lg" show={openModal === ThreeEngineModal.CUSTOM_EVENT} onHide={() => setOpenModal(ThreeEngineModal.NONE)}>
                 <Container style={{padding: 16}}>
                     <h3>Send Custom Event</h3>
-                    <Tabs
-                        activeKey={activeKey}
-                        onSelect={(key: any) => setActiveKey(key)}
-                    >
-                        {getExecutableGraph().events?.map((customEvent: any, index: number) => {
-                            return (
-                                <Tab title={customEvent.id} eventKey={index + 1}>
-                                    <Row style={{textAlign: "left"}}>
-                                        {Object.keys(customEvent.values).map((val: any) => {
-                                            return (
-                                                <Col md={12}>
-                                                    <Form.Group>
-                                                        <Form.Label>{val}</Form.Label>
-                                                        <Form.Control id={val} type="text"/>
-                                                    </Form.Group>
-                                                </Col>
-                                            )
-                                        })}
-                                        <hr style={{ borderTop: '1px solid #777', margin: '16px 0' }} />
-                                        <Button variant={"outline-primary"} onClick={() => {
-                                            const payload: any = {};
-                                            for (const val of Object.keys(customEvent.values)) {
-                                                payload[val] = (document.getElementById(val) as HTMLInputElement).value;
-                                            }
-                                            threeEngineRef.current?.dispatchCustomEvent(`KHR_INTERACTIVITY:${customEvent.id}`, payload);
-                                            console.log(`Sending custom event: ${customEvent.id}`, payload);
-                                            setOpenModal(ThreeEngineModal.NONE);
-                                        }}>Send</Button>
-                                    </Row>
-                                </Tab>
-                            )
-                        })}
-                    </Tabs>
+                    <SendCustomEventPanel graph={getExecutableGraph()} />
                     <hr style={{ borderTop: '1px solid #777', margin: '16px 0' }} />
-                    <Row style={{ marginTop: 16 }}>
-                        <Col xs={12} md={12}>
-                            <Button variant={"outline-danger"} style={{width: "100%"}} onClick={() => setOpenModal(ThreeEngineModal.NONE)}>
-                                Cancel
-                            </Button>
-                        </Col>
-                    </Row>
+                    <Button variant={"outline-secondary"} style={{width: "100%"}} onClick={() => setOpenModal(ThreeEngineModal.NONE)}>
+                        Close
+                    </Button>
                 </Container>
             </Modal>
 

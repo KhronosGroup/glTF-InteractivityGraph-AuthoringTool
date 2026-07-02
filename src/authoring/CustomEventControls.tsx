@@ -1,7 +1,8 @@
-import { CSSProperties, useCallback, useEffect, useRef, useState } from "react";
-import { IInteractivityEvent, InteractivityValueType } from "../BasicBehaveEngine/types/InteractivityGraph";
+import { CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { IInteractivityEvent, IInteractivityGraph, InteractivityValueType } from "../BasicBehaveEngine/types/InteractivityGraph";
 import { standardTypes } from "../BasicBehaveEngine/types/nodes";
 import { RefValuePicker } from "./RefValuePicker";
+import "../css/flowNodes.css";
 
 const refSelectButtonStyle: CSSProperties = {
     height: 30,
@@ -277,7 +278,7 @@ const placeholderForType = (typeIndex: number): string => {
  * Raw string values are sent as the event detail; the event/receive engine node parses each value
  * according to its declared type (matching the existing engine "Send Custom Event" modals).
  */
-export const CustomEventReceiveTrigger = (props: { event: IInteractivityEvent }) => {
+export const CustomEventReceiveTrigger = (props: { event: IInteractivityEvent; disabled?: boolean }) => {
     const channel = eventChannel(props.event.id);
     const valueEntries = Object.entries(props.event.values || {});
     const [args, setArgs] = useState<Record<string, string>>({});
@@ -335,7 +336,7 @@ export const CustomEventReceiveTrigger = (props: { event: IInteractivityEvent })
                     </div>
                 );
             })}
-            <button type="button" className={`flow-node-event-trigger-btn${flash ? " is-flash" : ""}`} onClick={trigger}>
+            <button type="button" className={`flow-node-event-trigger-btn${flash ? " is-flash" : ""}`} onClick={trigger} disabled={props.disabled}>
                 ⚡ Trigger event
             </button>
 
@@ -346,6 +347,101 @@ export const CustomEventReceiveTrigger = (props: { event: IInteractivityEvent })
                 onClose={() => setRefPickerArg(null)}
                 onSelect={(pointer) => { if (refPickerArg) { setArgs((prev) => ({ ...prev, [refPickerArg]: pointer })); } }}
             />
+        </div>
+    );
+};
+
+/**
+ * Count, per custom event, how many event/receive nodes in the graph listen for it. A custom event
+ * with zero receivers can still be triggered, but nothing in the graph reacts — the Send panel uses
+ * these counts to flag orphan events and disable their trigger.
+ *
+ * event/receive nodes reference their event by index through configuration.event.value[0] (stored as
+ * a string, matching the exported graph format — see tst/testGraphs/customEventsLoop.json).
+ */
+const countCustomEventReceivers = (graph: IInteractivityGraph): number[] => {
+    const counts = (graph.events ?? []).map(() => 0);
+    const declarations = graph.declarations ?? [];
+    for (const node of graph.nodes ?? []) {
+        if (node.declaration == null) { continue; }
+        if (declarations[node.declaration]?.op !== "event/receive") { continue; }
+        const index = Number(node.configuration?.event?.value?.[0]);
+        if (Number.isInteger(index) && index >= 0 && index < counts.length) {
+            counts[index] += 1;
+        }
+    }
+    return counts;
+};
+
+/**
+ * "Send Custom Event" panel for the engine views. Lists every custom event declared in the graph,
+ * flags those with no event/receive listener (their trigger is disabled), and — for the selected
+ * event — renders a typed input per argument plus a Trigger button (reusing CustomEventReceiveTrigger,
+ * which dispatches onto the same document bus the running engine listens on).
+ */
+export const SendCustomEventPanel = (props: { graph: IInteractivityGraph }) => {
+    const events = props.graph.events ?? [];
+    const receiverCounts = useMemo(() => countCustomEventReceivers(props.graph), [props.graph]);
+
+    // default to the first event that actually has a receiver, so the panel opens on something useful
+    const initialIndex = useMemo(() => {
+        const withReceiver = receiverCounts.findIndex((c) => c > 0);
+        return withReceiver >= 0 ? withReceiver : 0;
+    }, [receiverCounts]);
+    const [selected, setSelected] = useState(initialIndex);
+    useEffect(() => { setSelected(initialIndex); }, [initialIndex]);
+
+    if (events.length === 0) {
+        return <div className={"send-event-empty"}>This graph declares no custom events.</div>;
+    }
+
+    const safeSelected = Math.min(selected, events.length - 1);
+    const selectedEvent = events[safeSelected];
+    const selectedHasReceiver = (receiverCounts[safeSelected] ?? 0) > 0;
+    const selectedArgCount = Object.keys(selectedEvent.values || {}).length;
+
+    return (
+        <div className={"send-event-panel"}>
+            <div className={"send-event-list"}>
+                {events.map((ev, i) => {
+                    const count = receiverCounts[i] ?? 0;
+                    const argCount = Object.keys(ev.values || {}).length;
+                    return (
+                        <button
+                            key={ev.id ?? i}
+                            type="button"
+                            className={`send-event-item${i === safeSelected ? " is-selected" : ""}${count === 0 ? " is-orphan" : ""}`}
+                            onClick={() => setSelected(i)}
+                        >
+                            <span className={"send-event-item-id"}>{ev.id || `event ${i}`}</span>
+                            <span className={"send-event-item-meta"}>
+                                <span className={"send-event-arg-count"}>{argCount} arg{argCount === 1 ? "" : "s"}</span>
+                                {count > 0 ? (
+                                    <span className={"send-event-badge is-ok"}>{count} receiver{count === 1 ? "" : "s"}</span>
+                                ) : (
+                                    <span className={"send-event-badge is-none"}>no receiver</span>
+                                )}
+                            </span>
+                        </button>
+                    );
+                })}
+            </div>
+            <div className={"send-event-detail"}>
+                <div className={"send-event-detail-title"}>{selectedEvent.id || `event ${safeSelected}`}</div>
+                {selectedHasReceiver ? (
+                    <div className={"send-event-status is-ok"}>
+                        {receiverCounts[safeSelected]} event/receive node{receiverCounts[safeSelected] === 1 ? "" : "s"} in the graph listen{receiverCounts[safeSelected] === 1 ? "s" : ""} for this event.
+                    </div>
+                ) : (
+                    <div className={"send-event-status is-warn"}>
+                        No <code>event/receive</code> node in the graph listens for this event — triggering it will have no effect.
+                    </div>
+                )}
+                {selectedArgCount === 0 && (
+                    <div className={"send-event-noargs"}>This event carries no arguments.</div>
+                )}
+                <CustomEventReceiveTrigger key={selectedEvent.id ?? safeSelected} event={selectedEvent} disabled={!selectedHasReceiver} />
+            </div>
         </div>
     );
 };

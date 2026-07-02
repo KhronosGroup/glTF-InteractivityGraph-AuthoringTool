@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState, useContext} from "react";
-import {Button, Col, Container, Form, Modal, Row, Tab, Tabs} from "react-bootstrap";
+import {Button, Container, Modal} from "react-bootstrap";
 import {
     AbstractMesh,
     AnimationGroup,
@@ -24,7 +24,7 @@ import {BasicBehaveEngine} from "../../BasicBehaveEngine/BasicBehaveEngine";
 import {GLTFFileLoader, GLTFLoaderAnimationStartMode} from "@babylonjs/loaders";
 import { InteractivityGraphContext } from "../../InteractivityGraphContext";
 import { DOMEventBus } from "../../BasicBehaveEngine/eventBuses/DOMEventBus";
-import { attachPointerEventLogging } from "../../authoring/CustomEventControls";
+import { attachPointerEventLogging, SendCustomEventPanel } from "../../authoring/CustomEventControls";
 import { computeExtensionDiagnostics } from "../../diagnostics";
 
 enum BabylonEngineModal {
@@ -44,7 +44,6 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const engineRef = useRef<Engine | null>(null);
     const sceneRef = useRef<Scene>();
-    const [activeKey, setActiveKey] = useState("1");
     const [graphRunning, setGraphRunning] = useState(false);
     const [openModal, setOpenModal] = useState<BabylonEngineModal>(BabylonEngineModal.NONE);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -431,49 +430,14 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
 
             <canvas ref={canvasRef} style={{ width: '100%', height: '700px' }} data-testid={"babylon-engine-canvas"} />
 
-            <Modal show={openModal === BabylonEngineModal.CUSTOM_EVENT}>
+            <Modal size="lg" show={openModal === BabylonEngineModal.CUSTOM_EVENT} onHide={() => setOpenModal(BabylonEngineModal.NONE)}>
                 <Container style={{padding: 16}}>
                     <h3>Send Custom Event</h3>
-                    <Tabs
-                        activeKey={activeKey}
-                        onSelect={(key: any) => setActiveKey(key)}
-                    >
-                        {getExecutableGraph().events?.map((customEvent: any, index: number) => {
-                            return (
-                                <Tab key={customEvent.id ?? index} title={customEvent.id} eventKey={index + 1}>
-                                    <Row style={{textAlign: "left"}}>
-                                        {Object.keys(customEvent.values).map((val: any) => {
-                                            return (
-                                                <Col key={val} md={12}>
-                                                    <Form.Group>
-                                                        <Form.Label>{val}</Form.Label>
-                                                        <Form.Control id={val} type="text"/>
-                                                    </Form.Group>
-                                                </Col>
-                                            )
-                                        })}
-                                        <hr style={{ borderTop: '1px solid #777', margin: '16px 0' }} />
-                                        <Button variant={"outline-primary"} onClick={() => {
-                                            const payload: any = {};
-                                            for (const val of Object.keys(customEvent.values)) {
-                                                payload[val] = (document.getElementById(val) as HTMLInputElement).value;
-                                            }
-                                            babylonEngineRef.current?.dispatchCustomEvent(`KHR_INTERACTIVITY:${customEvent.id}`, payload)
-                                            setOpenModal(BabylonEngineModal.NONE);
-                                        }}>Send</Button>
-                                    </Row>
-                                </Tab>
-                            )
-                        })}
-                    </Tabs>
+                    <SendCustomEventPanel graph={getExecutableGraph()} />
                     <hr style={{ borderTop: '1px solid #777', margin: '16px 0' }} />
-                    <Row style={{ marginTop: 16 }}>
-                        <Col xs={12} md={12}>
-                            <Button variant={"outline-danger"} style={{width: "100%"}} onClick={() => setOpenModal(BabylonEngineModal.NONE)}>
-                                Cancel
-                            </Button>
-                        </Col>
-                    </Row>
+                    <Button variant={"outline-secondary"} style={{width: "100%"}} onClick={() => setOpenModal(BabylonEngineModal.NONE)}>
+                        Close
+                    </Button>
                 </Container>
             </Modal>
 

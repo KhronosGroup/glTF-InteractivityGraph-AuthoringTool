@@ -7,6 +7,59 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
+/* ---- top menu bar (replaces the old top-right stacked button panel) ---- */
+
+.graph-menu-bar {
+    display: flex;
+    align-items: stretch;
+    gap: 2px;
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid #e2e2e2;
+    border-radius: 12px;
+    padding: 6px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(6px);
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.graph-menu-bar-btn {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #444;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.12s ease, color 0.12s ease;
+}
+
+.graph-menu-bar-btn:hover {
+    background: #eef2f8;
+    color: #1c1c1c;
+}
+
+.graph-menu-bar-btn.is-active {
+    background: #e2ebfa;
+    color: #3d5987;
+}
+
+.graph-menu-bar-btn svg {
+    flex-shrink: 0;
+}
+
+.graph-menu-bar-divider {
+    width: 1px;
+    align-self: stretch;
+    margin: 4px 2px;
+    background: #e2e2e2;
+}
+
 .node-picker-item {
     padding: 2px 6px;
     margin: 0 -6px 4px;
@@ -451,6 +504,7 @@
     z-index: 20;
     max-height: 200px;
     overflow-y: auto;
+    overscroll-behavior: contain;
     background: white;
     border: 1px solid #ccc;
     border-radius: 6px;
@@ -568,6 +622,7 @@
     max-width: 280px;
     overflow-y: auto;
     overflow-x: hidden;
+    overscroll-behavior: contain;
     border: 1px solid #e2e2e2;
     border-radius: 6px;
     background: #1c1c1c;
@@ -681,6 +736,7 @@
     flex: 0 0 210px;
     max-height: 340px;
     overflow-y: auto;
+    overscroll-behavior: contain;
     border: 1px solid #e2e2e2;
     border-radius: 8px;
     display: flex;

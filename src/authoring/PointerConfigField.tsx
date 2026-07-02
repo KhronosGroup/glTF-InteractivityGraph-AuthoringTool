@@ -156,6 +156,7 @@ export const PointerConfigField: React.FC<PointerConfigFieldProps> = ({ value, a
                         right: 0,
                         maxHeight: 320,
                         overflowY: "auto",
+                        overscrollBehavior: "contain",
                         background: "white",
                         border: "1px solid #ccc",
                         borderRadius: 4,

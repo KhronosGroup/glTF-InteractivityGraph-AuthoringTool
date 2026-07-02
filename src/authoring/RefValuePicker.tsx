@@ -162,7 +162,7 @@ export const RefValuePicker: React.FC<RefValuePickerProps> = ({ show, currentVal
                         <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
                             {/* categories */}
                             <RenderIf shouldShow={!onlyCategoryId}>
-                                <div style={{ width: 180, borderRight: "1px solid #eee", overflowY: "auto", padding: 8 }}>
+                                <div style={{ width: 180, borderRight: "1px solid #eee", overflowY: "auto", overscrollBehavior: "contain", padding: 8 }}>
                                     {availableCategories.map((category) => (
                                         <div
                                             key={category.id}
@@ -186,7 +186,7 @@ export const RefValuePicker: React.FC<RefValuePickerProps> = ({ show, currentVal
                             </RenderIf>
 
                             {/* object list / tree */}
-                            <div style={{ flex: 1, overflowY: "auto", padding: 8 }}>
+                            <div style={{ flex: 1, overflowY: "auto", overscrollBehavior: "contain", padding: 8 }}>
                                 {activeCategory && renderList(activeCategory)}
                             </div>
                         </div>

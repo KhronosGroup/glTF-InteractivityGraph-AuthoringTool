@@ -12,7 +12,6 @@ import {v4 as uuidv4} from "uuid";
 import {RenderIf} from "./RenderIf";
 import {Button, Col, Container, Row, Form} from "react-bootstrap";
 import 'reactflow/dist/style.css';
-import {Spacer} from "./Spacer";
 import {interactivityNodeSpecs, knownDeclarations, standardTypes} from "../BasicBehaveEngine/types/nodes";
 import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityNode, IInteractivityVariable } from '../BasicBehaveEngine/types/InteractivityGraph';
 import { InteractivityGraphContext } from '../InteractivityGraphContext';
@@ -44,6 +43,60 @@ enum AuthoringComponentModelType {
 }
 
 const nodesWithConfigurations = interactivityNodeSpecs.filter(node => node.configuration !== undefined).map(node => knownDeclarations[node.declaration].op);
+
+// small stroke-style icons for the top menu bar (kept inline to avoid pulling in an icon library
+// for five glyphs); viewBox/props mirror the Feather icon set for a consistent stroke weight
+const iconProps = {
+    width: 16, height: 16, viewBox: "0 0 24 24", fill: "none",
+    stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const,
+};
+
+const IconVariables = () => (
+    <svg {...iconProps}>
+        <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/>
+        <line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/>
+        <line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/>
+        <line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>
+    </svg>
+);
+
+const IconCustomEvents = () => (
+    <svg {...iconProps}>
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+    </svg>
+);
+
+const IconJsonView = () => (
+    <svg {...iconProps}>
+        <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+    </svg>
+);
+
+const IconNodeTypes = () => (
+    <svg {...iconProps}>
+        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+        <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+    </svg>
+);
+
+const IconUpload = () => (
+    <svg {...iconProps}>
+        <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
+    </svg>
+);
+
+const MenuBarButton = (props: {id: string, icon: React.ReactNode, label: string, isActive: boolean, onClick: () => void}) => (
+    <button
+        id={props.id}
+        className={`graph-menu-bar-btn${props.isActive ? " is-active" : ""}`}
+        onClick={props.onClick}
+    >
+        {props.icon}
+        {props.label}
+    </button>
+);
+
+const MenuBarDivider = () => <div className="graph-menu-bar-divider"/>;
 
 const isOverScrollableElement = (target: Element | null, boundary: Element | null): boolean => {
     let el = target;
@@ -466,21 +519,45 @@ export const AuthoringComponent = () => {
                         <VariablesComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)}/>
                     </RenderIf>
 
-                    <Panel position={"top-right"}>
-                        <div style={{ display: 'flex', flexDirection: 'column', border: "1px solid gray", padding: 16, marginRight: 8, borderRadius: 16, background: "white"}}>
-                            <h3>Menu</h3>
-                            <hr/>
-                            <Button variant="outline-primary" id={'variables-btn'} onClick={() => setAuthoringComponentModal(AuthoringComponentModelType.VARIABLES)}>Variables</Button>
-                            <hr/>
-                            <Spacer width={0} height={8}/>
-                            <Button variant="outline-primary" id={"custom-events-btn"} onClick={() => setAuthoringComponentModal(AuthoringComponentModelType.CUSTOM_EVENTS)}>Custom Events</Button>
-                            <Spacer width={0} height={8}/>
-                            <hr/>
-                            <Button variant="outline-primary" id={"show-json-btn"} onClick={() => setAuthoringComponentModal(AuthoringComponentModelType.JSON_VIEW)}>JSON View</Button>
-                            <Spacer width={0} height={8}/>
-                            <Button variant="outline-primary" id={"show-node-list-btn"} onClick={() => setAuthoringComponentModal(AuthoringComponentModelType.NODE_LIST)}>Node Types</Button>
-                            <Spacer width={0} height={8}/>
-                            <Button variant="outline-primary" id={"upload-graph-btn"} onClick={() => setAuthoringComponentModal(AuthoringComponentModelType.UPLOAD_GRAPH)}>Upload Graph</Button>
+                    <Panel position={"top-center"} style={{width: "calc(100% - 32px)", maxWidth: 1100, margin: "10px 16px"}}>
+                        <div className="graph-menu-bar">
+                            <MenuBarButton
+                                id={"variables-btn"}
+                                icon={<IconVariables/>}
+                                label={"Variables"}
+                                isActive={authoringComponentModal === AuthoringComponentModelType.VARIABLES}
+                                onClick={() => setAuthoringComponentModal(AuthoringComponentModelType.VARIABLES)}
+                            />
+                            <MenuBarDivider/>
+                            <MenuBarButton
+                                id={"custom-events-btn"}
+                                icon={<IconCustomEvents/>}
+                                label={"Custom Events"}
+                                isActive={authoringComponentModal === AuthoringComponentModelType.CUSTOM_EVENTS}
+                                onClick={() => setAuthoringComponentModal(AuthoringComponentModelType.CUSTOM_EVENTS)}
+                            />
+                            <MenuBarDivider/>
+                            <MenuBarButton
+                                id={"show-json-btn"}
+                                icon={<IconJsonView/>}
+                                label={"JSON View"}
+                                isActive={authoringComponentModal === AuthoringComponentModelType.JSON_VIEW}
+                                onClick={() => setAuthoringComponentModal(AuthoringComponentModelType.JSON_VIEW)}
+                            />
+                            <MenuBarButton
+                                id={"show-node-list-btn"}
+                                icon={<IconNodeTypes/>}
+                                label={"Node Types"}
+                                isActive={authoringComponentModal === AuthoringComponentModelType.NODE_LIST}
+                                onClick={() => setAuthoringComponentModal(AuthoringComponentModelType.NODE_LIST)}
+                            />
+                            <MenuBarButton
+                                id={"upload-graph-btn"}
+                                icon={<IconUpload/>}
+                                label={"Upload Graph"}
+                                isActive={authoringComponentModal === AuthoringComponentModelType.UPLOAD_GRAPH}
+                                onClick={() => setAuthoringComponentModal(AuthoringComponentModelType.UPLOAD_GRAPH)}
+                            />
                         </div>
                     </Panel>
 
@@ -584,7 +661,7 @@ const NodePickerComponent = (props: {onAddNode: any, closeModal: any, mousePos: 
                         })
                     }
                 </div>
-                <div style={{ columnWidth: 200, columnGap: 24, maxHeight: "40vh", overflowY: "auto", marginTop: 16, padding: "0 16px 8px" }}>
+                <div style={{ columnWidth: 200, columnGap: 24, maxHeight: "40vh", overflowY: "auto", overscrollBehavior: "contain", marginTop: 16, padding: "0 16px 8px" }}>
                     {
                         sortedNodeCategories.map(category => {
                             const nodesInCategory = nodeTypesByCategory[category].filter(nodeType =>
@@ -706,6 +783,7 @@ const JSONViewComponent = (props: {closeModal: any}) => {
                 <div style={{
                     textAlign: "left",
                     overflow: "auto",
+                    overscrollBehavior: "contain",
                     height: "40vh",
                     maxHeight: "calc(100vh - 220px)",
                     border: "1px solid #ccc",
@@ -764,7 +842,7 @@ const NodeListComponent = (props: {closeModal: any}) => {
         <Panel id={"node-list-panel"} position={"top-center"} style={{border:"1px solid gray", background: "white", zIndex: 10}}>
             <Container style={{padding: 16}}>
                 <h3>Node List</h3>
-                <pre style={{textAlign: "left", overflow:"scroll", height: 400, width: 400}}>{getDataString()}</pre>
+                <pre style={{textAlign: "left", overflow:"scroll", overscrollBehavior: "contain", height: 400, width: 400}}>{getDataString()}</pre>
                 <Row style={{ marginTop: 16 }}>
                     <Col xs={12} md={6}>
                         <Button variant={"outline-primary"}  style={{width: "100%"}} onClick={copyToClipboard}>
@@ -853,7 +931,7 @@ const VariablesComponent = (props: {closeModal: any}) => {
                     <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
                         {/* overflowX hidden avoids the horizontal scrollbar Bootstrap's negative
                             row gutters would otherwise trigger (overflow-y:auto forces x to auto too) */}
-                        <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", textAlign: "left", paddingRight: 4 }}>
+                        <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", overscrollBehavior: "contain", textAlign: "left", paddingRight: 4 }}>
                             {variables.length === 0 && (
                                 <p style={{ color: "#888", textAlign: "center", marginTop: 32 }}>
                                     No variables yet. Add one to get started.
@@ -921,7 +999,7 @@ const VariablesComponent = (props: {closeModal: any}) => {
                         variables list on the left rather than widening the JSON pane */}
                     <div style={{ width: 380, flexShrink: 0, minWidth: 0, display: "flex", flexDirection: "column" }}>
                         <span style={{ fontSize: 12, color: "#666", marginBottom: 4 }}>JSON</span>
-                        <pre style={{ flex: 1, margin: 0, overflow: "auto", textAlign: "left", border: "1px solid #ccc", borderRadius: 4, padding: 8, background: "#f5f5f5", fontSize: 12 }}>
+                        <pre style={{ flex: 1, margin: 0, overflow: "auto", overscrollBehavior: "contain", textAlign: "left", border: "1px solid #ccc", borderRadius: 4, padding: 8, background: "#f5f5f5", fontSize: 12 }}>
                             {JSON.stringify(toGraphVariables(variables), undefined, 2)}
                         </pre>
                     </div>
@@ -1028,7 +1106,7 @@ const CustomEventsComponent = (props: {closeModal: any}) => {
                 <div style={{ display: "flex", gap: 16, height: 460 }}>
                     {/* left: editable list of events */}
                     <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
-                        <div style={{ flex: 1, overflowY: "auto", textAlign: "left", paddingRight: 4 }}>
+                        <div style={{ flex: 1, overflowY: "auto", overscrollBehavior: "contain", textAlign: "left", paddingRight: 4 }}>
                             {events.length === 0 && (
                                 <p style={{ color: "#888", textAlign: "center", marginTop: 32 }}>
                                     No custom events yet. Add one to get started.
@@ -1117,7 +1195,7 @@ const CustomEventsComponent = (props: {closeModal: any}) => {
                     {/* right: live JSON view */}
                     <div style={{ flex: 0.8, minWidth: 0, display: "flex", flexDirection: "column" }}>
                         <span style={{ fontSize: 12, color: "#666", marginBottom: 4 }}>JSON</span>
-                        <pre style={{ flex: 1, margin: 0, overflow: "auto", textAlign: "left", border: "1px solid #ccc", borderRadius: 4, padding: 8, background: "#f5f5f5", fontSize: 12 }}>
+                        <pre style={{ flex: 1, margin: 0, overflow: "auto", overscrollBehavior: "contain", textAlign: "left", border: "1px solid #ccc", borderRadius: 4, padding: 8, background: "#f5f5f5", fontSize: 12 }}>
                             {JSON.stringify(toGraphEvents(events), undefined, 2)}
                         </pre>
                     </div>

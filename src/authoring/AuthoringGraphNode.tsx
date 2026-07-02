@@ -11,6 +11,7 @@ import { getStandardTypeIndexForSignature } from "./pointerCatalogue";
 import { FLOW_COLOR, getColorForTypeIndex, getTypeLabel } from "./socketColors";
 import { RefValuePicker } from "./RefValuePicker";
 import { VariablesConfigField } from "./VariablesConfigField";
+import { InterpolationCurveField, ControlPoint } from "./InterpolationCurveField";
 import { CustomEventSendMonitor, CustomEventReceiveTrigger, PointerEventMonitor } from "./CustomEventControls";
 import "../css/flowNodes.css";
 
@@ -158,6 +159,16 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         arr[index] = raw === "" ? NaN : Number(raw);
         setInputValues({ ...inputValues, [socket]: { value: arr, typeOptions: curParam.typeOptions, type: curParam.type } });
     }, [inputValues]);
+
+    // apply an easing preset to an interpolate node: set both p1 and p2 float2 control-point
+    // sockets at once. The per-component number inputs remain available for fine tuning.
+    const setInterpolationControlPoints = useCallback((p1: ControlPoint, p2: ControlPoint) => {
+        setInputValues((prev) => ({
+            ...prev,
+            p1: { typeOptions: prev.p1?.typeOptions ?? [3], type: prev.p1?.type ?? 3, value: p1 },
+            p2: { typeOptions: prev.p2?.typeOptions ?? [3], type: prev.p2?.type ?? 3, value: p2 },
+        }));
+    }, []);
 
     // set a ref socket's static value (a JSON pointer string) from the picker or manual entry
     const setSocketRefValue = useCallback((socket: string, pointer: string) => {
@@ -547,6 +558,20 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     // flow/sequence and flow/multiGate have user-managed, renamable output flow sockets
     const isDynamicFlowNode = node?.op === "flow/sequence" || node?.op === "flow/multiGate";
 
+    // interpolate nodes expose p1/p2 as the cubic-bezier easing control points; show a curve
+    // preview + preset picker when both are present as inline (unwired) float2 values.
+    const isInterpolateNode = node?.op === "variable/interpolate" || node?.op === "pointer/interpolate";
+    const isSocketLinked = (socket: string) =>
+        (props.data.linked && props.data.linked[socket]) || node?.values?.input?.[socket]?.node !== undefined;
+    const readControlPoint = (socket: string): ControlPoint => {
+        const v = inputValues[socket]?.value;
+        return [Number(v?.[0]), Number(v?.[1])];
+    };
+    const showInterpolationCurve =
+        isInterpolateNode &&
+        inputValues.p1 !== undefined && inputValues.p2 !== undefined &&
+        !isSocketLinked("p1") && !isSocketLinked("p2");
+
     // the custom event a event/send or event/receive node is currently configured to use (if any).
     // configuration.event holds the selected index into the graph's events list (-1 / undefined = none)
     const configuredEventIndex = configuration.event?.value?.[0];
@@ -858,6 +883,16 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                             })}
                         </div>
                     </div>
+                </RenderIf>
+
+                {/* interpolate nodes: normalized easing-curve preview for the p1/p2 control points, with common presets */}
+                <RenderIf shouldShow={showInterpolationCurve}>
+                    <hr />
+                    <InterpolationCurveField
+                        p1={readControlPoint("p1")}
+                        p2={readControlPoint("p2")}
+                        onChange={setInterpolationControlPoints}
+                    />
                 </RenderIf>
 
                 {/* event/send: live chronology of when this custom event fires (spam-aggregated per frame) */}

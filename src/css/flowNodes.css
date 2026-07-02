@@ -12,6 +12,15 @@
     min-width: 400px;
 }
 
+/* selection state: reactflow adds `.selected` to the node wrapper when a node is clicked or
+   caught by the drag-selection rectangle. Draw the selection border with `outline` so it doesn't
+   affect layout, and `outline-offset` to leave a margin between the node and the border. */
+.react-flow__node.selected .flow-node {
+    outline: 2px solid #3d5987;
+    outline-offset: 3px;
+    box-shadow: 0 0 0 4px rgba(61, 89, 135, 0.15);
+}
+
 .flow-node-header {
     padding: 6px 8px;
     margin-bottom: 8px;
@@ -544,7 +553,9 @@
 
 .flow-node-event-log {
     max-height: 132px;
+    max-width: 280px;
     overflow-y: auto;
+    overflow-x: hidden;
     border: 1px solid #e2e2e2;
     border-radius: 6px;
     background: #1c1c1c;
@@ -563,7 +574,7 @@
     align-items: baseline;
     gap: 6px;
     padding: 1px 0;
-    white-space: nowrap;
+    min-width: 0;
 }
 
 .flow-node-event-log-time {
@@ -579,8 +590,11 @@
 
 .flow-node-event-log-detail {
     color: #b9e69b;
+    flex: 1 1 auto;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* event/receive: manual trigger UI */

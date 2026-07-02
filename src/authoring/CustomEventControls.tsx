@@ -23,6 +23,13 @@ const refSelectButtonStyle: CSSProperties = {
 // triggered by dispatching.
 const eventChannel = (id: string) => `KHR_INTERACTIVITY:${id}`;
 
+// Pointer-driven event nodes (event/onSelect, event/onHoverIn, event/onHoverOut) fire through
+// internal engine callbacks, not the custom-event bus. So the engine nodes additionally dispatch a
+// lightweight document event on this channel when they fire (see OnSelect/OnHoverIn/OnHoverOut).
+// The detail carries the watched glTF `nodeIndex` so a monitor can filter to its own configured node.
+// NOTE: this string is duplicated in the engine node classes; keep both in sync.
+const pointerNodeEventChannel = (op: string) => `AUTHORING_NODE_EVENT:${op}`;
+
 const getEventTypeLabel = (typeIndex: number): string =>
     standardTypes[typeIndex]?.name ?? standardTypes[typeIndex]?.signature ?? String(typeIndex);
 
@@ -53,16 +60,22 @@ interface FireLogEntry {
 // cap the on-node log so a long-running graph can't grow it without bound
 const MAX_LOG_ENTRIES = 40;
 
+interface FireLogOptions {
+    // ignore events whose detail doesn't match (e.g. a different watched nodeIndex)
+    accept?: (detail: any) => boolean;
+    // how to render an event's detail into the log line
+    format?: (detail: any) => string;
+}
+
 /**
- * Live fire chronology for an event/send ("trigger") node. Subscribes to the configured custom
- * event on the document bus and renders a newest-first log of when it fired.
+ * Subscribe to a document event channel and build a newest-first fire chronology of when it fired.
  *
- * Spam handling: a send node can fire many times per frame (e.g. inside a loop). Rather than
- * logging/rendering each dispatch, fires are counted into a per-frame accumulator and flushed once
- * per animation frame into a single aggregated entry ("×N"), keeping the UI responsive under bursts.
+ * Spam handling: an event node can fire many times per frame (e.g. inside a loop, or rapid hover).
+ * Rather than logging/rendering each dispatch, fires are counted into a per-frame accumulator and
+ * flushed once per animation frame into a single aggregated entry ("×N"), keeping the UI responsive
+ * under bursts.
  */
-export const CustomEventSendMonitor = (props: { event: IInteractivityEvent }) => {
-    const channel = eventChannel(props.event.id);
+const useFireLog = (channel: string, opts?: FireLogOptions) => {
     const [log, setLog] = useState<FireLogEntry[]>([]);
     const [total, setTotal] = useState(0);
 
@@ -72,8 +85,14 @@ export const CustomEventSendMonitor = (props: { event: IInteractivityEvent }) =>
     const rafRef = useRef<number | null>(null);
     const nextIdRef = useRef(0);
 
+    // keep the latest accept/format without re-subscribing every render
+    const acceptRef = useRef(opts?.accept);
+    const formatRef = useRef(opts?.format);
+    acceptRef.current = opts?.accept;
+    formatRef.current = opts?.format;
+
     useEffect(() => {
-        // reset when the tracked event changes
+        // reset when the tracked channel changes
         setLog([]);
         setTotal(0);
         frameCountRef.current = 0;
@@ -95,9 +114,11 @@ export const CustomEventSendMonitor = (props: { event: IInteractivityEvent }) =>
         };
 
         const listener = (e: Event) => {
+            const detail = (e as CustomEvent).detail;
+            if (acceptRef.current && !acceptRef.current(detail)) { return; }
             // a burst of fires within one frame collapses into a single aggregated log entry
             frameCountRef.current += 1;
-            lastDetailRef.current = formatDetail((e as CustomEvent).detail);
+            lastDetailRef.current = (formatRef.current ?? formatDetail)(detail);
             if (rafRef.current === null) {
                 rafRef.current = requestAnimationFrame(flush);
             }
@@ -115,29 +136,126 @@ export const CustomEventSendMonitor = (props: { event: IInteractivityEvent }) =>
 
     const clear = useCallback(() => { setLog([]); setTotal(0); }, []);
 
-    return (
-        <div className={"flow-node-event-monitor nodrag"}>
-            <div className={"flow-node-event-monitor-head"}>
-                {/* keying the dot by the newest entry re-triggers its flash animation each frame */}
-                <span key={log[0]?.id ?? "idle"} className={`flow-node-event-dot${log.length > 0 ? " is-live" : ""}`} />
-                <span className={"flow-node-event-monitor-title"}>fired ×{total}</span>
-                <button type="button" className={"flow-node-event-clear"} onClick={clear} disabled={log.length === 0} title={"Clear log"}>clear</button>
-            </div>
-            <div className={"flow-node-event-log"}>
-                {log.length === 0 ? (
-                    <div className={"flow-node-event-log-empty"}>waiting for events…</div>
-                ) : (
-                    log.map((entry) => (
-                        <div key={entry.id} className={"flow-node-event-log-row"}>
-                            <span className={"flow-node-event-log-time"}>{formatTime(entry.time)}</span>
-                            {entry.count > 1 && <span className={"flow-node-event-log-count"}>×{entry.count}</span>}
-                            {entry.detail && <span className={"flow-node-event-log-detail"} title={entry.detail}>{entry.detail}</span>}
-                        </div>
-                    ))
-                )}
-            </div>
+    return { log, total, clear };
+};
+
+// presentational fire log: live dot + total counter + clear button + newest-first entries
+const FireLogView = (props: { log: FireLogEntry[]; total: number; clear: () => void }) => (
+    <div className={"flow-node-event-monitor nodrag"}>
+        <div className={"flow-node-event-monitor-head"}>
+            {/* keying the dot by the newest entry re-triggers its flash animation each frame */}
+            <span key={props.log[0]?.id ?? "idle"} className={`flow-node-event-dot${props.log.length > 0 ? " is-live" : ""}`} />
+            <span className={"flow-node-event-monitor-title"}>fired ×{props.total}</span>
+            <button type="button" className={"flow-node-event-clear"} onClick={props.clear} disabled={props.log.length === 0} title={"Clear log"}>clear</button>
         </div>
-    );
+        <div className={"flow-node-event-log"}>
+            {props.log.length === 0 ? (
+                <div className={"flow-node-event-log-empty"}>waiting for events…</div>
+            ) : (
+                props.log.map((entry) => (
+                    <div key={entry.id} className={"flow-node-event-log-row"}>
+                        <span className={"flow-node-event-log-time"}>{formatTime(entry.time)}</span>
+                        {entry.count > 1 && <span className={"flow-node-event-log-count"}>×{entry.count}</span>}
+                        {entry.detail && <span className={"flow-node-event-log-detail"} title={entry.detail}>{entry.detail}</span>}
+                    </div>
+                ))
+            )}
+        </div>
+    </div>
+);
+
+/**
+ * Live fire chronology for an event/send ("trigger") node. Subscribes to the configured custom
+ * event on the document bus and renders when it fired.
+ */
+export const CustomEventSendMonitor = (props: { event: IInteractivityEvent }) => {
+    const { log, total, clear } = useFireLog(eventChannel(props.event.id));
+    return <FireLogView log={log} total={total} clear={clear} />;
+};
+
+/**
+ * Live fire chronology for a pointer-driven event node (event/onSelect, event/onHoverIn,
+ * event/onHoverOut). Listens for the engine's per-op document event and filters to fires whose
+ * watched glTF nodeIndex matches this node's configuration (undefined config == the engine's -1
+ * default), so each node logs only its own hits.
+ */
+export const PointerEventMonitor = (props: { op: string; nodeIndex: number }) => {
+    const { op, nodeIndex } = props;
+    const accept = useCallback((detail: any) => Number(detail?.nodeIndex ?? -1) === nodeIndex, [nodeIndex]);
+    // the nodeIndex is implied by the node itself, so drop it from the rendered detail
+    const format = useCallback((detail: any) => {
+        if (detail == null || typeof detail !== "object") { return ""; }
+        const { nodeIndex: _omit, ...rest } = detail;
+        return formatDetail(rest);
+    }, []);
+    const { log, total, clear } = useFireLog(pointerNodeEventChannel(op), { accept, format });
+    return <FireLogView log={log} total={total} clear={clear} />;
+};
+
+/**
+ * Instrument a running engine so pointer-driven event nodes (event/onSelect, event/onHoverIn,
+ * event/onHoverOut) notify the authoring UI when they fire — without modifying the engine itself.
+ *
+ * The engine registers a per-node callback for each watched glTF node in its public
+ * `selectableNodesIndices` / `hoverableNodesIndices` maps (keyed by the node's resolved watched
+ * index, after the engine's parent walk). We wrap those callbacks so they also dispatch a document
+ * event that PointerEventMonitor listens for, then delegate to the original. Because loadBehaveGraph
+ * rebuilds these maps on every (re)play, we re-instrument by wrapping loadBehaveGraph on the engine
+ * instance. Call once, right after the engine (decorator) is created.
+ */
+export const attachPointerEventLogging = (engine: any): void => {
+    if (!engine || engine.__pointerEventLoggingAttached) { return; }
+    engine.__pointerEventLoggingAttached = true;
+
+    const dispatch = (op: string, detail: Record<string, any>) =>
+        document.dispatchEvent(new CustomEvent(pointerNodeEventChannel(op), { detail }));
+
+    const instrument = () => {
+        // the maps live on the BasicBehaveEngine core, reached through the decorator's behaveEngine field
+        const core = engine.behaveEngine ?? engine;
+        const selectable: Map<number, any> | undefined = core.selectableNodesIndices;
+        const hoverable: Map<number, any> | undefined = core.hoverableNodesIndices;
+
+        selectable?.forEach((cb: any, index: number) => {
+            if (!cb || cb.__pelWrapped) { return; }
+            const wrapped = (ref: any, controllerIndex: number, selectionPoint: any, selectionRayOrigin: any) => {
+                dispatch("event/onSelect", { nodeIndex: index, controllerIndex, selectionPoint: selectionPoint ?? null, selectionRayOrigin: selectionRayOrigin ?? null });
+                return cb(ref, controllerIndex, selectionPoint, selectionRayOrigin);
+            };
+            wrapped.__pelWrapped = true;
+            selectable.set(index, wrapped);
+        });
+
+        hoverable?.forEach((info: any, index: number) => {
+            if (info?.callbackHoverIn && !info.callbackHoverIn.__pelWrapped) {
+                const cb = info.callbackHoverIn;
+                const wrapped = (ref: any, controllerIndex: number, firstCommon: any) => {
+                    dispatch("event/onHoverIn", { nodeIndex: index, controllerIndex });
+                    return cb(ref, controllerIndex, firstCommon);
+                };
+                wrapped.__pelWrapped = true;
+                info.callbackHoverIn = wrapped;
+            }
+            if (info?.callbackHoverOut && !info.callbackHoverOut.__pelWrapped) {
+                const cb = info.callbackHoverOut;
+                const wrapped = (ref: any, controllerIndex: number, firstCommon: any) => {
+                    dispatch("event/onHoverOut", { nodeIndex: index, controllerIndex });
+                    return cb(ref, controllerIndex, firstCommon);
+                };
+                wrapped.__pelWrapped = true;
+                info.callbackHoverOut = wrapped;
+            }
+        });
+    };
+
+    const originalLoad = engine.loadBehaveGraph?.bind(engine);
+    if (originalLoad) {
+        engine.loadBehaveGraph = (behaveGraph: any, runGraph = true) => {
+            originalLoad(behaveGraph, runGraph);
+            instrument();
+        };
+    }
+    instrument(); // in case a graph was already loaded before attaching
 };
 
 const placeholderForType = (typeIndex: number): string => {

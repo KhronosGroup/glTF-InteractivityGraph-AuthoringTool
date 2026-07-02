@@ -8,6 +8,7 @@ import { KTX2Loader } from "three/examples/jsm/loaders/KTX2Loader.js";
 import { Spacer } from "../Spacer";
 import { InteractivityGraphContext } from "../../InteractivityGraphContext";
 import { DOMEventBus } from "../../BasicBehaveEngine/eventBuses/DOMEventBus";
+import { attachPointerEventLogging } from "../../authoring/CustomEventControls";
 import { KHR_interactivity_three } from "../../loaderExtensions/KHR_interactivity";
 import { computeExtensionDiagnostics } from "../../diagnostics";
 import { buildGltfObjectModel } from "../../authoring/gltfObjectModel";
@@ -388,7 +389,8 @@ export const ThreeEngineComponent: React.FC<ThreeEngineComponentProps> = ({ mode
         // Create a new ThreeDecorator with a fresh BehaveEngine
         console.log("Creating new ThreeDecorator");
         threeEngineRef.current = new ThreeDecorator(new BasicBehaveEngine(60, eventBus), world, scene as Scene);
-        
+        attachPointerEventLogging(threeEngineRef.current);
+
         // Initialize the world with the scene
         console.log("Initializing world with scene");
         await threeEngineRef.current.initializeWorld(scene, parser);

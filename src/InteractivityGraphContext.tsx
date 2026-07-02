@@ -23,7 +23,9 @@ interface InteractivityGraphContextType {
     addDeclaration: (declaration: IInteractivityDeclaration) => void,
     getDeclarationIndex: (op: string) => number,
     addEvent: (event: IInteractivityEvent) => void,
+    setEvents: (events: IInteractivityEvent[]) => void,
     addVariable: (variable: IInteractivityVariable) => void,
+    setVariables: (variables: IInteractivityVariable[]) => void,
     addNode: (node: IInteractivityNode) => void,
     removeNode: (uid: string) => void
 }
@@ -51,7 +53,9 @@ const initialContext: InteractivityGraphContextType = {
     addDeclaration: () => {return null},
     getDeclarationIndex: () => -1,
     addEvent: () => {return null},
+    setEvents: () => {return null},
     addVariable: () => {return null},
+    setVariables: () => {return null},
     addNode: () => {return null},
     removeNode: () => {return null}
 };
@@ -572,8 +576,20 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         graphRef.current.events.push(event);
     };
 
+    // Replace the whole custom-event list. Used by the Custom Events editor, which manages
+    // add/edit/delete of events locally and commits the resulting array back in one call.
+    const setEvents = (events: IInteractivityEvent[]) => {
+        graphRef.current.events = events;
+    };
+
     const addVariable = (variable: IInteractivityVariable) => {
         graphRef.current.variables.push(variable);
+    };
+
+    // Replace the whole variable list. Used by the Variables editor, which manages
+    // add/edit/delete of variables locally and commits the resulting array back in one call.
+    const setVariables = (variables: IInteractivityVariable[]) => {
+        graphRef.current.variables = variables;
     };
 
     const addNode = (node: IInteractivityNode) => {
@@ -599,7 +615,9 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         addDeclaration: addDeclaration,
         getDeclarationIndex: getDeclarationIndex,
         addEvent: addEvent,
+        setEvents: setEvents,
         addVariable: addVariable,
+        setVariables: setVariables,
         addNode: addNode,
         removeNode: removeNode
     };

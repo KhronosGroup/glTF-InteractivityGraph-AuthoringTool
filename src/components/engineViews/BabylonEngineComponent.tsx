@@ -24,6 +24,7 @@ import {BasicBehaveEngine} from "../../BasicBehaveEngine/BasicBehaveEngine";
 import {GLTFFileLoader, GLTFLoaderAnimationStartMode} from "@babylonjs/loaders";
 import { InteractivityGraphContext } from "../../InteractivityGraphContext";
 import { DOMEventBus } from "../../BasicBehaveEngine/eventBuses/DOMEventBus";
+import { attachPointerEventLogging } from "../../authoring/CustomEventControls";
 import { computeExtensionDiagnostics } from "../../diagnostics";
 
 enum BabylonEngineModal {
@@ -222,6 +223,7 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
         const world = {glTFNodes: nodes, animations: animations, materials: materials, meshes: meshes.filter(m => m.subMeshes !== undefined)};
         const eventBus = new DOMEventBus();
         babylonEngineRef.current = new BabylonDecorator(new BasicBehaveEngine(60, eventBus), world, scene)
+        attachPointerEventLogging(babylonEngineRef.current);
 
         const extractedBehaveGraph = babylonEngineRef.current.extractBehaveGraphFromScene()
         try {
@@ -373,7 +375,8 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
             // Setup the engine with the loaded model
             const eventBus = new DOMEventBus();
             babylonEngineRef.current = new BabylonDecorator(new BasicBehaveEngine(60, eventBus), worldInfo, sceneRef.current!);
-            
+            attachPointerEventLogging(babylonEngineRef.current);
+
             const extractedBehaveGraph = babylonEngineRef.current.extractBehaveGraphFromScene();
             if (extractedBehaveGraph) {
                 loadGraphFromJson(JSON.parse(JSON.stringify(extractedBehaveGraph)));

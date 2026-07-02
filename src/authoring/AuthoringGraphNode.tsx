@@ -1,5 +1,5 @@
 import { CSSProperties, useCallback, useContext, useEffect, useState } from "react";
-import { Handle, Position, useUpdateNodeInternals } from "reactflow";
+import { Handle, Position, useReactFlow, useUpdateNodeInternals } from "reactflow";
 
 import { RenderIf } from "../components/RenderIf";
 import { IInteractivityFlow, IInteractivityValue, IInteractivityNode, IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityVariable, InteractivityValueType } from "../BasicBehaveEngine/types/InteractivityGraph";
@@ -11,7 +11,7 @@ import { getStandardTypeIndexForSignature } from "./pointerCatalogue";
 import { FLOW_COLOR, getColorForTypeIndex, getTypeLabel } from "./socketColors";
 import { RefValuePicker } from "./RefValuePicker";
 import { VariablesConfigField } from "./VariablesConfigField";
-import { CustomEventSendMonitor, CustomEventReceiveTrigger } from "./CustomEventControls";
+import { CustomEventSendMonitor, CustomEventReceiveTrigger, PointerEventMonitor } from "./CustomEventControls";
 import "../css/flowNodes.css";
 
 const refSelectButtonStyle: CSSProperties = {
@@ -92,6 +92,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     const [configuration, setConfiguration] = useState<Record<string, IInteractivityConfigurationValue>>({});
     const { graph } = useContext(InteractivityGraphContext);
     const updateNodeInternals = useUpdateNodeInternals();
+    const { deleteElements } = useReactFlow();
     const uid = props.data.uid;
     const [node, setNode] = useState<IInteractivityNode | null>(null);
     // which ref input socket currently has the object picker open (null = closed)
@@ -376,6 +377,8 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                 if (noValuePresent || (inlineValuePresent && inputValues["value"].type !== typeId)) {
                     const value: IInteractivityValue = { typeOptions: [typeId], type: typeId, value: [undefined] }
                     inputValuesToSet["value"] = value;
+                    // mark so the stale-socket-preservation pass below doesn't restore the old "value" over this fresh type
+                    pointerSlotTypeById.set("value", typeId);
                 }
             }
         }
@@ -396,6 +399,10 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         // We only want to set socket values that are either in the node's spec or are created as a result of the configuration
         // If the current node has a value for a socket we should use it otherwise we will use the node spec default (if it exists)
         // remaining sockets would have been populated during the above configuration evaluation
+        // input sockets the configuration evaluation just (re)generated carry the freshly selected
+        // type (e.g. pointer/set's "value" adopting the chosen pointer type). When such a socket has
+        // no user data it must keep that fresh entry rather than being reset to the node spec default.
+        const configGeneratedInputKeys = new Set(Object.keys(inputValuesToSet));
         const knownInputValueKeys = [...Object.keys(nodeSpecInputValues), ...Object.keys(inputValuesToSet)];
         for (const key of knownInputValueKeys) {
             const existing = inputValues[key];
@@ -406,13 +413,21 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
             const pointerSlotKindChanged = pointerSlotType !== undefined && existing !== undefined && existing.type !== pointerSlotType;
             if (existingHasData && !pointerSlotKindChanged) {
                 inputValuesToSet[key] = existing;
-            } else if (!existingHasData && nodeSpecInputValues[key] !== undefined) {
+            } else if (!existingHasData && !configGeneratedInputKeys.has(key) && nodeSpecInputValues[key] !== undefined) {
                 inputValuesToSet[key] = nodeSpecInputValues[key];
             }
         }
 
+        // output sockets the configuration evaluation just (re)generated carry the freshly
+        // selected type (e.g. pointer/get's "value" adopting the chosen pointer type) and must
+        // not be reverted to existing state or the node spec default below
+        const configGeneratedOutputKeys = new Set(Object.keys(outputValuesToSet));
+
         const knownOutputValueKeys = [...Object.keys(nodeSpecOutputValues), ...Object.keys(outputValuesToSet)];
         for (const key of knownOutputValueKeys) {
+            if (configGeneratedOutputKeys.has(key)) {
+                continue;
+            }
             if (outputValues[key] !== undefined && (outputValues[key].value?.[0] != null || outputValues[key].node != null)) {
                 outputValuesToSet[key] = outputValues[key];
             } else if (nodeSpecOutputValues[key] !== undefined) {
@@ -855,6 +870,12 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                 <RenderIf shouldShow={node?.op === "event/receive" && configuredEvent !== undefined}>
                     <hr />
                     <CustomEventReceiveTrigger event={configuredEvent!} />
+                </RenderIf>
+
+                {/* pointer-driven events: live fire chronology of when the watched node was selected/hovered */}
+                <RenderIf shouldShow={node?.op === "event/onSelect" || node?.op === "event/onHoverIn" || node?.op === "event/onHoverOut"}>
+                    <hr />
+                    <PointerEventMonitor op={node?.op ?? ""} nodeIndex={Number(configuration.nodeIndex?.value?.[0] ?? -1)} />
                 </RenderIf>
             </div>
 

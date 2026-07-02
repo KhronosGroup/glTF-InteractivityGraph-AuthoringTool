@@ -9,7 +9,6 @@ import ReactFlow, {
 import {AuthoringGraphNode} from "../authoring/AuthoringGraphNode";
 import React, {useCallback, useContext, useEffect, useRef, useState} from "react";
 import {v4 as uuidv4} from "uuid";
-import {useArray} from "../hooks/useArray";
 import {RenderIf} from "./RenderIf";
 import {Button, Col, Container, Row, Form} from "react-bootstrap";
 import 'reactflow/dist/style.css';
@@ -18,6 +17,7 @@ import {interactivityNodeSpecs, knownDeclarations, standardTypes} from "../Basic
 import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityNode, IInteractivityVariable } from '../BasicBehaveEngine/types/InteractivityGraph';
 import { InteractivityGraphContext } from '../InteractivityGraphContext';
 import { FLOW_COLOR, getColorForTypeIndex } from '../authoring/socketColors';
+import { TypedValueInput } from '../authoring/TypedValueInput';
 
 const nodeTypes = interactivityNodeSpecs.reduce((nodes, node) => {
     nodes[knownDeclarations[node.declaration].op] = (props: any) => {
@@ -37,14 +37,24 @@ enum AuthoringComponentModelType {
     JSON_VIEW,
     NODE_LIST,
     UPLOAD_GRAPH,
-    ADD_CUSTOM_EVENT,
-    SHOW_CUSTOM_EVENTS,
-    ADD_VARIABLE,
-    SHOW_VARIABLES,
+    CUSTOM_EVENTS,
+    VARIABLES,
     NONE
 }
 
 const nodesWithConfigurations = interactivityNodeSpecs.filter(node => node.configuration !== undefined).map(node => knownDeclarations[node.declaration].op);
+
+const isOverScrollableElement = (target: Element | null, boundary: Element | null): boolean => {
+    let el = target;
+    while (el && el !== boundary) {
+        const { overflowY, overflowX } = window.getComputedStyle(el);
+        if ((overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight) return true;
+        if ((overflowX === 'auto' || overflowX === 'scroll') && el.scrollWidth > el.clientWidth) return true;
+        el = el.parentElement;
+    }
+    return false;
+};
+
 export const AuthoringComponent = () => {
     const reactFlowRef = useRef<HTMLDivElement | null>(null);
     const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
@@ -58,6 +68,7 @@ export const AuthoringComponent = () => {
 
     //to handle the node picker props
     const mousePosRef = useRef({x:0, y:0});
+    const clipboardRef = useRef<Node[]>([]);
 
     useEffect(() => {
         const updatePositions = setInterval(() => {
@@ -70,6 +81,22 @@ export const AuthoringComponent = () => {
         }, 5000);
         return () => clearInterval(updatePositions);
     }, [nodes, graph])
+
+    useEffect(() => {
+        const container = reactFlowRef.current;
+        if (!container || !reactFlowInstance) return;
+        const handleWheel = (e: WheelEvent) => {
+            if (isOverScrollableElement(e.target as Element, container)) return;
+            e.preventDefault();
+            if (e.deltaY < 0) {
+                reactFlowInstance.zoomIn({ duration: 0 });
+            } else {
+                reactFlowInstance.zoomOut({ duration: 0 });
+            }
+        };
+        container.addEventListener('wheel', handleWheel, { passive: false });
+        return () => container.removeEventListener('wheel', handleWheel);
+    }, [reactFlowInstance]);
 
     const hasIntersection = (arr1: any[], arr2: any[]): boolean => {
         const set1 = new Set(arr1);
@@ -231,6 +258,97 @@ export const AuthoringComponent = () => {
         onNodesChange([{type: "add", item: nodeToAdd}]);
     }, [graph]);
 
+    const copySelectedNodes = useCallback(() => {
+        clipboardRef.current = nodes.filter(n => n.selected);
+    }, [nodes]);
+
+    const pasteNodes = useCallback(() => {
+        if (clipboardRef.current.length === 0) return;
+        const OFFSET = 40;
+        const copiedIds = new Set(clipboardRef.current.map(n => n.id));
+        const uidMap = new Map<string, string>();
+        for (const node of clipboardRef.current) uidMap.set(node.id, uuidv4());
+
+        const newGraphNodes: IInteractivityNode[] = [];
+        const newFlowNodes: Node[] = [];
+
+        for (const node of clipboardRef.current) {
+            const newUid = uidMap.get(node.id)!;
+            const srcGn = graph.nodes.find(n => n.uid === node.id);
+            if (!srcGn) continue;
+            const newGn: IInteractivityNode = JSON.parse(JSON.stringify(srcGn));
+            newGn.uid = newUid;
+            if (newGn.flows?.output) {
+                for (const key of Object.keys(newGn.flows.output)) {
+                    const ref = newGn.flows.output[key];
+                    if (ref.node && copiedIds.has(String(ref.node))) ref.node = uidMap.get(String(ref.node))!;
+                    else newGn.flows.output[key] = {};
+                }
+            }
+            if (newGn.values?.input) {
+                for (const key of Object.keys(newGn.values.input)) {
+                    const ref = newGn.values.input[key];
+                    if (ref.node && copiedIds.has(String(ref.node))) ref.node = uidMap.get(String(ref.node))!;
+                    else newGn.values.input[key] = {};
+                }
+            }
+            newGraphNodes.push(newGn);
+            newFlowNodes.push({
+                id: newUid,
+                type: node.type,
+                position: { x: node.position.x + OFFSET, y: node.position.y + OFFSET },
+                data: { ...node.data, uid: newUid, recolorEdges, renameFlowSocket },
+            } as Node);
+        }
+
+        for (const gn of newGraphNodes) {
+            if (gn.op) {
+                const decl = knownDeclarations.find(d => d.op === gn.op);
+                if (decl) addDeclaration(decl);
+            }
+            addNode(gn);
+        }
+        onNodesChange(newFlowNodes.map(n => ({ type: 'add' as const, item: n })));
+
+        const newEdges: Edge[] = [];
+        for (const gn of newGraphNodes) {
+            if (gn.flows?.output) {
+                for (const [handle, ref] of Object.entries(gn.flows.output)) {
+                    if (ref.node) newEdges.push({
+                        id: `paste-f-${gn.uid}-${handle}`,
+                        source: gn.uid!, target: String(ref.node),
+                        sourceHandle: handle, targetHandle: ref.socket ?? null,
+                        style: { stroke: FLOW_COLOR, strokeWidth: 2 },
+                    });
+                }
+            }
+            if (gn.values?.input) {
+                for (const [handle, ref] of Object.entries(gn.values.input)) {
+                    if (ref.node) {
+                        const srcGn = newGraphNodes.find(n => n.uid === ref.node);
+                        if (srcGn) {
+                            const stroke = getColorForTypeIndex(srcGn.values?.output?.[ref.socket!]?.type);
+                            newEdges.push({
+                                id: `paste-v-${ref.node}-${ref.socket}-${gn.uid}-${handle}`,
+                                source: String(ref.node), target: gn.uid!,
+                                sourceHandle: ref.socket ?? null, targetHandle: handle,
+                                style: { stroke, strokeWidth: 2 },
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        if (newEdges.length > 0) setEdges(eds => [...eds, ...newEdges]);
+    }, [graph, nodes, addDeclaration, addNode, onNodesChange, setEdges, recolorEdges, renameFlowSocket]);
+
+    const duplicateSelectedNodes = useCallback(() => {
+        const prev = clipboardRef.current;
+        clipboardRef.current = nodes.filter(n => n.selected);
+        pasteNodes();
+        clipboardRef.current = prev;
+    }, [nodes, pasteNodes]);
+
     useEffect(() => {
         if (needsSyncingToAuthor) {
             const result = getAuthorGraph(graph);
@@ -258,18 +376,34 @@ export const AuthoringComponent = () => {
         }
     }, [needsSyncingToAuthor]);
 
-    // handle clicking on the react flow pane
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            const active = document.activeElement;
+            if (active?.tagName === 'INPUT' || active?.tagName === 'TEXTAREA' || active?.tagName === 'SELECT') return;
+            if (!e.ctrlKey && !e.metaKey) return;
+            switch (e.key.toLowerCase()) {
+                case 'c': e.preventDefault(); copySelectedNodes(); break;
+                case 'v': e.preventDefault(); pasteNodes(); break;
+                case 'd': e.preventDefault(); e.stopPropagation(); duplicateSelectedNodes(); break;
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [copySelectedNodes, pasteNodes, duplicateSelectedNodes]);
+
+    // right-clicking the pane (panOnDrag={[2]} reserves the right button for panning; reactflow
+    // still fires this once the button is released without having actually panned, which is what
+    // we use to distinguish a right-click from a right-drag)
     const handleRightClick = (e: React.MouseEvent) => {
+        if (!reactFlowInstance) return;
         e.preventDefault();
         const bounds = reactFlowRef.current!.getBoundingClientRect();
-
         const position = reactFlowInstance.project({
             x: e.clientX - bounds.left,
             y: e.clientY - bounds.top
         });
-
         mousePosRef.current = position;
-        setAuthoringComponentModal(AuthoringComponentModelType.NODE_PICKER)
+        setAuthoringComponentModal(AuthoringComponentModelType.NODE_PICKER);
     };
 
     const handleLeftClick = (e: React.MouseEvent) => {
@@ -281,7 +415,12 @@ export const AuthoringComponent = () => {
         <div style={{width: "100vw", height: "75vh", textAlign: "center", padding: 16}}>
             <h2 style={{padding: 16}}>Interactivity Graph Authoring</h2>
             <p>You can inspect and adjust the Interactivity Graph here.</p>
-            <div ref={reactFlowRef} style={{width: "90%", height: "90%", border: "1px solid black", margin: "0 auto"}} data-testid={"authoring-view"}>
+            <div
+                ref={reactFlowRef}
+                style={{width: "90%", height: "90%", border: "1px solid black", margin: "0 auto"}}
+                data-testid={"authoring-view"}
+                onContextMenu={(e) => e.preventDefault()}
+            >
                 <ReactFlow
                     id={"flow-container"}
                     nodes={nodes}
@@ -294,8 +433,14 @@ export const AuthoringComponent = () => {
                     onEdgesDelete={onEdgesDelete}
                     nodeTypes={nodeTypes}
                     minZoom={0.1}
-                    onPaneContextMenu={handleRightClick}
                     onPaneClick={handleLeftClick}
+                    onPaneContextMenu={handleRightClick}
+                    panOnDrag={[2]}
+                    selectionOnDrag={true}
+                    zoomOnScroll={false}
+                    zoomOnDoubleClick={false}
+                    preventScrolling={false}
+                    deleteKeyCode="Delete"
                     fitView
                 >
                     <Controls />
@@ -313,31 +458,21 @@ export const AuthoringComponent = () => {
                     <RenderIf shouldShow={authoringComponentModal === AuthoringComponentModelType.NODE_LIST}>
                         <NodeListComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)}/>
                     </RenderIf>
-                    <RenderIf shouldShow={authoringComponentModal === AuthoringComponentModelType.ADD_CUSTOM_EVENT}>
-                        <AddCustomEventComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)}/>
+                    <RenderIf shouldShow={authoringComponentModal === AuthoringComponentModelType.CUSTOM_EVENTS}>
+                        <CustomEventsComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)}/>
                     </RenderIf>
-                    <RenderIf shouldShow={authoringComponentModal === AuthoringComponentModelType.SHOW_CUSTOM_EVENTS}>
-                        <ShowCustomEventComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)}/>
-                    </RenderIf>
-                    <RenderIf shouldShow={authoringComponentModal === AuthoringComponentModelType.ADD_VARIABLE}>
-                        <AddVariableComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)}/>
-                    </RenderIf>
-                    <RenderIf shouldShow={authoringComponentModal === AuthoringComponentModelType.SHOW_VARIABLES}>
-                        <ShowVariableComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)}/>
+                    <RenderIf shouldShow={authoringComponentModal === AuthoringComponentModelType.VARIABLES}>
+                        <VariablesComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)}/>
                     </RenderIf>
 
                     <Panel position={"top-right"}>
                         <div style={{ display: 'flex', flexDirection: 'column', border: "1px solid gray", padding: 16, marginRight: 8, borderRadius: 16, background: "white"}}>
                             <h3>Menu</h3>
                             <hr/>
-                            <Button variant="outline-primary" id={"add-variable-btn"} onClick={() => setAuthoringComponentModal(AuthoringComponentModelType.ADD_VARIABLE)}>Add Variable</Button>
-                            <Spacer width={0} height={8}/>
-                            <Button variant="outline-primary" id={'show-variables-btn'} onClick={() => setAuthoringComponentModal(AuthoringComponentModelType.SHOW_VARIABLES)}>Show Variables</Button>
+                            <Button variant="outline-primary" id={'variables-btn'} onClick={() => setAuthoringComponentModal(AuthoringComponentModelType.VARIABLES)}>Variables</Button>
                             <hr/>
                             <Spacer width={0} height={8}/>
-                            <Button variant="outline-primary" id={"add-custom-event-btn"} onClick={() => setAuthoringComponentModal(AuthoringComponentModelType.ADD_CUSTOM_EVENT)}>Add Custom Event</Button>
-                            <Spacer width={0} height={8}/>
-                            <Button variant="outline-primary" id={'show-custom-event-btn'} onClick={() => setAuthoringComponentModal(AuthoringComponentModelType.SHOW_CUSTOM_EVENTS)}>Show Custom Events</Button>
+                            <Button variant="outline-primary" id={"custom-events-btn"} onClick={() => setAuthoringComponentModal(AuthoringComponentModelType.CUSTOM_EVENTS)}>Custom Events</Button>
                             <Spacer width={0} height={8}/>
                             <hr/>
                             <Button variant="outline-primary" id={"show-json-btn"} onClick={() => setAuthoringComponentModal(AuthoringComponentModelType.JSON_VIEW)}>JSON View</Button>
@@ -345,6 +480,25 @@ export const AuthoringComponent = () => {
                             <Button variant="outline-primary" id={"show-node-list-btn"} onClick={() => setAuthoringComponentModal(AuthoringComponentModelType.NODE_LIST)}>Node Types</Button>
                             <Spacer width={0} height={8}/>
                             <Button variant="outline-primary" id={"upload-graph-btn"} onClick={() => setAuthoringComponentModal(AuthoringComponentModelType.UPLOAD_GRAPH)}>Upload Graph</Button>
+                        </div>
+                    </Panel>
+
+                    <Panel position={"bottom-center"}>
+                        <div style={{ display: 'flex', flexWrap: 'nowrap', gap: '0 14px', background: 'rgba(255,255,255,0.88)', border: '1px solid #ccc', borderRadius: 8, padding: '5px 14px', marginBottom: 6, fontSize: 11, color: '#000', userSelect: 'none', backdropFilter: 'blur(4px)' }}>
+                            {([
+                                ['Right-click', 'Add node'],
+                                ['Right-drag', 'Pan'],
+                                ['Left-drag', 'Multi-select'],
+                                ['Scroll', 'Zoom'],
+                                ['Ctrl+C / Ctrl+V', 'Copy / Paste'],
+                                ['Ctrl+D', 'Duplicate'],
+                                ['Del', 'Delete selected'],
+                            ] as [string, string][]).map(([key, label]) => (
+                                <span key={key} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
+                                    <kbd style={{ background: '#f0f0f0', border: '1px solid #bbb', borderRadius: 4, padding: '1px 5px', fontSize: 10, fontFamily: 'monospace', boxShadow: '0 1px 0 #aaa', lineHeight: '16px', color: '#000' }}>{key}</kbd>
+                                    <span>{label}</span>
+                                </span>
+                            ))}
                         </div>
                     </Panel>
                 </ReactFlow>
@@ -362,7 +516,7 @@ const NodePickerComponent = (props: {onAddNode: any, closeModal: any, mousePos: 
     }
 
     return (
-        <Panel id={"node-picker-panel"} position={"top-center"} style={{border: "1px solid gray", background: "white", textAlign: "left"}}>
+        <Panel id={"node-picker-panel"} position={"top-center"} style={{border: "1px solid gray", background: "white", textAlign: "left", zIndex: 10}}>
             <Container style={{padding: 0}}>
                 <h3 style={{textAlign: "center", paddingTop: 8}}>
                     Add Node
@@ -397,27 +551,6 @@ const NodePickerComponent = (props: {onAddNode: any, closeModal: any, mousePos: 
     );
 }
 
-const ShowVariableComponent = (props: {closeModal: any}) => {
-    const {graph} = useContext(InteractivityGraphContext);
-
-    return (
-        <Panel id={"show-variable-panel"} position={"top-center"} style={{border:"1px solid gray", background: "white", height: 500}}>
-           <Container style={{ padding: 16, flex: 1, display: 'flex', flexDirection: 'column', height: 500 }}>
-                <h3>Variables</h3>
-                <div style={{ flex: 1, overflowY: 'auto', textAlign: 'left', border: '1px solid #ccc', padding: 8, borderRadius: 4 }}>
-                    <pre>{JSON.stringify(graph.variables, undefined, ' ')}</pre>
-                </div>
-                <hr style={{ borderTop: '1px solid #777', margin: '16px 0' }} />
-                <div style={{ textAlign: 'right' }}>
-                    <Button variant={"outline-danger"} onClick={() => props.closeModal()} style={{ position: 'sticky', bottom: 0 }}>
-                        Close
-                    </Button>
-                </div>
-            </Container>
-        </Panel>
-    )
-}
-
 const JSONViewComponent = (props: {closeModal: any}) => {
     const [copied, setCopied] = useState(false);
     const {getExecutableGraph} = useContext(InteractivityGraphContext);
@@ -432,7 +565,7 @@ const JSONViewComponent = (props: {closeModal: any}) => {
     };
 
     return (
-        <Panel id={"show-json-view-panel"} position={"top-center"} style={{border:"1px solid gray", background: "white"}}>
+        <Panel id={"show-json-view-panel"} position={"top-center"} style={{border:"1px solid gray", background: "white", zIndex: 10}}>
             <Container style={{padding: 16}}>
                 <h3>JSON View</h3>
                 <pre style={{textAlign: "left", overflow:"scroll", height: 400, width: 400}}>{JSON.stringify(getExecutableGraph(), undefined, ' ')}</pre>
@@ -480,7 +613,7 @@ const NodeListComponent = (props: {closeModal: any}) => {
     };
 
     return (
-        <Panel id={"node-list-panel"} position={"top-center"} style={{border:"1px solid gray", background: "white"}}>
+        <Panel id={"node-list-panel"} position={"top-center"} style={{border:"1px solid gray", background: "white", zIndex: 10}}>
             <Container style={{padding: 16}}>
                 <h3>Node List</h3>
                 <pre style={{textAlign: "left", overflow:"scroll", height: 400, width: 400}}>{getDataString()}</pre>
@@ -501,180 +634,346 @@ const NodeListComponent = (props: {closeModal: any}) => {
     )
 }
 
-const AddVariableComponent = (props: {closeModal: any}) => {
-    const idRef = useRef<HTMLInputElement>(null);
-    const initialValueRef = useRef<HTMLInputElement>(null);
-    const typeRef = useRef<HTMLSelectElement>(null);
+// shared between the Variables and Custom Events editors' type dropdowns
+const typeSignatureName = (type: any): string => {
+    if (type.signature === "custom" && type.extensions) {
+        return Object.keys(type.extensions)[0];
+    }
+    return type.signature;
+};
 
-    const {addVariable: addVariableToGraph} = useContext(InteractivityGraphContext);
+// local, editing-friendly shape for a graph variable: kept as an ordered list (rather than
+// mutating the graph directly per keystroke) so a variable's id can be renamed a character at a
+// time without disturbing the rest of the list.
+interface EditableVariable {
+    name: string;
+    type: number;
+    value: any;
+}
+
+const fromGraphVariables = (variables: IInteractivityVariable[]): EditableVariable[] =>
+    // loaded KHR_interactivity graphs carry the name in `id`, authored ones in `name`
+    (variables || []).map((variable) => ({ name: variable.name ?? (variable as any).id ?? "", type: variable.type, value: variable.value }));
+
+const toGraphVariables = (variables: EditableVariable[]): IInteractivityVariable[] =>
+    variables.map(({ name, type, value }) => {
+        const entry: IInteractivityVariable = { type };
+        if (name !== "") { entry.name = name; }
+        if (value !== undefined) { entry.value = value; }
+        return entry;
+    });
+
+const VariablesComponent = (props: {closeModal: any}) => {
+    const {graph, setVariables: setGraphVariables} = useContext(InteractivityGraphContext);
+    // seed the editor from the current graph once; from here on the editor owns the state and
+    // pushes each change straight back to the graph so the rest of the app stays in sync
+    const [variables, setVariables] = useState<EditableVariable[]>(() => fromGraphVariables(graph.variables));
+
+    // single choke point for mutations: update local state and commit the projected list to the graph
+    const commit = (next: EditableVariable[]) => {
+        setVariables(next);
+        setGraphVariables(toGraphVariables(next));
+    };
 
     const addVariable = () => {
-        if (idRef.current === null || initialValueRef.current === null || typeRef.current === null) {return}
-        if (idRef.current.value === "" || initialValueRef.current.value === "" || typeRef.current.value === "") {return}
+        // suggest a unique-ish default id so a fresh variable is valid immediately
+        const existing = new Set(variables.map((v) => v.name));
+        let n = variables.length + 1;
+        let name = `variable_${n}`;
+        while (existing.has(name)) { name = `variable_${++n}`; }
+        commit([...variables, { name, type: 0, value: undefined }]);
+    };
 
-        const variable: IInteractivityVariable = {name: idRef.current.value, value: castParameter(initialValueRef.current.value, standardTypes[typeRef.current.selectedIndex].name!), type: typeRef.current.selectedIndex};
-        addVariableToGraph(variable);
-        props.closeModal();
-    }
+    const updateVariable = (index: number, patch: Partial<EditableVariable>) => {
+        commit(variables.map((v, i) => (i === index ? { ...v, ...patch } : v)));
+    };
 
-    const getTypeNameFromType = (type: any) => {
-        if (type.signature === "custom" && type.extensions) {
-            return Object.keys(type.extensions)[0]
-        } else {
-            return type.signature;
-        }
-    }
-
-    return (
-        <Panel id={"create-variable-panel"} position={"top-center"} style={{border:"1px solid gray", background: "white"}}>
-            <Container style={{padding: 16}}>
-                <h3>Add Variable</h3>
-                <Row style={{textAlign: "left"}}>
-                    <Col md={12}>
-                        <Form.Group>
-                            <Form.Label>ID</Form.Label>
-                            <Form.Control ref={idRef} type="text" />
-                        </Form.Group>
-                    </Col>
-                    <Col md={12}>
-                        <Form.Group>
-                            <Form.Label>Initial Value</Form.Label>
-                            <Form.Control ref={initialValueRef} type="text" />
-                        </Form.Group>
-                    </Col>
-                    <Col md={12}>
-                        <Form.Control ref={typeRef} as="select">
-                            {standardTypes.map((option, index) => (
-                                <option key={index}>{getTypeNameFromType(option)}</option>
-                            ))}
-                        </Form.Control>
-                    </Col>
-                </Row>
-                <hr style={{ borderTop: '1px solid #777', margin: '16px 0' }} />
-                <Row style={{ marginTop: 16 }}>
-                    <Col xs={12} md={6}>
-                        <Button variant={"outline-primary"} style={{width: "100%"}} id="add-variable-btn" onClick={() => addVariable()}>
-                            Add
-                        </Button>
-                    </Col>
-                    <Col xs={12} md={6}>
-                        <Button variant={"outline-danger"} style={{width: "100%"}} onClick={() => props.closeModal()}>
-                            Cancel
-                        </Button>
-                    </Col>
-                </Row>
-            </Container>
-        </Panel>
-    )
-}
-
-const ShowCustomEventComponent = (props: {closeModal: any}) => {
-    const {graph} = useContext(InteractivityGraphContext);
+    const removeVariable = (index: number) => {
+        commit(variables.filter((_, i) => i !== index));
+    };
 
     return (
-        <Panel id={"show-custom-event-panel"} position={"top-center"} style={{border:"1px solid gray", background: "white", height: 500}}>
-            <Container style={{padding: 16, flex: 1, display: 'flex', flexDirection: 'column', height: 500}}>
-                <h3>Custom Events</h3>
-                <div style={{ flex: 1, overflowY: 'auto', textAlign: 'left', border: '1px solid #ccc', padding: 8, borderRadius: 4 }}>
-                    <pre>{JSON.stringify(graph.events, undefined, ' ')}</pre>
+        <Panel id={"variables-panel"} position={"top-center"} style={{border:"1px solid gray", background: "white", borderRadius: 8, boxShadow: "0 4px 24px rgba(0,0,0,0.15)", zIndex: 10}}>
+            <Container fluid style={{ padding: 16, width: 1080, maxWidth: "95vw" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <h3 style={{ margin: 0 }}>Variables</h3>
+                    <Button variant={"outline-danger"} size={"sm"} onClick={() => props.closeModal()}>Close</Button>
                 </div>
-                <hr style={{ borderTop: '1px solid #777', margin: '16px 0' }} />
-             <div style={{ textAlign: 'right' }}>
-                 <Button variant={"outline-danger"} onClick={() => props.closeModal()} style={{ position: 'sticky', bottom: 0 }}>
-                     Close
-                 </Button>
-             </div>
+                <hr style={{ borderTop: '1px solid #777', margin: '12px 0' }} />
+                <div style={{ display: "flex", gap: 16, height: 460 }}>
+                    {/* left: editable list of variables */}
+                    <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+                        {/* overflowX hidden avoids the horizontal scrollbar Bootstrap's negative
+                            row gutters would otherwise trigger (overflow-y:auto forces x to auto too) */}
+                        <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", textAlign: "left", paddingRight: 4 }}>
+                            {variables.length === 0 && (
+                                <p style={{ color: "#888", textAlign: "center", marginTop: 32 }}>
+                                    No variables yet. Add one to get started.
+                                </p>
+                            )}
+                            {variables.length > 0 && (
+                                <Row style={{ marginBottom: 0, marginLeft: 0, marginRight: 0 }}>
+                                    <Col style={{ flexGrow: 2 }}><span style={{ fontSize: 11, color: "#999" }}>ID</span></Col>
+                                    <Col xs={2}><span style={{ fontSize: 11, color: "#999" }}>Type</span></Col>
+                                    <Col xs={4}><span style={{ fontSize: 11, color: "#999" }}>Value</span></Col>
+                                    <Col style={{ width: 44, flexShrink: 0, padding: 0 }}></Col>
+                                </Row>
+                            )}
+                            {variables.map((variable, index) => (
+                                <div key={index}>
+                                    {index > 0 && <hr style={{ margin: "6px 0", borderColor: "#bbb" }} />}
+                                    <Row className={"align-items-center"} style={{ marginTop: 6, marginLeft: 0, marginRight: 0 }}>
+                                        {/* flexGrow 2 lets the ID field claim ~2/3 of the leftover
+                                            space (the delete column keeps the default 1) so names
+                                            have more room while the ✕ stays pinned to the right */}
+                                        <Col style={{ flexGrow: 2 }}>
+                                            <Form.Control
+                                                size={"sm"}
+                                                type="text"
+                                                value={variable.name}
+                                                placeholder="variable id"
+                                                onChange={(e) => updateVariable(index, { name: e.target.value })}
+                                            />
+                                        </Col>
+                                        <Col xs={2}>
+                                            <Form.Control
+                                                as="select"
+                                                size={"sm"}
+                                                value={variable.type}
+                                                onChange={(e) => updateVariable(index, { type: Number(e.target.value), value: undefined })}
+                                            >
+                                                {standardTypes.map((option, typeIndex) => (
+                                                    <option key={typeIndex} value={typeIndex}>{typeSignatureName(option)}</option>
+                                                ))}
+                                            </Form.Control>
+                                        </Col>
+                                        <Col xs={4}>
+                                            <TypedValueInput
+                                                typeIndex={variable.type}
+                                                value={variable.value}
+                                                onChange={(v) => updateVariable(index, { value: v })}
+                                            />
+                                        </Col>
+                                        <Col style={{ width: 44, flexShrink: 0, padding: "0 4px", textAlign: "right" }}>
+                                            <Button variant="outline-secondary" size={"sm"} title={"Remove variable"} onClick={() => removeVariable(index)}>
+                                                ✕
+                                            </Button>
+                                        </Col>
+                                    </Row>
+                                </div>
+                            ))}
+                        </div>
+                        <hr style={{ borderTop: '1px solid #ddd', margin: '8px 0' }} />
+                        <Button variant={"outline-primary"} id={"add-variable-btn"} onClick={addVariable}>
+                            + Add Variable
+                        </Button>
+                    </div>
+
+                    {/* right: live JSON view — fixed width so the extra panel width goes to the
+                        variables list on the left rather than widening the JSON pane */}
+                    <div style={{ width: 380, flexShrink: 0, minWidth: 0, display: "flex", flexDirection: "column" }}>
+                        <span style={{ fontSize: 12, color: "#666", marginBottom: 4 }}>JSON</span>
+                        <pre style={{ flex: 1, margin: 0, overflow: "auto", textAlign: "left", border: "1px solid #ccc", borderRadius: 4, padding: 8, background: "#f5f5f5", fontSize: 12 }}>
+                            {JSON.stringify(toGraphVariables(variables), undefined, 2)}
+                        </pre>
+                    </div>
+                </div>
             </Container>
         </Panel>
     )
 }
 
-const AddCustomEventComponent = (props: {closeModal: any}) => {
-    const idRef = useRef<HTMLInputElement>(null);
-    const {array: values, push: pushValue, remove: removeValue, set: setValue} = useArray([]);
-    const {addEvent: addEventToGraph} = useContext(InteractivityGraphContext);
-    const handleInputChange = (index: number, updatedValue: any) => {
-        setValue(index, updatedValue)
-    }
+// local, editing-friendly shape for a custom event: value ids are kept as an ordered list of
+// {key, type, defaultValue} entries (rather than a Record) so a value id can be renamed a
+// character at a time without keys colliding or vanishing mid-edit.
+interface EditableEventValue {
+    key: string;
+    type: number;
+    defaultValue: any;
+}
+interface EditableEvent {
+    id: string;
+    values: EditableEventValue[];
+}
 
-    const addCustomEvent = () => {
-        if (idRef.current === null || idRef.current.value === "") {return}
-        const valuesObject: Record<string, {type: number, value?: any[]}> = {};
-        values.forEach((val, index) => {
-            valuesObject[val.id] = {type: val.type, value: val.value};
-        });
+const fromGraphEvents = (events: IInteractivityEvent[]): EditableEvent[] =>
+    (events || []).map((event) => ({
+        id: event.id,
+        values: Object.entries(event.values || {}).map(([key, value]) => ({
+            key,
+            type: value.type,
+            defaultValue: value.value,
+        })),
+    }));
 
-        const customEvent: IInteractivityEvent = {id: idRef.current!.value, values: valuesObject}
-        addEventToGraph(customEvent);
-        props.closeModal();
-    }
+// project the editing model back onto the graph's IInteractivityEvent[] shape, dropping any
+// value rows whose id is still blank so the committed graph never carries an empty-string key
+const toGraphEvents = (events: EditableEvent[]): IInteractivityEvent[] =>
+    events.map((event) => ({
+        id: event.id,
+        values: event.values.reduce((acc, { key, type, defaultValue }) => {
+            if (key === "") return acc;
+            const entry: { type: number; value?: any } = { type };
+            if (defaultValue !== undefined) { entry.value = defaultValue; }
+            acc[key] = entry;
+            return acc;
+        }, {} as Record<string, { type: number; value?: any }>),
+    }));
 
-    const getTypeNameFromType = (type: any) => {
-        if (type.signature === "custom" && type.extensions) {
-            return Object.keys(type.extensions)[0]
-        } else {
-            return type.signature;
-        }
-    }
+const CustomEventsComponent = (props: {closeModal: any}) => {
+    const {graph, setEvents: setGraphEvents} = useContext(InteractivityGraphContext);
+    // seed the editor from the current graph once; from here on the editor owns the state and
+    // pushes each change straight back to the graph so the rest of the app stays in sync
+    const [events, setEvents] = useState<EditableEvent[]>(() => fromGraphEvents(graph.events));
+
+    // single choke point for mutations: update local state and commit the projected list to the graph
+    const commit = (next: EditableEvent[]) => {
+        setEvents(next);
+        setGraphEvents(toGraphEvents(next));
+    };
+
+    const updateEventId = (index: number, id: string) => {
+        commit(events.map((event, i) => (i === index ? { ...event, id } : event)));
+    };
+
+    const addEvent = () => {
+        // suggest a unique-ish default id so a fresh event is valid immediately
+        const existing = new Set(events.map((e) => e.id));
+        let n = events.length + 1;
+        let id = `event_${n}`;
+        while (existing.has(id)) { id = `event_${++n}`; }
+        commit([...events, { id, values: [] }]);
+    };
+
+    const deleteEvent = (index: number) => {
+        commit(events.filter((_, i) => i !== index));
+    };
+
+    const addValue = (eventIndex: number) => {
+        commit(events.map((event, i) => (
+            i === eventIndex ? { ...event, values: [...event.values, { key: "", type: 0, defaultValue: undefined }] } : event
+        )));
+    };
+
+    const updateValue = (eventIndex: number, valueIndex: number, patch: Partial<EditableEventValue>) => {
+        commit(events.map((event, i) => (
+            i === eventIndex
+                ? { ...event, values: event.values.map((v, j) => (j === valueIndex ? { ...v, ...patch } : v)) }
+                : event
+        )));
+    };
+
+    const removeValue = (eventIndex: number, valueIndex: number) => {
+        commit(events.map((event, i) => (
+            i === eventIndex ? { ...event, values: event.values.filter((_, j) => j !== valueIndex) } : event
+        )));
+    };
 
     return (
-        <Panel id={"create-custom-event-panel"} position={"top-center"} style={{border:"1px solid gray", background: "white"}}>
-            <Container style={{padding: 16}}>
-                <h3>Add Custom Event</h3>
-                <Form style={{textAlign: "left"}}>
-                    <Form.Group>
-                        <Form.Label>ID</Form.Label>
-                        <Form.Control ref={idRef} type="text" />
-                    </Form.Group>
-                    <h4>Values</h4>
-                    {values.map((val, index) => (
-                        <Row key={index} style={{marginTop: 16}}>
-                            <Col>
-                                <Form.Control
-                                    type="text"
-                                    value={val.id}
-                                    placeholder="Value ID"
-                                    onChange={(e) => handleInputChange(index, {...val, id: e.target.value})}
-                                />
-                            </Col>
-                            <Col>
-                                <Form.Control as="select"
-                                              onChange={(e) => {
-                                                  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                                                  // @ts-ignore
-                                                  const selectedIndex = e.target.selectedIndex;
-                                                  handleInputChange(index, { ...val, type: selectedIndex });
-                                              }}
-                                >
-                                    {standardTypes.map((option, typeIndex) => (
-                                        <option key={typeIndex}>{getTypeNameFromType(option)}</option>
-                                    ))}
-                                </Form.Control>
-                            </Col>
-                            <Col xs="auto">
-                                <Button variant="outline-danger" onClick={() => removeValue(index)}>
-                                    Remove
-                                </Button>
-                            </Col>
-                        </Row>
-                    ))}
-                    <Button variant="outline-secondary" onClick={() => pushValue({id: '', type: 0, description: ''})} style={{marginTop: 16}}>
-                        Add Value
-                    </Button>
-                </Form>
-                <hr style={{ borderTop: '1px solid #777', margin: '16px 0' }} />
-                <Row style={{ marginTop: 16 }}>
-                    <Col xs={12} md={6}>
-                        <Button variant={"outline-primary"} style={{width: "100%"}} id="add-variable-btn" onClick={() => addCustomEvent()}>
-                            Add
+        <Panel id={"custom-events-panel"} position={"top-center"} style={{border:"1px solid gray", background: "white", borderRadius: 8, boxShadow: "0 4px 24px rgba(0,0,0,0.15)", zIndex: 10}}>
+            <Container fluid style={{ padding: 16, width: 1100, maxWidth: "95vw" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <h3 style={{ margin: 0 }}>Custom Events</h3>
+                    <Button variant={"outline-danger"} size={"sm"} onClick={() => props.closeModal()}>Close</Button>
+                </div>
+                <hr style={{ borderTop: '1px solid #777', margin: '12px 0' }} />
+                <div style={{ display: "flex", gap: 16, height: 460 }}>
+                    {/* left: editable list of events */}
+                    <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+                        <div style={{ flex: 1, overflowY: "auto", textAlign: "left", paddingRight: 4 }}>
+                            {events.length === 0 && (
+                                <p style={{ color: "#888", textAlign: "center", marginTop: 32 }}>
+                                    No custom events yet. Add one to get started.
+                                </p>
+                            )}
+                            {events.map((event, eventIndex) => (
+                                <div key={eventIndex} style={{ border: "1px solid #ddd", borderRadius: 8, padding: 12, marginBottom: 12, background: "#fafafa" }}>
+                                    {/* event header: label+input flex-end so Delete sits at input baseline */}
+                                    <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ fontSize: 12, color: "#666", marginBottom: 2 }}>Event ID</div>
+                                            <Form.Control
+                                                type="text"
+                                                value={event.id}
+                                                placeholder="event id"
+                                                onChange={(e) => updateEventId(eventIndex, e.target.value)}
+                                            />
+                                        </div>
+                                        <Button variant="outline-danger" size={"sm"} title={"Delete event"} onClick={() => deleteEvent(eventIndex)}>
+                                            Delete
+                                        </Button>
+                                    </div>
+                                    <div style={{ marginTop: 10 }}>
+                                        <div style={{ fontSize: 12, color: "#666", marginBottom: 4 }}>Values</div>
+                                        {event.values.length > 0 && (
+                                            <Row style={{ marginBottom: 0 }}>
+                                                <Col><span style={{ fontSize: 11, color: "#999" }}>ID</span></Col>
+                                                <Col xs={3}><span style={{ fontSize: 11, color: "#999" }}>Type</span></Col>
+                                                <Col xs={4}><span style={{ fontSize: 11, color: "#999" }}>Default</span></Col>
+                                                <Col style={{ width: 44, flexShrink: 0, padding: 0 }}></Col>
+                                            </Row>
+                                        )}
+                                        {event.values.map((val, valueIndex) => (
+                                            <div key={valueIndex}>
+                                                {valueIndex > 0 && <hr style={{ margin: "6px 0", borderColor: "#bbb" }} />}
+                                                <Row className={"align-items-center"} style={{ marginTop: 6 }}>
+                                                    <Col>
+                                                        <Form.Control
+                                                            size={"sm"}
+                                                            type="text"
+                                                            value={val.key}
+                                                            placeholder="value id"
+                                                            onChange={(e) => updateValue(eventIndex, valueIndex, { key: e.target.value })}
+                                                        />
+                                                    </Col>
+                                                    <Col xs={3}>
+                                                        <Form.Control
+                                                            as="select"
+                                                            size={"sm"}
+                                                            value={val.type}
+                                                            onChange={(e) => updateValue(eventIndex, valueIndex, { type: Number(e.target.value), defaultValue: undefined })}
+                                                        >
+                                                            {standardTypes.map((option, typeIndex) => (
+                                                                <option key={typeIndex} value={typeIndex}>{typeSignatureName(option)}</option>
+                                                            ))}
+                                                        </Form.Control>
+                                                    </Col>
+                                                    <Col xs={4}>
+                                                        <TypedValueInput
+                                                            typeIndex={val.type}
+                                                            value={val.defaultValue}
+                                                            onChange={(v) => updateValue(eventIndex, valueIndex, { defaultValue: v })}
+                                                        />
+                                                    </Col>
+                                                    <Col style={{ width: 44, flexShrink: 0, padding: "0 4px", textAlign: "right" }}>
+                                                        <Button variant="outline-secondary" size={"sm"} title={"Remove value"} onClick={() => removeValue(eventIndex, valueIndex)}>
+                                                            ✕
+                                                        </Button>
+                                                    </Col>
+                                                </Row>
+                                            </div>
+                                        ))}
+                                        <Button variant="link" size={"sm"} style={{ padding: "4px 0", textDecoration: "none" }} onClick={() => addValue(eventIndex)}>
+                                            + Add value
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <hr style={{ borderTop: '1px solid #ddd', margin: '8px 0' }} />
+                        <Button variant={"outline-primary"} id={"add-custom-event-btn"} onClick={addEvent}>
+                            + Add Custom Event
                         </Button>
-                    </Col>
-                    <Col xs={12} md={6}>
-                        <Button variant={"outline-danger"} style={{width: "100%"}} onClick={() => props.closeModal()}>
-                            Cancel
-                        </Button>
-                    </Col>
-                </Row>
+                    </div>
+
+                    {/* right: live JSON view */}
+                    <div style={{ flex: 0.8, minWidth: 0, display: "flex", flexDirection: "column" }}>
+                        <span style={{ fontSize: 12, color: "#666", marginBottom: 4 }}>JSON</span>
+                        <pre style={{ flex: 1, margin: 0, overflow: "auto", textAlign: "left", border: "1px solid #ccc", borderRadius: 4, padding: 8, background: "#f5f5f5", fontSize: 12 }}>
+                            {JSON.stringify(toGraphEvents(events), undefined, 2)}
+                        </pre>
+                    </div>
+                </div>
             </Container>
         </Panel>
     )
@@ -691,7 +990,7 @@ const UploadGraphComponent = (props: { closeModal: any}) => {
     }
 
     return (
-        <Panel id={"upload-graph-panel"} position={"top-center"} style={{border:"1px solid gray", background: "white"}}>
+        <Panel id={"upload-graph-panel"} position={"top-center"} style={{border:"1px solid gray", background: "white", zIndex: 10}}>
             <Container style={{padding: 16, width: 600}}>
                 <h3>Upload graph</h3>
                 <Row style={{textAlign: "left"}}>
@@ -718,26 +1017,3 @@ const UploadGraphComponent = (props: { closeModal: any}) => {
     );
 }
 
-const stringToListOfNumbers = (inputString: string) => {
-    const numberStrings = inputString.split(',');
-    return numberStrings.map(numberString => parseFloat(numberString));
-}
-
-const castParameter = (value: any, signature: string) => {
-    switch (signature) {
-        case "bool":
-            return typeof value === "string" ? [value === "true"] : [JSON.parse(value)];
-        case "int":
-        case "float":
-            return [Number(value)];
-        case "float2":
-        case "float3":
-        case "float4":
-        case "float4x4":
-            return typeof value === "string" ? stringToListOfNumbers(value) : value
-        case "AMZN_interactivity_string":
-            return String(value)
-        default:
-            return String(value)
-    }
-}

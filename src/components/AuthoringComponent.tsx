@@ -16,7 +16,7 @@ import {Spacer} from "./Spacer";
 import {interactivityNodeSpecs, knownDeclarations, standardTypes} from "../BasicBehaveEngine/types/nodes";
 import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityNode, IInteractivityVariable } from '../BasicBehaveEngine/types/InteractivityGraph';
 import { InteractivityGraphContext } from '../InteractivityGraphContext';
-import { FLOW_COLOR, getColorForTypeIndex } from '../authoring/socketColors';
+import { FLOW_COLOR, getColorForTypeIndex, getNodeCategoryColor } from '../authoring/socketColors';
 import { TypedValueInput } from '../authoring/TypedValueInput';
 import '../css/flowNodes.css';
 
@@ -558,17 +558,30 @@ const NodePickerComponent = (props: {onAddNode: any, closeModal: any, mousePos: 
                 />
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6, margin: "10px auto 0", width: "90%" }}>
                     {
-                        sortedNodeCategories.map(category => (
-                            <Button
-                                key={category}
-                                size={"sm"}
-                                variant={activeCategory === category ? "primary" : "outline-primary"}
-                                onClick={() => toggleCategory(category)}
-                                data-testid={`node-picker-category-${category}`}
-                            >
-                                {category}
-                            </Button>
-                        ))
+                        sortedNodeCategories.map(category => {
+                            const categoryColor = getNodeCategoryColor(category);
+                            const isActive = activeCategory === category;
+                            return (
+                                <Button
+                                    key={category}
+                                    size={"sm"}
+                                    variant={"outline-secondary"}
+                                    onClick={() => toggleCategory(category)}
+                                    data-testid={`node-picker-category-${category}`}
+                                    style={{
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        gap: 6,
+                                        borderColor: isActive ? categoryColor : undefined,
+                                        background: isActive ? `${categoryColor}33` : undefined,
+                                        color: "#333",
+                                    }}
+                                >
+                                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: categoryColor, display: "inline-block", flexShrink: 0 }} />
+                                    {category}
+                                </Button>
+                            );
+                        })
                     }
                 </div>
                 <div style={{ columnWidth: 200, columnGap: 24, maxHeight: "40vh", overflowY: "auto", marginTop: 16, padding: "0 16px 8px" }}>
@@ -581,8 +594,10 @@ const NodePickerComponent = (props: {onAddNode: any, closeModal: any, mousePos: 
                             return (
                                 <RenderIf key={category} shouldShow={shouldShowCategory}>
                                     <div style={{ breakInside: "avoid", marginBottom: 16 }}>
-                                        <div style={{ fontWeight: "bold", color: "#555" }}>{category}</div>
-                                        <hr style={{ borderTop: '1px solid #777', margin: '4px 0 8px' }} />
+                                        <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: "bold", color: "#555", borderBottom: `3px solid ${getNodeCategoryColor(category)}`, paddingBottom: 4, marginBottom: 8 }}>
+                                            <span style={{ width: 8, height: 8, borderRadius: "50%", background: getNodeCategoryColor(category), display: "inline-block", flexShrink: 0 }} />
+                                            {category}
+                                        </div>
                                         {
                                             nodesInCategory.map(nodeType => (
                                                 <p key={nodeType} className="node-picker-item" style={{overflowWrap: "anywhere"}} onClick={() => selectNode(nodeType)} data-testid={`node-picker-${nodeType}`}>{nodeType}</p>

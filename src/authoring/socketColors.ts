@@ -40,6 +40,27 @@ export const getColorForTypeIndex = (typeIndex: number | undefined): string => {
 export const getColorForSignature = (signature: string | undefined): string =>
     (signature && TYPE_COLORS[signature]) || DEFAULT_SOCKET_COLOR;
 
+/**
+ * Color map for node categories (the segment before the "/" in a node's op/type, e.g. "flow/branch").
+ * Used for both the node header background (AuthoringGraphNode) and the "Add Node" panel's
+ * category/group headers (AuthoringComponent), so a category reads as the same color everywhere.
+ */
+export const CATEGORY_COLORS: Record<string, string> = {
+    flow: "#b18cd9",
+    event: "#f8a848",
+    math: "#baf691",
+    pointer: "#7ddede",
+    animation: "#e1b739",
+    node: "#d97aff",
+    variable: "#59ef73",
+};
+
+/** Resolve a color for a node category or a full node op/type (e.g. "flow" or "flow/branch"). */
+export const getNodeCategoryColor = (nameOrCategory: string): string => {
+    const category = nameOrCategory.split("/")[0].toLowerCase();
+    return CATEGORY_COLORS[category] ?? DEFAULT_SOCKET_COLOR;
+};
+
 /** Short label for a socket's data type, e.g. "float3" (used for the socket type badge). */
 export const getTypeLabel = (typeIndex: number | undefined): string => {
     if (typeIndex === undefined) {

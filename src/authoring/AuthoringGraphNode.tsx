@@ -8,7 +8,7 @@ import { InteractivityGraphContext } from "../InteractivityGraphContext";
 import { getMessageTemplateSocketIds, getPathTemplateSockets } from "./pathTemplate";
 import { PointerConfigField } from "./PointerConfigField";
 import { getStandardTypeIndexForSignature } from "./pointerCatalogue";
-import { FLOW_COLOR, getColorForTypeIndex, getTypeLabel } from "./socketColors";
+import { FLOW_COLOR, getColorForTypeIndex, getNodeCategoryColor, getTypeLabel } from "./socketColors";
 import { RefValuePicker } from "./RefValuePicker";
 import { BoolSwitch } from "./TypedValueInput";
 import { VariablesConfigField } from "./VariablesConfigField";
@@ -524,28 +524,6 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         return value?.type;
     }
 
-    const getHeaderColor = (name: string) => {
-        const category = name.split("/")[0];
-        switch (category) {
-            case "flow":
-                return "#b18cd9"
-            case "event":
-                return "#f8a848"
-            case "math":
-                return "#baf691"
-            case "pointer":
-                return "#7ddede"
-            case "animation":
-                return "#e1b739"
-            case "node":
-                return "#d97aff"
-            case "variable":
-                return "#59ef73"
-            default:
-                return "#868484"
-        }
-    }
-
     // parse the currently-selected variable ids for the multi-variable config (variable/set).
     // The stored value may be a plain number array (["0", "1"] / [0, 1]) or, from legacy text
     // entry, a single comma/bracket-delimited string in value[0]; normalise both to number[].
@@ -635,7 +613,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
 
     return (
         <div className={`flow-node${isPointerNode ? " flow-node--pointer" : ""}`}>
-            <div className={"flow-node-header"} style={{ background: getHeaderColor(node?.op || "") }}>
+            <div className={"flow-node-header"} style={{ background: getNodeCategoryColor(node?.op || "") }}>
                 <h2>
                     {node?.op}
                 </h2>

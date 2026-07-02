@@ -775,8 +775,8 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                 return (
                                     <div key={socket} className={"flow-node-socket"}>
                                         <div className={"flow-node-socket-head"}>
-                                            <label htmlFor={socket}>{socket}</label>
                                             <span className={"flow-node-type-badge"} style={{ background: FLOW_COLOR }}>flow</span>
+                                            <label htmlFor={socket}>{socket}</label>
                                         </div>
                                         <Handle type="target" position={Position.Left} id={socket} style={handleStyle(FLOW_COLOR, "left")} />
                                     </div>
@@ -790,6 +790,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                 return (
                                     <div key={socket} className={"flow-node-socket"}>
                                         <div className={"flow-node-socket-head"}>
+                                            <span className={"flow-node-type-badge"} style={{ background: FLOW_COLOR }}>flow</span>
                                             {isDynamicFlowNode ? (
                                                 <input
                                                     key={socket}
@@ -802,7 +803,6 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                             ) : (
                                                 <label htmlFor={socket}>{socket}</label>
                                             )}
-                                            <span className={"flow-node-type-badge"} style={{ background: FLOW_COLOR }}>flow</span>
                                         </div>
                                         <Handle type="source" position={Position.Right} id={socket} style={handleStyle(FLOW_COLOR, "right")} />
                                     </div>
@@ -841,7 +841,6 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                 return (
                                     <div key={socket} className={"flow-node-socket"}>
                                         <div className={"flow-node-socket-head"}>
-                                            <label htmlFor={socket} title={isVariableSetNode ? `${getInputSocketFullLabel(socket)} (variable #${socket})` : undefined}>{getInputSocketLabel(socket)}</label>
                                             {isTypeEditable ? (
                                                 <span className={"flow-node-type-badge flow-node-type-badge--editable nodrag"} style={{ background: getColorForTypeIndex(inputType) }} title={"Change type"}>
                                                     {getTypeLabel(inputType)}
@@ -857,6 +856,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                             ) : (
                                                 <span className={"flow-node-type-badge"} style={{ background: getColorForTypeIndex(inputType) }}>{getTypeLabel(inputType)}</span>
                                             )}
+                                            <label htmlFor={socket} title={isVariableSetNode ? `${getInputSocketFullLabel(socket)} (variable #${socket})` : undefined}>{getInputSocketLabel(socket)}</label>
                                         </div>
                                         {isRefSocket ? (
                                             <div style={{ display: isLinked ? "none" : "flex", gap: 4 }}>
@@ -919,8 +919,8 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                 return (
                                     <div key={socket} className={"flow-node-socket"}>
                                         <div className={"flow-node-socket-head"}>
-                                            <label htmlFor={socket}>{socket}</label>
                                             <span className={"flow-node-type-badge"} style={{ background: getColorForTypeIndex(_value.type) }}>{getTypeLabel(_value.type)}</span>
+                                            <label htmlFor={socket}>{socket}</label>
                                         </div>
                                         <Handle type="source" position={Position.Right} id={socket} style={handleStyle(getColorForTypeIndex(_value.type), "right")} />
                                     </div>

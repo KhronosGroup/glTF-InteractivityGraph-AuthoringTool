@@ -1,6 +1,20 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { IInteractivityEvent } from "../BasicBehaveEngine/types/InteractivityGraph";
+import { CSSProperties, useCallback, useEffect, useRef, useState } from "react";
+import { IInteractivityEvent, InteractivityValueType } from "../BasicBehaveEngine/types/InteractivityGraph";
 import { standardTypes } from "../BasicBehaveEngine/types/nodes";
+import { RefValuePicker } from "./RefValuePicker";
+
+const refSelectButtonStyle: CSSProperties = {
+    height: 30,
+    border: "1px solid #ccc",
+    borderRadius: 6,
+    background: "white",
+    cursor: "pointer",
+    fontSize: 12,
+    color: "#333",
+    whiteSpace: "nowrap",
+    flexShrink: 0,
+    padding: "0 8px",
+};
 
 // Custom events flow through the global document as CustomEvents named `KHR_INTERACTIVITY:<id>`
 // (see DOMEventBus). All three engines (Babylon, Three, Logging) dispatch/listen on this same
@@ -150,9 +164,11 @@ export const CustomEventReceiveTrigger = (props: { event: IInteractivityEvent })
     const valueEntries = Object.entries(props.event.values || {});
     const [args, setArgs] = useState<Record<string, string>>({});
     const [flash, setFlash] = useState(false);
+    // which ref argument currently has the object picker open (null = closed)
+    const [refPickerArg, setRefPickerArg] = useState<string | null>(null);
 
     // clear entered args when the target event changes
-    useEffect(() => { setArgs({}); }, [channel]);
+    useEffect(() => { setArgs({}); setRefPickerArg(null); }, [channel]);
 
     const trigger = useCallback(() => {
         const detail: Record<string, any> = {};
@@ -166,24 +182,52 @@ export const CustomEventReceiveTrigger = (props: { event: IInteractivityEvent })
 
     return (
         <div className={"flow-node-event-trigger nodrag"}>
-            {valueEntries.map(([key, value]) => (
-                <div key={key} className={"flow-node-field"}>
-                    <label htmlFor={`trigger-${channel}-${key}`}>
-                        {key}
-                        <span className={"flow-node-event-arg-type"}>{getEventTypeLabel(value.type)}</span>
-                    </label>
-                    <input
-                        id={`trigger-${channel}-${key}`}
-                        className={"flow-node-control"}
-                        placeholder={placeholderForType(value.type)}
-                        value={args[key] ?? ""}
-                        onChange={(e) => setArgs((prev) => ({ ...prev, [key]: e.target.value }))}
-                    />
-                </div>
-            ))}
+            {valueEntries.map(([key, value]) => {
+                const isRef = standardTypes[value.type]?.signature === InteractivityValueType.REF;
+                return (
+                    <div key={key} className={"flow-node-field"}>
+                        <label htmlFor={`trigger-${channel}-${key}`}>
+                            {key}
+                            <span className={"flow-node-event-arg-type"}>{getEventTypeLabel(value.type)}</span>
+                        </label>
+                        {isRef ? (
+                            // ref args reuse the shared object-reference picker (same as ref input sockets)
+                            <div style={{ display: "flex", gap: 4 }}>
+                                <input
+                                    id={`trigger-${channel}-${key}`}
+                                    className={"flow-node-control"}
+                                    style={{ flex: 1, minWidth: 0, fontFamily: "monospace" }}
+                                    placeholder={"/nodes/0"}
+                                    value={args[key] ?? ""}
+                                    onChange={(e) => setArgs((prev) => ({ ...prev, [key]: e.target.value }))}
+                                />
+                                <button type="button" onClick={() => setRefPickerArg(key)} style={refSelectButtonStyle} title={"Select an object reference"}>
+                                    Select…
+                                </button>
+                            </div>
+                        ) : (
+                            <input
+                                id={`trigger-${channel}-${key}`}
+                                className={"flow-node-control"}
+                                placeholder={placeholderForType(value.type)}
+                                value={args[key] ?? ""}
+                                onChange={(e) => setArgs((prev) => ({ ...prev, [key]: e.target.value }))}
+                            />
+                        )}
+                    </div>
+                );
+            })}
             <button type="button" className={`flow-node-event-trigger-btn${flash ? " is-flash" : ""}`} onClick={trigger}>
                 ⚡ Trigger event
             </button>
+
+            <RefValuePicker
+                show={refPickerArg !== null}
+                currentValue={refPickerArg ? (args[refPickerArg] ?? "") : undefined}
+                hintSocket={refPickerArg ?? undefined}
+                onClose={() => setRefPickerArg(null)}
+                onSelect={(pointer) => { if (refPickerArg) { setArgs((prev) => ({ ...prev, [refPickerArg]: pointer })); } }}
+            />
         </div>
     );
 };

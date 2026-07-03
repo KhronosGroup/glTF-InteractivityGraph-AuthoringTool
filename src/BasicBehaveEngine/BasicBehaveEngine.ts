@@ -687,8 +687,8 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/matMul", MatMul);
         this.registerBehaveEngineNode("math/inverse", Inverse);
         this.registerBehaveEngineNode("debug/log", DebugLog);
-        this.registerBehaveEngineNode("ref/equality", RefEquality);
         this.registerBehaveEngineNode("event/stopPropagation", EventStopPropagation);
+        this.registerBehaveEngineNode("ref/eq", RefEquality);
     }
 
     protected validateGraph = (behaviorGraph: any) => {

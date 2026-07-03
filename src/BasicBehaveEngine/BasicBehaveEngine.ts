@@ -123,7 +123,7 @@ import { cubicBezier, linearFloat, slerpFloat4 } from "./easingUtils";
 import { Determinant } from "./nodes/math/matrix/Determinant";
 import { Transform } from "./nodes/math/vector/Transform";
 import { Transpose } from "./nodes/math/matrix/Transpose";
-import { RefEquality } from "./nodes/ref/Equality";
+import { RefEquality } from "./nodes/ref/RefEquality";
 import { EventStopPropagation } from "./nodes/event/StopPropagation";
 
 

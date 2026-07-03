@@ -1,7 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class RefEquality extends BehaveEngineNode {
-    REQUIRED_CONFIGURATIONS = {a: {}, b: {}}
+    REQUIRED_VALUES = {a: {}, b: {}}
 
     constructor(props: IBehaviourNodeProps) {
         super(props);

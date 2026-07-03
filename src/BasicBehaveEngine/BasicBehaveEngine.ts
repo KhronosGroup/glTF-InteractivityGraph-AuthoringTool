@@ -433,6 +433,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
             }
             const behaviourNodeProps: IBehaviourNodeProps = {
                 ...defaultProps,
+                index: index,
                 flows:node.flows || {},
                 values: node.values || {},
                 configuration: node.configuration || {},

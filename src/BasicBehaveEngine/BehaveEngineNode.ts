@@ -2,6 +2,7 @@ import { IInteractivityConfigurationValue, IInteractivityDeclaration, IInteracti
 import {BasicBehaveEngine} from "./BasicBehaveEngine";
 
 export interface IBehaviourNodeProps {
+    index: number,
     graphEngine: BasicBehaveEngine,
     idToBehaviourNodeMap: Map<number, BehaveEngineNode>
     declaration: IInteractivityDeclaration,
@@ -11,13 +12,14 @@ export interface IBehaviourNodeProps {
     events: IInteractivityEvent[],
     types:IInteractivityValueType[],
     configuration: Record<string, IInteractivityConfigurationValue>,
-    addEventToWorkQueue: any
+    addEventToWorkQueue: any,
 }
 
 export class BehaveEngineNode {
     REQUIRED_VALUES: Record<string, IInteractivityValue> = {};
     REQUIRED_CONFIGURATIONS: Record<string, IInteractivityConfigurationValue> = {};
 
+    index: number;
     name: string | undefined;
     world: any;
     graphEngine: BasicBehaveEngine;
@@ -33,7 +35,8 @@ export class BehaveEngineNode {
     addEventToWorkQueue: any;
 
     constructor(props: IBehaviourNodeProps) {
-        const {flows, values, idToBehaviourNodeMap, graphEngine, variables, events, types, configuration, addEventToWorkQueue, declaration} = props;
+        const {index, flows, values, idToBehaviourNodeMap, graphEngine, variables, events, types, configuration, addEventToWorkQueue, declaration} = props;
+        this.index = index;
         this.idToBehaviourNodeMap = idToBehaviourNodeMap;
         this.graphEngine = graphEngine;
         this.variables = variables;

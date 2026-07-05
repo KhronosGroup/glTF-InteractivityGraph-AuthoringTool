@@ -37,7 +37,7 @@ export class MatMul extends BehaveEngineNode {
             ]);
 
             const result = glMatrix.mat4.create();
-            glMatrix.mat4.multiply(result, matA, matB);
+            glMatrix.mat4.multiply(result, matB, matA);
 
             return {'value': {value: [
                 result[0], result[1], result[2], result[3],
@@ -58,7 +58,7 @@ export class MatMul extends BehaveEngineNode {
             ]);
 
             const result = glMatrix.mat3.create();
-            glMatrix.mat3.multiply(result, matA, matB);
+            glMatrix.mat3.multiply(result, matB, matA);
 
             return {'value': {value: [
                 result[0], result[1], result[2],
@@ -76,7 +76,7 @@ export class MatMul extends BehaveEngineNode {
             ]);
 
             const result = glMatrix.mat2.create();
-            glMatrix.mat2.multiply(result, matA, matB);
+            glMatrix.mat2.multiply(result, matB, matA);
 
             return {'value': {value: [
                 result[0], result[1],

@@ -126,6 +126,10 @@ import { Transform } from "./nodes/math/vector/Transform";
 import { Transpose } from "./nodes/math/matrix/Transpose";
 import { RefEquality } from "./nodes/ref/RefEquality";
 import { EventStopPropagation } from "./nodes/event/StopPropagation";
+import { SmoothStep } from "./nodes/math/arithmetic/SmoothStep";
+import { Slerp } from "./nodes/math/vector/Slerp";
+import { RgbToOkLCh } from "./nodes/math/color/RgbToOkLCh";
+import { RgbFromOkLCh } from "./nodes/math/color/RgbFromOkLCh";
 
 
 export class BasicBehaveEngine implements IBehaveEngine {
@@ -614,6 +618,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/mix", Mix);
         this.registerBehaveEngineNode("math/saturate", Saturate);
         this.registerBehaveEngineNode("math/clamp", Clamp);
+        this.registerBehaveEngineNode("math/smoothStep", SmoothStep);
         this.registerBehaveEngineNode("math/rad", DegreeToRadians);
         this.registerBehaveEngineNode("math/deg", RadiansToDegrees);
         this.registerBehaveEngineNode("math/sin", Sine);
@@ -647,6 +652,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/rotate2D", Rotate2D);
         this.registerBehaveEngineNode("math/rotate3D", Rotate3D);
         this.registerBehaveEngineNode("math/length", VectorLength);
+        this.registerBehaveEngineNode("math/slerp", Slerp);
         this.registerBehaveEngineNode("math/isInf", IsInfNode);
         this.registerBehaveEngineNode("math/isNaN", IsNaNNode);
         this.registerBehaveEngineNode("math/select", Select);
@@ -692,6 +698,8 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("debug/log", DebugLog);
         this.registerBehaveEngineNode("event/stopPropagation", EventStopPropagation);
         this.registerBehaveEngineNode("ref/eq", RefEquality);
+        this.registerBehaveEngineNode("math/rgbToOkLCh", RgbToOkLCh);
+        this.registerBehaveEngineNode("math/rgbFromOkLCh", RgbFromOkLCh);
     }
 
     protected validateGraph = (behaviorGraph: any) => {

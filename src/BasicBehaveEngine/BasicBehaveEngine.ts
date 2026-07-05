@@ -21,6 +21,7 @@ import {VariableSet} from "./nodes/variable/VariableSet";
 import {AbsoluteValue} from "./nodes/math/arithmetic/AbsoluteValue";
 import {Euler} from "./nodes/math/constants/Euler";
 import {Pi} from "./nodes/math/constants/Pi";
+import {Tau} from "./nodes/math/constants/Tau";
 import {Sign} from "./nodes/math/arithmetic/Sign";
 import {Truncate} from "./nodes/math/arithmetic/Truncate";
 import {Floor} from "./nodes/math/arithmetic/Floor";
@@ -596,6 +597,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/Inf", Inf);
         this.registerBehaveEngineNode("math/NaN", NotANumber);
         this.registerBehaveEngineNode("math/Pi", Pi);
+        this.registerBehaveEngineNode("math/Tau", Tau);
         this.registerBehaveEngineNode("math/sign", Sign);
         this.registerBehaveEngineNode("math/trunc", Truncate);
         this.registerBehaveEngineNode("math/floor", Floor);

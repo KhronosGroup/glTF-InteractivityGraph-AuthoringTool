@@ -163,9 +163,9 @@
 		{
 			"declaration": 1,
 			"values": {
-				"delayIndex": {
+				"delay": {
 					"node": 4,
-					"socket": "lastDelayIndex"
+					"socket": "lastDelay"
 				}
 			},
 			"configuration": {},
@@ -223,6 +223,10 @@
 		{
 			"name": "float4x4",
 			"signature": "float4x4"
+		},
+		{
+			"name": "ref",
+			"signature": "ref"
 		},
 		{
 			"name": "AMZN_interactivity_string",

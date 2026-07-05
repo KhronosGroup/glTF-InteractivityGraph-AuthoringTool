@@ -26,7 +26,7 @@ export class Receive extends BehaveEngineNode {
         const defaultValues: Record<string, any> = {};
         Object.entries(customEventDesc.values).forEach(([key, value]) => {
             const typeName = this.getType(value.type);
-            let defaultVal = this.getDefualtValueForType(typeName);
+            let defaultVal = this.getDefaultValueForType(typeName);
             if (value.value) {
                 // if there is a given default value in the CE then use that
                 defaultVal = value.value;

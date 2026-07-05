@@ -216,10 +216,10 @@ export class BehaveEngineNode {
         return typeNames.indexOf(name);
     }
 
-    protected getDefualtValueForType(type: string): any {
+    protected getDefaultValueForType(type: string): any {
         switch (type) {
             case "ref":
-                return null;
+                return [null];
             case "bool":
                 return [false];
             case "int":

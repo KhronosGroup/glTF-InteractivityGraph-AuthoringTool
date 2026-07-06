@@ -78,7 +78,7 @@ export const TypedValueInput = ({ typeIndex, value, onChange }: TypedValueInputP
             <input
                 type="number"
                 step={1}
-                className={"flow-node-control"}
+                className={"flow-node-control nodrag"}
                 placeholder={"0"}
                 value={num !== undefined && !Number.isNaN(num) ? num : ""}
                 onChange={(e) => onChange(e.target.value === "" ? undefined : [parseInt(e.target.value, 10)])}
@@ -92,7 +92,7 @@ export const TypedValueInput = ({ typeIndex, value, onChange }: TypedValueInputP
             <input
                 type="number"
                 step={"any"}
-                className={"flow-node-control"}
+                className={"flow-node-control nodrag"}
                 placeholder={"0.0"}
                 value={num !== undefined && !Number.isNaN(num) ? num : ""}
                 onChange={(e) => onChange(e.target.value === "" ? undefined : [parseFloat(e.target.value)])}
@@ -115,7 +115,7 @@ export const TypedValueInput = ({ typeIndex, value, onChange }: TypedValueInputP
                                 key={idx}
                                 type="number"
                                 step="any"
-                                className={"flow-node-vec-cell"}
+                                className={"flow-node-vec-cell nodrag"}
                                 title={componentLabel(vecLayout, row, col)}
                                 placeholder={componentLabel(vecLayout, row, col)}
                                 value={compVal === undefined || (typeof compVal === "number" && Number.isNaN(compVal)) ? "" : compVal}
@@ -137,7 +137,7 @@ export const TypedValueInput = ({ typeIndex, value, onChange }: TypedValueInputP
         return (
             <div style={{ display: "flex", gap: 4 }}>
                 <input
-                    className={"flow-node-control"}
+                    className={"flow-node-control nodrag"}
                     style={{ flex: 1, minWidth: 0, fontFamily: "monospace", fontSize: 12 }}
                     placeholder={"/nodes/0"}
                     value={strVal}
@@ -161,7 +161,7 @@ export const TypedValueInput = ({ typeIndex, value, onChange }: TypedValueInputP
     return (
         <input
             type="text"
-            className={"flow-node-control"}
+            className={"flow-node-control nodrag"}
             placeholder={"value"}
             value={strVal}
             onChange={(e) => onChange(e.target.value || undefined)}

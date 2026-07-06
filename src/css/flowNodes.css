@@ -71,6 +71,35 @@
     background: #e9ecef;
 }
 
+/* tooltip shown for each node-picker entry: op description + flow/value sockets */
+.node-picker-tooltip .tooltip-inner {
+    max-width: 360px;
+    text-align: left;
+}
+
+.node-picker-tooltip-section {
+    margin-top: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9db3cc;
+}
+
+.node-picker-tooltip-row {
+    line-height: 1.35;
+}
+
+.node-picker-tooltip-socket {
+    font-family: monospace;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.node-picker-tooltip-desc {
+    color: #c8c8c8;
+}
+
 /* pointer nodes carry long JSON pointer strings, so give them more room */
 .flow-node.flow-node--pointer {
     min-width: 400px;
@@ -158,6 +187,15 @@
     color: #555;
     text-transform: uppercase;
     letter-spacing: 0.04em;
+    text-align: left;
+}
+
+.flow-node-hint {
+    font-size: 11px;
+    color: #777;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* unified control styling for the config inputs / selects */
@@ -353,6 +391,32 @@
     border: none;
     opacity: 0;
     cursor: pointer;
+}
+
+/* wired input socket whose source type doesn't match what the socket declares as acceptable */
+.flow-node-type-warning {
+    color: #e02020;
+    font-size: 16px;
+    line-height: 1;
+    cursor: help;
+    flex-shrink: 0;
+}
+
+/* header warning: sits in front of the node name when any socket has a type mismatch */
+.flow-node-header-warning {
+    color: #e02020;
+    font-size: 32px;
+    line-height: 1;
+    cursor: help;
+    flex-shrink: 0;
+}
+
+/* node has a header warning (type mismatch): call it out with a red dotted border.
+   Lives inside react-flow's zoom-transformed pane, so this thickness scales with
+   zoom automatically — no manual zoom-adjustment needed, just make it thick enough
+   to still read at typical zoomed-out levels. */
+.flow-node.flow-node--warning {
+    border: 5px dotted #e02020;
 }
 
 /* output column: right-align labels so they sit next to their handles */
@@ -553,6 +617,63 @@
     color: #999;
     font-size: 13px;
     font-style: italic;
+}
+
+/* ---- editable int[] list (e.g. `cases` config) ---- */
+.int-arr-config {
+    width: 100%;
+}
+
+.int-arr-config-chips {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    min-height: 30px;
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 4px 6px;
+    background: white;
+}
+
+.int-arr-config-chip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    width: 100%;
+    box-sizing: border-box;
+    background: #eef2f8;
+    border: 1px solid #d5deeb;
+    border-radius: 6px;
+    padding: 2px 6px 2px 8px;
+    font-size: 12px;
+    font-family: monospace;
+    color: #222;
+}
+
+.int-arr-config-chip-x {
+    cursor: pointer;
+    color: #888;
+    font-weight: 700;
+    line-height: 1;
+    padding-left: 1px;
+}
+
+.int-arr-config-chip-x:hover {
+    color: #d05c65;
+}
+
+.int-arr-config-input {
+    flex: 1;
+    min-width: 48px;
+    border: none;
+    outline: none;
+    font-size: 13px;
+    color: #222;
+    background: transparent;
 }
 
 /* ---- custom event controls (event/send monitor + event/receive trigger) ---- */

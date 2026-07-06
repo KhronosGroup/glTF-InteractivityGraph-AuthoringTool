@@ -1,6 +1,6 @@
 import { createContext, useRef, useState } from 'react';
 import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityGraph, IInteractivityNode, IInteractivityValue, IInteractivityVariable } from './BasicBehaveEngine/types/InteractivityGraph';
-import { createNoOpNode, interactivityNodeSpecs, standardTypes } from './BasicBehaveEngine/types/nodes';
+import { createNoOpNode, interactivityNodeSpecs, resolveOutputSocketType, standardTypes } from './BasicBehaveEngine/types/nodes';
 import { v4 as uuidv4 } from 'uuid';
 import { Edge, Node } from 'reactflow';
 import { DiagnosticCategory, IGraphDiagnostic } from './diagnostics';
@@ -136,7 +136,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
                 // if the value is derived from the output of another node, create an edge linking to that node
                 // color the edge by the source output socket's data type
                 const sourceNode = graph.nodes.find(n => n.uid === value.node);
-                const sourceType = sourceNode?.values?.output?.[value.socket!]?.type;
+                const sourceType = resolveOutputSocketType(sourceNode, value.socket!, graph.nodes);
                 edges.push({
                   id: uuidv4(),
                   source: String(value.node),

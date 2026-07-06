@@ -10,10 +10,10 @@ import {AuthoringGraphNode} from "../authoring/AuthoringGraphNode";
 import React, {useCallback, useContext, useEffect, useRef, useState} from "react";
 import {v4 as uuidv4} from "uuid";
 import {RenderIf} from "./RenderIf";
-import {Button, Col, Container, Row, Form} from "react-bootstrap";
+import {Button, Col, Container, Row, Form, OverlayTrigger, Tooltip} from "react-bootstrap";
 import 'reactflow/dist/style.css';
-import {interactivityNodeSpecs, knownDeclarations, standardTypes} from "../BasicBehaveEngine/types/nodes";
-import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityNode, IInteractivityVariable } from '../BasicBehaveEngine/types/InteractivityGraph';
+import {getTypeGroupMembers, interactivityNodeSpecs, knownDeclarations, resolveOutputSocketType, resolveTypeGroupType, standardTypes} from "../BasicBehaveEngine/types/nodes";
+import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityNode, IInteractivityValue, IInteractivityVariable } from '../BasicBehaveEngine/types/InteractivityGraph';
 import { InteractivityGraphContext } from '../InteractivityGraphContext';
 import { FLOW_COLOR, getColorForTypeIndex, getNodeCategoryColor } from '../authoring/socketColors';
 import { TypedValueInput } from '../authoring/TypedValueInput';
@@ -41,8 +41,6 @@ enum AuthoringComponentModelType {
     VARIABLES,
     NONE
 }
-
-const nodesWithConfigurations = interactivityNodeSpecs.filter(node => node.configuration !== undefined).map(node => knownDeclarations[node.declaration].op);
 
 // small stroke-style icons for the top menu bar (kept inline to avoid pulling in an icon library
 // for five glyphs); viewBox/props mirror the Feather icon set for a consistent stroke weight
@@ -164,6 +162,39 @@ export const AuthoringComponent = () => {
         return false;
     }
 
+    // Re-resolve `group` on `targetNode` (an unconnected sibling's own type > a wired sibling's
+    // source type > default, via the shared resolver — see resolveTypeGroupType) and persist it
+    // onto the sockets whose type follows the group: the outputs, and any input that is neither
+    // wired (its type comes from its source) nor carries a user-set static value (which must keep
+    // its own type). This keeps the node internally consistent and, by writing the outputs, lets
+    // downstream nodes read the resolved type from the model.
+    const propagateGroupType = (targetNode: IInteractivityNode, group: string) => {
+        const spec = interactivityNodeSpecs.find(n => n.op === targetNode.op);
+        const resolvedType = resolveTypeGroupType(targetNode, spec, group, graph.nodes);
+        if (resolvedType === undefined) { return; }
+        const { inputs, outputs } = getTypeGroupMembers(spec, group);
+        for (const name of inputs) {
+            const socket = targetNode.values?.input?.[name];
+            if (socket === undefined) { continue; }
+            const connected = socket.node !== undefined;
+            const hasStatic = !connected && socket.value?.[0] != null;
+            if (!connected && !hasStatic) { socket.type = resolvedType; socket.value = [undefined]; }
+        }
+        for (const name of outputs) {
+            const socket = targetNode.values?.output?.[name];
+            if (socket === undefined) { continue; }
+            socket.type = resolvedType;
+            socket.value = [undefined];
+        }
+    };
+
+    // Force a node's own component to re-render after we've directly mutated its model data from
+    // here (outside its own React state, as typeGroup propagation does), by replacing its `data`
+    // object with a shallow copy so the reference changes.
+    const bumpNodeData = useCallback((nodeId: string) => {
+        setNodes((nds: Node[]) => nds.map((n) => (n.id === nodeId ? { ...n, data: { ...n.data } } : n)));
+    }, [setNodes]);
+
     // handle creation and deletion of edges
     const onConnect = useCallback((vals: Edge<any> | Connection) => {
         const sourceNodeId = vals.source;
@@ -174,18 +205,28 @@ export const AuthoringComponent = () => {
 
         if (sourceNodeId === targetNodeId) {return}
 
-        const isConfigurableSocket = nodesWithConfigurations.includes(sourceNode.op!) || nodesWithConfigurations.includes(targetNode.op!) || sourceNode.op === "flow/sequence";
-       
+        // flow/sequence and flow/multiGate add their output flow sockets dynamically, so a
+        // freshly-added output handle won't exist in flows.output yet even though it is a flow
+        // socket; treat those nodes' outputs as flow regardless.
+        const isDynamicFlowSourceNode = sourceNode.op === "flow/sequence" || sourceNode.op === "flow/multiGate";
+
         // if one is flow and one isn't then do not connect
-        const sourceIsFlow = sourceNode.flows?.output?.[vals.sourceHandle!] !== undefined;
+        const sourceIsFlow = sourceNode.flows?.output?.[vals.sourceHandle!] !== undefined || isDynamicFlowSourceNode;
         const targetIsFlow = targetNode.flows?.input?.[vals.targetHandle!] !== undefined;
-        if (!isConfigurableSocket && targetIsFlow !== sourceIsFlow) {return}
+        if (targetIsFlow !== sourceIsFlow) {return}
 
         if (!sourceIsFlow && !targetIsFlow) {
-            // make sure the valueTypes are compatible
-            const sourceValueTypes = sourceNode.values?.output?.[vals.sourceHandle!].typeOptions;
-            const targetValueTypes = targetNode.values?.input?.[vals.targetHandle!].typeOptions;
-            if (!isConfigurableSocket && (sourceValueTypes === undefined || targetValueTypes === undefined || !hasIntersection(sourceValueTypes, targetValueTypes))) {return}
+            // make sure the valueTypes are compatible; only enforce this when both sockets
+            // actually declare typeOptions. A configurable node's dynamic socket that hasn't
+            // been typed yet (e.g. before its driving configuration is set) is left
+            // unconstrained, but a socket with a clear, fixed type — including dynamic ones
+            // like event/send's per-parameter inputs once an event is selected — must reject
+            // an incompatible wire outright instead of accepting it and then losing its type
+            // once disconnected again. (Previously this whole check was skipped for any node
+            // with *any* configuration, which let mismatched wires onto fixed-type sockets.)
+            const sourceValueTypes = sourceNode.values?.output?.[vals.sourceHandle!]?.typeOptions;
+            const targetValueTypes = targetNode.values?.input?.[vals.targetHandle!]?.typeOptions;
+            if (sourceValueTypes !== undefined && targetValueTypes !== undefined && !hasIntersection(sourceValueTypes, targetValueTypes)) {return}
         }
 
         if (!targetIsFlow) {
@@ -209,15 +250,57 @@ export const AuthoringComponent = () => {
             }
             sourceNode!.flows!.output![vals.sourceHandle!] = {node: targetNode.uid, socket: vals.targetHandle!}
         } else {
-            targetNode!.values!.input![vals.targetHandle!] = {node: sourceNode.uid, socket: vals.sourceHandle!}
+            // capture the target socket's group, description and (for sockets with no typeGroup,
+            // i.e. a fixed type) its type/typeOptions before they're overwritten with the
+            // {node, socket} link below — the link would otherwise drop this metadata, and for
+            // dynamic per-node sockets (e.g. event/send's event-parameter inputs) it isn't
+            // recoverable from the static spec later, which left the socket typeless ("?") once
+            // disconnected again
+            const existingTarget = targetNode.values?.input?.[vals.targetHandle!];
+            const specTarget = interactivityNodeSpecs.find(n => n.op === targetNode.op)?.values?.input?.[vals.targetHandle!];
+            const targetGroup = existingTarget?.typeGroup ?? specTarget?.typeGroup;
+            const targetDescription = existingTarget?.description ?? specTarget?.description;
+            const targetType = existingTarget?.type ?? specTarget?.type;
+            const targetTypeOptions = existingTarget?.typeOptions ?? specTarget?.typeOptions;
+            targetNode!.values!.input![vals.targetHandle!] = {
+                node: sourceNode.uid,
+                socket: vals.sourceHandle!,
+                ...(targetDescription !== undefined ? { description: targetDescription } : {}),
+                ...(targetGroup !== undefined
+                    ? { typeGroup: targetGroup }
+                    : (targetType !== undefined ? { type: targetType, typeOptions: targetTypeOptions } : {})),
+            }
+
+            if (targetGroup !== undefined) {
+                // re-resolve the group (a static value on a sibling still wins over this new wire)
+                // and persist it onto the followers + outputs; refresh the node + its outgoing edges
+                propagateGroupType(targetNode, targetGroup);
+                recolorEdges(targetNodeId!);
+                bumpNodeData(targetNodeId!);
+            }
         }
 
         // color the wiring by the source socket type (or flow color for flow connections)
         const edgeColor = sourceIsFlow
             ? FLOW_COLOR
-            : getColorForTypeIndex(sourceNode.values?.output?.[vals.sourceHandle!]?.type);
-        setEdges((eds: any) => addEdge({ ...vals, style: { stroke: edgeColor, strokeWidth: 2 } }, eds));
-    }, [nodes, graph]);
+            : getColorForTypeIndex(resolveOutputSocketType(sourceNode, vals.sourceHandle!, graph.nodes));
+        setEdges((eds: any) => {
+            // a value input socket can only ever be driven by one wire (matches the data
+            // model above, which overwrites targetNode.values.input[handle] rather than
+            // appending) — drop any pre-existing edge into this exact target socket first.
+            // Flow input sockets are exempt: multiple flow wires legitimately fan into one.
+            let filtered = targetIsFlow
+                ? eds
+                : eds.filter((e: any) => !(e.target === vals.target && e.targetHandle === vals.targetHandle));
+            // a flow output socket can likewise only ever point to one target (flows.output[handle]
+            // above is overwritten, not appended) — value output sockets are exempt since one
+            // value legitimately fans out to many inputs.
+            if (sourceIsFlow) {
+                filtered = filtered.filter((e: any) => !(e.source === vals.source && e.sourceHandle === vals.sourceHandle));
+            }
+            return addEdge({ ...vals, style: { stroke: edgeColor, strokeWidth: 2 } }, filtered);
+        });
+    }, [nodes, graph, bumpNodeData]);
 
     // recolor a node's outgoing value edges to match its current output socket types
     // (called by nodes when a type changes, e.g. via the type dropdown or Pointer Type config)
@@ -234,7 +317,7 @@ export const AuthoringComponent = () => {
             if (sourceNode.flows?.output?.[edge.sourceHandle!] !== undefined) {
                 return edge;
             }
-            const stroke = getColorForTypeIndex(sourceNode.values?.output?.[edge.sourceHandle!]?.type);
+            const stroke = getColorForTypeIndex(resolveOutputSocketType(sourceNode, edge.sourceHandle!, graph.nodes));
             if ((edge.style as any)?.stroke === stroke) {
                 return edge;
             }
@@ -278,11 +361,38 @@ export const AuthoringComponent = () => {
                 // flow so we should remove the flow value from the node
                 sourceNode!.flows!.output![edge.sourceHandle!] = {};
             } else {
-                // value so we should remove the value from the target node
-                targetNode!.values!.input![edge.targetHandle!] = {};
+                // value so we should remove the value from the target node — restore its spec
+                // default (preserving typeOptions/typeGroup/description) rather than leaving a bare
+                // {} that would permanently strip the socket's type metadata. Dynamic per-node
+                // sockets (e.g. event/send's event-parameter inputs, pointer/message template
+                // slots) have no entry in the static spec at all, so fall back to whatever
+                // type/typeOptions/typeGroup/description the socket itself carried while it was
+                // connected (preserved there by onConnect) rather than leaving it typeless ("?").
+                const existing = targetNode.values?.input?.[edge.targetHandle!];
+                const spec = interactivityNodeSpecs.find(n => n.op === targetNode.op);
+                const specDefault = spec?.values?.input?.[edge.targetHandle!];
+                const source = specDefault ?? existing;
+                // a socket restricted to bool alone renders as a checkbox, which always shows as
+                // checked/unchecked — defaulting it to `false` instead of `undefined` keeps the
+                // stored value consistent with what the checkbox already displays
+                const isPureBoolSocket = source?.typeOptions?.length === 1 && source.typeOptions[0] === 0;
+                const restored: IInteractivityValue = source !== undefined ? {
+                    ...(source.type !== undefined ? { type: source.type } : {}),
+                    ...(source.typeOptions !== undefined ? { typeOptions: source.typeOptions } : {}),
+                    ...(source.typeGroup !== undefined ? { typeGroup: source.typeGroup } : {}),
+                    ...(source.description !== undefined ? { description: source.description } : {}),
+                    value: [isPureBoolSocket ? false : undefined],
+                } : {};
+                targetNode!.values!.input![edge.targetHandle!] = restored;
+
+                if (restored.typeGroup !== undefined) {
+                    propagateGroupType(targetNode, restored.typeGroup);
+                    recolorEdges(targetNode.uid!);
+                }
+                bumpNodeData(edge.target!);
             }
         }
-    }, [graph]);
+    }, [graph, bumpNodeData]);
 
     const onNodesDelete = useCallback((nodes: Node[]) => {
         for (let i = 0; i < nodes.length; i++) {
@@ -381,7 +491,7 @@ export const AuthoringComponent = () => {
                     if (ref.node) {
                         const srcGn = newGraphNodes.find(n => n.uid === ref.node);
                         if (srcGn) {
-                            const stroke = getColorForTypeIndex(srcGn.values?.output?.[ref.socket!]?.type);
+                            const stroke = getColorForTypeIndex(resolveOutputSocketType(srcGn, ref.socket!, newGraphNodes));
                             newEdges.push({
                                 id: `paste-v-${ref.node}-${ref.socket}-${gn.uid}-${handle}`,
                                 source: String(ref.node), target: gn.uid!,
@@ -603,6 +713,65 @@ const nodeTypesByCategory = Object.keys(nodeTypes).reduce((categories, nodeType)
 
 const sortedNodeCategories = Object.keys(nodeTypesByCategory).sort((a, b) => a.localeCompare(b));
 
+// spec-driven tooltip/search text for a node type's picker entry: op description plus every
+// flow/value socket (value sockets include their description, flow sockets are name-only since
+// IInteractivityFlow carries no description field)
+const nodePickerSpecByType = interactivityNodeSpecs.reduce((specs, node) => {
+    specs[node.op!] = node;
+    return specs;
+}, {} as {[nodeType: string]: IInteractivityNode});
+
+const NodePickerTooltipContent = (props: {nodeType: string}) => {
+    const spec = nodePickerSpecByType[props.nodeType];
+    if (!spec) { return <>{props.nodeType}</>; }
+    const flowIn = Object.keys(spec.flows?.input ?? {});
+    const flowOut = Object.keys(spec.flows?.output ?? {});
+    const valueIn = Object.entries(spec.values?.input ?? {});
+    const valueOut = Object.entries(spec.values?.output ?? {});
+    return (
+        <div>
+            <RenderIf shouldShow={spec.description !== undefined}>
+                <div>{spec.description}</div>
+            </RenderIf>
+            <RenderIf shouldShow={flowIn.length > 0}>
+                <div className="node-picker-tooltip-section">Flow In</div>
+                {flowIn.map(socket => <div key={socket} className="node-picker-tooltip-row"><span className="node-picker-tooltip-socket">{socket}</span></div>)}
+            </RenderIf>
+            <RenderIf shouldShow={valueIn.length > 0}>
+                <div className="node-picker-tooltip-section">Value In</div>
+                {valueIn.map(([socket, value]) => (
+                    <div key={socket} className="node-picker-tooltip-row">
+                        <span className="node-picker-tooltip-socket">{socket}</span>
+                        <RenderIf shouldShow={value.description !== undefined}>
+                            <span className="node-picker-tooltip-desc"> — {value.description}</span>
+                        </RenderIf>
+                    </div>
+                ))}
+            </RenderIf>
+            <RenderIf shouldShow={flowOut.length > 0}>
+                <div className="node-picker-tooltip-section">Flow Out</div>
+                {flowOut.map(socket => <div key={socket} className="node-picker-tooltip-row"><span className="node-picker-tooltip-socket">{socket}</span></div>)}
+            </RenderIf>
+            <RenderIf shouldShow={valueOut.length > 0}>
+                <div className="node-picker-tooltip-section">Value Out</div>
+                {valueOut.map(([socket, value]) => (
+                    <div key={socket} className="node-picker-tooltip-row">
+                        <span className="node-picker-tooltip-socket">{socket}</span>
+                        <RenderIf shouldShow={value.description !== undefined}>
+                            <span className="node-picker-tooltip-desc"> — {value.description}</span>
+                        </RenderIf>
+                    </div>
+                ))}
+            </RenderIf>
+        </div>
+    );
+};
+
+const getNodePickerSearchText = (nodeType: string): string => {
+    const spec = nodePickerSpecByType[nodeType];
+    return `${nodeType} ${spec?.description ?? ""}`.toLowerCase();
+};
+
 const NodePickerComponent = (props: {onAddNode: any, closeModal: any, mousePos: any}) => {
     const [filter, setFilter] = useState("");
     const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -666,7 +835,7 @@ const NodePickerComponent = (props: {onAddNode: any, closeModal: any, mousePos: 
                     {
                         sortedNodeCategories.map(category => {
                             const nodesInCategory = nodeTypesByCategory[category].filter(nodeType =>
-                                normalizedFilter === "" || nodeType.toLowerCase().includes(normalizedFilter)
+                                normalizedFilter === "" || getNodePickerSearchText(nodeType).includes(normalizedFilter)
                             );
                             const shouldShowCategory = nodesInCategory.length > 0 && (activeCategory === null || activeCategory === category);
                             return (
@@ -678,7 +847,18 @@ const NodePickerComponent = (props: {onAddNode: any, closeModal: any, mousePos: 
                                         </div>
                                         {
                                             nodesInCategory.map(nodeType => (
-                                                <p key={nodeType} className="node-picker-item" style={{overflowWrap: "anywhere"}} onClick={() => selectNode(nodeType)} data-testid={`node-picker-${nodeType}`}>{nodeType}</p>
+                                                <OverlayTrigger
+                                                    key={nodeType}
+                                                    placement={"right"}
+                                                    delay={{show: 300, hide: 0}}
+                                                    overlay={
+                                                        <Tooltip id={`node-picker-tooltip-${nodeType}`} className="node-picker-tooltip">
+                                                            <NodePickerTooltipContent nodeType={nodeType} />
+                                                        </Tooltip>
+                                                    }
+                                                >
+                                                    <p className="node-picker-item" style={{overflowWrap: "anywhere"}} onClick={() => selectNode(nodeType)} data-testid={`node-picker-${nodeType}`}>{nodeType}</p>
+                                                </OverlayTrigger>
                                             ))
                                         }
                                     </div>

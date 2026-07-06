@@ -1,4 +1,4 @@
-import { IInteractivityDeclaration, IInteractivityNode, IInteractivityValue, IInteractivityValueType, InteractivityValueType } from "./InteractivityGraph";
+import { IInteractivityDeclaration, IInteractivityNode, IInteractivityValue, IInteractivityValueType, InteractivityConfigurationValueType, InteractivityValueType } from "./InteractivityGraph";
 
 export const knownDeclarations: IInteractivityDeclaration[] = [
     {
@@ -895,9 +895,13 @@ const hoverabilityNodeSpecs: IInteractivityNode[] = [
         description: "Event that is triggered when a node is hovered over",
         configuration: {
             nodeIndex: {
+                type: InteractivityConfigurationValueType.INT,
+                description: "Index of the glTF node to observe for hover-in events; omit to listen for hover-in on any node",
                 value: [undefined]
             },
             stopPropagation: {
+                type: InteractivityConfigurationValueType.BOOLEAN,
+                description: "If true, stops this event from propagating to other listeners once handled",
                 value: [undefined]
             }
         },
@@ -930,9 +934,13 @@ const hoverabilityNodeSpecs: IInteractivityNode[] = [
         description: "Event that is triggered when a node is hovered out",
         configuration: {
             nodeIndex: {
+                type: InteractivityConfigurationValueType.INT,
+                description: "Index of the glTF node to observe for hover-out events; omit to listen for hover-out on any node",
                 value: [undefined]
             },
             stopPropagation: {
+                type: InteractivityConfigurationValueType.BOOLEAN,
+                description: "If true, stops this event from propagating to other listeners once handled",
                 value: [undefined]
             }
         },
@@ -963,9 +971,13 @@ const selectabilityNodeSpecs: IInteractivityNode[] = [
         description: "Event that is triggered when a node is selected",
         configuration: {
             nodeIndex: {
+                type: InteractivityConfigurationValueType.INT,
+                description: "Index of the glTF node to observe for selection events; omit to listen for selection on any node",
                 value: [undefined]
             },
             stopPropagation: {
+                type: InteractivityConfigurationValueType.BOOLEAN,
+                description: "If true, stops this event from propagating to other listeners once handled",
                 value: [undefined]
             }
         },
@@ -1134,6 +1146,8 @@ const rigidBodyNodeSpecs: IInteractivityNode[] = [
         description: "Trigger entered event",
         configuration: {
             nodeIndex: {
+                type: InteractivityConfigurationValueType.INT,
+                description: "Index of the trigger glTF node to observe; omit to listen for trigger-enter on any node",
                 value: [undefined]
             }
         },
@@ -1166,6 +1180,8 @@ const rigidBodyNodeSpecs: IInteractivityNode[] = [
         description: "Trigger exited event",
         configuration: {
             nodeIndex: {
+                type: InteractivityConfigurationValueType.INT,
+                description: "Index of the trigger glTF node to observe; omit to listen for trigger-exit on any node",
                 value: [undefined]
             }
         },
@@ -1331,7 +1347,7 @@ const mathTypeConversionNodeSpecs: IInteractivityNode[] = [
                 a: {
                     typeOptions: [0],
                     type: 0,
-                    value: [undefined]
+                    value: [false]
                 }
             },
             output: {
@@ -1345,14 +1361,14 @@ const mathTypeConversionNodeSpecs: IInteractivityNode[] = [
     },
     {
         op: "type/boolToFloat",
-        declaration: knownDeclarations.findIndex(declaration => declaration.op === "type/boolToFloat"), 
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "type/boolToFloat"),
         description: "Convert boolean to float",
         values: {
             input: {
                 a: {
                     typeOptions: [0],
                     type: 0,
-                    value: [undefined]
+                    value: [false]
                 }
             },
             output: {
@@ -3110,7 +3126,7 @@ const mathSpecialNodeSpecs: IInteractivityNode[] = [
                     typeOptions: [0],
                     description: "Selects b when true, a when false",
                     type: 0,
-                    value: [undefined]
+                    value: [false]
                 },
                 a: {
                     typeOptions: anyType,
@@ -3144,6 +3160,8 @@ const mathSpecialNodeSpecs: IInteractivityNode[] = [
         description: "Switch between two values based on a condition",
         configuration: {
             cases: {
+                type: InteractivityConfigurationValueType.INT_ARR,
+                description: "Integer case values; generates one input value socket per entry, named after the case number. Empty by default, in which case only `selection` and `default` sockets exist",
                 value: [undefined]
             }
         },
@@ -3985,6 +4003,8 @@ const variableNodeSpecs: IInteractivityNode[] = [
         description: "Set multiple variables to a value",
         configuration: {
             variables: {
+                type: InteractivityConfigurationValueType.INT_ARR,
+                description: "Indices of the custom variables to set; generates one input value socket per entry, named after the variable index",
                 value: [undefined],
             }
         },
@@ -4009,6 +4029,8 @@ const variableNodeSpecs: IInteractivityNode[] = [
         description: "Get a variable's value",
         configuration: {
             variable: {
+                type: InteractivityConfigurationValueType.INT,
+                description: "Index of the custom variable to read",
                 value: [undefined]
             }
         }
@@ -4019,9 +4041,13 @@ const variableNodeSpecs: IInteractivityNode[] = [
         description: "Interpolate a variable between two values",
         configuration: {
             variable: {
+                type: InteractivityConfigurationValueType.INT,
+                description: "Index of the custom variable to interpolate",
                 value: [undefined]
             },
             useSlerp: {
+                type: InteractivityConfigurationValueType.BOOLEAN,
+                description: "Whether to use spherical linear interpolation (slerp), typically for quaternion variables",
                 value: [undefined]
             }
         },
@@ -4076,9 +4102,13 @@ const pointerNodeSpecs: IInteractivityNode[] = [
         description: "Set a pointer to a value",
         configuration: {
             pointer: {
+                type: InteractivityConfigurationValueType.STRING,
+                description: "JSON Pointer template of the glTF Object Model property to write; `[param]`/`{param}` segments generate matching input value sockets",
                 value: [undefined],
             },
             type: {
+                type: InteractivityConfigurationValueType.INT,
+                description: "Index into the graph's `types` array specifying the property's value type",
                 value: [undefined]
             }
         },
@@ -4116,9 +4146,13 @@ const pointerNodeSpecs: IInteractivityNode[] = [
         description: "Get a pointer's value",
         configuration: {
             pointer: {
+                type: InteractivityConfigurationValueType.STRING,
+                description: "JSON Pointer template of the glTF Object Model property to read; `[param]`/`{param}` segments generate matching input value sockets",
                 value: [undefined]
             },
             type: {
+                type: InteractivityConfigurationValueType.INT,
+                description: "Index into the graph's `types` array specifying the property's value type",
                 value: [undefined]
             }
         },
@@ -4143,9 +4177,13 @@ const pointerNodeSpecs: IInteractivityNode[] = [
         description: "Interpolate a pointer between two values",
         configuration: {
             pointer: {
+                type: InteractivityConfigurationValueType.STRING,
+                description: "JSON Pointer template of the glTF Object Model property to interpolate; `[param]`/`{param}` segments generate matching input value sockets",
                 value: [undefined]
             },
             type: {
+                type: InteractivityConfigurationValueType.INT,
+                description: "Index into the graph's `types` array specifying the property's value type",
                 value: [undefined]
             }
         },
@@ -4263,6 +4301,8 @@ const lifecycleNodeSpecs: IInteractivityNode[] = [
         description: "This node will fire when an event is received",
         configuration: {
             event: {
+                type: InteractivityConfigurationValueType.INT,
+                description: "Index of the custom event to listen for",
                 value: [undefined]
             }
         },
@@ -4291,6 +4331,8 @@ const lifecycleNodeSpecs: IInteractivityNode[] = [
         description: "This node will send an event",
         configuration: {
             event: {
+                type: InteractivityConfigurationValueType.INT,
+                description: "Index of the custom event to send",
                 value: [undefined]
             }
         },
@@ -4318,6 +4360,8 @@ const flowNodeSpecs: IInteractivityNode[] = [
         description: "Switch the control flow based on a condition.",
         configuration: {
             cases: {
+                type: InteractivityConfigurationValueType.INT_ARR,
+                description: "Integer case values; generates one output flow socket per entry, named after the case number. Empty by default, in which case only the `default` output flow exists",
                 value: [undefined]
             }
         },
@@ -4372,7 +4416,7 @@ const flowNodeSpecs: IInteractivityNode[] = [
                 condition: {
                     typeOptions: [0],
                     type: 0,
-                    value: [undefined]
+                    value: [false]
                 }
             }
         }
@@ -4420,6 +4464,18 @@ const flowNodeSpecs: IInteractivityNode[] = [
         op: "flow/multiGate",
         declaration: knownDeclarations.findIndex(declaration => declaration.op === "flow/multiGate"),
         description: "Multiplex the control flow based on a selection",
+        configuration: {
+            isRandom: {
+                type: InteractivityConfigurationValueType.BOOLEAN,
+                description: "If true, output flows are activated in random order, picking a random not-yet-used output each time. False in the default configuration",
+                value: [undefined]
+            },
+            isLoop: {
+                type: InteractivityConfigurationValueType.BOOLEAN,
+                description: "If true, output flow activation repeats in a loop once all outputs have been used. False in the default configuration",
+                value: [undefined]
+            }
+        },
         flows: {
             input: {
                 in: {
@@ -4446,6 +4502,13 @@ const flowNodeSpecs: IInteractivityNode[] = [
         op: "flow/waitAll",
         declaration: knownDeclarations.findIndex(declaration => declaration.op === "flow/waitAll"),
         description: "Wait for all the subgraphs to complete",
+        configuration: {
+            inputFlows: {
+                type: InteractivityConfigurationValueType.INT,
+                description: "Number of input flows to wait for (0-64); generates that many numbered input flow sockets from 0 to n-1. Zero in the default configuration",
+                value: [undefined]
+            }
+        },
         flows: {
             input: {
                 reset: {
@@ -4619,7 +4682,7 @@ const flowNodeSpecs: IInteractivityNode[] = [
                 condition: {
                     typeOptions: [0],
                     type: 0,
-                    value: [undefined]
+                    value: [false]
                 }
             }
         }
@@ -4630,6 +4693,8 @@ const flowNodeSpecs: IInteractivityNode[] = [
         description: "Execute the subgraph for flow loopBody from startIndex to endIndex (exclusive), then execute the subgraph completed",
         configuration: {
             initialIndex: {
+                type: InteractivityConfigurationValueType.INT,
+                description: "The index value before the loop starts. Zero in the default configuration",
                 value: [0]
             }
         },
@@ -4696,9 +4761,13 @@ const debugNodeSpecs: IInteractivityNode[] = [
         description: "Log the value to the console",
         configuration: {
             severity: {
+                type: InteractivityConfigurationValueType.INT,
+                description: "Severity level of the logged message, for implementation-defined filtering",
                 value: [undefined]
             },
             message: {
+                type: InteractivityConfigurationValueType.STRING,
+                description: "Message template string; `{param}` segments generate matching input value sockets evaluated at runtime",
                 value: [undefined]
             }
         },
@@ -4758,6 +4827,91 @@ export const interactivityNodeSpecs: IInteractivityNode[] = [
     ...mathTypeConversionNodeSpecs, ...pointerNodeSpecs, ...animationNodeSpecs, ...selectabilityNodeSpecs, ...customNodeSpecs, ...hoverabilityNodeSpecs,
     ...mathQuaternionNodeSpecs,...debugNodeSpecs, ...rigidBodyNodeSpecs, ...refNodeSpecs
 ];
+
+/**
+ * Spec-declared socket names that share `group` on a node. Membership is read from the immutable
+ * node spec (not the live model) because connecting an input overwrites its socket object with a
+ * bare {node, socket} link that no longer carries the `typeGroup` tag.
+ */
+export const getTypeGroupMembers = (
+    spec: IInteractivityNode | undefined,
+    group: string,
+): { inputs: string[]; outputs: string[] } => {
+    const specInputs = spec?.values?.input ?? {};
+    const specOutputs = spec?.values?.output ?? {};
+    return {
+        inputs: Object.keys(specInputs).filter((name) => specInputs[name].typeGroup === group),
+        outputs: Object.keys(specOutputs).filter((name) => specOutputs[name].typeGroup === group),
+    };
+};
+
+/**
+ * Resolve the single concrete type shared by `group` on `node`, from its live model + the spec.
+ * Priority (highest first):
+ *   1. any unconnected input's own selected type — ground truth, whether it's an explicit dropdown
+ *      pick or just holds a static value. A connection must match this, not dictate it: otherwise
+ *      picking a new type for one (unconnected) member of the group would keep getting silently
+ *      overridden back to a differently-typed sibling's wire, and touching a dropdown could never
+ *      visibly "win" without also having to disconnect that sibling — which is not something a type
+ *      change should ever do on its own (it may have been an accidental click).
+ *   2. only once every member is connected (no unconnected member has a determinable type) — a
+ *      connected input adopts its source output socket's type,
+ *   3. any grouped socket's stored type (input then output) — the fallback / default.
+ * Returns undefined if the group has no members with a determinable type.
+ */
+export const resolveTypeGroupType = (
+    node: IInteractivityNode,
+    spec: IInteractivityNode | undefined,
+    group: string,
+    graphNodes: IInteractivityNode[],
+): number | undefined => {
+    const { inputs, outputs } = getTypeGroupMembers(spec, group);
+    const nodeInputs = node.values?.input ?? {};
+    const nodeOutputs = node.values?.output ?? {};
+
+    for (const name of inputs) {
+        const socket = nodeInputs[name];
+        if (socket === undefined || socket.node !== undefined) { continue; }
+        if (socket.type !== undefined) { return socket.type; }
+    }
+    for (const name of inputs) {
+        const socket = nodeInputs[name];
+        if (socket?.node !== undefined) {
+            const source = graphNodes.find((g) => g.uid === socket.node);
+            const sourceType = source?.values?.output?.[socket.socket!]?.type;
+            if (sourceType !== undefined) { return sourceType; }
+        }
+    }
+    for (const name of inputs) {
+        if (nodeInputs[name]?.type !== undefined) { return nodeInputs[name].type; }
+    }
+    for (const name of outputs) {
+        if (nodeOutputs[name]?.type !== undefined) { return nodeOutputs[name].type; }
+    }
+    return undefined;
+};
+
+/**
+ * Resolve the effective type of `node`'s output `socket` for display (socket dot + wire color).
+ * A grouped output (e.g. math/add's `value`) adopts its group's resolved type so a wire leaving it
+ * matches the colored dot; otherwise it falls back to the socket's own stored type. Mirrors the
+ * output-socket resolution in AuthoringGraphNode so wires and dots always agree.
+ */
+export const resolveOutputSocketType = (
+    node: IInteractivityNode | undefined,
+    socket: string,
+    graphNodes: IInteractivityNode[],
+): number | undefined => {
+    const value = node?.values?.output?.[socket];
+    if (value === undefined) { return undefined; }
+    const spec = interactivityNodeSpecs.find((n) => n.op === node!.op);
+    const group = value.typeGroup ?? spec?.values?.output?.[socket]?.typeGroup;
+    if (group !== undefined) {
+        const resolved = resolveTypeGroupType(node!, spec, group, graphNodes);
+        if (resolved !== undefined) { return resolved; }
+    }
+    return value.type;
+};
 
 export const createNoOpNode = (declaration: IInteractivityDeclaration): IInteractivityNode => {
     const outValues: Record<string, IInteractivityValue> = {};

@@ -2,8 +2,8 @@ import { CSSProperties, useCallback, useContext, useEffect, useState } from "rea
 import { Handle, Position, useReactFlow, useUpdateNodeInternals } from "reactflow";
 
 import { RenderIf } from "../components/RenderIf";
-import { IInteractivityFlow, IInteractivityValue, IInteractivityNode, IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityVariable, InteractivityValueType } from "../BasicBehaveEngine/types/InteractivityGraph";
-import { anyType, interactivityNodeSpecs, standardTypes } from "../BasicBehaveEngine/types/nodes";
+import { IInteractivityFlow, IInteractivityValue, IInteractivityNode, IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityVariable, InteractivityValueType, InteractivityConfigurationValueType } from "../BasicBehaveEngine/types/InteractivityGraph";
+import { anyType, getTypeGroupMembers, interactivityNodeSpecs, resolveTypeGroupType, standardTypes } from "../BasicBehaveEngine/types/nodes";
 import { InteractivityGraphContext } from "../InteractivityGraphContext";
 import { getMessageTemplateSocketIds, getPathTemplateSockets } from "./pathTemplate";
 import { PointerConfigField } from "./PointerConfigField";
@@ -12,6 +12,7 @@ import { FLOW_COLOR, getColorForTypeIndex, getNodeCategoryColor, getTypeLabel } 
 import { RefValuePicker } from "./RefValuePicker";
 import { BoolSwitch } from "./TypedValueInput";
 import { VariablesConfigField } from "./VariablesConfigField";
+import { IntArrayConfigField } from "./IntArrayConfigField";
 import { InterpolationCurveField, ControlPoint } from "./InterpolationCurveField";
 import { CustomEventSendMonitor, CustomEventReceiveTrigger, PointerEventMonitor } from "./CustomEventControls";
 import "../css/flowNodes.css";
@@ -51,6 +52,19 @@ const handleStyle = (color: string, side: "left" | "right", top: number | undefi
 export interface IAuthoringGraphNodeProps {
     data: any
 }
+
+// normalizes an `int[]` configuration's raw value into a plain number list. Handles both the
+// spec-correct array-of-numbers form and the legacy free-text form (a single comma-separated
+// string) that the old raw text field used to store.
+const parseIntArrayConfigValue = (raw: any[] | undefined): number[] => {
+    if (!Array.isArray(raw) || raw.length === 0) { return []; }
+    if (raw.length === 1 && typeof raw[0] === "string") {
+        const cleaned = raw[0].replace(/[[\]\s]/g, "");
+        if (cleaned === "") { return []; }
+        return cleaned.split(",").map((s) => parseInt(s, 10)).filter((n) => !Number.isNaN(n));
+    }
+    return raw.filter((v): v is number => typeof v === "number" && !Number.isNaN(v));
+};
 
 const getStandardTypeIndex = (signature: InteractivityValueType): number => {
     const index = standardTypes.findIndex((type) => type.signature === signature);
@@ -96,7 +110,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     const [inputValues, setInputValues] = useState<Record<string, IInteractivityValue>>({});
     const [outputValues, setOutputValues] = useState<Record<string, IInteractivityValue>>({});
     const [configuration, setConfiguration] = useState<Record<string, IInteractivityConfigurationValue>>({});
-    const { graph } = useContext(InteractivityGraphContext);
+    const { graph, gltfObjectModel } = useContext(InteractivityGraphContext);
     const updateNodeInternals = useUpdateNodeInternals();
     const { deleteElements } = useReactFlow();
     const uid = props.data.uid;
@@ -194,9 +208,46 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     const onChangeType = useCallback((evt: { target: { value: any; }; }) => {
         const socketId = (evt.target as HTMLInputElement).id.replace("typeDropDown-", "");
         const curParam = inputValues[socketId];
-        const newParam: IInteractivityValue = { value: [undefined], typeOptions: curParam.typeOptions, type: evt.target.value }
-        setInputValues({ ...inputValues, [socketId]: newParam });
-    }, [inputValues]);
+        const newType = Number(evt.target.value);
+        const newParam: IInteractivityValue = { ...curParam, value: [undefined], type: newType };
+        const group = curParam.typeGroup ?? nodeSpec?.values?.input?.[socketId]?.typeGroup;
+
+        if (group === undefined) {
+            setInputValues({ ...inputValues, [socketId]: newParam });
+            return;
+        }
+
+        // grouped socket: propagate the newly picked type to every unconnected sibling in the
+        // group — plus the output — so the whole node (e.g. math/add's a, b, value) stays one
+        // consistent type. Every unconnected sibling adopts the new type and has its static value
+        // cleared, INCLUDING a sibling that currently holds a static value: the explicit dropdown
+        // choice must win over such a value.
+        // A wired sibling is left untouched — never force-updated or disconnected just because
+        // another socket's dropdown was touched (that could be an accidental click). Its source
+        // connection keeps dictating its own type; resolveTypeGroupType treats an unconnected
+        // member's selected type as ground truth for the group regardless, so any resulting
+        // mismatch is only ever surfaced as a warning (see getGroupTypeConflict), never resolved by
+        // touching the wire.
+        const nextInputValues = { ...inputValues };
+        for (const [s, v] of Object.entries(inputValues)) {
+            if (s === socketId) { nextInputValues[s] = newParam; continue; }
+            if ((v.typeGroup ?? nodeSpec?.values?.input?.[s]?.typeGroup) !== group) { continue; }
+            if (isSocketLinked(s)) { continue; }
+            nextInputValues[s] = { ...v, value: [undefined], type: newType };
+        }
+        setInputValues(nextInputValues);
+
+        const groupOutputEntries = Object.entries(outputValues).filter(
+            ([s, v]) => (v.typeGroup ?? nodeSpec?.values?.output?.[s]?.typeGroup) === group
+        );
+        if (groupOutputEntries.length > 0) {
+            const nextOutputValues = { ...outputValues };
+            for (const [s, v] of groupOutputEntries) {
+                nextOutputValues[s] = { ...v, value: [undefined], type: newType };
+            }
+            setOutputValues(nextOutputValues);
+        }
+    }, [inputValues, outputValues, node]);
 
     const onChangeConfiguration = useCallback((evt: { target: { value: any; }; }) => {
         const configurationId = (evt.target as HTMLInputElement).id;
@@ -239,6 +290,30 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         const newConfiguration: Record<string, IInteractivityConfigurationValue> = {
             ...configuration,
             variables: { value: ids },
+        };
+        setConfiguration(newConfiguration);
+        evaluateConfigurationWhichChangeSockets(newConfiguration, inputValues, outputValues, inputFlows, outputFlows);
+    }, [configuration, inputValues, outputValues, inputFlows, outputFlows]);
+
+    // generic typed config field (bool/int/string, no special socket-picking UI): store the
+    // already-parsed value under its configuration id and re-evaluate in case it affects sockets
+    // (e.g. flow/waitAll's `inputFlows`).
+    const onChangeGenericConfig = useCallback((configurationId: string, value: any) => {
+        const newConfiguration: Record<string, IInteractivityConfigurationValue> = {
+            ...configuration,
+            [configurationId]: { value: [value] },
+        };
+        setConfiguration(newConfiguration);
+        evaluateConfigurationWhichChangeSockets(newConfiguration, inputValues, outputValues, inputFlows, outputFlows);
+    }, [configuration, inputValues, outputValues, inputFlows, outputFlows]);
+
+    // int[] config (e.g. `cases`): stores the full list of integers directly, matching the
+    // KHR_interactivity value format (one array entry per case), unlike the other generic
+    // configs above which wrap a single value in a 1-element array.
+    const onChangeIntArrayConfig = useCallback((configurationId: string, values: number[]) => {
+        const newConfiguration: Record<string, IInteractivityConfigurationValue> = {
+            ...configuration,
+            [configurationId]: { value: values },
         };
         setConfiguration(newConfiguration);
         evaluateConfigurationWhichChangeSockets(newConfiguration, inputValues, outputValues, inputFlows, outputFlows);
@@ -304,6 +379,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                     const inputValue: IInteractivityValue = {
                         value: [undefined],
                         typeOptions: anyType,
+                        typeGroup: "T",
                         type: 0
                     }
                     inputValuesToSet[`${cases[i]}`] = inputValue;
@@ -448,7 +524,12 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
             const pointerSlotType = pointerSlotTypeById.get(key);
             const pointerSlotKindChanged = pointerSlotType !== undefined && existing !== undefined && existing.type !== pointerSlotType;
             if (existingHasData && !pointerSlotKindChanged) {
-                inputValuesToSet[key] = existing;
+                // the loaded/wired socket may predate the spec's `description` (e.g. loaded from a
+                // glTF file, which has no such field) — backfill it from the spec without touching
+                // the actual value/connection data
+                inputValuesToSet[key] = existing.description === undefined && nodeSpecInputValues[key]?.description !== undefined
+                    ? { ...existing, description: nodeSpecInputValues[key].description }
+                    : existing;
             } else if (!existingHasData && !configGeneratedInputKeys.has(key) && nodeSpecInputValues[key] !== undefined) {
                 inputValuesToSet[key] = nodeSpecInputValues[key];
             }
@@ -465,7 +546,10 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                 continue;
             }
             if (outputValues[key] !== undefined && (outputValues[key].value?.[0] != null || outputValues[key].node != null)) {
-                outputValuesToSet[key] = outputValues[key];
+                const existing = outputValues[key];
+                outputValuesToSet[key] = existing.description === undefined && nodeSpecOutputValues[key]?.description !== undefined
+                    ? { ...existing, description: nodeSpecOutputValues[key].description }
+                    : existing;
             } else if (nodeSpecOutputValues[key] !== undefined) {
                 outputValuesToSet[key] = nodeSpecOutputValues[key];
             }
@@ -525,10 +609,114 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         }
     }
 
+    // immutable spec for this node — the source of truth for typeGroup membership (a wired socket's
+    // live object loses its typeGroup tag when overwritten by the connection link)
+    const nodeSpec = interactivityNodeSpecs.find(n => n.op === node?.op);
+
+    // Resolve the concrete type shared by every socket tagged with `group` on this node instance.
+    // Delegates to the shared resolver, fed this node's freshest values (local state), so the
+    // priority (static value > connection > default) and spec-based membership stay consistent with
+    // the connect/disconnect side in AuthoringComponent. Mirrors the KHR_interactivity rule that
+    // sockets sharing a type variable (e.g. floatN's `T`) resolve to the same concrete type.
+    const getGroupType = (group: string): number | undefined =>
+        resolveTypeGroupType(
+            { declaration: -1, op: node?.op, values: { input: inputValues, output: outputValues } },
+            nodeSpec,
+            group,
+            graph.nodes,
+        );
+
+    // Detect a wired input socket whose connected source outputs a type this socket doesn't
+    // declare as acceptable (its spec `typeOptions` — the same set `hasIntersection` checks
+    // against at connect time in AuthoringComponent). This can drift out of sync with the wire
+    // after the initial connection: connecting to a "configurable" socket (variable/set,
+    // event/send, pointer/get, ...) skips that check entirely, and a source's output type can
+    // change later (type dropdown, typeGroup resolution) without re-validating existing wires.
+    const getInputTypeMismatch = (socket: string, value: IInteractivityValue, resolvedType: number | undefined): string | undefined => {
+        const link = node?.values?.input?.[socket] ?? value;
+        if (link?.node === undefined || resolvedType === undefined) { return undefined; }
+        const expectedTypeOptions = nodeSpec?.values?.input?.[socket]?.typeOptions ?? value.typeOptions;
+        if (expectedTypeOptions === undefined || expectedTypeOptions.includes(resolvedType)) { return undefined; }
+        const expectedLabel = expectedTypeOptions.map((t) => getTypeLabel(t)).join(" | ");
+        return `Type mismatch: wired value is ${getTypeLabel(resolvedType)}, but this socket expects ${expectedLabel}`;
+    };
+
+    // A wired socket's badge/handle should reflect the connected value's type only when that type
+    // is actually one the socket declares as acceptable — otherwise (a mismatch caught by
+    // getInputTypeMismatch) showing the foreign type as if it were adopted is misleading, so fall
+    // back to displaying the socket's own declared type instead.
+    const getDisplaySocketType = (socket: string, value: IInteractivityValue, resolvedType: number | undefined): number | undefined => {
+        if (resolvedType === undefined) { return resolvedType; }
+        const expectedTypeOptions = nodeSpec?.values?.input?.[socket]?.typeOptions ?? value.typeOptions;
+        if (expectedTypeOptions === undefined || expectedTypeOptions.includes(resolvedType)) { return resolvedType; }
+        return value.type ?? expectedTypeOptions[0];
+    };
+
+    // A socket's own effective type, ignoring the group's collapsed resolution: a wire's source
+    // type if wired, otherwise the socket's own stored `type` (whatever the type dropdown last set
+    // it to). Needed because resolveSocketType folds every unwired grouped socket into ONE shared
+    // answer (resolveTypeGroupType picks a single winner for the whole group), so comparing via
+    // resolveSocketType can never see two differing unwired members, and — since that winner
+    // requires an actual static *value* to be present, not just a type — it also ignores a type the
+    // user just picked from the dropdown until a value is entered, making the group-conflict check
+    // silently stale right after a manual type change.
+    const getOwnSocketType = (socket: string, value: IInteractivityValue): number | undefined => {
+        const link = node?.values?.input?.[socket] ?? value;
+        if (link?.node !== undefined) {
+            const sourceNode = graph.nodes.find(n => n.uid === link.node);
+            return sourceNode?.values?.output?.[link.socket!]?.type;
+        }
+        return value?.type;
+    };
+
+    // Detect an input socket whose own type disagrees with a sibling in the same typeGroup — e.g.
+    // math/add's `a` and `b` share a group (both must be the same concrete type), so wiring an int
+    // into `a` and a float into `b` is invalid even though each individually satisfies its own
+    // typeOptions, and so is picking `b`'s type dropdown to float while `a` is wired to int.
+    // Membership is read from the immutable spec since a wired socket's live object loses its
+    // `typeGroup` tag (see getTypeGroupMembers). Every member that disagrees with at least one
+    // sibling is flagged, since there's no way to tell which one is "correct".
+    const getGroupTypeConflict = (socket: string, value: IInteractivityValue): string | undefined => {
+        const group = value.typeGroup ?? nodeSpec?.values?.input?.[socket]?.typeGroup;
+        if (group === undefined) { return undefined; }
+        const ownType = getOwnSocketType(socket, value);
+        if (ownType === undefined) { return undefined; }
+        const { inputs } = getTypeGroupMembers(nodeSpec, group);
+        const conflicting: string[] = [];
+        for (const name of inputs) {
+            if (name === socket) { continue; }
+            const siblingValue = inputValues[name];
+            if (siblingValue === undefined) { continue; }
+            const siblingType = getOwnSocketType(name, siblingValue);
+            if (siblingType !== undefined && siblingType !== ownType) {
+                conflicting.push(`${name}: ${getTypeLabel(siblingType)}`);
+            }
+        }
+        if (conflicting.length === 0) { return undefined; }
+        return `Type group mismatch: this socket is ${getTypeLabel(ownType)}, but a sibling socket sharing the same type must match (${conflicting.join(", ")})`;
+    };
+
+    // KHR_interactivity requires every input socket to either be wired or carry a static value —
+    // an unconnected socket left at its "no value entered yet" placeholder (undefined/NaN/empty
+    // string, depending on the socket's shape) would export as invalid.
+    const getMissingValueWarning = (socket: string, value: IInteractivityValue): string | undefined => {
+        if (isSocketLinked(socket)) { return undefined; }
+        // ref sockets store their pointer as a bare string rather than array-wrapped
+        // (see castParameter/setSocketRefValue), so normalize both shapes before checking.
+        const raw = value.value;
+        const values = raw === undefined ? [] : Array.isArray(raw) ? raw : [raw];
+        const isUnset = values.length === 0 ||
+            values.every((v) => v === undefined || v === "" || (typeof v === "number" && Number.isNaN(v)));
+        if (!isUnset) { return undefined; }
+        return `Missing value: this socket is not connected and has no value set`;
+    };
+
     // Determine the effective type of an input socket. A wired socket takes its type from the
     // connected source output socket (auto-detected), so its own type/typeOptions are ignored.
     // The connection lives on the shared graph model (mutated on connect), which may be ahead of
-    // this node's local `value` state. Fall back to the socket's own type when unconnected.
+    // this node's local `value` state. Otherwise, a grouped socket adopts its group's resolved
+    // type (so ungrouped-but-linked siblings stay visually consistent); finally fall back to the
+    // socket's own type.
     const resolveSocketType = (socket: string, value: IInteractivityValue): number | undefined => {
         const link = node?.values?.input?.[socket] ?? value;
         if (link?.node !== undefined) {
@@ -537,6 +725,11 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
             if (sourceType !== undefined) {
                 return sourceType;
             }
+        }
+        const group = value.typeGroup ?? nodeSpec?.values?.input?.[socket]?.typeGroup;
+        if (group !== undefined) {
+            const groupType = getGroupType(group);
+            if (groupType !== undefined) { return groupType; }
         }
         return value?.type;
     }
@@ -642,9 +835,22 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         socketDescriptionLines.length > 0 ? `Sockets:\n${socketDescriptionLines.join("\n")}` : undefined,
     ].filter(Boolean).join("\n\n");
 
+    // aggregate socket-level mismatches into a single node-header warning, so a type conflict on
+    // any input is visible without having to scan every socket
+    const typeMismatchLines = Object.entries(inputValues)
+        .map(([socket, value]) => {
+            const resolvedType = resolveSocketType(socket, value);
+            return getInputTypeMismatch(socket, value, resolvedType) ?? getGroupTypeConflict(socket, value) ?? getMissingValueWarning(socket, value);
+        })
+        .filter((msg): msg is string => msg !== undefined);
+    const nodeHeaderWarningTitle = typeMismatchLines.join("\n");
+
     return (
-        <div className={`flow-node${isPointerNode ? " flow-node--pointer" : ""}`}>
+        <div className={`flow-node${isPointerNode ? " flow-node--pointer" : ""}${typeMismatchLines.length > 0 ? " flow-node--warning" : ""}`}>
             <div className={"flow-node-header"} style={{ background: getNodeCategoryColor(node?.op || "") }} title={nodeHeaderTitle}>
+                <RenderIf shouldShow={typeMismatchLines.length > 0}>
+                    <span className={"flow-node-header-warning"} title={nodeHeaderWarningTitle}>⚠</span>
+                </RenderIf>
                 <h2>
                     {node?.op}
                 </h2>
@@ -666,7 +872,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                             (configuration.event !== undefined) &&
                             <div className={"flow-node-field"}>
                                 <label htmlFor="event">event</label>
-                                <select id="event" name="event" defaultValue={configuration.event.value?.[0] === undefined ? -1 : configuration.event.value[0]} onChange={(event) => {
+                                <select id="event" name="event" className="nodrag" defaultValue={configuration.event.value?.[0] === undefined ? -1 : configuration.event.value[0]} onChange={(event) => {
                                     if (Number(event.target.value) === -1) {
                                         return
                                     }
@@ -685,7 +891,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                             (configuration.variable !== undefined) &&
                             <div className={"flow-node-field"}>
                                 <label htmlFor="variable">variable</label>
-                                <select id="variable" name="variable" defaultValue={configuration.variable.value?.[0] === undefined ? -1 : configuration.variable.value[0]} onChange={(event) => {
+                                <select id="variable" name="variable" className="nodrag" defaultValue={configuration.variable.value?.[0] === undefined ? -1 : configuration.variable.value[0]} onChange={(event) => {
                                     if (Number(event.target.value) === -1) {
                                         return
                                     }
@@ -729,29 +935,40 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                         }
                         {
                             (configuration.nodeIndex !== undefined) &&
-                            <div className={"flow-node-field"}>
-                                <label htmlFor="nodeIndex">nodeIndex</label>
-                                <div style={{ display: "flex", gap: 4 }}>
-                                    <input
-                                        id="nodeIndex"
-                                        name="nodeIndex"
-                                        type="number"
-                                        className={"flow-node-control"}
-                                        style={{ flex: 1, minWidth: 0 }}
-                                        value={String(configuration.nodeIndex.value?.[0] ?? -1)}
-                                        onChange={(event) => onChangeNodeIndex(Number(event.target.value))}
-                                    />
-                                    <button type="button" onClick={() => setShowNodeIndexPicker(true)} style={refSelectButtonStyle} title={"Select a node"}>
-                                        Select…
-                                    </button>
-                                </div>
-                            </div>
+                            (() => {
+                                const selectedNodeName = gltfObjectModel?.nodes.find((n) => n.index === configuration.nodeIndex.value?.[0])?.name;
+                                return (
+                                    <div className={"flow-node-field"}>
+                                        <label htmlFor="nodeIndex">nodeIndex</label>
+                                        <div style={{ display: "flex", gap: 4 }}>
+                                            <input
+                                                id="nodeIndex"
+                                                name="nodeIndex"
+                                                type="number"
+                                                className={"flow-node-control nodrag"}
+                                                style={{ flex: 1, minWidth: 0 }}
+                                                value={String(configuration.nodeIndex.value?.[0] ?? -1)}
+                                                onChange={(event) => onChangeNodeIndex(Number(event.target.value))}
+                                            />
+                                            <button type="button" onClick={() => setShowNodeIndexPicker(true)} style={refSelectButtonStyle} title={"Select a node"}>
+                                                Select…
+                                            </button>
+                                        </div>
+                                        {
+                                            selectedNodeName &&
+                                            <div className={"flow-node-hint"} title={selectedNodeName}>
+                                                {selectedNodeName}
+                                            </div>
+                                        }
+                                    </div>
+                                );
+                            })()
                         }
                         {
                             (configuration.type !== undefined) &&
                             <div className={"flow-node-field"}>
                                 <label htmlFor="type">{isPointerNode ? "Pointer Type" : "type"}</label>
-                                <select id="type" name="type" key={`type-${configuration.type.value?.[0]}`} defaultValue={configuration.type.value?.[0] === undefined ? -1 : configuration.type.value[0]} onChange={(event) => {
+                                <select id="type" name="type" className="nodrag" key={`type-${configuration.type.value?.[0]}`} defaultValue={configuration.type.value?.[0] === undefined ? -1 : configuration.type.value[0]} onChange={(event) => {
                                     if (Number(event.target.value) === -1) {
                                         return
                                     }
@@ -772,10 +989,42 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                             Object.keys(configuration)
                                 .filter((configurationId) => configurationId !== "event" && configurationId !== "variable" && configurationId !== "variables" && configurationId !== "type" && configurationId !== "pointer" && configurationId !== "nodeIndex")
                                 .map((configurationId) => {
+                                    const configSpec = nodeSpec?.configuration?.[configurationId];
+                                    const configValue = configuration[configurationId];
                                     return (
                                         <div key={configurationId} className={"flow-node-field"}>
-                                            <label htmlFor={configurationId}>{configurationId}</label>
-                                            <input id={configurationId} name={configurationId} defaultValue={configuration[configurationId].value} onChange={onChangeConfiguration} />
+                                            <label htmlFor={configurationId} title={configSpec?.description}>{configurationId}</label>
+                                            {
+                                                configSpec?.type === InteractivityConfigurationValueType.BOOLEAN ? (
+                                                    <BoolSwitch
+                                                        checked={Boolean(configValue.value?.[0])}
+                                                        onChange={(checked) => onChangeGenericConfig(configurationId, checked)}
+                                                    />
+                                                ) : configSpec?.type === InteractivityConfigurationValueType.INT ? (
+                                                    <input
+                                                        id={configurationId}
+                                                        name={configurationId}
+                                                        type="number"
+                                                        step={1}
+                                                        className={"flow-node-control nodrag"}
+                                                        value={configValue.value?.[0] ?? ""}
+                                                        onChange={(e) => onChangeGenericConfig(configurationId, e.target.value === "" ? undefined : parseInt(e.target.value, 10))}
+                                                    />
+                                                ) : configSpec?.type === InteractivityConfigurationValueType.INT_ARR ? (
+                                                    <IntArrayConfigField
+                                                        values={parseIntArrayConfigValue(configValue.value)}
+                                                        onChange={(values) => onChangeIntArrayConfig(configurationId, values)}
+                                                    />
+                                                ) : (
+                                                    <input
+                                                        id={configurationId}
+                                                        name={configurationId}
+                                                        className={"flow-node-control nodrag"}
+                                                        defaultValue={configValue.value}
+                                                        onChange={onChangeConfiguration}
+                                                    />
+                                                )
+                                            }
                                         </div>
                                     )
                                 })
@@ -846,7 +1095,9 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                         <div>
                             {Object.entries(inputValues).map(([socket, value]) => {
                                 const isLinked = (props.data.linked && props.data.linked[socket]) || node?.values?.input?.[socket]?.node !== undefined;
-                                const inputType = resolveSocketType(socket, value);
+                                const resolvedInputType = resolveSocketType(socket, value);
+                                const typeMismatch = getInputTypeMismatch(socket, value, resolvedInputType) ?? getGroupTypeConflict(socket, value) ?? getMissingValueWarning(socket, value);
+                                const inputType = getDisplaySocketType(socket, value, resolvedInputType);
                                 const signature = standardTypes[value.type ?? -1]?.signature;
                                 const isRefSocket = signature === InteractivityValueType.REF;
                                 const isBoolSocket = signature === InteractivityValueType.BOOLEAN;
@@ -879,15 +1130,18 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                                 <span className={"flow-node-type-badge"} style={{ background: getColorForTypeIndex(inputType) }}>{getTypeLabel(inputType)}</span>
                                             )}
                                             <label htmlFor={socket} title={socketLabelTitle}>{getInputSocketLabel(socket)}</label>
+                                            <RenderIf shouldShow={typeMismatch !== undefined}>
+                                                <span className={"flow-node-type-warning"} title={typeMismatch}>⚠</span>
+                                            </RenderIf>
                                         </div>
                                         {isRefSocket ? (
                                             <div style={{ display: isLinked ? "none" : "flex", gap: 4 }}>
                                                 <input
                                                     id={`in-${socket}`}
                                                     name={socket}
-                                                    className={"flow-node-control"}
+                                                    className={"flow-node-control nodrag"}
                                                     style={{ flex: 1, minWidth: 0, fontFamily: "monospace" }}
-                                                    placeholder={"/nodes/0"}
+                                                    placeholder={"/nodes/..."}
                                                     value={String(inputValues[socket].value ?? "")}
                                                     onChange={(e) => setSocketRefValue(socket, e.target.value)}
                                                 />
@@ -909,7 +1163,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                                                 key={idx}
                                                                 type="number"
                                                                 step="any"
-                                                                className={"flow-node-vec-cell"}
+                                                                className={"flow-node-vec-cell nodrag"}
                                                                 title={getComponentTitle(vecLayout, row, col)}
                                                                 placeholder={getComponentTitle(vecLayout, row, col)}
                                                                 value={compVal === undefined || (typeof compVal === "number" && Number.isNaN(compVal)) ? "" : compVal}
@@ -927,7 +1181,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                                 />
                                             </div>
                                         ) : (
-                                            <input id={`in-${socket}`} name={socket} onChange={onChangeParameter} defaultValue={inputValues[socket].value} style={{ display: isLinked ? "none" : "block" }} />
+                                            <input id={`in-${socket}`} name={socket} className={"nodrag"} onChange={onChangeParameter} defaultValue={inputValues[socket].value} style={{ display: isLinked ? "none" : "block" }} />
                                         )}
                                         <Handle type="target" position={Position.Left} id={socket} style={handleStyle(getColorForTypeIndex(inputType), "left")} />
                                     </div>

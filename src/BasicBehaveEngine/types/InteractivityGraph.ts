@@ -53,6 +53,8 @@ export enum InteractivityConfigurationValueType {
 }
 
 export interface IInteractivityConfigurationValue {
+   type?: InteractivityConfigurationValueType
+   description?: string
    value?: any[]
    defaultValue?: any[]
 }

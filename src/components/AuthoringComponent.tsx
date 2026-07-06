@@ -115,7 +115,12 @@ export const AuthoringComponent = () => {
     // to handle nodes and edges in graph
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-    
+    // uids of every node that feeds (directly or transitively, via flow or value wiring) into the
+    // single currently-selected node, so its full upstream hierarchy can be highlighted
+    const [ancestorNodeIds, setAncestorNodeIds] = useState<Set<string>>(new Set());
+    // ids of the edges connecting that upstream hierarchy, highlighted alongside the nodes
+    const [ancestorEdgeIds, setAncestorEdgeIds] = useState<Set<string>>(new Set());
+
     const {graph, needsSyncingToAuthor, setNeedsSyncingToAuthor, getAuthorGraph, addDeclaration, getDeclarationIndex, addNode, removeNode} = useContext(InteractivityGraphContext);
 
     //to handle the node picker props
@@ -576,6 +581,56 @@ export const AuthoringComponent = () => {
        setAuthoringComponentModal(AuthoringComponentModelType.NONE)
     }
 
+    // walk every edge feeding into `nodeId` (flow or value, either counts as "connected"),
+    // then repeat from each source found, so the whole upstream hierarchy is collected — not
+    // just its direct predecessors. Also collects the edges walked along the way, so the wires
+    // connecting that hierarchy can be highlighted too.
+    const getAncestors = useCallback((nodeId: string): { nodeIds: Set<string>, edgeIds: Set<string> } => {
+        const visitedNodes = new Set<string>();
+        const visitedEdges = new Set<string>();
+        const stack = [nodeId];
+        while (stack.length > 0) {
+            const current = stack.pop()!;
+            for (const edge of edges) {
+                if (edge.target === current && !visitedNodes.has(edge.source)) {
+                    visitedNodes.add(edge.source);
+                    visitedEdges.add(edge.id);
+                    stack.push(edge.source);
+                } else if (edge.target === current) {
+                    visitedEdges.add(edge.id);
+                }
+            }
+        }
+        return { nodeIds: visitedNodes, edgeIds: visitedEdges };
+    }, [edges]);
+
+    // recompute the highlighted ancestor set whenever selection changes; only meaningful for a
+    // single selected node, so multi-select or an empty selection clears the highlight
+    const onSelectionChange = useCallback(({ nodes: selectedNodes }: { nodes: Node[] }) => {
+        const { nodeIds, edgeIds } = selectedNodes.length === 1
+            ? getAncestors(selectedNodes[0].id)
+            : { nodeIds: new Set<string>(), edgeIds: new Set<string>() };
+        setAncestorNodeIds(nodeIds);
+        setAncestorEdgeIds(edgeIds);
+    }, [getAncestors]);
+
+    // tag ancestor nodes with a highlight class for rendering, without touching the underlying
+    // `nodes` state (positions, selection, etc. stay owned by useNodesState/onNodesChange)
+    const displayNodes = React.useMemo(() => {
+        if (ancestorNodeIds.size === 0) { return nodes; }
+        return nodes.map((n) => ancestorNodeIds.has(n.id)
+            ? { ...n, className: [n.className, "ancestor-highlight"].filter(Boolean).join(" ") }
+            : n);
+    }, [nodes, ancestorNodeIds]);
+
+    // thicken the wires connecting the highlighted ancestor hierarchy to the selected node
+    const displayEdges = React.useMemo(() => {
+        if (ancestorEdgeIds.size === 0) { return edges; }
+        return edges.map((e) => ancestorEdgeIds.has(e.id)
+            ? { ...e, style: { ...(e.style || {}), strokeWidth: 6 }, zIndex: 1 }
+            : e);
+    }, [edges, ancestorEdgeIds]);
+
     return (
         <div style={{width: "100vw", height: "75vh", textAlign: "center", padding: 16}}>
             <h2 style={{padding: 16}}>Interactivity Graph Authoring</h2>
@@ -588,14 +643,15 @@ export const AuthoringComponent = () => {
             >
                 <ReactFlow
                     id={"flow-container"}
-                    nodes={nodes}
+                    nodes={displayNodes}
                     onNodesChange={onNodesChange}
-                    edges={edges}
+                    edges={displayEdges}
                     onEdgesChange={onEdgesChange}
                     onNodesDelete={onNodesDelete}
                     onInit={setReactFlowInstance}
                     onConnect={onConnect}
                     onEdgesDelete={onEdgesDelete}
+                    onSelectionChange={onSelectionChange}
                     nodeTypes={nodeTypes}
                     minZoom={0.1}
                     onPaneClick={handleLeftClick}

@@ -114,6 +114,16 @@
     box-shadow: 0 0 0 4px rgba(61, 89, 135, 0.15);
 }
 
+/* upstream hierarchy of the currently-selected node (see onSelectionChange in
+   AuthoringComponent): every node feeding into it, directly or transitively. Uses the same
+   accent color as the other "live" highlights (event flash / trigger button) so it reads as
+   "active", distinct from the blue selection outline. */
+.react-flow__node.ancestor-highlight .flow-node {
+    outline: 5px solid #f8a848;
+    outline-offset: 4px;
+    box-shadow: 0 0 0 9px rgba(248, 168, 72, 0.25);
+}
+
 .flow-node-header {
     padding: 6px 8px;
     margin-bottom: 8px;

@@ -4,9 +4,11 @@ import ReactFlow, {
     Edge,
     Node,
     NodeChange,
+    EdgeTypes,
     NodeTypes, Panel, useEdgesState, useNodesState, useReactFlow, XYPosition
 } from 'reactflow';
 import {AuthoringGraphNode} from "../authoring/AuthoringGraphNode";
+import {DeletableEdge} from "../authoring/DeletableEdge";
 import React, {useCallback, useContext, useEffect, useRef, useState} from "react";
 import {v4 as uuidv4} from "uuid";
 import {RenderIf} from "./RenderIf";
@@ -29,7 +31,13 @@ const nodeTypes = interactivityNodeSpecs.reduce((nodes, node) => {
 nodeTypes["NoOp"] = (props: any) => {
     props.data.isNoOp = true;
     return <AuthoringGraphNode {...props} />;
-};  
+};
+
+// override react-flow's built-in default edge so every wire (loaded or newly connected,
+// none of which set an explicit type) gets the hover "×" delete button
+const edgeTypes: EdgeTypes = {
+    default: DeletableEdge,
+};
 
 
 enum AuthoringComponentModelType {
@@ -653,6 +661,7 @@ export const AuthoringComponent = () => {
                     onEdgesDelete={onEdgesDelete}
                     onSelectionChange={onSelectionChange}
                     nodeTypes={nodeTypes}
+                    edgeTypes={edgeTypes}
                     minZoom={0.1}
                     onPaneClick={handleLeftClick}
                     onPaneContextMenu={handleRightClick}

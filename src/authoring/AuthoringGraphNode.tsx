@@ -629,9 +629,22 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         props.data.renameFlowSocket?.(props.data.uid, oldName, newName);
     };
 
+    // this node's position in the graph's node list — the index used by KHR_interactivity
+    // node references (e.g. configuration.nodeIndex) elsewhere in the graph
+    const nodeIndex = graph.nodes.findIndex((n) => n.uid === uid);
+    const socketDescriptionLines = [
+        ...Object.entries(inputValues).map(([socket, value]) => value.description ? `  ${socket}: ${value.description}` : undefined),
+        ...Object.entries(outputValues).map(([socket, value]) => value.description ? `  ${socket}: ${value.description}` : undefined),
+    ].filter(Boolean);
+    const nodeHeaderTitle = [
+        node?.description,
+        `Node Index: ${nodeIndex}`,
+        socketDescriptionLines.length > 0 ? `Sockets:\n${socketDescriptionLines.join("\n")}` : undefined,
+    ].filter(Boolean).join("\n\n");
+
     return (
         <div className={`flow-node${isPointerNode ? " flow-node--pointer" : ""}`}>
-            <div className={"flow-node-header"} style={{ background: getNodeCategoryColor(node?.op || "") }}>
+            <div className={"flow-node-header"} style={{ background: getNodeCategoryColor(node?.op || "") }} title={nodeHeaderTitle}>
                 <h2>
                     {node?.op}
                 </h2>
@@ -843,9 +856,13 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                 // more than one type, isn't the pointer node's fixed value socket, and
                                 // isn't wired to an output (a connection dictates the type automatically)
                                 const isTypeEditable = (value.typeOptions?.length ?? 0) > 1 && !(isPointerNode && socket === "value") && !isLinked;
+                                const socketLabelTitle = [
+                                    isVariableSetNode ? `${getInputSocketFullLabel(socket)} (variable #${socket})` : undefined,
+                                    value.description,
+                                ].filter(Boolean).join("\n\n") || undefined;
                                 return (
                                     <div key={socket} className={"flow-node-socket"}>
-                                        <div className={"flow-node-socket-head"}>
+                                        <div className={"flow-node-socket-head"} title={value.description}>
                                             {isTypeEditable ? (
                                                 <span className={"flow-node-type-badge flow-node-type-badge--editable nodrag"} style={{ background: getColorForTypeIndex(inputType) }} title={"Change type"}>
                                                     {getTypeLabel(inputType)}
@@ -861,7 +878,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                             ) : (
                                                 <span className={"flow-node-type-badge"} style={{ background: getColorForTypeIndex(inputType) }}>{getTypeLabel(inputType)}</span>
                                             )}
-                                            <label htmlFor={socket} title={isVariableSetNode ? `${getInputSocketFullLabel(socket)} (variable #${socket})` : undefined}>{getInputSocketLabel(socket)}</label>
+                                            <label htmlFor={socket} title={socketLabelTitle}>{getInputSocketLabel(socket)}</label>
                                         </div>
                                         {isRefSocket ? (
                                             <div style={{ display: isLinked ? "none" : "flex", gap: 4 }}>
@@ -921,13 +938,17 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                         {/*outputValues*/}
                         <div className={"flow-node-outputs"}>
                             {Object.entries(outputValues).map(([socket, _value]) => {
+                                // a grouped output adopts its group's resolved type (e.g. math/add's
+                                // "value" tracks whatever concrete type a/b have resolved to)
+                                const outputGroup = _value.typeGroup ?? nodeSpec?.values?.output?.[socket]?.typeGroup;
+                                const outputType = outputGroup !== undefined ? (getGroupType(outputGroup) ?? _value.type) : _value.type;
                                 return (
                                     <div key={socket} className={"flow-node-socket"}>
-                                        <div className={"flow-node-socket-head"}>
-                                            <span className={"flow-node-type-badge"} style={{ background: getColorForTypeIndex(_value.type) }}>{getTypeLabel(_value.type)}</span>
-                                            <label htmlFor={socket}>{socket}</label>
+                                        <div className={"flow-node-socket-head"} title={_value.description}>
+                                            <span className={"flow-node-type-badge"} style={{ background: getColorForTypeIndex(outputType) }}>{getTypeLabel(outputType)}</span>
+                                            <label htmlFor={socket} title={_value.description}>{socket}</label>
                                         </div>
-                                        <Handle type="source" position={Position.Right} id={socket} style={handleStyle(getColorForTypeIndex(_value.type), "right")} />
+                                        <Handle type="source" position={Position.Right} id={socket} style={handleStyle(getColorForTypeIndex(outputType), "right")} />
                                     </div>
                                 )
                             })}

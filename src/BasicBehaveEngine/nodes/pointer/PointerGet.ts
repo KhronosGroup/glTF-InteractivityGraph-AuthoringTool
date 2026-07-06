@@ -103,7 +103,7 @@ export class PointerGet extends BehaveEngineNode {
 
             if (typeName !== configuredTypeName) {
                 return {
-                    'value':{value: this.getDefualtValueForType(configuredTypeName), type: this._typeIndex},
+                    'value':{value: this.getDefaultValueForType(configuredTypeName), type: this._typeIndex},
                     'isValid':{value: [false], type: this.getTypeIndex('bool')}
                 };
             }

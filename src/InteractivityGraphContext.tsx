@@ -1,6 +1,6 @@
 import { createContext, useRef, useState } from 'react';
 import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityGraph, IInteractivityNode, IInteractivityValue, IInteractivityVariable } from './BasicBehaveEngine/types/InteractivityGraph';
-import { createNoOpNode, interactivityNodeSpecs, resolveOutputSocketType, standardTypes } from './BasicBehaveEngine/types/nodes';
+import { createNoOpNode, interactivityNodeSpecs, propagateGraphGroupTypes, resolveOutputSocketType, standardTypes } from './BasicBehaveEngine/types/nodes';
 import { v4 as uuidv4 } from 'uuid';
 import { Edge, Node } from 'reactflow';
 import { DiagnosticCategory, IGraphDiagnostic } from './diagnostics';
@@ -415,6 +415,15 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         }
 
         graph.nodes = loadedNodes;
+
+        // The loader fills input sockets straight from the file and leaves outputs (and any input the
+        // file omitted) at the spec default, so grouped sockets — e.g. a math node's `a`/`b`/output
+        // sharing type `T` — can be left inconsistent (output/omitted input stuck at the default
+        // `int` while the group actually resolves to `float`). The interactive connect / type paths
+        // keep these in sync as the user edits, but nothing runs on load; do it explicitly here so
+        // stored types match the resolved type (no spurious type-group warnings, correct exports).
+        propagateGraphGroupTypes(graph.nodes);
+
         graphRef.current = graph;
 
         // surface any node operations this tool does not implement (loaded as inert NoOp nodes)

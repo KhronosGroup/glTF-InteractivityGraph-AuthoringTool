@@ -4869,6 +4869,16 @@ export const resolveTypeGroupType = (
     const nodeInputs = node.values?.input ?? {};
     const nodeOutputs = node.values?.output ?? {};
 
+    // 1a. an unconnected input that actually holds a static value is the strongest ground truth —
+    // preferred over a sibling that only carries a leftover/placeholder `type` (e.g. a socket the
+    // loaded glTF omitted, which falls back to the spec default). This makes resolution independent
+    // of socket iteration order, so a group whose typed socket comes *after* an untyped-default one
+    // still resolves to the real value's type.
+    for (const name of inputs) {
+        const socket = nodeInputs[name];
+        if (socket === undefined || socket.node !== undefined) { continue; }
+        if (socket.value?.[0] != null && socket.type !== undefined) { return socket.type; }
+    }
     for (const name of inputs) {
         const socket = nodeInputs[name];
         if (socket === undefined || socket.node !== undefined) { continue; }
@@ -4911,6 +4921,72 @@ export const resolveOutputSocketType = (
         if (resolved !== undefined) { return resolved; }
     }
     return value.type;
+};
+
+/**
+ * Write each typeGroup's resolved concrete type onto the sockets that follow the group on `node` —
+ * its grouped outputs, and any grouped input that is neither wired nor carries a static value. This
+ * is the model-only equivalent of AuthoringComponent.propagateGroupType, needed when a graph is
+ * loaded: the interactive connect / type-dropdown paths keep grouped sockets consistent as the user
+ * edits, but loading a glTF sets input sockets straight from the file (and outputs straight from the
+ * spec default) with no such propagation, leaving e.g. a math node's output — and any input the file
+ * omitted — stuck at the spec-default `int` while the group actually resolves to `float`. That stale
+ * stored type then drives a spurious type-group-mismatch warning and a wrong exported output type,
+ * even though the socket *displays* the correctly resolved type. Returns true if anything changed.
+ */
+export const propagateNodeGroupTypes = (
+    node: IInteractivityNode,
+    graphNodes: IInteractivityNode[],
+): boolean => {
+    const spec = interactivityNodeSpecs.find((n) => n.op === node.op);
+    if (spec === undefined) { return false; }
+
+    const groups = new Set<string>();
+    for (const socket of Object.values(spec.values?.input ?? {})) {
+        if (socket.typeGroup !== undefined) { groups.add(socket.typeGroup); }
+    }
+    for (const socket of Object.values(spec.values?.output ?? {})) {
+        if (socket.typeGroup !== undefined) { groups.add(socket.typeGroup); }
+    }
+
+    let changed = false;
+    for (const group of groups) {
+        const resolvedType = resolveTypeGroupType(node, spec, group, graphNodes);
+        if (resolvedType === undefined) { continue; }
+        const { inputs, outputs } = getTypeGroupMembers(spec, group);
+        for (const name of inputs) {
+            const socket = node.values?.input?.[name];
+            if (socket === undefined) { continue; }
+            const connected = socket.node !== undefined;
+            const hasStatic = !connected && socket.value?.[0] != null;
+            if (!connected && !hasStatic && socket.type !== resolvedType) {
+                socket.type = resolvedType;
+                changed = true;
+            }
+        }
+        for (const name of outputs) {
+            const socket = node.values?.output?.[name];
+            if (socket === undefined || socket.type === resolvedType) { continue; }
+            socket.type = resolvedType;
+            changed = true;
+        }
+    }
+    return changed;
+};
+
+/**
+ * Propagate typeGroup resolution across every node in a freshly loaded graph. Repeats until a full
+ * pass makes no change (a change to one node's output can feed a downstream node's wired grouped
+ * input), bounded by the node count since each pass advances the resolution by at least one wire.
+ */
+export const propagateGraphGroupTypes = (graphNodes: IInteractivityNode[]): void => {
+    for (let pass = 0; pass < graphNodes.length; pass++) {
+        let changed = false;
+        for (const node of graphNodes) {
+            if (propagateNodeGroupTypes(node, graphNodes)) { changed = true; }
+        }
+        if (!changed) { break; }
+    }
 };
 
 export const createNoOpNode = (declaration: IInteractivityDeclaration): IInteractivityNode => {

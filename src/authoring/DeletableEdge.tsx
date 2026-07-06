@@ -1,4 +1,4 @@
-import {useMemo, useRef, useState} from "react";
+import {useEffect, useMemo, useSyncExternalStore} from "react";
 import {
     BaseEdge,
     EdgeLabelRenderer,
@@ -6,6 +6,7 @@ import {
     getBezierPath,
     useReactFlow,
     useStore,
+    useStoreApi,
 } from "reactflow";
 
 // how far (in screen px) inside each endpoint the "×" sits, and how close the cursor must get to reveal it
@@ -13,26 +14,111 @@ const BUTTON_INSET_PX = 40;
 const REVEAL_RADIUS_PX = 80;
 
 type EdgeEnd = "source" | "target";
+type Point = {x: number; y: number};
+type Anchors = Record<EdgeEnd, Point>;
+
+/**
+ * Shared cursor tracker spanning all DeletableEdge instances. Each edge registers its two button
+ * anchors (flow coordinates); a single mousemove listener finds the one anchor nearest to the
+ * cursor within REVEAL_RADIUS_PX (screen px) and publishes it. So when several wires' reveal zones
+ * overlap, only the closest end shows its "×" instead of every wire at once.
+ */
+const anchorRegistry = new Map<string, Anchors>();
+const subscribers = new Set<() => void>();
+let flowStore: ReturnType<typeof useStoreApi> | null = null;
+let nearestId: string | null = null;
+let nearestEnd: EdgeEnd | null = null;
+let rafId = 0;
+let lastEvent: MouseEvent | null = null;
+
+const publishNearest = (id: string | null, end: EdgeEnd | null) => {
+    if (id === nearestId && end === nearestEnd) {return}
+    nearestId = id;
+    nearestEnd = end;
+    subscribers.forEach((notify) => notify());
+};
+
+const updateNearest = () => {
+    rafId = 0;
+    const state = flowStore?.getState();
+    const domNode = state?.domNode;
+    const event = lastEvent;
+    if (!event || !state || !domNode) {return}
+    if (!(event.target instanceof Node) || !domNode.contains(event.target)) {
+        publishNearest(null, null);
+        return;
+    }
+    const bounds = domNode.getBoundingClientRect();
+    const [tx, ty, zoom] = state.transform;
+    const cursorX = (event.clientX - bounds.left - tx) / zoom;
+    const cursorY = (event.clientY - bounds.top - ty) / zoom;
+    let bestId: string | null = null;
+    let bestEnd: EdgeEnd | null = null;
+    let bestDist = REVEAL_RADIUS_PX / zoom;
+    anchorRegistry.forEach((anchors, id) => {
+        for (const end of ["source", "target"] as EdgeEnd[]) {
+            const dist = Math.hypot(anchors[end].x - cursorX, anchors[end].y - cursorY);
+            if (dist <= bestDist) {
+                bestDist = dist;
+                bestId = id;
+                bestEnd = end;
+            }
+        }
+    });
+    publishNearest(bestId, bestEnd);
+};
+
+const scheduleUpdate = () => {
+    if (!rafId && lastEvent) {rafId = requestAnimationFrame(updateNearest)}
+};
+
+const onMouseMove = (event: MouseEvent) => {
+    lastEvent = event;
+    scheduleUpdate();
+};
+
+const registerEdge = (id: string, anchors: Anchors) => {
+    if (anchorRegistry.size === 0) {window.addEventListener("mousemove", onMouseMove)}
+    anchorRegistry.set(id, anchors);
+    // anchors can move under a stationary cursor (node drag), so re-evaluate from the last position
+    scheduleUpdate();
+};
+
+const unregisterEdge = (id: string) => {
+    anchorRegistry.delete(id);
+    if (nearestId === id) {publishNearest(null, null)}
+    if (anchorRegistry.size === 0) {
+        window.removeEventListener("mousemove", onMouseMove);
+        if (rafId) {
+            cancelAnimationFrame(rafId);
+            rafId = 0;
+        }
+        // keep lastEvent: a re-register (zoom/drag re-runs the effect) re-evaluates from it,
+        // since wheel-zoom moves the anchors without firing a mousemove
+    }
+};
+
+const subscribeNearest = (notify: () => void) => {
+    subscribers.add(notify);
+    return () => {subscribers.delete(notify)};
+};
 
 /**
  * A bezier edge with a "×" delete button anchored just inside each endpoint. The button for an
- * endpoint appears only while the cursor enters a circular zone centered on that anchor, giving a
- * fixed, predictable target near the sockets (rather than chasing the wire) that stays reachable on
- * long wires. The reveal zone shares its center with the button so it feels consistent.
+ * endpoint appears only while the cursor is within REVEAL_RADIUS_PX of that anchor AND the anchor
+ * is the nearest one across all edges, giving a fixed, predictable target near the sockets that
+ * never stacks multiple buttons when wires run close together.
  *
  * Deletion is routed through react-flow's `deleteElements` so the graph's `onEdgesDelete` cleanup
  * (clearing the model + `linked` flags) still runs. The button is rendered through EdgeLabelRenderer,
- * which portals it outside the edge's DOM element, so hover is tracked with local state. The reveal
- * circles live in the edge SVG layer (below the node handles), so they don't block the sockets.
+ * which portals it outside the edge's DOM element.
  */
 export const DeletableEdge = (props: EdgeProps) => {
     const {id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, style, markerEnd} = props;
     const {deleteElements} = useReactFlow();
-    // subscribe to zoom so anchor inset / reveal radius stay consistent in screen px as you zoom
+    const store = useStoreApi();
+    // subscribe to zoom so the anchor inset stays consistent in screen px as you zoom
     const zoom = useStore((s) => s.transform[2]);
-    const [activeEnd, setActiveEnd] = useState<EdgeEnd | null>(null);
-    const [overBtn, setOverBtn] = useState(false);
-    const lastEnd = useRef<EdgeEnd>("target");
 
     const [edgePath, labelX, labelY] = getBezierPath({
         sourceX,
@@ -55,32 +141,21 @@ export const DeletableEdge = (props: EdgeProps) => {
         return {source: {x: s.x, y: s.y}, target: {x: e.x, y: e.y}};
     }, [edgePath, zoom]);
 
-    const radius = REVEAL_RADIUS_PX / zoom;
-    const shownEnd = activeEnd ?? (overBtn ? lastEnd.current : null);
-    const point = shownEnd !== null && anchors !== null ? anchors[shownEnd] : null;
-    const visible = point !== null;
+    useEffect(() => {
+        flowStore = store;
+        if (anchors === null) {return}
+        registerEdge(id, anchors);
+        return () => unregisterEdge(id);
+    }, [id, anchors, store]);
 
-    const enter = (end: EdgeEnd) => {
-        lastEnd.current = end;
-        setActiveEnd(end);
-    };
+    // which end of this edge (if any) currently owns the cursor
+    const activeEnd = useSyncExternalStore(subscribeNearest, () => (nearestId === id ? nearestEnd : null));
+    const point = activeEnd !== null && anchors !== null ? anchors[activeEnd] : null;
+    const visible = point !== null;
 
     return (
         <>
             <BaseEdge id={id} path={edgePath} style={style} markerEnd={markerEnd} />
-            {/* invisible circular reveal zones centered on each button anchor */}
-            {anchors !== null && (["source", "target"] as EdgeEnd[]).map((end) => (
-                <circle
-                    key={end}
-                    cx={anchors[end].x}
-                    cy={anchors[end].y}
-                    r={radius}
-                    fill="transparent"
-                    style={{pointerEvents: "all"}}
-                    onMouseEnter={() => enter(end)}
-                    onMouseLeave={() => setActiveEnd((cur) => (cur === end ? null : cur))}
-                />
-            ))}
             <EdgeLabelRenderer>
                 <button
                     className="edge-delete-btn nodrag nopan"
@@ -90,8 +165,6 @@ export const DeletableEdge = (props: EdgeProps) => {
                         pointerEvents: visible ? "all" : "none",
                     }}
                     title="Remove connection"
-                    onMouseEnter={() => setOverBtn(true)}
-                    onMouseLeave={() => setOverBtn(false)}
                     onClick={(event) => {
                         event.stopPropagation();
                         deleteElements({edges: [{id}]});

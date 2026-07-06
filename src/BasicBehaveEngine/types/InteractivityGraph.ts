@@ -69,6 +69,14 @@ export interface IInteractivityValue {
     node?: number | string,
     socket?: string
     description?: string
+    /**
+     * Optional type-group tag (the spec's shared type variable, e.g. "T"). All value sockets on the
+     * same node that share a `typeGroup` MUST resolve to the same concrete type (mirroring the
+     * KHR_interactivity rule that all `floatN`/`floatNxN` sockets have the same type within a node).
+     * Sockets with a fixed type, or unrelated types, simply omit this field. Purely additive metadata
+     * used by the authoring UI to resolve/display socket types; ignored by the runtime engine.
+     */
+    typeGroup?: string
 }
 
 export interface IInteractivityNode {

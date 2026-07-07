@@ -28,6 +28,10 @@ export class OnSelect extends BehaveEngineNode {
             type: this.getTypeIndex('int'),
             value: [-1],
         };
+        this.outValues.event = {
+            type: this.getTypeIndex('ref'),
+            value: [this._nodeIndex],
+        };
 
         this.setUpOnSelect();
     }

@@ -81,11 +81,29 @@ export interface IInteractivityValue {
     typeGroup?: string
 }
 
+export enum NodeSpecFlag {
+    // this op's value/flow socket set is partly generated from `configuration` at authoring time
+    // (variable ids, JSON-pointer/message template params, custom event params, switch/multiGate/
+    // sequence output flows) rather than being fixed by its spec entry - a socket name on an
+    // instance of this op that isn't in the spec template is expected, not a violation, so the
+    // load-time spec-validity check skips the "unknown socket" check for it (see
+    // loadGraphFromJson in InteractivityGraphContext.tsx).
+    DynamicSockets = "dynamicSockets",
+    // this op has user-managed output flow sockets (author-added and freely renamed, e.g. via the
+    // "+"/rename UI) rather than a fixed set or one generated purely from configuration -
+    // currently flow/sequence and flow/multiGate. Affects both node rendering (renamable socket
+    // labels) and wire-connect validation (AuthoringComponent treats a not-yet-existing output
+    // handle on these ops as a flow socket regardless).
+    DynamicFlowOutputs = "dynamicFlowOutputs",
+}
+
 export interface IInteractivityNode {
     uid?: string,
     op?: string,
     declaration: number,
     description?: string,
+    // see NodeSpecFlag
+    flags?: NodeSpecFlag[],
     configuration?: Record<string, IInteractivityConfigurationValue>,
     flows?: {
         input?: Record<string, IInteractivityFlow>,

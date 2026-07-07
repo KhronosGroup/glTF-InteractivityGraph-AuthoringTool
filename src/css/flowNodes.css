@@ -10,6 +10,7 @@
 /* ---- top menu bar (replaces the old top-right stacked button panel) ---- */
 
 .graph-menu-bar {
+    position: relative;
     display: flex;
     align-items: stretch;
     gap: 2px;
@@ -21,6 +22,99 @@
     backdrop-filter: blur(6px);
     justify-content: center;
     flex-wrap: wrap;
+}
+
+/* error/warning counter: pinned to the right edge of the bar so it doesn't disturb the
+   centered button group */
+.graph-diagnostics-counter {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: default;
+}
+
+.diagnostics-counter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border-radius: 999px;
+    padding: 4px 9px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.diagnostics-counter-chip--error {
+    background: #fbe2e2;
+    color: #b32323;
+}
+
+.diagnostics-counter-chip--warning {
+    background: #fdf1d8;
+    color: #8a6116;
+}
+
+.diagnostics-counter-popover {
+    max-width: 420px;
+}
+
+.diagnostics-counter-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 320px;
+    overflow-y: auto;
+    text-align: left;
+}
+
+.diagnostics-counter-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 4px 0;
+    font-size: 12.5px;
+    border-bottom: 1px solid #eee;
+}
+
+.diagnostics-counter-item:last-child {
+    border-bottom: none;
+}
+
+.diagnostics-counter-badge {
+    flex-shrink: 0;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.diagnostics-counter-badge--error {
+    color: #e02020;
+}
+
+.diagnostics-counter-badge--warning {
+    color: #b8860b;
+}
+
+.diagnostics-counter-item-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    text-align: left;
+    color: #2a5db0;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 12.5px;
+}
+
+.diagnostics-counter-item-btn:hover {
+    color: #163d80;
+}
+
+.diagnostics-counter-item-text {
+    color: #333;
 }
 
 .graph-menu-bar-btn {
@@ -111,6 +205,11 @@
 .node-info-tooltip-conn {
     color: #7fd0a0;
     font-style: italic;
+}
+
+.node-info-tooltip-warning {
+    color: #ff6b6b;
+    line-height: 1.35;
 }
 
 /* pointer nodes carry long JSON pointer strings, so give them more room */
@@ -440,6 +539,24 @@
    to still read at typical zoomed-out levels. */
 .flow-node.flow-node--warning {
     border: 5px dotted #e02020;
+}
+
+/* a socket name the op's spec doesn't declare (typo, or a hand-edited/broken glTF) - kept visible
+   instead of silently dropped, but locked from editing since there is nothing valid to edit into */
+.flow-node-socket--unknown .flow-node-socket-head label {
+    color: #e02020;
+}
+
+.flow-node-socket--unknown .flow-node-control,
+.flow-node-socket--unknown input,
+.flow-node-socket--unknown select,
+.flow-node-socket--unknown .flow-node-vec-cell,
+.flow-node-socket--unknown button {
+    pointer-events: none;
+    opacity: 0.65;
+    border-color: #e02020 !important;
+    background: #fdecea !important;
+    color: #a33 !important;
 }
 
 /* output column: right-align labels so they sit next to their handles */

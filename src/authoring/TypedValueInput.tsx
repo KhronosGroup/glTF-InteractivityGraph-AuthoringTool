@@ -33,16 +33,18 @@ export interface BoolSwitchProps {
     onChange: (checked: boolean) => void;
     className?: string;
     style?: React.CSSProperties;
+    disabled?: boolean;
 }
 
 // checkbox used everywhere a "bool" typed value is edited (node config values,
 // socket default values, variable/event defaults).
-export const BoolSwitch = ({ checked, onChange, className, style }: BoolSwitchProps) => (
+export const BoolSwitch = ({ checked, onChange, className, style, disabled }: BoolSwitchProps) => (
     <input
         type="checkbox"
         className={["flow-node-control", "nodrag", className].filter(Boolean).join(" ")}
         style={{ width: 18, height: 18, cursor: "pointer", ...style }}
         checked={checked}
+        disabled={disabled}
         onChange={(e) => onChange(e.target.checked)}
     />
 );

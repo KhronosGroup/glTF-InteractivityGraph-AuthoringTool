@@ -3,14 +3,15 @@ import { Alert, Badge, Button } from "react-bootstrap";
 import { InteractivityGraphContext } from "../InteractivityGraphContext";
 import { IGraphDiagnostic } from "../diagnostics";
 
-const categoryLabel: Record<IGraphDiagnostic["category"], string> = {
+export const categoryLabel: Record<IGraphDiagnostic["category"], string> = {
     extension: "Extension",
     operation: "Node operation",
     type: "Data type",
+    node: "Node validation",
 };
 
 export const DiagnosticsPanel: React.FC = () => {
-    const { diagnostics, clearDiagnostics } = useContext(InteractivityGraphContext);
+    const { allDiagnostics: diagnostics, clearDiagnostics } = useContext(InteractivityGraphContext);
     const [collapsed, setCollapsed] = useState(false);
 
     if (!diagnostics || diagnostics.length === 0) {
@@ -59,6 +60,11 @@ export const DiagnosticsPanel: React.FC = () => {
                                 >
                                     {categoryLabel[diagnostic.category]}
                                 </Badge>
+                                {diagnostic.nodeIndex !== undefined && (
+                                    <Badge bg="secondary" style={{ marginRight: 8 }}>
+                                        Node #{diagnostic.nodeIndex}{diagnostic.nodeOp ? `: ${diagnostic.nodeOp}` : ""}
+                                    </Badge>
+                                )}
                                 <strong>{diagnostic.title}</strong>
                                 {diagnostic.detail && (
                                     <div style={{ fontSize: "0.9rem", marginTop: 2 }}>{diagnostic.detail}</div>

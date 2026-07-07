@@ -1,6 +1,6 @@
-import { createContext, useRef, useState } from 'react';
-import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityGraph, IInteractivityNode, IInteractivityValue, IInteractivityVariable } from './BasicBehaveEngine/types/InteractivityGraph';
-import { createNoOpNode, interactivityNodeSpecs, propagateGraphGroupTypes, resolveOutputSocketType, standardTypes } from './BasicBehaveEngine/types/nodes';
+import { createContext, useCallback, useMemo, useRef, useState } from 'react';
+import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityGraph, IInteractivityNode, IInteractivityValue, IInteractivityVariable, NodeSpecFlag } from './BasicBehaveEngine/types/InteractivityGraph';
+import { createNoOpNode, hasNodeSpecFlag, interactivityNodeSpecs, propagateGraphGroupTypes, resolveOutputSocketType, standardTypes } from './BasicBehaveEngine/types/nodes';
 import { v4 as uuidv4 } from 'uuid';
 import { Edge, Node } from 'reactflow';
 import { DiagnosticCategory, IGraphDiagnostic } from './diagnostics';
@@ -8,6 +8,11 @@ import { FLOW_COLOR, getColorForTypeIndex } from './authoring/socketColors';
 import { GltfObjectModel } from './authoring/gltfObjectModel';
 
 const edgeStyle = (color: string) => ({ stroke: color, strokeWidth: 2 });
+
+// human-readable label for a standard type index (0=bool, 1=int, 2=float, ...), used to phrase
+// load-time spec-validity diagnostics
+const typeIndexName = (typeIndex: number | undefined): string =>
+    typeIndex === undefined ? "unknown" : (standardTypes[typeIndex]?.name ?? `type#${typeIndex}`);
 interface InteractivityGraphContextType {
     graph: IInteractivityGraph,
     needsSyncingToAuthor: boolean,
@@ -15,6 +20,12 @@ interface InteractivityGraphContextType {
     diagnostics: IGraphDiagnostic[],
     setDiagnosticsForCategory: (category: DiagnosticCategory, diagnostics: IGraphDiagnostic[]) => void,
     clearDiagnostics: () => void,
+    // diagnostics + every currently-mounted node's live socket/type warnings (missing values,
+    // type mismatches, type-group conflicts - computed per-render in AuthoringGraphNode and
+    // reported here via reportNodeWarnings), so the DiagnosticsPanel/DiagnosticsCounter reflect
+    // problems introduced by editing the graph in the UI, not just ones found at load time
+    allDiagnostics: IGraphDiagnostic[],
+    reportNodeWarnings: (nodeUid: string, nodeIndex: number, nodeOp: string | undefined, warnings: string[]) => void,
     gltfObjectModel: GltfObjectModel | null,
     setGltfObjectModel: (model: GltfObjectModel | null) => void,
     supportedPointerTemplates: ReadonlySet<string> | null,
@@ -47,6 +58,8 @@ const initialContext: InteractivityGraphContextType = {
     diagnostics: [],
     setDiagnosticsForCategory: () => {return null},
     clearDiagnostics: () => {return null},
+    allDiagnostics: [],
+    reportNodeWarnings: () => {return null},
     gltfObjectModel: null,
     setGltfObjectModel: () => {return null},
     supportedPointerTemplates: null,
@@ -83,6 +96,36 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
     const clearDiagnostics = () => {
         setDiagnostics([]);
     };
+
+    // live per-node warnings (missing values, type mismatches, type-group conflicts), keyed by
+    // node uid and refreshed every render by that node's own AuthoringGraphNode instance - see
+    // reportNodeWarnings below and its call site in AuthoringGraphNode
+    const [nodeWarnings, setNodeWarnings] = useState<Record<string, IGraphDiagnostic[]>>({});
+
+    const reportNodeWarnings = useCallback((nodeUid: string, nodeIndex: number, nodeOp: string | undefined, warnings: string[]) => {
+        setNodeWarnings(prev => {
+            const existing = prev[nodeUid];
+            if (warnings.length === 0) {
+                if (existing === undefined) { return prev; }
+                const next = { ...prev };
+                delete next[nodeUid];
+                return next;
+            }
+            // bail out if unchanged so this doesn't retrigger a render loop every frame
+            if (existing !== undefined && existing.length === warnings.length && existing.every((d, i) => d.title === warnings[i])) {
+                return prev;
+            }
+            return {
+                ...prev,
+                [nodeUid]: warnings.map((title) => ({ severity: 'warning', category: 'node', nodeUid, nodeIndex, nodeOp, title })),
+            };
+        });
+    }, []);
+
+    const allDiagnostics = useMemo(
+        () => [...diagnostics, ...Object.values(nodeWarnings).flat()],
+        [diagnostics, nodeWarnings]
+    );
 
     const [gltfObjectModel, setGltfObjectModel] = useState<GltfObjectModel | null>(null);
     const [supportedPointerTemplates, setSupportedPointerTemplates] = useState<ReadonlySet<string> | null>(null);
@@ -356,6 +399,10 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         const uuids = [];
         // track unsupported node operations (op -> number of nodes using it) so we can surface them
         const unsupportedOps = new Map<string, number>();
+        // per-node spec-validity diagnostics (unknown socket names / socket type mismatches
+        // against this op's declaration in nodes.ts) - not KHR_interactivity spec compliance of
+        // the file overall, but of the individual node instances within it
+        const nodeDiagnostics: IGraphDiagnostic[] = [];
         for (let i = 0; i < json.nodes.length; i++) {
             uuids.push(uuidv4());
         }
@@ -375,16 +422,42 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
             copyOfTemplateNode.uid = uuids[i];
             copyOfTemplateNode.declaration = node.declaration;
 
+            // an op whose spec doesn't carry the DynamicSockets flag has a fixed socket set, so
+            // any socket name in the file that isn't declared on the matched spec is either a
+            // typo or a hand-authored graph that isn't spec-compliant for this op
+            const allowsDynamicSockets = isNoOp || hasNodeSpecFlag(templateNode, NodeSpecFlag.DynamicSockets);
+
             if (node.values !== undefined) {
                 for (const key in node.values) {
                     if (node.values[key].value !== undefined) {
                         copyOfTemplateNode.values = copyOfTemplateNode.values || {};
                         copyOfTemplateNode.values.input = copyOfTemplateNode.values.input || {};
                         const newTypeIndex = getUpdatedTypeIndex(json.types[node.values[key].type]);
+                        const specSocket = templateNode.values?.input?.[key];
+                        if (!isNoOp && specSocket === undefined && !allowsDynamicSockets) {
+                            nodeDiagnostics.push({
+                                severity: 'error', category: 'node', nodeUid: uuids[i], nodeIndex: i, nodeOp,
+                                title: `Unknown input value socket "${key}"`,
+                                detail: `"${nodeOp}" does not declare an input value socket named "${key}" in the interactivity spec.`,
+                            });
+                        } else if (!isNoOp && specSocket?.typeOptions !== undefined && !specSocket.typeOptions.includes(newTypeIndex)) {
+                            nodeDiagnostics.push({
+                                severity: 'error', category: 'node', nodeUid: uuids[i], nodeIndex: i, nodeOp,
+                                title: `Type mismatch on input socket "${key}"`,
+                                detail: `Socket "${key}" is set to type ${typeIndexName(newTypeIndex)}, but "${nodeOp}" expects ${specSocket.typeOptions.map(typeIndexName).join(" | ")}.`,
+                            });
+                        }
                         copyOfTemplateNode.values.input[key] = {value: node.values[key].value, type: newTypeIndex, typeOptions: copyOfTemplateNode.values.input[key]?.typeOptions || [newTypeIndex]};
                     } else if (node.values[key].socket !== undefined && node.values[key].node !== null) {
                         copyOfTemplateNode.values = copyOfTemplateNode.values || {};
                         copyOfTemplateNode.values.input = copyOfTemplateNode.values.input || {};
+                        if (!isNoOp && templateNode.values?.input?.[key] === undefined && !allowsDynamicSockets) {
+                            nodeDiagnostics.push({
+                                severity: 'error', category: 'node', nodeUid: uuids[i], nodeIndex: i, nodeOp,
+                                title: `Unknown input value socket "${key}"`,
+                                detail: `"${nodeOp}" does not declare an input value socket named "${key}" in the interactivity spec.`,
+                            });
+                        }
                         copyOfTemplateNode.values.input[key] = {socket: node.values[key].socket, node: uuids[node.values[key].node]};
                     }
                 }
@@ -394,6 +467,13 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
                 for (const key in node.flows) {
                     copyOfTemplateNode.flows = copyOfTemplateNode.flows || {};
                     copyOfTemplateNode.flows.output = copyOfTemplateNode.flows.output || {};
+                    if (templateNode.flows?.output?.[key] === undefined && !allowsDynamicSockets) {
+                        nodeDiagnostics.push({
+                            severity: 'error', category: 'node', nodeUid: uuids[i], nodeIndex: i, nodeOp,
+                            title: `Unknown output flow socket "${key}"`,
+                            detail: `"${nodeOp}" does not declare an output flow socket named "${key}" in the interactivity spec.`,
+                        });
+                    }
                     copyOfTemplateNode.flows.output[key] = {socket: node.flows[key].socket, node: uuids[node.flows[key].node]};
                 }
             }
@@ -439,6 +519,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
             detail: `${count} node${count > 1 ? 's' : ''} in this graph use "${op}", which this tool does not implement. ${count > 1 ? 'They are' : 'It is'} shown as a NoOp node and will not execute.`,
         }));
         setDiagnosticsForCategory('operation', opDiagnostics);
+        setDiagnosticsForCategory('node', nodeDiagnostics);
 
         setNeedsSyncingToAuthor(true);
     }
@@ -621,6 +702,8 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         diagnostics: diagnostics,
         setDiagnosticsForCategory: setDiagnosticsForCategory,
         clearDiagnostics: clearDiagnostics,
+        allDiagnostics: allDiagnostics,
+        reportNodeWarnings: reportNodeWarnings,
         gltfObjectModel: gltfObjectModel,
         setGltfObjectModel: setGltfObjectModel,
         supportedPointerTemplates: supportedPointerTemplates,

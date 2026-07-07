@@ -1,11 +1,16 @@
 export type DiagnosticSeverity = 'error' | 'warning';
-export type DiagnosticCategory = 'extension' | 'operation' | 'type';
+export type DiagnosticCategory = 'extension' | 'operation' | 'type' | 'node';
 
 export interface IGraphDiagnostic {
     severity: DiagnosticSeverity;
     category: DiagnosticCategory;
     title: string;
     detail?: string;
+    // present when this diagnostic is attributable to a single node instance (currently only
+    // 'node'-category socket/type spec-validity diagnostics) - lets the UI jump to that node
+    nodeUid?: string;
+    nodeIndex?: number;
+    nodeOp?: string;
 }
 
 /**

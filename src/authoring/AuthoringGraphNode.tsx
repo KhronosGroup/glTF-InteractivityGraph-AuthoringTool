@@ -4,8 +4,8 @@ import { OverlayTrigger, Tooltip } from "react-bootstrap";
 
 import { RenderIf } from "../components/RenderIf";
 import { NodeInfoTooltip, NodeTooltipSections } from "./NodeInfoTooltip";
-import { IInteractivityFlow, IInteractivityValue, IInteractivityNode, IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityVariable, InteractivityValueType, InteractivityConfigurationValueType } from "../BasicBehaveEngine/types/InteractivityGraph";
-import { anyType, getTypeGroupMembers, interactivityNodeSpecs, resolveTypeGroupType, standardTypes } from "../BasicBehaveEngine/types/nodes";
+import { IInteractivityFlow, IInteractivityValue, IInteractivityNode, IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityVariable, InteractivityValueType, InteractivityConfigurationValueType, NodeSpecFlag } from "../BasicBehaveEngine/types/InteractivityGraph";
+import { anyType, getTypeGroupMembers, hasNodeSpecFlag, interactivityNodeSpecs, resolveTypeGroupType, standardTypes } from "../BasicBehaveEngine/types/nodes";
 import { InteractivityGraphContext } from "../InteractivityGraphContext";
 import { getMessageTemplateSocketIds, getPathTemplateSockets } from "./pathTemplate";
 import { PointerConfigField } from "./PointerConfigField";
@@ -53,6 +53,7 @@ const handleStyle = (color: string, side: "left" | "right", top: number | undefi
 
 export interface IAuthoringGraphNodeProps {
     data: any
+    dragging?: boolean
 }
 
 // normalizes an `int[]` configuration's raw value into a plain number list. Handles both the
@@ -112,7 +113,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     const [inputValues, setInputValues] = useState<Record<string, IInteractivityValue>>({});
     const [outputValues, setOutputValues] = useState<Record<string, IInteractivityValue>>({});
     const [configuration, setConfiguration] = useState<Record<string, IInteractivityConfigurationValue>>({});
-    const { graph, gltfObjectModel } = useContext(InteractivityGraphContext);
+    const { graph, gltfObjectModel, diagnostics, reportNodeWarnings } = useContext(InteractivityGraphContext);
     const updateNodeInternals = useUpdateNodeInternals();
     const { deleteElements } = useReactFlow();
     const uid = props.data.uid;
@@ -510,6 +511,13 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         const nodeSpecInputFlows: Record<string, IInteractivityFlow> = nodeSpec?.flows?.input || {};
         const nodeSpecOutputFlows: Record<string, IInteractivityFlow> = nodeSpec?.flows?.output || {};
 
+        // ops with a fixed (non-configuration-driven) socket set fully rely on the spec/config-key
+        // lists below to decide what still exists; ops carrying this flag instead own their current
+        // socket set entirely via the configuration re-evaluation above (e.g. flow/switch's cases,
+        // variable/set's selected variables), so a key that configuration no longer generates is
+        // meant to disappear.
+        const allowsDynamicSockets = props.data.isNoOp === true || hasNodeSpecFlag(nodeSpec, NodeSpecFlag.DynamicSockets);
+
         // We only want to set socket values that are either in the node's spec or are created as a result of the configuration
         // If the current node has a value for a socket we should use it otherwise we will use the node spec default (if it exists)
         // remaining sockets would have been populated during the above configuration evaluation
@@ -517,7 +525,11 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         // type (e.g. pointer/set's "value" adopting the chosen pointer type). When such a socket has
         // no user data it must keep that fresh entry rather than being reset to the node spec default.
         const configGeneratedInputKeys = new Set(Object.keys(inputValuesToSet));
-        const knownInputValueKeys = [...Object.keys(nodeSpecInputValues), ...Object.keys(inputValuesToSet)];
+        // a socket name this fixed-spec op doesn't declare (a typo, or a hand-edited/broken glTF)
+        // would otherwise be silently dropped here on every re-evaluation; keep it around as long as
+        // it still carries real data so the node UI can flag it instead of hiding the invalid state
+        const extraInputValueKeys = allowsDynamicSockets ? [] : Object.keys(inputValues);
+        const knownInputValueKeys = [...Object.keys(nodeSpecInputValues), ...Object.keys(inputValuesToSet), ...extraInputValueKeys];
         for (const key of knownInputValueKeys) {
             const existing = inputValues[key];
             const existingHasData = existing !== undefined && (existing.value?.[0] != null || existing.node != null);
@@ -566,7 +578,9 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
             }
         }
 
-        const knownOutputFlowKeys = [...Object.keys(nodeSpecOutputFlows), ...Object.keys(outputFlowsToSet)];
+        // same reasoning as extraInputValueKeys above, for an unknown output flow socket name
+        const extraOutputFlowKeys = allowsDynamicSockets ? [] : Object.keys(outputFlows);
+        const knownOutputFlowKeys = [...Object.keys(nodeSpecOutputFlows), ...Object.keys(outputFlowsToSet), ...extraOutputFlowKeys];
         for (const key of knownOutputFlowKeys) {
             if (outputFlows[key] !== undefined && (outputFlows[key].node != null)) {
                 outputFlowsToSet[key] = outputFlows[key];
@@ -574,7 +588,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                 outputFlowsToSet[key] = nodeSpecOutputFlows[key];
             }
         }
-        if (nodeSpec?.op === "flow/sequence" || nodeSpec?.op === "flow/multiGate") {
+        if (hasNodeSpecFlag(nodeSpec, NodeSpecFlag.DynamicFlowOutputs)) {
             // flow sequence is a very special node which has sockets that are not in the node spec nor or generated based on configuration
             for (const key of Object.keys(outputFlows)) {
                 outputFlowsToSet[key] = outputFlows[key];
@@ -640,7 +654,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         const expectedTypeOptions = nodeSpec?.values?.input?.[socket]?.typeOptions ?? value.typeOptions;
         if (expectedTypeOptions === undefined || expectedTypeOptions.includes(resolvedType)) { return undefined; }
         const expectedLabel = expectedTypeOptions.map((t) => getTypeLabel(t)).join(" | ");
-        return `Type mismatch: wired value is ${getTypeLabel(resolvedType)}, but this socket expects ${expectedLabel}`;
+        return `Type mismatch on socket "${getInputSocketFullLabel(socket)}": wired value is ${getTypeLabel(resolvedType)}, but this socket expects ${expectedLabel}`;
     };
 
     // A wired socket's badge/handle should reflect the connected value's type only when that type
@@ -695,7 +709,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
             }
         }
         if (conflicting.length === 0) { return undefined; }
-        return `Type group mismatch: this socket is ${getTypeLabel(ownType)}, but a sibling socket sharing the same type must match (${conflicting.join(", ")})`;
+        return `Type group mismatch on socket "${getInputSocketFullLabel(socket)}": this socket is ${getTypeLabel(ownType)}, but a sibling socket sharing the same type must match (${conflicting.join(", ")})`;
     };
 
     // KHR_interactivity requires every input socket to either be wired or carry a static value —
@@ -710,7 +724,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         const isUnset = values.length === 0 ||
             values.every((v) => v === undefined || v === "" || (typeof v === "number" && Number.isNaN(v)));
         if (!isUnset) { return undefined; }
-        return `Missing value: this socket is not connected and has no value set`;
+        return `Missing value on socket "${getInputSocketFullLabel(socket)}": not connected and has no value set`;
     };
 
     // Determine the effective type of an input socket. A wired socket takes its type from the
@@ -773,7 +787,18 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
 
     const isPointerNode = node?.op?.startsWith("pointer/") ?? false;
     // flow/sequence and flow/multiGate have user-managed, renamable output flow sockets
-    const isDynamicFlowNode = node?.op === "flow/sequence" || node?.op === "flow/multiGate";
+    const isDynamicFlowNode = hasNodeSpecFlag(nodeSpec, NodeSpecFlag.DynamicFlowOutputs);
+
+    // a socket name this op's spec doesn't declare, on an op with a fixed (non-configuration-driven)
+    // socket set - mirrors loadGraphFromJson's per-node spec-validity check (the same diagnostic
+    // shown in this node's header warning tooltip), so the exact socket a typo or hand-edited/broken
+    // glTF put here is visible and editable rather than silently missing from the node body
+    const isNoOp = props.data.isNoOp === true;
+    const allowsDynamicSockets = isNoOp || hasNodeSpecFlag(nodeSpec, NodeSpecFlag.DynamicSockets);
+    const isUnknownInputValueSocket = (socket: string): boolean =>
+        !isNoOp && !allowsDynamicSockets && nodeSpec?.values?.input?.[socket] === undefined;
+    const isUnknownOutputFlowSocket = (socket: string): boolean =>
+        !isNoOp && !allowsDynamicSockets && nodeSpec?.flows?.output?.[socket] === undefined;
 
     // interpolate nodes expose p1/p2 as the cubic-bezier easing control points; show a curve
     // preview + preset picker when both are present as inline (unwired) float2 values.
@@ -853,9 +878,40 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
             .map((n, i) => (Object.values(n.values?.input ?? {}).some((v) => v.node === uid && v.socket === socket) ? i : undefined))
             .filter((i): i is number => i !== undefined);
 
+    // load-time spec-validity diagnostics attributed to this node instance (unknown socket names /
+    // socket type mismatches against this op's declaration in nodes.ts - see loadGraphFromJson)
+    const specDiagnosticLines = diagnostics
+        .filter((d) => d.category === "node" && d.nodeUid === uid)
+        .map((d) => d.title);
+
+    // this node instance's own live socket warnings (missing values, type mismatches, type-group
+    // conflicts) - recomputed every render as the user edits, unlike specDiagnosticLines which are
+    // fixed at load time
+    const liveWarningLines = Object.entries(inputValues)
+        .map(([socket, value]) => {
+            const resolvedType = resolveSocketType(socket, value);
+            return getInputTypeMismatch(socket, value, resolvedType) ?? getGroupTypeConflict(socket, value) ?? getMissingValueWarning(socket, value);
+        })
+        .filter((msg): msg is string => msg !== undefined);
+
+    // aggregate socket-level mismatches into a single node-header warning, so a type conflict on
+    // any input is visible without having to scan every socket
+    const typeMismatchLines = [...specDiagnosticLines, ...liveWarningLines];
+
+    // report this node's live warnings up to the shared context so the top-level DiagnosticsPanel
+    // and DiagnosticsCounter reflect problems introduced by editing the graph, not just ones found
+    // when a file is loaded. specDiagnosticLines are already load-time context diagnostics and
+    // must not be re-reported here, or they'd be duplicated in the combined list.
+    const liveWarningLinesKey = liveWarningLines.join("\n");
+    useEffect(() => {
+        reportNodeWarnings(uid, nodeIndex, node?.op, liveWarningLinesKey === "" ? [] : liveWarningLinesKey.split("\n"));
+        return () => reportNodeWarnings(uid, nodeIndex, node?.op, []);
+    }, [uid, nodeIndex, node?.op, liveWarningLinesKey, reportNodeWarnings]);
+
     const headerTooltipSections: NodeTooltipSections = {
         nodeIndex,
         description: node?.description,
+        warnings: typeMismatchLines,
         flowIn: Object.keys(inputFlows).map((socket) => ({
             socket,
             connectedNodeIndices: findFlowSourceIndices(socket),
@@ -875,44 +931,46 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         })),
     };
 
-    // aggregate socket-level mismatches into a single node-header warning, so a type conflict on
-    // any input is visible without having to scan every socket
-    const typeMismatchLines = Object.entries(inputValues)
-        .map(([socket, value]) => {
-            const resolvedType = resolveSocketType(socket, value);
-            return getInputTypeMismatch(socket, value, resolvedType) ?? getGroupTypeConflict(socket, value) ?? getMissingValueWarning(socket, value);
-        })
-        .filter((msg): msg is string => msg !== undefined);
-    const nodeHeaderWarningTitle = typeMismatchLines.join("\n");
+    const headerContent = (
+        <div className={"flow-node-header"} style={{ background: getNodeCategoryColor(node?.op || "") }}>
+            <RenderIf shouldShow={typeMismatchLines.length > 0}>
+                <span className={"flow-node-header-warning"}>⚠</span>
+            </RenderIf>
+            <h2>
+                {node?.op}
+            </h2>
+            <button
+                type="button"
+                className={"flow-node-delete-btn nodrag nopan"}
+                title={"Delete node"}
+                onClick={(e) => { e.stopPropagation(); deleteElements({ nodes: [{ id: uid }] }); }}
+            >
+                ×
+            </button>
+        </div>
+    );
 
     return (
         <div className={`flow-node${isPointerNode ? " flow-node--pointer" : ""}${typeMismatchLines.length > 0 ? " flow-node--warning" : ""}`}>
-            <OverlayTrigger
-                placement="bottom"
-                delay={{ show: 300, hide: 0 }}
-                overlay={
-                    <Tooltip id={`node-header-tooltip-${uid}`} className="node-info-tooltip">
-                        <NodeInfoTooltip sections={headerTooltipSections} />
-                    </Tooltip>
-                }
-            >
-                <div className={"flow-node-header"} style={{ background: getNodeCategoryColor(node?.op || "") }}>
-                    <RenderIf shouldShow={typeMismatchLines.length > 0}>
-                        <span className={"flow-node-header-warning"} title={nodeHeaderWarningTitle}>⚠</span>
-                    </RenderIf>
-                    <h2>
-                        {node?.op}
-                    </h2>
-                    <button
-                        type="button"
-                        className={"flow-node-delete-btn nodrag nopan"}
-                        title={"Delete node"}
-                        onClick={(e) => { e.stopPropagation(); deleteElements({ nodes: [{ id: uid }] }); }}
-                    >
-                        ×
-                    </button>
-                </div>
-            </OverlayTrigger>
+            {/* while the node is being dragged, skip OverlayTrigger entirely so the tooltip can't
+                stay open/reopen mid-drag (hover never "leaves" the header just because the mouse
+                stayed still relative to it while the node moved underneath) */}
+            <RenderIf shouldShow={!props.dragging}>
+                <OverlayTrigger
+                    placement="bottom"
+                    delay={{ show: 300, hide: 0 }}
+                    overlay={
+                        <Tooltip id={`node-header-tooltip-${uid}`} className="node-info-tooltip">
+                            <NodeInfoTooltip sections={headerTooltipSections} />
+                        </Tooltip>
+                    }
+                >
+                    {headerContent}
+                </OverlayTrigger>
+            </RenderIf>
+            <RenderIf shouldShow={!!props.dragging}>
+                {headerContent}
+            </RenderIf>
 
             <div className={"flow-node-body"}>
                 <RenderIf shouldShow={Object.keys(configuration).length > 0}>
@@ -1104,8 +1162,9 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                         {/*outputFlows*/}
                         <div className={"flow-node-outputs"}>
                             {(isDynamicFlowNode ? Object.keys(outputFlows).sort() : Object.keys(outputFlows)).map(socket => {
+                                const isUnknown = isUnknownOutputFlowSocket(socket);
                                 return (
-                                    <div key={socket} className={"flow-node-socket"}>
+                                    <div key={socket} className={`flow-node-socket${isUnknown ? " flow-node-socket--unknown" : ""}`}>
                                         <div className={"flow-node-socket-head"}>
                                             <span className={"flow-node-type-badge"} style={{ background: FLOW_COLOR }}>flow</span>
                                             {isDynamicFlowNode ? (
@@ -1118,8 +1177,11 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                                     onKeyDown={(e) => { if (e.key === "Enter") { (e.target as HTMLInputElement).blur(); } }}
                                                 />
                                             ) : (
-                                                <label htmlFor={socket}>{socket}</label>
+                                                <label htmlFor={socket} title={isUnknown ? `"${socket}" is not a valid output flow socket for "${node?.op}"` : undefined}>{socket}</label>
                                             )}
+                                            <RenderIf shouldShow={isUnknown}>
+                                                <span className={"flow-node-type-warning"} title={`Unknown output flow socket "${socket}"`}>⚠</span>
+                                            </RenderIf>
                                         </div>
                                         <Handle type="source" position={Position.Right} id={socket} style={handleStyle(FLOW_COLOR, "right", isDynamicFlowNode ? FLOW_NAME_HEAD_CENTER : SOCKET_HEAD_CENTER)} />
                                     </div>
@@ -1145,8 +1207,11 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                         <div>
                             {Object.entries(inputValues).map(([socket, value]) => {
                                 const isLinked = (props.data.linked && props.data.linked[socket]) || node?.values?.input?.[socket]?.node !== undefined;
+                                const isUnknown = isUnknownInputValueSocket(socket);
                                 const resolvedInputType = resolveSocketType(socket, value);
-                                const typeMismatch = getInputTypeMismatch(socket, value, resolvedInputType) ?? getGroupTypeConflict(socket, value) ?? getMissingValueWarning(socket, value);
+                                const typeMismatch = isUnknown
+                                    ? `Unknown input value socket "${getInputSocketFullLabel(socket)}": "${node?.op}" does not declare this socket`
+                                    : getInputTypeMismatch(socket, value, resolvedInputType) ?? getGroupTypeConflict(socket, value) ?? getMissingValueWarning(socket, value);
                                 const inputType = getDisplaySocketType(socket, value, resolvedInputType);
                                 const signature = standardTypes[value.type ?? -1]?.signature;
                                 const isRefSocket = signature === InteractivityValueType.REF;
@@ -1162,13 +1227,13 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                     value.description,
                                 ].filter(Boolean).join("\n\n") || undefined;
                                 return (
-                                    <div key={socket} className={"flow-node-socket"}>
+                                    <div key={socket} className={`flow-node-socket${isUnknown ? " flow-node-socket--unknown" : ""}`}>
                                         <div className={"flow-node-socket-head"} title={value.description}>
                                             {isTypeEditable ? (
                                                 <span className={"flow-node-type-badge flow-node-type-badge--editable nodrag"} style={{ background: getColorForTypeIndex(inputType) }} title={"Change type"}>
                                                     {getTypeLabel(inputType)}
                                                     <span className={"flow-node-type-badge-arrow"}>▾</span>
-                                                    <select id={`typeDropDown-${socket}`} className={"flow-node-type-badge-select"} onChange={onChangeType} value={value.type}>
+                                                    <select id={`typeDropDown-${socket}`} className={"flow-node-type-badge-select"} disabled={isUnknown} onChange={onChangeType} value={value.type}>
                                                         {(value.typeOptions || []).map((type, index) => (
                                                             <option key={index} value={type}>
                                                                 {standardTypes[type]?.name ?? standardTypes[type]?.signature ?? String(type)}
@@ -1193,9 +1258,10 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                                     style={{ flex: 1, minWidth: 0, fontFamily: "monospace" }}
                                                     placeholder={"/nodes/..."}
                                                     value={String(inputValues[socket].value ?? "")}
+                                                    readOnly={isUnknown}
                                                     onChange={(e) => setSocketRefValue(socket, e.target.value)}
                                                 />
-                                                <button type="button" onClick={() => setRefPickerSocket(socket)} style={refSelectButtonStyle} title={"Select an object reference"}>
+                                                <button type="button" disabled={isUnknown} onClick={() => setRefPickerSocket(socket)} style={refSelectButtonStyle} title={"Select an object reference"}>
                                                     Select…
                                                 </button>
                                             </div>
@@ -1217,6 +1283,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                                                 title={getComponentTitle(vecLayout, row, col)}
                                                                 placeholder={getComponentTitle(vecLayout, row, col)}
                                                                 value={compVal === undefined || (typeof compVal === "number" && Number.isNaN(compVal)) ? "" : compVal}
+                                                                readOnly={isUnknown}
                                                                 onChange={(e) => onChangeComponent(socket, idx, e.target.value)}
                                                             />
                                                         );
@@ -1227,11 +1294,12 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                             <div style={{ display: isLinked ? "none" : "block", textAlign: "left" }}>
                                                 <BoolSwitch
                                                     checked={Array.isArray(value.value) ? Boolean(value.value[0]) : false}
+                                                    disabled={isUnknown}
                                                     onChange={(checked) => onChangeBoolean(socket, checked)}
                                                 />
                                             </div>
                                         ) : (
-                                            <input id={`in-${socket}`} name={socket} className={"nodrag"} onChange={onChangeParameter} defaultValue={inputValues[socket].value} style={{ display: isLinked ? "none" : "block" }} />
+                                            <input id={`in-${socket}`} name={socket} className={"nodrag"} onChange={onChangeParameter} defaultValue={inputValues[socket].value} readOnly={isUnknown} style={{ display: isLinked ? "none" : "block" }} />
                                         )}
                                         <Handle type="target" position={Position.Left} id={socket} style={handleStyle(getColorForTypeIndex(inputType), "left")} />
                                     </div>

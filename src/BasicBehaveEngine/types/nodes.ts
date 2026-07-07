@@ -1,4 +1,9 @@
-import { IInteractivityDeclaration, IInteractivityNode, IInteractivityValue, IInteractivityValueType, InteractivityConfigurationValueType, InteractivityValueType } from "./InteractivityGraph";
+import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityNode, IInteractivityValue, IInteractivityValueType, IInteractivityVariable, InteractivityConfigurationValueType, InteractivityValueType, NodeSpecFlag } from "./InteractivityGraph";
+
+// whether a node spec (or the spec matching a live node instance's `op`) declares the given trait
+// - see NodeSpecFlag for what belongs here vs. a plain op-name check near its call site.
+export const hasNodeSpecFlag = (spec: IInteractivityNode | undefined, flag: NodeSpecFlag): boolean =>
+    spec?.flags?.includes(flag) ?? false;
 
 export const knownDeclarations: IInteractivityDeclaration[] = [
     {
@@ -4001,6 +4006,7 @@ const variableNodeSpecs: IInteractivityNode[] = [
         op: "variable/set",
         declaration: knownDeclarations.findIndex(declaration => declaration.op === "variable/set"),
         description: "Set multiple variables to a value",
+        flags: [NodeSpecFlag.DynamicSockets],
         configuration: {
             variables: {
                 type: InteractivityConfigurationValueType.INT_ARR,
@@ -4039,6 +4045,7 @@ const variableNodeSpecs: IInteractivityNode[] = [
         op: "variable/interpolate",
         declaration: knownDeclarations.findIndex(declaration => declaration.op === "variable/interpolate"),
         description: "Interpolate a variable between two values",
+        flags: [NodeSpecFlag.DynamicSockets],
         configuration: {
             variable: {
                 type: InteractivityConfigurationValueType.INT,
@@ -4100,6 +4107,7 @@ const pointerNodeSpecs: IInteractivityNode[] = [
         op: "pointer/set",
         declaration: knownDeclarations.findIndex(declaration => declaration.op === "pointer/set"),
         description: "Set a pointer to a value",
+        flags: [NodeSpecFlag.DynamicSockets],
         configuration: {
             pointer: {
                 type: InteractivityConfigurationValueType.STRING,
@@ -4144,6 +4152,7 @@ const pointerNodeSpecs: IInteractivityNode[] = [
         op: "pointer/get",
         declaration: knownDeclarations.findIndex(declaration => declaration.op === "pointer/get"),
         description: "Get a pointer's value",
+        flags: [NodeSpecFlag.DynamicSockets],
         configuration: {
             pointer: {
                 type: InteractivityConfigurationValueType.STRING,
@@ -4175,6 +4184,7 @@ const pointerNodeSpecs: IInteractivityNode[] = [
         op: "pointer/interpolate",
         declaration: knownDeclarations.findIndex(declaration => declaration.op === "pointer/interpolate"),
         description: "Interpolate a pointer between two values",
+        flags: [NodeSpecFlag.DynamicSockets],
         configuration: {
             pointer: {
                 type: InteractivityConfigurationValueType.STRING,
@@ -4329,6 +4339,7 @@ const lifecycleNodeSpecs: IInteractivityNode[] = [
         op: "event/send",
         declaration: knownDeclarations.findIndex(declaration => declaration.op === "event/send"),
         description: "This node will send an event",
+        flags: [NodeSpecFlag.DynamicSockets],
         configuration: {
             event: {
                 type: InteractivityConfigurationValueType.INT,
@@ -4358,6 +4369,7 @@ const flowNodeSpecs: IInteractivityNode[] = [
         op: "flow/switch",
         declaration: knownDeclarations.findIndex(declaration => declaration.op === "flow/switch"),
         description: "Switch the control flow based on a condition.",
+        flags: [NodeSpecFlag.DynamicSockets],
         configuration: {
             cases: {
                 type: InteractivityConfigurationValueType.INT_ARR,
@@ -4464,6 +4476,7 @@ const flowNodeSpecs: IInteractivityNode[] = [
         op: "flow/multiGate",
         declaration: knownDeclarations.findIndex(declaration => declaration.op === "flow/multiGate"),
         description: "Multiplex the control flow based on a selection",
+        flags: [NodeSpecFlag.DynamicSockets, NodeSpecFlag.DynamicFlowOutputs],
         configuration: {
             isRandom: {
                 type: InteractivityConfigurationValueType.BOOLEAN,
@@ -4742,6 +4755,7 @@ const flowNodeSpecs: IInteractivityNode[] = [
         op: "flow/sequence",
         declaration: knownDeclarations.findIndex(declaration => declaration.op === "flow/sequence"),
         description: "Takes in a single in flow and executes the out flows in order",
+        flags: [NodeSpecFlag.DynamicSockets, NodeSpecFlag.DynamicFlowOutputs],
         flows: {
             input: {
                 in: {
@@ -4759,6 +4773,7 @@ const debugNodeSpecs: IInteractivityNode[] = [
         op: "debug/log",
         declaration: knownDeclarations.findIndex(declaration => declaration.op === "debug/log"),
         description: "Log the value to the console",
+        flags: [NodeSpecFlag.DynamicSockets],
         configuration: {
             severity: {
                 type: InteractivityConfigurationValueType.INT,

@@ -14,9 +14,11 @@ import {v4 as uuidv4} from "uuid";
 import {RenderIf} from "./RenderIf";
 import {Button, Col, Container, Row, Form, OverlayTrigger, Popover, Tooltip} from "react-bootstrap";
 import 'reactflow/dist/style.css';
-import {getTypeGroupMembers, interactivityNodeSpecs, knownDeclarations, resolveOutputSocketType, resolveTypeGroupType, standardTypes} from "../BasicBehaveEngine/types/nodes";
-import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityNode, IInteractivityValue, IInteractivityVariable } from '../BasicBehaveEngine/types/InteractivityGraph';
+import {getTypeGroupMembers, hasNodeSpecFlag, interactivityNodeSpecs, knownDeclarations, resolveOutputSocketType, resolveTypeGroupType, standardTypes} from "../BasicBehaveEngine/types/nodes";
+import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityNode, IInteractivityValue, IInteractivityVariable, NodeSpecFlag } from '../BasicBehaveEngine/types/InteractivityGraph';
 import { InteractivityGraphContext } from '../InteractivityGraphContext';
+import { IGraphDiagnostic } from '../diagnostics';
+import { categoryLabel } from './DiagnosticsPanel';
 import { FLOW_COLOR, getColorForTypeIndex, getNodeCategoryColor } from '../authoring/socketColors';
 import { TypedValueInput } from '../authoring/TypedValueInput';
 import { NodeInfoTooltip, buildNodeTypeTooltipSections } from '../authoring/NodeInfoTooltip';
@@ -105,6 +107,97 @@ const MenuBarButton = (props: {id: string, icon: React.ReactNode, label: string,
 
 const MenuBarDivider = () => <div className="graph-menu-bar-divider"/>;
 
+// pinned to the right edge of the graph menu bar: total error/warning count across all
+// diagnostics (extensions, node operations, data types, per-node spec validity). Hovering shows
+// the full list; entries attributed to a specific node (currently only 'node'-category spec
+// validity diagnostics) are clickable and pan/select that node on the canvas.
+const DiagnosticsCounter = (props: { diagnostics: IGraphDiagnostic[], onJumpToNode: (nodeUid: string) => void }) => {
+    // OverlayTrigger's built-in "hover" trigger only watches mouse enter/leave on the trigger
+    // chip itself (see react-bootstrap's OverlayTrigger), not on the popover it renders via
+    // portal. So the instant the cursor leaves the chip heading toward the popover below it,
+    // the overlay was told to hide - closing before a click on any entry could land. Managing
+    // `show` ourselves, and also listening for mouse enter/leave on the popover, keeps it open
+    // while the cursor is over either element.
+    const [show, setShow] = useState(false);
+    const closeTimeoutRef = useRef<number | null>(null);
+
+    const cancelClose = () => {
+        if (closeTimeoutRef.current !== null) {
+            window.clearTimeout(closeTimeoutRef.current);
+            closeTimeoutRef.current = null;
+        }
+    };
+    const openNow = () => {
+        cancelClose();
+        setShow(true);
+    };
+    const closeWithDelay = () => {
+        cancelClose();
+        closeTimeoutRef.current = window.setTimeout(() => setShow(false), 200);
+    };
+
+    if (props.diagnostics.length === 0) {
+        return null;
+    }
+    const errorCount = props.diagnostics.filter((d) => d.severity === "error").length;
+    const warningCount = props.diagnostics.length - errorCount;
+
+    const popover = (
+        <Popover
+            id={"diagnostics-counter-popover"}
+            className={"diagnostics-counter-popover"}
+            onMouseEnter={openNow}
+            onMouseLeave={closeWithDelay}
+        >
+            <Popover.Body>
+                <ul className={"diagnostics-counter-list"}>
+                    {props.diagnostics.map((d, index) => (
+                        <li key={index} className={"diagnostics-counter-item"}>
+                            <span className={`diagnostics-counter-badge diagnostics-counter-badge--${d.severity}`}>
+                                {d.severity === "error" ? "✕" : "⚠"}
+                            </span>
+                            {d.nodeUid !== undefined ? (
+                                <button
+                                    type="button"
+                                    className={"diagnostics-counter-item-btn"}
+                                    onClick={() => { props.onJumpToNode(d.nodeUid!); setShow(false); }}
+                                    title={"Jump to this node"}
+                                >
+                                    {d.nodeIndex !== undefined ? `Node #${d.nodeIndex}: ` : ""}{d.title}
+                                </button>
+                            ) : (
+                                <span className={"diagnostics-counter-item-text"}>
+                                    {categoryLabel[d.category]}: {d.title}
+                                </span>
+                            )}
+                        </li>
+                    ))}
+                </ul>
+            </Popover.Body>
+        </Popover>
+    );
+
+    return (
+        <OverlayTrigger placement={"bottom-end"} trigger={[]} show={show} overlay={popover}>
+            <div
+                className={"graph-diagnostics-counter"}
+                tabIndex={0}
+                onMouseEnter={openNow}
+                onMouseLeave={closeWithDelay}
+                onFocus={openNow}
+                onBlur={closeWithDelay}
+            >
+                <RenderIf shouldShow={errorCount > 0}>
+                    <span className={"diagnostics-counter-chip diagnostics-counter-chip--error"}>✕ {errorCount}</span>
+                </RenderIf>
+                <RenderIf shouldShow={warningCount > 0}>
+                    <span className={"diagnostics-counter-chip diagnostics-counter-chip--warning"}>⚠ {warningCount}</span>
+                </RenderIf>
+            </div>
+        </OverlayTrigger>
+    );
+};
+
 const isOverScrollableElement = (target: Element | null, boundary: Element | null): boolean => {
     let el = target;
     while (el && el !== boundary) {
@@ -130,7 +223,15 @@ export const AuthoringComponent = () => {
     // ids of the edges connecting that upstream hierarchy, highlighted alongside the nodes
     const [ancestorEdgeIds, setAncestorEdgeIds] = useState<Set<string>>(new Set());
 
-    const {graph, needsSyncingToAuthor, setNeedsSyncingToAuthor, getAuthorGraph, addDeclaration, getDeclarationIndex, addNode, removeNode} = useContext(InteractivityGraphContext);
+    const {graph, needsSyncingToAuthor, setNeedsSyncingToAuthor, getAuthorGraph, addDeclaration, getDeclarationIndex, addNode, removeNode, allDiagnostics} = useContext(InteractivityGraphContext);
+
+    // pan/select a node by id from the diagnostics counter popover
+    const jumpToNode = useCallback((nodeUid: string) => {
+        const target = nodes.find((n) => n.id === nodeUid);
+        if (!target || !reactFlowInstance) { return; }
+        setNodes((prev) => prev.map((n) => ({ ...n, selected: n.id === nodeUid })));
+        reactFlowInstance.setCenter(target.position.x, target.position.y, { zoom: 1, duration: 500 });
+    }, [nodes, reactFlowInstance, setNodes]);
 
     //to handle the node picker props
     const mousePosRef = useRef({x:0, y:0});
@@ -230,7 +331,7 @@ export const AuthoringComponent = () => {
         // flow/sequence and flow/multiGate add their output flow sockets dynamically, so a
         // freshly-added output handle won't exist in flows.output yet even though it is a flow
         // socket; treat those nodes' outputs as flow regardless.
-        const isDynamicFlowSourceNode = sourceNode.op === "flow/sequence" || sourceNode.op === "flow/multiGate";
+        const isDynamicFlowSourceNode = hasNodeSpecFlag(interactivityNodeSpecs.find(n => n.op === sourceNode.op), NodeSpecFlag.DynamicFlowOutputs);
 
         // if one is flow and one isn't then do not connect
         const sourceIsFlow = sourceNode.flows?.output?.[vals.sourceHandle!] !== undefined || isDynamicFlowSourceNode;
@@ -743,6 +844,7 @@ export const AuthoringComponent = () => {
                                 isActive={authoringComponentModal === AuthoringComponentModelType.UPLOAD_GRAPH}
                                 onClick={() => setAuthoringComponentModal(AuthoringComponentModelType.UPLOAD_GRAPH)}
                             />
+                            <DiagnosticsCounter diagnostics={allDiagnostics} onJumpToNode={jumpToNode}/>
                         </div>
                     </Panel>
 

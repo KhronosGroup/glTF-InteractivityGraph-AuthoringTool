@@ -16,29 +16,26 @@ export class PointerGet extends BehaveEngineNode {
         this.name = "PointerGet";
         this.validateValues(this.values);
         this.validateConfigurations(this.configuration);
+        this.resolveRef = props.graphEngine.resolveRef;
 
         const {pointer, type} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
         this._pointer = pointer[0];
         this._typeIndex = type[0];
 
-        const valIds = this.parsePathVals(this._pointer);
-        const generatedVals: Record<string, IInteractivityValue> = {};
-        for (let i = 0; i < valIds.length; i++) {
-            generatedVals[valIds[i]] = {value: [undefined], type: 1};
+        this._pointerVals = {};
+        const refIds = this.parsePathRefs(this._pointer);
+        for (let i = 0; i < refIds.length; i++) {
+            this._pointerVals[refIds[i]] = {value: [undefined], type: 1};
         }
-        this._pointerVals = generatedVals;
 
+        this._pointerIndices = {};
         const indexIds = this.parsePathIndices(this._pointer);
-        const generatedIndices: Record<string, IInteractivityValue> = {};
         for (let i = 0; i < indexIds.length; i++) {
-            generatedIndices[indexIds[i]] = {value: [undefined], type: 1};
+            this._pointerIndices[indexIds[i]] = {value: [undefined], type: 1};
         }
-        this._pointerIndices = generatedIndices;
-
-        this.resolveRef = props.graphEngine.resolveRef;
     }
 
-    parsePathVals(path: string): string[] {
+    parsePathRefs(path: string): string[] {
         const regex = /{([^}]+)}/g;
         const match = path.match(regex);
         const keys: string[] = [];

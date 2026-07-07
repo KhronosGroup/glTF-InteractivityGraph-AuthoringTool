@@ -17,29 +17,42 @@ export class PointerSet extends BehaveEngineNode {
         this.name = "PointerSet";
         this.validateValues(this.values);
         this.validateConfigurations(this.configuration);
+        this.resolveRef = props.graphEngine.resolveRef;
 
         const {pointer, type} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
         this._pointer = pointer[0];
         this._typeIndex = type[0];
         
-        const valIds = this.parsePathVals(this._pointer);
-        const generatedVals: Record<string, IInteractivityValue> = {};
-        for (let i = 0; i < valIds.length; i++) {
-            generatedVals[valIds[i]] = {value: [undefined], type: 1};
+        this._pointerVals = {};
+        const refIds = this.parsePathRefs(this._pointer);
+        for (let i = 0; i < refIds.length; i++) {
+            this._pointerVals[refIds[i]] = {value: [undefined], type: 1};
         }
-        this._pointerVals = generatedVals;
 
+        this._pointerIndices = {};
         const indexIds = this.parsePathIndices(this._pointer);
-        const generatedIndices: Record<string, IInteractivityValue> = {};
         for (let i = 0; i < indexIds.length; i++) {
-            generatedIndices[indexIds[i]] = {value: [undefined], type: 1};
+            this._pointerIndices[indexIds[i]] = {value: [undefined], type: 1};
         }
-        this._pointerIndices = generatedIndices;
 
-        this.resolveRef = props.graphEngine.resolveRef;
+        // TODO: abstract this into helper function to remove duplicate code
+        //create a test path with all 0's to check if the path is read only 
+        const readOnlyTestRefs: Record<string, number> = {};
+        for (let i = 0; i < refIds.length; i++) {
+            readOnlyTestRefs[refIds[i]] = 0;
+        }
+        const readOnlyTestIndices: Record<string, number> = {};
+        for (let i = 0; i < indexIds.length; i++) {
+            readOnlyTestIndices[indexIds[i]] = 0;
+        }
+        const readOnlyTestPath = this.populatePath(this._pointer, readOnlyTestRefs, readOnlyTestIndices);
+        const isReadOnly = this.graphEngine.isReadOnly(readOnlyTestPath);
+        if (isReadOnly) {
+            throw new Error(`Path ${this._pointer} is read only but is included in a pointer/interpolate configuration`);
+        }
     }
 
-    parsePathVals(path: string): string[] {
+    parsePathRefs(path: string): string[] {
         const regex = /{([^}]+)}/g;
         const match = path.match(regex);
         const keys: string[] = [];

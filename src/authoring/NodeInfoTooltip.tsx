@@ -15,6 +15,9 @@ export interface NodeTooltipSections {
     // references (e.g. configuration.nodeIndex) elsewhere in the graph. Undefined for a node type
     // that isn't placed on the graph yet (the Add Node picker).
     nodeIndex?: number;
+    // diagnostic/warning lines for this node instance (type mismatches, missing values, ...),
+    // rendered in red. Undefined/empty for a node type with no live graph instance.
+    warnings?: string[];
     flowIn: TooltipSocketRow[];
     valueIn: TooltipSocketRow[];
     flowOut: TooltipSocketRow[];
@@ -68,6 +71,12 @@ export const NodeInfoTooltip = (props: {sections: NodeTooltipSections}) => {
             </RenderIf>
             <RenderIf shouldShow={sections.description !== undefined}>
                 <div>{sections.description}</div>
+            </RenderIf>
+            <RenderIf shouldShow={(sections.warnings?.length ?? 0) > 0}>
+                <div className="node-info-tooltip-section">Warnings</div>
+                {(sections.warnings ?? []).map((warning, index) => (
+                    <div key={index} className="node-info-tooltip-warning">{warning}</div>
+                ))}
             </RenderIf>
             <RenderIf shouldShow={sections.flowIn.length > 0}>
                 <div className="node-info-tooltip-section">Flow In</div>

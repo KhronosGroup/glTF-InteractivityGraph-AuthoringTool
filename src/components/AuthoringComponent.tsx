@@ -12,7 +12,7 @@ import {DeletableEdge} from "../authoring/DeletableEdge";
 import React, {useCallback, useContext, useEffect, useRef, useState} from "react";
 import {v4 as uuidv4} from "uuid";
 import {RenderIf} from "./RenderIf";
-import {Button, Col, Container, Row, Form, OverlayTrigger, Tooltip} from "react-bootstrap";
+import {Button, Col, Container, Row, Form, OverlayTrigger, Popover, Tooltip} from "react-bootstrap";
 import 'reactflow/dist/style.css';
 import {getTypeGroupMembers, interactivityNodeSpecs, knownDeclarations, resolveOutputSocketType, resolveTypeGroupType, standardTypes} from "../BasicBehaveEngine/types/nodes";
 import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityNode, IInteractivityValue, IInteractivityVariable } from '../BasicBehaveEngine/types/InteractivityGraph';

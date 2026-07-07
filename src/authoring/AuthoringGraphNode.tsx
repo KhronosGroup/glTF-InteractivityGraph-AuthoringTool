@@ -7,7 +7,7 @@ import { NodeInfoTooltip, NodeTooltipSections } from "./NodeInfoTooltip";
 import { IInteractivityFlow, IInteractivityValue, IInteractivityNode, IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityVariable, InteractivityValueType, InteractivityConfigurationValueType, NodeSpecFlag } from "../BasicBehaveEngine/types/InteractivityGraph";
 import { anyType, getTypeGroupMembers, hasNodeSpecFlag, interactivityNodeSpecs, resolveTypeGroupType, standardTypes } from "../BasicBehaveEngine/types/nodes";
 import { InteractivityGraphContext } from "../InteractivityGraphContext";
-import { getMessageTemplateSocketIds, getPathTemplateSockets } from "./pathTemplate";
+import { buildPointerSlotValue, getMessageTemplateSocketIds, getPathTemplateSockets, getRefSlotPointerPrefix } from "./pathTemplate";
 import { PointerConfigField } from "./PointerConfigField";
 import { getStandardTypeIndexForSignature } from "./pointerCatalogue";
 import { FLOW_COLOR, getColorForTypeIndex, getNodeCategoryColor, getTypeLabel } from "./socketColors";
@@ -337,6 +337,10 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         // pointer template slot id -> its required type, so a slot whose kind (index/ref) changed
         // adopts the new type instead of keeping the stale socket
         const pointerSlotTypeById = new Map<string, number>();
+        // pointer slots whose loaded value the pointer block already preserved/normalized below; the
+        // generic restore loop must not overwrite these with the raw loaded value (which would undo
+        // the int->"/nodes/3" ref normalization)
+        const preservedPointerSlotIds = new Set<string>();
 
         if (updatedConfiguration.inputFlows !== undefined) {
             const numberInputFlows = Number(updatedConfiguration.inputFlows.value?.[0] || 0);
@@ -415,14 +419,25 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
 
         }
         if (updatedConfiguration.pointer !== undefined) {
-            const sockets = getPathTemplateSockets(updatedConfiguration.pointer.value?.[0] || "");
+            const template = updatedConfiguration.pointer.value?.[0] || "";
+            const sockets = getPathTemplateSockets(template);
             const intTypeIndex = getStandardTypeIndex(InteractivityValueType.INT);
             const refTypeIndex = getStandardTypeIndex(InteractivityValueType.REF);
             for (const socket of sockets) {
                 const type = socket.kind === "index" ? intTypeIndex : refTypeIndex;
-                const value: IInteractivityValue = { value: [undefined], typeOptions: [type], type }
+                // preserve a value/wire the slot already carries (e.g. a pointer loaded from a glTF
+                // file) instead of resetting it to [undefined]; a ref slot storing a bare integer
+                // index (spec-compliant files) is normalized to its "/nodes/3" pointer string. Only a
+                // truly-empty slot is marked for the stale-socket reset below, so a loaded value whose
+                // stored type differs from the delimiter-derived type is kept (see buildPointerSlotValue).
+                const refPrefix = socket.kind === "ref" ? getRefSlotPointerPrefix(template, socket.id) : undefined;
+                const { value, preserved } = buildPointerSlotValue(inputValues[socket.id], socket.kind, type, refPrefix);
                 inputValuesToSet[socket.id] = value;
-                pointerSlotTypeById.set(socket.id, type);
+                if (preserved) {
+                    preservedPointerSlotIds.add(socket.id);
+                } else {
+                    pointerSlotTypeById.set(socket.id, type);
+                }
             }
         }
         if (updatedConfiguration.message !== undefined) {
@@ -531,6 +546,9 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         const extraInputValueKeys = allowsDynamicSockets ? [] : Object.keys(inputValues);
         const knownInputValueKeys = [...Object.keys(nodeSpecInputValues), ...Object.keys(inputValuesToSet), ...extraInputValueKeys];
         for (const key of knownInputValueKeys) {
+            // the pointer block already preserved (and, for ref slots, normalized) this slot's loaded
+            // value — leave its entry as-is so we don't overwrite "/nodes/3" with the raw index
+            if (preservedPointerSlotIds.has(key)) { continue; }
             const existing = inputValues[key];
             const existingHasData = existing !== undefined && (existing.value?.[0] != null || existing.node != null);
             // if a pointer slot's kind changed (index <-> ref) its type differs, so keep the
@@ -545,7 +563,18 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                     ? { ...existing, description: nodeSpecInputValues[key].description }
                     : existing;
             } else if (!existingHasData && !configGeneratedInputKeys.has(key) && nodeSpecInputValues[key] !== undefined) {
-                inputValuesToSet[key] = nodeSpecInputValues[key];
+                // A grouped input the file/model left without a static value or wire still carries a
+                // resolved group type — propagated across connections when the graph was loaded (see
+                // propagateGraphGroupTypes), or set by an earlier type pick. Restoring the bare spec
+                // default here would snap that placeholder back to the spec-default type (e.g. a math
+                // node's `int`), so its badge would disagree with its group + the wired sibling that
+                // resolved it and raise a spurious type-group warning. Keep the resolved type on the
+                // otherwise-default socket.
+                const specDefault = nodeSpecInputValues[key];
+                const grouped = (specDefault.typeGroup ?? existing?.typeGroup) !== undefined;
+                inputValuesToSet[key] = grouped && existing?.type !== undefined && existing.type !== specDefault.type
+                    ? { ...specDefault, type: existing.type }
+                    : specDefault;
             }
         }
 
@@ -565,7 +594,16 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                     ? { ...existing, description: nodeSpecOutputValues[key].description }
                     : existing;
             } else if (nodeSpecOutputValues[key] !== undefined) {
-                outputValuesToSet[key] = nodeSpecOutputValues[key];
+                // Same as the grouped inputs above: a grouped output (e.g. math/sub's `value`) never
+                // holds a value/node of its own, so it would always revert to the spec default here —
+                // discarding the type its group resolved to on load and leaving the output badge/wire
+                // stuck at the default `int`. Preserve the resolved group type on the default socket.
+                const existing = outputValues[key];
+                const specDefault = nodeSpecOutputValues[key];
+                const grouped = (specDefault.typeGroup ?? existing?.typeGroup) !== undefined;
+                outputValuesToSet[key] = grouped && existing?.type !== undefined && existing.type !== specDefault.type
+                    ? { ...specDefault, type: existing.type }
+                    : specDefault;
             }
         }
 
@@ -618,6 +656,11 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
             case "float4":
             case "float4x4":
                 return typeof value === "string" ? stringToListOfNumbers(value) : value
+            case "ref":
+                // ref values are JSON pointer strings, but must be array-wrapped like every other
+                // type (IInteractivityValue.value: any[]) so the runtime's parseType/resolveRef —
+                // which read val[0] — and the spec-shaped export both see "/nodes/0", not "/".
+                return [value === "" || value == null ? undefined : String(value)]
             case "AMZN_interactivity_string":
                 return String(value)
             default:
@@ -717,8 +760,8 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     // string, depending on the socket's shape) would export as invalid.
     const getMissingValueWarning = (socket: string, value: IInteractivityValue): string | undefined => {
         if (isSocketLinked(socket)) { return undefined; }
-        // ref sockets store their pointer as a bare string rather than array-wrapped
-        // (see castParameter/setSocketRefValue), so normalize both shapes before checking.
+        // ref sockets store their pointer array-wrapped (see castParameter), but older graphs may
+        // still carry a bare string; normalize both shapes before checking.
         const raw = value.value;
         const values = raw === undefined ? [] : Array.isArray(raw) ? raw : [raw];
         const isUnset = values.length === 0 ||

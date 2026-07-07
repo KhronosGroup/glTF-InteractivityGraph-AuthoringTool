@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { InteractivityValueType } from "../BasicBehaveEngine/types/InteractivityGraph";
 import { pointerCatalogue, PointerCategory, isPointerTemplateSupported } from "./pointerCatalogue";
 import { getPathTemplateSockets, setPathTemplateSlotKind, PathTemplateSocketKind } from "./pathTemplate";
+import { InteractivityGraphContext } from "../InteractivityGraphContext";
 
 export interface PointerConfigFieldProps {
     /** current pointer template string */
@@ -27,6 +28,7 @@ export const PointerConfigField: React.FC<PointerConfigFieldProps> = ({ value, a
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState("");
     const containerRef = useRef<HTMLDivElement | null>(null);
+    const { supportedPointerTemplates } = useContext(InteractivityGraphContext);
 
     // close the dropdown when clicking outside of it
     useEffect(() => {
@@ -58,7 +60,7 @@ export const PointerConfigField: React.FC<PointerConfigFieldProps> = ({ value, a
             .map((category) => ({ category, entries: byCategory.get(category)! }));
     }, [search]);
 
-    const currentSupported = value ? isPointerTemplateSupported(value) : true;
+    const currentSupported = value ? isPointerTemplateSupported(value, supportedPointerTemplates) : true;
 
     // slots in the current template, so each can be toggled between index and reference input
     const slots = useMemo(() => getPathTemplateSockets(value), [value]);
@@ -99,8 +101,8 @@ export const PointerConfigField: React.FC<PointerConfigFieldProps> = ({ value, a
                     value={value}
                     placeholder="/nodes/[node]/translation"
                     onChange={(e) => onChange(e.target.value)}
-                    style={{ flex: 1, minWidth: 0, fontFamily: "monospace", borderColor: currentSupported ? undefined : "#d98c00" }}
-                    title={currentSupported ? undefined : "This pointer is not supported by this tool's engine and may not resolve at runtime."}
+                    style={{ flex: 1, minWidth: 0, fontFamily: "monospace", borderColor: currentSupported === false ? "#d98c00" : undefined }}
+                    title={currentSupported === false ? "This pointer is not supported by this tool's engine and may not resolve at runtime." : undefined}
                 />
                 <button
                     type="button"
@@ -112,7 +114,7 @@ export const PointerConfigField: React.FC<PointerConfigFieldProps> = ({ value, a
                 </button>
             </div>
 
-            {!currentSupported && value !== "" && (
+            {currentSupported === false && value !== "" && (
                 <div style={{ color: "#b36b00", fontSize: 11, marginTop: 2 }}>
                     ⚠ Not supported by this tool — may not resolve at runtime.
                 </div>
@@ -183,6 +185,7 @@ export const PointerConfigField: React.FC<PointerConfigFieldProps> = ({ value, a
                             </div>
                             {entries.map((entry) => {
                                 const disabled = entry.readOnly && !allowReadOnly;
+                                const entrySupported = isPointerTemplateSupported(entry.template, supportedPointerTemplates);
                                 return (
                                     <div
                                         key={entry.template}
@@ -212,7 +215,7 @@ export const PointerConfigField: React.FC<PointerConfigFieldProps> = ({ value, a
                                             {entry.readOnly && (
                                                 <span style={{ fontSize: 10, color: "#888", border: "1px solid #ccc", borderRadius: 3, padding: "0 3px" }}>read-only</span>
                                             )}
-                                            {!entry.supported && (
+                                            {entrySupported === false && (
                                                 <span style={{ fontSize: 10, color: "#b36b00", border: "1px solid #e0b070", borderRadius: 3, padding: "0 3px" }}>unsupported</span>
                                             )}
                                         </div>

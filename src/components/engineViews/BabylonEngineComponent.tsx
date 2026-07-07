@@ -26,6 +26,7 @@ import { InteractivityGraphContext } from "../../InteractivityGraphContext";
 import { DOMEventBus } from "../../BasicBehaveEngine/eventBuses/DOMEventBus";
 import { attachPointerEventLogging, SendCustomEventPanel } from "../../authoring/CustomEventControls";
 import { computeExtensionDiagnostics } from "../../diagnostics";
+import { buildNormalizedTemplateSet } from "../../authoring/pointerCatalogue";
 
 enum BabylonEngineModal {
     CUSTOM_EVENT = "CUSTOM_EVENT",
@@ -51,7 +52,7 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
     const [fileUploaded, setFileUploaded] = useState<string | null>(null);
     const [clickedHotSpot, setClickedHotSpot] = useState<string | null>(null);
 
-    const {getExecutableGraph, loadGraphFromJson, setDiagnosticsForCategory, setGltfObjectModel} = useContext(InteractivityGraphContext);
+    const {getExecutableGraph, loadGraphFromJson, setDiagnosticsForCategory, setGltfObjectModel, setSupportedPointerTemplates} = useContext(InteractivityGraphContext);
 
     // Inspect the loaded glb's declared extensions (stashed on the scene metadata by the
     // KHR_interactivity loader extension) and surface any this tool does not support. Also publish
@@ -83,6 +84,7 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
             sceneRef.current?.dispose();
             engineRef.current?.dispose();
             babylonEngineRef.current?.clearCustomEventListeners();
+            setSupportedPointerTemplates(null);
         };
     }, []);
 
@@ -222,6 +224,8 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
         const world = {glTFNodes: nodes, animations: animations, materials: materials, meshes: meshes.filter(m => m.subMeshes !== undefined)};
         const eventBus = new DOMEventBus();
         babylonEngineRef.current = new BabylonDecorator(new BasicBehaveEngine(60, eventBus), world, scene)
+        const runtimeTemplates = buildNormalizedTemplateSet(babylonEngineRef.current.getRegisteredJsonPointers());
+        setSupportedPointerTemplates(runtimeTemplates);
         attachPointerEventLogging(babylonEngineRef.current);
 
         const extractedBehaveGraph = babylonEngineRef.current.extractBehaveGraphFromScene()

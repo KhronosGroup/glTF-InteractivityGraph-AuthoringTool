@@ -5,6 +5,7 @@ import {BasicBehaveEngine} from "../../BasicBehaveEngine/BasicBehaveEngine";
 import {LoggingDecorator} from "../../decorators/LoggingDecorator";
 import { InteractivityGraphContext } from "../../InteractivityGraphContext";
 import { DOMEventBus } from "../../BasicBehaveEngine/eventBuses/DOMEventBus";
+import { buildNormalizedTemplateSet } from "../../authoring/pointerCatalogue";
 
 enum LoggingEngineModal {
     WORLD = "WORLD",
@@ -25,12 +26,13 @@ export const LoggingEngineComponent: React.FC<LoggingEngineComponentProps> = ({ 
     const worldInputRef = useRef<HTMLTextAreaElement | null>(null);
     const loggingEngineRef = useRef<LoggingDecorator | null>(null);
 
-    const {getExecutableGraph} = useContext(InteractivityGraphContext);
+    const {getExecutableGraph, setSupportedPointerTemplates} = useContext(InteractivityGraphContext);
 
     useEffect(() => {
         return () => {
             // Clean up resources when the component unmounts
             loggingEngineRef.current?.clearCustomEventListeners();
+            setSupportedPointerTemplates(null);
         };
     }, []);
 
@@ -70,6 +72,8 @@ export const LoggingEngineComponent: React.FC<LoggingEngineComponentProps> = ({ 
 
         const eventBus = new DOMEventBus();
         loggingEngineRef.current = new LoggingDecorator(new BasicBehaveEngine(1, eventBus), (line: string) => setExecutionLog((prev: string) => prev + "\n" + line), world)
+        const runtimeTemplates = buildNormalizedTemplateSet(loggingEngineRef.current.getRegisteredJsonPointers());
+        setSupportedPointerTemplates(runtimeTemplates);
         loggingEngineRef.current?.loadBehaveGraph(behaveGraph);
     }
 

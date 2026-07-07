@@ -90,6 +90,10 @@ export abstract class ADecorator implements IBehaveEngine {
         this.behaveEngine.registerBehaveEngineNode(type, behaveEngineNode);
     }
 
+    getRegisteredJsonPointers(): string[] {
+        return this.behaveEngine.getRegisteredJsonPointers();
+    }
+
     isSlerpPath(path: string): boolean {
         return this.behaveEngine.isSlerpPath(path);
     }

@@ -17,6 +17,8 @@ interface InteractivityGraphContextType {
     clearDiagnostics: () => void,
     gltfObjectModel: GltfObjectModel | null,
     setGltfObjectModel: (model: GltfObjectModel | null) => void,
+    supportedPointerTemplates: ReadonlySet<string> | null,
+    setSupportedPointerTemplates: (templates: ReadonlySet<string> | null) => void,
     getAuthorGraph: (graph: IInteractivityGraph) => [Node[], Edge[], IInteractivityEvent[], IInteractivityVariable[]],
     getExecutableGraph: () => any,
     loadGraphFromJson: (json: any) => void,
@@ -47,6 +49,8 @@ const initialContext: InteractivityGraphContextType = {
     clearDiagnostics: () => {return null},
     gltfObjectModel: null,
     setGltfObjectModel: () => {return null},
+    supportedPointerTemplates: null,
+    setSupportedPointerTemplates: () => {return null},
     getAuthorGraph: (graph: IInteractivityGraph) => {return [[], [], [], []]},
     getExecutableGraph: () => {return null},
     loadGraphFromJson: () => {return null},
@@ -81,6 +85,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
     };
 
     const [gltfObjectModel, setGltfObjectModel] = useState<GltfObjectModel | null>(null);
+    const [supportedPointerTemplates, setSupportedPointerTemplates] = useState<ReadonlySet<string> | null>(null);
 
     const getAuthorGraph = (graph: IInteractivityGraph): [Node[], Edge[], IInteractivityEvent[], IInteractivityVariable[]] => {
         // TODO: THIS IS NOT JSON WE SHOULD NOT ALLOW FOR NANS OR INFINITIES
@@ -618,6 +623,8 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         clearDiagnostics: clearDiagnostics,
         gltfObjectModel: gltfObjectModel,
         setGltfObjectModel: setGltfObjectModel,
+        supportedPointerTemplates: supportedPointerTemplates,
+        setSupportedPointerTemplates: setSupportedPointerTemplates,
         getAuthorGraph: getAuthorGraph,
         loadGraphFromJson: loadGraphFromJson,
         getExecutableGraph: getExecutableGraph,

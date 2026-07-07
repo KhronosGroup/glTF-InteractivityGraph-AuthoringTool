@@ -3,8 +3,8 @@ import { standardTypes } from "../BasicBehaveEngine/types/nodes";
 
 /**
  * A catalogue of glTF Object Model JSON pointer templates for the pointer get/set/interpolate
- * authoring nodes. This is the full(ish) Object Model surface; entries that this tool's engine
- * decorators do not actually register are flagged as `supported: false` so the UI can mark them.
+ * authoring nodes. This is the full(ish) Object Model surface; support is resolved at runtime from
+ * the active engine decorator's registered pointer registry.
  *
  * Templates use the authoring tool's placeholder syntax:
  *   [name]  -> an integer index input socket (e.g. a node index)
@@ -150,70 +150,29 @@ export const normalizePointerTemplate = (template: string): string =>
         })
         .join("/");
 
+/** Build a normalized template set from concrete registered JSON pointer paths. */
+export const buildNormalizedTemplateSet = (paths: readonly string[]): ReadonlySet<string> =>
+    new Set(paths.map((path) => normalizePointerTemplate(path)));
+
 /**
- * Normalized templates this tool's engine decorators actually register (i.e. can resolve at runtime).
- * Derived from BabylonDecorator registerKnownPointers. Anything not here is shown but
- * flagged as unsupported by this tool.
+ * Returns pointer support status from runtime registry templates.
+ * `undefined` means support is not known yet (e.g. no engine initialized yet).
  */
-const SUPPORTED_TEMPLATES: ReadonlySet<string> = new Set<string>([
-    "/nodes/{}/translation",
-    "/nodes/{}/rotation",
-    "/nodes/{}/scale",
-    "/nodes/{}/matrix",
-    "/nodes/{}/globalMatrix",
-    "/nodes/{}/mesh",
-    "/nodes/{}/children/{}",
-    "/nodes/{}/extensions/KHR_node_visibility/visible",
-    "/nodes/{}/extensions/KHR_node_selectability/selectable",
-    "/nodes/{}/extensions/KHR_node_hoverability/hoverable",
-    "/meshes/{}/primitives/{}/material",
-    "/materials/{}/pbrMetallicRoughness/baseColorFactor",
-    "/materials/{}/pbrMetallicRoughness/metallicFactor",
-    "/materials/{}/pbrMetallicRoughness/roughnessFactor",
-    "/materials/{}/alphaCutoff",
-    "/materials/{}/emissiveFactor",
-    "/materials/{}/extensions/KHR_materials_emissive_strength/emissiveStrength",
-    "/materials/{}/extensions/KHR_materials_transmission/transmissionFactor",
-    "/materials/{}/pbrMetallicRoughness/baseColorTexture/extensions/KHR_texture_transform/offset",
-    "/materials/{}/pbrMetallicRoughness/baseColorTexture/extensions/KHR_texture_transform/scale",
-    "/materials/{}/pbrMetallicRoughness/baseColorTexture/extensions/KHR_texture_transform/rotation",
-    "/materials/{}/pbrMetallicRoughness/metallicRoughnessTexture/extensions/KHR_texture_transform/offset",
-    "/materials/{}/pbrMetallicRoughness/metallicRoughnessTexture/extensions/KHR_texture_transform/scale",
-    "/materials/{}/pbrMetallicRoughness/metallicRoughnessTexture/extensions/KHR_texture_transform/rotation",
-    "/materials/{}/normalTexture/extensions/KHR_texture_transform/offset",
-    "/materials/{}/normalTexture/extensions/KHR_texture_transform/scale",
-    "/materials/{}/normalTexture/extensions/KHR_texture_transform/rotation",
-    "/materials/{}/occlusionTexture/extensions/KHR_texture_transform/offset",
-    "/materials/{}/occlusionTexture/extensions/KHR_texture_transform/scale",
-    "/materials/{}/occlusionTexture/extensions/KHR_texture_transform/rotation",
-    "/materials/{}/emissiveTexture/extensions/KHR_texture_transform/offset",
-    "/materials/{}/emissiveTexture/extensions/KHR_texture_transform/scale",
-    "/materials/{}/emissiveTexture/extensions/KHR_texture_transform/rotation",
-    "/animations/{}/extensions/KHR_interactivity/isPlaying",
-    "/animations/{}/extensions/KHR_interactivity/minTime",
-    "/animations/{}/extensions/KHR_interactivity/maxTime",
-    "/animations/{}/extensions/KHR_interactivity/playhead",
-    "/animations/{}/extensions/KHR_interactivity/virtualPlayhead",
-    "/nodes.length",
-    "/materials.length",
-    "/animations.length",
-    "/extensions/KHR_interactivity/activeCamera/position",
-    "/extensions/KHR_interactivity/activeCamera/rotation",
-]);
+export const isPointerTemplateSupported = (
+    template: string,
+    supportedTemplates: ReadonlySet<string> | null
+): boolean | undefined => {
+    if (supportedTemplates === null) return undefined;
+    return supportedTemplates.has(normalizePointerTemplate(template));
+};
 
-export const isPointerTemplateSupported = (template: string): boolean =>
-    SUPPORTED_TEMPLATES.has(normalizePointerTemplate(template));
-
-/** The catalogue with a computed `supported` flag per entry. */
-export const pointerCatalogue: (PointerCatalogueEntry & { supported: boolean })[] = rawCatalogue.map((entry) => ({
-    ...entry,
-    supported: isPointerTemplateSupported(entry.template),
-}));
+/** Static catalogue metadata; support is resolved dynamically against runtime templates. */
+export const pointerCatalogue: PointerCatalogueEntry[] = rawCatalogue;
 
 /** Resolve an Object Model type signature to its standard type index, or -1 if unknown. */
 export const getStandardTypeIndexForSignature = (signature: InteractivityValueType): number =>
     standardTypes.findIndex((type) => type.signature === signature);
 
 /** Look up a catalogue entry by exact template string. */
-export const findPointerCatalogueEntry = (template: string): (PointerCatalogueEntry & { supported: boolean }) | undefined =>
+export const findPointerCatalogueEntry = (template: string): PointerCatalogueEntry | undefined =>
     pointerCatalogue.find((entry) => entry.template === template);

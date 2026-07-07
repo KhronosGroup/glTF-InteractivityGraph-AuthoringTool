@@ -363,6 +363,10 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.jsonPtrTrie.addPath(jsonPtr, getterCallback, setterCallback, typeName, readOnly);
     }
 
+    public getRegisteredJsonPointers = (): string[] => {
+        return this.jsonPtrTrie.getRegisteredPaths();
+    }
+
     public isValidJsonPtr = (jsonPtr: string): boolean => {
         return this.jsonPtrTrie.isPathValid(jsonPtr);
     }

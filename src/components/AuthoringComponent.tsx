@@ -635,7 +635,7 @@ export const AuthoringComponent = () => {
     const displayEdges = React.useMemo(() => {
         if (ancestorEdgeIds.size === 0) { return edges; }
         return edges.map((e) => ancestorEdgeIds.has(e.id)
-            ? { ...e, style: { ...(e.style || {}), strokeWidth: 6 }, zIndex: 1 }
+            ? { ...e, style: { ...(e.style || {}), strokeWidth: 4 }, zIndex: 1 }
             : e);
     }, [edges, ancestorEdgeIds]);
 

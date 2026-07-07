@@ -3,6 +3,7 @@ import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 export class OnSelect extends BehaveEngineNode {
     REQUIRED_CONFIGURATIONS = {nodeIndex: {defaultValue: [-1]}}
     _nodeIndex: number;
+    
     constructor(props: IBehaviourNodeProps) {
         super(props);
         this.name = 'OnSelect';
@@ -61,12 +62,6 @@ export class OnSelect extends BehaveEngineNode {
             };
             
             this.addEventToWorkQueue(this.flows.out);
-
-            this.graphEngine.queueFunctionCall(() => {
-                if (!this.graphEngine.propagationCancelled.has(this._nodeIndex)) {
-                    this.graphEngine.alertOnSelect(this._nodeIndex, controllerIndex, selectionPoint, selectionRayOrigin);
-                }
-            });
         }
         this.graphEngine.selectableNodesIndices.set(Number(this._nodeIndex), callback);
     }

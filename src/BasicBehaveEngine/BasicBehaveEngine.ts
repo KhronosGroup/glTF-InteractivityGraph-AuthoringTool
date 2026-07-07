@@ -244,18 +244,23 @@ export class BasicBehaveEngine implements IBehaveEngine {
         }
     }
 
-    public select(selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) {
-        this.alertOnSelect(selectedNodeIndex, controllerIndex, selectionPoint, selectionRayOrigin);
-    }
+    public select(nodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) {
+        for (;;) {
+            if (this.propagationCancelled.has(nodeIndex)) {
+                break;
+            }
 
-    public alertOnSelect(nodeIndex: number | undefined, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) {
-        while (nodeIndex !== undefined) {
             const callback = this.selectableNodesIndices.get(nodeIndex);
             if (callback !== undefined) {
                 callback(nodeIndex, controllerIndex, selectionPoint, selectionRayOrigin);
                 return;
             }
-            nodeIndex = this.getParentNodeIndex(nodeIndex);
+
+            const parent = this.getParentNodeIndex(nodeIndex);
+            if (parent === undefined) {
+                return;
+            }
+            nodeIndex = parent;
         }
     }
 

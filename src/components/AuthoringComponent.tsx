@@ -154,11 +154,19 @@ export const AuthoringComponent = () => {
         const handleWheel = (e: WheelEvent) => {
             if (isOverScrollableElement(e.target as Element, container)) return;
             e.preventDefault();
-            if (e.deltaY < 0) {
-                reactFlowInstance.zoomIn({ duration: 0 });
-            } else {
-                reactFlowInstance.zoomOut({ duration: 0 });
-            }
+            const { x, y, zoom } = reactFlowInstance.getViewport();
+            const factor = e.deltaY < 0 ? 1.2 : 1 / 1.2;
+            const newZoom = Math.min(2, Math.max(0.1, zoom * factor));
+            const rect = container.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            const flowX = (mouseX - x) / zoom;
+            const flowY = (mouseY - y) / zoom;
+            reactFlowInstance.setViewport({
+                x: mouseX - flowX * newZoom,
+                y: mouseY - flowY * newZoom,
+                zoom: newZoom,
+            }, { duration: 0 });
         };
         container.addEventListener('wheel', handleWheel, { passive: false });
         return () => container.removeEventListener('wheel', handleWheel);

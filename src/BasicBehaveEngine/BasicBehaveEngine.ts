@@ -244,18 +244,18 @@ export class BasicBehaveEngine implements IBehaveEngine {
         }
     }
 
-    public select(selectedNodeRef: any, selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) {
-        this.alertOnSelect(selectedNodeRef, controllerIndex, selectionPoint, selectionRayOrigin, selectedNodeIndex);
+    public select(selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) {
+        this.alertOnSelect(selectedNodeIndex, controllerIndex, selectionPoint, selectionRayOrigin);
     }
 
-    public alertOnSelect(selectedNodeRef: any, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined, currentNodeIndex: number | undefined) {
-        while (currentNodeIndex !== undefined) {
-            const callback = this.selectableNodesIndices.get(currentNodeIndex);
+    public alertOnSelect(nodeIndex: number | undefined, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) {
+        while (nodeIndex !== undefined) {
+            const callback = this.selectableNodesIndices.get(nodeIndex);
             if (callback !== undefined) {
-                callback(selectedNodeRef, controllerIndex, selectionPoint, selectionRayOrigin);
+                callback(nodeIndex, controllerIndex, selectionPoint, selectionRayOrigin);
                 return;
             }
-            currentNodeIndex = this.getParentNodeIndex(currentNodeIndex);
+            nodeIndex = this.getParentNodeIndex(nodeIndex);
         }
     }
 

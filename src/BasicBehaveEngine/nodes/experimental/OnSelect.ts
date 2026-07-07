@@ -64,8 +64,7 @@ export class OnSelect extends BehaveEngineNode {
 
             this.graphEngine.queueFunctionCall(() => {
                 if (!this.graphEngine.propagationCancelled.has(this._nodeIndex)) {
-                    const parentNodeIndex = this.graphEngine.getParentNodeIndex(this._nodeIndex);
-                    this.graphEngine.alertOnSelect(selectedNodeRef, controllerIndex, selectionPoint, selectionRayOrigin, parentNodeIndex);
+                    this.graphEngine.alertOnSelect(this._nodeIndex, controllerIndex, selectionPoint, selectionRayOrigin);
                 }
             });
         }

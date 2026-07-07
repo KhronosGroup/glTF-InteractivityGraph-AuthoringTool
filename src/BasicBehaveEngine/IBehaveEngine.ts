@@ -62,13 +62,12 @@ export interface IBehaveEngine {
 
     /**
      * Trigger a selection event on a specified node index and controller index.
-     * @param selectedNodeRef - The reference to the selected node.
      * @param selectedNodeIndex - The index of the selected node.
      * @param controllerIndex - The index of the controller.
      * @param selectionPoint - The position in world space where the collision happened.
      * @param selectionRayOrigin - The origin of the selection ray.
      */
-    select: (selectedNodeRef: any, selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) => void;
+    select: (selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) => void;
 
     isSlerpPath: (path: string) => boolean;
 

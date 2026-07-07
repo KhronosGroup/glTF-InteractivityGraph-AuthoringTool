@@ -62,8 +62,8 @@ export abstract class ADecorator implements IBehaveEngine {
         this.behaveEngine.hoverOn(nodeIndex, controllerIndex);
     }
 
-    select(selectedNodeRef: any, selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) {
-        this.behaveEngine.select(selectedNodeRef, selectedNodeIndex, controllerIndex, selectionPoint, selectionRayOrigin);
+    select(selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) {
+        this.behaveEngine.select(selectedNodeIndex, controllerIndex, selectionPoint, selectionRayOrigin);
     }
 
     getEventList() {

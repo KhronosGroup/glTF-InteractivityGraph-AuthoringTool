@@ -108,6 +108,14 @@ export class PointerGet extends BehaveEngineNode {
             };
         } else {
             const typeName = this.getType(this._typeIndex);
+
+            if (typeName === "ref") {
+                return {
+                    'value':{value: [populatedPath], type: this._typeIndex},
+                    'isValid':{value: [true], type: this.getTypeIndex('bool')}
+                };
+            }
+
             return {
                 'value':{value: this.getDefaultValueForType(typeName), type: this._typeIndex},
                 'isValid':{value: [false], type: this.getTypeIndex('bool')}

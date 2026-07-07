@@ -269,4 +269,10 @@ export class BehaveEngineNode {
     private evaluateConfiguration(configuration: IInteractivityConfigurationValue): any {
         return configuration.value;
     }
+
+    protected refToIndex(ref: string): number {
+        const refParts = ref.split("/");
+        const lastPart = refParts[refParts.length - 1];
+        return Number(lastPart);
+    }
 }

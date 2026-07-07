@@ -967,7 +967,7 @@ const NodePickerComponent = (props: {onAddNode: any, closeModal: any, mousePos: 
                         })
                     }
                 </div>
-                <div style={{ columnWidth: 200, columnGap: 24, maxHeight: "40vh", overflowY: "auto", overscrollBehavior: "contain", marginTop: 16, padding: "0 16px 8px" }}>
+                <div style={{ columnWidth: 200, columnGap: 24, maxHeight: "min(40vh, calc(100vh - 260px))", overflowY: "auto", overscrollBehavior: "contain", marginTop: 16, padding: "0 16px 8px" }}>
                     {
                         sortedNodeCategories.map(category => {
                             const nodesInCategory = nodeTypesByCategory[category].filter(nodeType =>
@@ -1243,7 +1243,7 @@ const VariablesComponent = (props: {closeModal: any}) => {
                     <Button variant={"outline-danger"} size={"sm"} onClick={() => props.closeModal()}>Close</Button>
                 </div>
                 <hr style={{ borderTop: '1px solid #777', margin: '12px 0' }} />
-                <div style={{ display: "flex", gap: 16, height: 460 }}>
+                <div style={{ display: "flex", gap: 16, height: "min(460px, calc(100vh - 210px))" }}>
                     {/* left: editable list of variables */}
                     <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
                         {/* overflowX hidden avoids the horizontal scrollbar Bootstrap's negative
@@ -1420,7 +1420,7 @@ const CustomEventsComponent = (props: {closeModal: any}) => {
                     <Button variant={"outline-danger"} size={"sm"} onClick={() => props.closeModal()}>Close</Button>
                 </div>
                 <hr style={{ borderTop: '1px solid #777', margin: '12px 0' }} />
-                <div style={{ display: "flex", gap: 16, height: 460 }}>
+                <div style={{ display: "flex", gap: 16, height: "min(460px, calc(100vh - 210px))" }}>
                     {/* left: editable list of events */}
                     <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
                         <div style={{ flex: 1, overflowY: "auto", overscrollBehavior: "contain", textAlign: "left", paddingRight: 4 }}>

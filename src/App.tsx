@@ -4,7 +4,6 @@ import {EngineType} from "./components/engineViews/EngineType";
 import {RenderIf} from "./components/RenderIf";
 import {LoggingEngineComponent} from "./components/engineViews/LoggingEngineComponent";
 import {BabylonEngineComponent} from "./components/engineViews/BabylonEngineComponent";
-import {ThreeEngineComponent} from "./components/engineViews/ThreeEngineComponent";
 import {Tab, Tabs} from "react-bootstrap";
 import {Spacer} from "./components/Spacer";
 import { InteractivityGraphProvider } from './InteractivityGraphContext';
@@ -30,9 +29,6 @@ export const App = () => {
       switch (engineParam.toLowerCase()) {
         case 'logging':
           setEngineType(EngineType.LOGGING);
-          break;
-        case 'three':
-          setEngineType(EngineType.THREE);
           break;
         case 'babylon':
           setEngineType(EngineType.BABYLON);
@@ -76,9 +72,6 @@ export const App = () => {
         switch (engineParam.toLowerCase()) {
           case 'logging':
             setEngineType(EngineType.LOGGING);
-            break;
-          case 'three':
-            setEngineType(EngineType.THREE);
             break;
           case 'babylon':
             setEngineType(EngineType.BABYLON);
@@ -153,9 +146,6 @@ export const App = () => {
         <RenderIf shouldShow={engineType === EngineType.BABYLON}>
             <BabylonEngineComponent modelUrl={modelUrl} />
         </RenderIf>
-        <RenderIf shouldShow={engineType === EngineType.THREE}>
-            <ThreeEngineComponent modelUrl={modelUrl} />
-        </RenderIf>
 
         <AuthoringComponent/>
       </div>
@@ -177,8 +167,6 @@ export const EngineSelector: React.FC<EngineSelectorProps> = ({ setEngineType, c
                 return '1';
             case EngineType.BABYLON:
                 return '2';
-            case EngineType.THREE:
-                return '3';
             default:
                 return '2'; // Default to Babylon
         }
@@ -201,9 +189,6 @@ export const EngineSelector: React.FC<EngineSelectorProps> = ({ setEngineType, c
                 case '2':
                     engine = EngineType.BABYLON;
                     break;
-                case '3':
-                    engine = EngineType.THREE;
-                    break;
                 default:
                     throw Error("Invalid Selection")
             }
@@ -224,7 +209,6 @@ export const EngineSelector: React.FC<EngineSelectorProps> = ({ setEngineType, c
                     onSelect={handleEngineChange}
                 >
                     <Tab title={"Babylon Engine"} eventKey={2}/>
-                    <Tab title={"Three.js (experimental)"} eventKey={3}/>
                     <Tab title={"Logging Engine (for development)"} eventKey={1}/>
                 </Tabs>
             </div>

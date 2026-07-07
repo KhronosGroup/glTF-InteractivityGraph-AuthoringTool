@@ -1,7 +1,7 @@
 /**
  * An engine-agnostic snapshot of the loaded glTF's addressable objects, used to power the ref-socket
- * value picker in the authoring UI. Built from the raw glTF JSON (available from the Babylon loader
- * and the three.js parser), so names, indices and the node hierarchy are all faithful.
+ * value picker in the authoring UI. Built from the raw glTF JSON (available from the Babylon loader),
+ * so names, indices and the node hierarchy are all faithful.
  */
 
 export interface GltfObjectNode {

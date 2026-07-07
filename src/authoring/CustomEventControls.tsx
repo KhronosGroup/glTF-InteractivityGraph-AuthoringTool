@@ -18,7 +18,7 @@ const refSelectButtonStyle: CSSProperties = {
 };
 
 // Custom events flow through the global document as CustomEvents named `KHR_INTERACTIVITY:<id>`
-// (see DOMEventBus). All three engines (Babylon, Three, Logging) dispatch/listen on this same
+// (see DOMEventBus). Both engines (Babylon, Logging) dispatch/listen on this same
 // bus, so the authoring nodes can hook it directly without a reference to whichever engine is
 // currently running: event/send nodes are monitored by listening, event/receive nodes are
 // triggered by dispatching.

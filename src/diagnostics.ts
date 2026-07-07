@@ -12,7 +12,7 @@ export interface IGraphDiagnostic {
  * glTF extensions this tool can load and/or interpret. Anything found in a glb's
  * extensionsUsed/extensionsRequired that is not in this set is surfaced to the user
  * as a diagnostic. Includes both the interactivity-related extensions handled by the
- * decorators and the common asset extensions Babylon/three understand out of the box.
+ * decorators and the common asset extensions Babylon understands out of the box.
  */
 export const SUPPORTED_GLTF_EXTENSIONS: ReadonlySet<string> = new Set<string>([
     // interactivity related

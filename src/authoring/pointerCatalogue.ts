@@ -152,7 +152,7 @@ export const normalizePointerTemplate = (template: string): string =>
 
 /**
  * Normalized templates this tool's engine decorators actually register (i.e. can resolve at runtime).
- * Derived from BabylonDecorator/ThreeDecorator registerKnownPointers. Anything not here is shown but
+ * Derived from BabylonDecorator registerKnownPointers. Anything not here is shown but
  * flagged as unsupported by this tool.
  */
 const SUPPORTED_TEMPLATES: ReadonlySet<string> = new Set<string>([

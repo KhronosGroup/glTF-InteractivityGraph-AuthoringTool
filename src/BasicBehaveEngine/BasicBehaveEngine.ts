@@ -731,13 +731,12 @@ export class BasicBehaveEngine implements IBehaveEngine {
 
     protected addEventToWorkQueue = (flow: IInteractivityFlow) => {
         if (flow === undefined || flow.node === undefined) {return}
-        const nextNode: BehaveEngineNode | undefined = this.idToBehaviourNodeMap.get(Number(flow.node));
 
+        const nextNode = this.idToBehaviourNodeMap.get(Number(flow.node));
         if (nextNode === undefined) {return}
-        const nodeToPush = this.idToBehaviourNodeMap.get(Number(flow.node))!;
 
         this.processAddingNodeToQueue(flow);
-        this.eventBus.addEvent({behaveNode: nodeToPush, inSocketId: flow.socket});
+        this.eventBus.addEvent({behaveNode: nextNode, inSocketId: flow.socket});
     }
 
     public executeEventQueueTick = () => {

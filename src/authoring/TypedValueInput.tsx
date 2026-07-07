@@ -139,7 +139,7 @@ export const TypedValueInput = ({ typeIndex, value, onChange }: TypedValueInputP
                 <input
                     className={"flow-node-control nodrag"}
                     style={{ flex: 1, minWidth: 0, fontFamily: "monospace", fontSize: 12 }}
-                    placeholder={"/nodes/0"}
+                    placeholder={"/nodes/..."}
                     value={strVal}
                     onChange={(e) => onChange(e.target.value || undefined)}
                 />

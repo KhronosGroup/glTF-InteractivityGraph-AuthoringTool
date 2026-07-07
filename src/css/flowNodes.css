@@ -71,13 +71,21 @@
     background: #e9ecef;
 }
 
-/* tooltip shown for each node-picker entry: op description + flow/value sockets */
-.node-picker-tooltip .tooltip-inner {
+/* shared rich tooltip body (NodeInfoTooltip): used by both the Add Node picker entries and the
+   graph canvas node header — op description + flow/value sockets (+ NodeIndex / connections) */
+.node-info-tooltip .tooltip-inner {
     max-width: 360px;
     text-align: left;
 }
 
-.node-picker-tooltip-section {
+.node-info-tooltip-index {
+    font-size: 11px;
+    font-weight: 700;
+    color: #9db3cc;
+    margin-bottom: 4px;
+}
+
+.node-info-tooltip-section {
     margin-top: 6px;
     font-size: 10px;
     font-weight: 700;
@@ -86,18 +94,23 @@
     color: #9db3cc;
 }
 
-.node-picker-tooltip-row {
+.node-info-tooltip-row {
     line-height: 1.35;
 }
 
-.node-picker-tooltip-socket {
+.node-info-tooltip-socket {
     font-family: monospace;
     font-weight: 600;
     color: #ffffff;
 }
 
-.node-picker-tooltip-desc {
+.node-info-tooltip-desc {
     color: #c8c8c8;
+}
+
+.node-info-tooltip-conn {
+    color: #7fd0a0;
+    font-style: italic;
 }
 
 /* pointer nodes carry long JSON pointer strings, so give them more room */

@@ -19,6 +19,7 @@ import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityNode, IIn
 import { InteractivityGraphContext } from '../InteractivityGraphContext';
 import { FLOW_COLOR, getColorForTypeIndex, getNodeCategoryColor } from '../authoring/socketColors';
 import { TypedValueInput } from '../authoring/TypedValueInput';
+import { NodeInfoTooltip, buildNodeTypeTooltipSections } from '../authoring/NodeInfoTooltip';
 import '../css/flowNodes.css';
 
 const nodeTypes = interactivityNodeSpecs.reduce((nodes, node) => {
@@ -789,47 +790,7 @@ const nodePickerSpecByType = interactivityNodeSpecs.reduce((specs, node) => {
 const NodePickerTooltipContent = (props: {nodeType: string}) => {
     const spec = nodePickerSpecByType[props.nodeType];
     if (!spec) { return <>{props.nodeType}</>; }
-    const flowIn = Object.keys(spec.flows?.input ?? {});
-    const flowOut = Object.keys(spec.flows?.output ?? {});
-    const valueIn = Object.entries(spec.values?.input ?? {});
-    const valueOut = Object.entries(spec.values?.output ?? {});
-    return (
-        <div>
-            <RenderIf shouldShow={spec.description !== undefined}>
-                <div>{spec.description}</div>
-            </RenderIf>
-            <RenderIf shouldShow={flowIn.length > 0}>
-                <div className="node-picker-tooltip-section">Flow In</div>
-                {flowIn.map(socket => <div key={socket} className="node-picker-tooltip-row"><span className="node-picker-tooltip-socket">{socket}</span></div>)}
-            </RenderIf>
-            <RenderIf shouldShow={valueIn.length > 0}>
-                <div className="node-picker-tooltip-section">Value In</div>
-                {valueIn.map(([socket, value]) => (
-                    <div key={socket} className="node-picker-tooltip-row">
-                        <span className="node-picker-tooltip-socket">{socket}</span>
-                        <RenderIf shouldShow={value.description !== undefined}>
-                            <span className="node-picker-tooltip-desc"> — {value.description}</span>
-                        </RenderIf>
-                    </div>
-                ))}
-            </RenderIf>
-            <RenderIf shouldShow={flowOut.length > 0}>
-                <div className="node-picker-tooltip-section">Flow Out</div>
-                {flowOut.map(socket => <div key={socket} className="node-picker-tooltip-row"><span className="node-picker-tooltip-socket">{socket}</span></div>)}
-            </RenderIf>
-            <RenderIf shouldShow={valueOut.length > 0}>
-                <div className="node-picker-tooltip-section">Value Out</div>
-                {valueOut.map(([socket, value]) => (
-                    <div key={socket} className="node-picker-tooltip-row">
-                        <span className="node-picker-tooltip-socket">{socket}</span>
-                        <RenderIf shouldShow={value.description !== undefined}>
-                            <span className="node-picker-tooltip-desc"> — {value.description}</span>
-                        </RenderIf>
-                    </div>
-                ))}
-            </RenderIf>
-        </div>
-    );
+    return <NodeInfoTooltip sections={buildNodeTypeTooltipSections(spec)} />;
 };
 
 const getNodePickerSearchText = (nodeType: string): string => {
@@ -917,7 +878,7 @@ const NodePickerComponent = (props: {onAddNode: any, closeModal: any, mousePos: 
                                                     placement={"right"}
                                                     delay={{show: 300, hide: 0}}
                                                     overlay={
-                                                        <Tooltip id={`node-picker-tooltip-${nodeType}`} className="node-picker-tooltip">
+                                                        <Tooltip id={`node-picker-tooltip-${nodeType}`} className="node-info-tooltip">
                                                             <NodePickerTooltipContent nodeType={nodeType} />
                                                         </Tooltip>
                                                     }

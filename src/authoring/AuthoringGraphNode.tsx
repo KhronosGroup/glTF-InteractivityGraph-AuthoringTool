@@ -1,7 +1,9 @@
 import { CSSProperties, useCallback, useContext, useEffect, useState } from "react";
 import { Handle, Position, useReactFlow, useUpdateNodeInternals } from "reactflow";
+import { OverlayTrigger, Tooltip } from "react-bootstrap";
 
 import { RenderIf } from "../components/RenderIf";
+import { NodeInfoTooltip, NodeTooltipSections } from "./NodeInfoTooltip";
 import { IInteractivityFlow, IInteractivityValue, IInteractivityNode, IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityVariable, InteractivityValueType, InteractivityConfigurationValueType } from "../BasicBehaveEngine/types/InteractivityGraph";
 import { anyType, getTypeGroupMembers, interactivityNodeSpecs, resolveTypeGroupType, standardTypes } from "../BasicBehaveEngine/types/nodes";
 import { InteractivityGraphContext } from "../InteractivityGraphContext";
@@ -825,15 +827,53 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     // this node's position in the graph's node list — the index used by KHR_interactivity
     // node references (e.g. configuration.nodeIndex) elsewhere in the graph
     const nodeIndex = graph.nodes.findIndex((n) => n.uid === uid);
-    const socketDescriptionLines = [
-        ...Object.entries(inputValues).map(([socket, value]) => value.description ? `  ${socket}: ${value.description}` : undefined),
-        ...Object.entries(outputValues).map(([socket, value]) => value.description ? `  ${socket}: ${value.description}` : undefined),
-    ].filter(Boolean);
-    const nodeHeaderTitle = [
-        node?.description,
-        `Node Index: ${nodeIndex}`,
-        socketDescriptionLines.length > 0 ? `Sockets:\n${socketDescriptionLines.join("\n")}` : undefined,
-    ].filter(Boolean).join("\n\n");
+
+    // NodeIndex that a given uid resolves to, for annotating a wired socket's tooltip row with
+    // what it's connected to.
+    const nodeIndexForUid = (targetUid: string | number | undefined): number | undefined => {
+        if (targetUid === undefined) { return undefined; }
+        const idx = graph.nodes.findIndex((n) => n.uid === targetUid);
+        return idx >= 0 ? idx : undefined;
+    };
+
+    // reverse-lookup: every node whose flows.output points at (this node's uid, socket) — i.e.
+    // every upstream node flowing into this input flow socket. flows.input is never populated
+    // with the link itself (only used as template metadata, e.g. flow/waitAll's inputFlows
+    // count — see setInputFlows above), so the only way to find the source(s) is to scan for
+    // whoever points here.
+    const findFlowSourceIndices = (socket: string): number[] =>
+        graph.nodes
+            .map((n, i) => (Object.values(n.flows?.output ?? {}).some((f) => f.node === uid && f.socket === socket) ? i : undefined))
+            .filter((i): i is number => i !== undefined);
+
+    // reverse-lookup: every node whose values.input references (this node's uid, socket) — a
+    // value output can fan out to several consumers, unlike a value input which has one source.
+    const findValueConsumerIndices = (socket: string): number[] =>
+        graph.nodes
+            .map((n, i) => (Object.values(n.values?.input ?? {}).some((v) => v.node === uid && v.socket === socket) ? i : undefined))
+            .filter((i): i is number => i !== undefined);
+
+    const headerTooltipSections: NodeTooltipSections = {
+        nodeIndex,
+        description: node?.description,
+        flowIn: Object.keys(inputFlows).map((socket) => ({
+            socket,
+            connectedNodeIndices: findFlowSourceIndices(socket),
+        })),
+        flowOut: Object.keys(outputFlows).map((socket) => {
+            const targetIndex = nodeIndexForUid((node?.flows?.output?.[socket] ?? outputFlows[socket])?.node);
+            return { socket, connectedNodeIndices: targetIndex !== undefined ? [targetIndex] : [] };
+        }),
+        valueIn: Object.entries(inputValues).map(([socket, value]) => {
+            const sourceIndex = nodeIndexForUid((node?.values?.input?.[socket] ?? value)?.node);
+            return { socket, description: value.description, connectedNodeIndices: sourceIndex !== undefined ? [sourceIndex] : [] };
+        }),
+        valueOut: Object.entries(outputValues).map(([socket, value]) => ({
+            socket,
+            description: value.description,
+            connectedNodeIndices: findValueConsumerIndices(socket),
+        })),
+    };
 
     // aggregate socket-level mismatches into a single node-header warning, so a type conflict on
     // any input is visible without having to scan every socket
@@ -847,22 +887,32 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
 
     return (
         <div className={`flow-node${isPointerNode ? " flow-node--pointer" : ""}${typeMismatchLines.length > 0 ? " flow-node--warning" : ""}`}>
-            <div className={"flow-node-header"} style={{ background: getNodeCategoryColor(node?.op || "") }} title={nodeHeaderTitle}>
-                <RenderIf shouldShow={typeMismatchLines.length > 0}>
-                    <span className={"flow-node-header-warning"} title={nodeHeaderWarningTitle}>⚠</span>
-                </RenderIf>
-                <h2>
-                    {node?.op}
-                </h2>
-                <button
-                    type="button"
-                    className={"flow-node-delete-btn nodrag nopan"}
-                    title={"Delete node"}
-                    onClick={(e) => { e.stopPropagation(); deleteElements({ nodes: [{ id: uid }] }); }}
-                >
-                    ×
-                </button>
-            </div>
+            <OverlayTrigger
+                placement="bottom"
+                delay={{ show: 300, hide: 0 }}
+                overlay={
+                    <Tooltip id={`node-header-tooltip-${uid}`} className="node-info-tooltip">
+                        <NodeInfoTooltip sections={headerTooltipSections} />
+                    </Tooltip>
+                }
+            >
+                <div className={"flow-node-header"} style={{ background: getNodeCategoryColor(node?.op || "") }}>
+                    <RenderIf shouldShow={typeMismatchLines.length > 0}>
+                        <span className={"flow-node-header-warning"} title={nodeHeaderWarningTitle}>⚠</span>
+                    </RenderIf>
+                    <h2>
+                        {node?.op}
+                    </h2>
+                    <button
+                        type="button"
+                        className={"flow-node-delete-btn nodrag nopan"}
+                        title={"Delete node"}
+                        onClick={(e) => { e.stopPropagation(); deleteElements({ nodes: [{ id: uid }] }); }}
+                    >
+                        ×
+                    </button>
+                </div>
+            </OverlayTrigger>
 
             <div className={"flow-node-body"}>
                 <RenderIf shouldShow={Object.keys(configuration).length > 0}>

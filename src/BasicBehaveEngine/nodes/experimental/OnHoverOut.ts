@@ -12,7 +12,7 @@ export class OnHoverOut extends BehaveEngineNode {
         const {nodeIndex} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
         this._nodeIndex = Number(nodeIndex[0]);
 
-        this.outValues.hoverNodeRef = {
+        this.outValues.hoveredNode = {
             type: this.getTypeIndex('ref'),
             value: [null],
         };
@@ -28,7 +28,7 @@ export class OnHoverOut extends BehaveEngineNode {
         const callback = (selectedNodeRef: unknown, controllerIndex: number, firstCommonHoverNodeIndex: number | undefined) => {
             const hoverInformation = this.graphEngine.hoverableNodesIndices.get(this._nodeIndex);
             if (hoverInformation) {
-                this.outValues.hoverNodeRef = {
+                this.outValues.hoveredNode = {
                     type: this.getTypeIndex('ref'),
                     value: [selectedNodeRef ?? null],
                 };

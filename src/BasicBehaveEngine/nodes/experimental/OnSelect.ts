@@ -20,7 +20,7 @@ export class OnSelect extends BehaveEngineNode {
             type: this.getTypeIndex('float3'),
             value: [NaN, NaN, NaN],
         };
-        this.outValues.selectedNodeRef = {
+        this.outValues.selectedNode = {
             type: this.getTypeIndex('ref'),
             value: [null],
         };
@@ -47,7 +47,7 @@ export class OnSelect extends BehaveEngineNode {
                 type: this.getTypeIndex('float3'),
                 value: selectionRayOrigin ?? [NaN, NaN, NaN],
             };
-            this.outValues.selectedNodeRef = {
+            this.outValues.selectedNode = {
                 type: this.getTypeIndex('ref'),
                 value: [selectedNodeRef ?? null],
             };

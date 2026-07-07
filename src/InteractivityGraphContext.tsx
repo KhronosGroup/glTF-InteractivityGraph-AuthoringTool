@@ -507,7 +507,10 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         // `int` while the group actually resolves to `float`). The interactive connect / type paths
         // keep these in sync as the user edits, but nothing runs on load; do it explicitly here so
         // stored types match the resolved type (no spurious type-group warnings, correct exports).
-        propagateGraphGroupTypes(graph.nodes);
+        // preferConnections: at load a wired input's source type must beat an unconnected sibling's
+        // spec-default placeholder, so a whole grouped chain resolves consistently instead of leaking
+        // a default `int` downstream (see propagateGraphGroupTypes / resolveTypeGroupType).
+        propagateGraphGroupTypes(graph.nodes, true);
 
         graphRef.current = graph;
 

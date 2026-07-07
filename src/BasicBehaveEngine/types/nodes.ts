@@ -4873,12 +4873,20 @@ export const getTypeGroupMembers = (
  *      connected input adopts its source output socket's type,
  *   3. any grouped socket's stored type (input then output) — the fallback / default.
  * Returns undefined if the group has no members with a determinable type.
+ *
+ * `preferConnections` (the load-time mode) skips the bare-stored-type step (1b) so a wired input's
+ * source type wins over an unconnected sibling that carries only a spec-default placeholder. This is
+ * safe *only* at load, where an input is always either a static value or a wire — never a bare
+ * authored type — so an unconnected+valueless socket's `type` is just the spec default and not real
+ * evidence. In the live editor (`preferConnections` false) that bare type may be a deliberate
+ * dropdown pick, which must keep beating a wire, so 1b is retained.
  */
 export const resolveTypeGroupType = (
     node: IInteractivityNode,
     spec: IInteractivityNode | undefined,
     group: string,
     graphNodes: IInteractivityNode[],
+    preferConnections = false,
 ): number | undefined => {
     const { inputs, outputs } = getTypeGroupMembers(spec, group);
     const nodeInputs = node.values?.input ?? {};
@@ -4894,10 +4902,15 @@ export const resolveTypeGroupType = (
         if (socket === undefined || socket.node !== undefined) { continue; }
         if (socket.value?.[0] != null && socket.type !== undefined) { return socket.type; }
     }
-    for (const name of inputs) {
-        const socket = nodeInputs[name];
-        if (socket === undefined || socket.node !== undefined) { continue; }
-        if (socket.type !== undefined) { return socket.type; }
+    // 1b. an unconnected input's bare stored type (a live dropdown pick, or a spec-default placeholder
+    // at load). Skipped in `preferConnections` mode so a real wired source (step 2) outranks a
+    // placeholder default.
+    if (!preferConnections) {
+        for (const name of inputs) {
+            const socket = nodeInputs[name];
+            if (socket === undefined || socket.node !== undefined) { continue; }
+            if (socket.type !== undefined) { return socket.type; }
+        }
     }
     for (const name of inputs) {
         const socket = nodeInputs[name];
@@ -4952,6 +4965,7 @@ export const resolveOutputSocketType = (
 export const propagateNodeGroupTypes = (
     node: IInteractivityNode,
     graphNodes: IInteractivityNode[],
+    preferConnections = true,
 ): boolean => {
     const spec = interactivityNodeSpecs.find((n) => n.op === node.op);
     if (spec === undefined) { return false; }
@@ -4966,7 +4980,7 @@ export const propagateNodeGroupTypes = (
 
     let changed = false;
     for (const group of groups) {
-        const resolvedType = resolveTypeGroupType(node, spec, group, graphNodes);
+        const resolvedType = resolveTypeGroupType(node, spec, group, graphNodes, preferConnections);
         if (resolvedType === undefined) { continue; }
         const { inputs, outputs } = getTypeGroupMembers(spec, group);
         for (const name of inputs) {
@@ -4993,12 +5007,21 @@ export const propagateNodeGroupTypes = (
  * Propagate typeGroup resolution across every node in a freshly loaded graph. Repeats until a full
  * pass makes no change (a change to one node's output can feed a downstream node's wired grouped
  * input), bounded by the node count since each pass advances the resolution by at least one wire.
+ *
+ * Runs in `preferConnections` mode by default: this is a load-only pass, and at load a wired input's
+ * source type must outrank an unconnected sibling that only carries a spec-default placeholder (see
+ * resolveTypeGroupType). Persisting resolved output types this way lets each pass feed the next
+ * node's wired input, so a whole chain (e.g. float → math/sub → math/sub → math/combine2) settles to
+ * a consistent type instead of a placeholder `int` leaking downstream.
  */
-export const propagateGraphGroupTypes = (graphNodes: IInteractivityNode[]): void => {
+export const propagateGraphGroupTypes = (
+    graphNodes: IInteractivityNode[],
+    preferConnections = true,
+): void => {
     for (let pass = 0; pass < graphNodes.length; pass++) {
         let changed = false;
         for (const node of graphNodes) {
-            if (propagateNodeGroupTypes(node, graphNodes)) { changed = true; }
+            if (propagateNodeGroupTypes(node, graphNodes, preferConnections)) { changed = true; }
         }
         if (!changed) { break; }
     }

@@ -5,7 +5,7 @@ import { OverlayTrigger, Tooltip } from "react-bootstrap";
 import { RenderIf } from "../components/RenderIf";
 import { NodeInfoTooltip, NodeTooltipSections } from "./NodeInfoTooltip";
 import { IInteractivityFlow, IInteractivityValue, IInteractivityNode, IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityVariable, InteractivityValueType, InteractivityConfigurationValueType, NodeSpecFlag } from "../BasicBehaveEngine/types/InteractivityGraph";
-import { anyType, getTypeGroupMembers, hasNodeSpecFlag, interactivityNodeSpecs, resolveTypeGroupType, standardTypes } from "../BasicBehaveEngine/types/nodes";
+import { anyType, getTypeGroupMembers, hasNodeSpecFlag, interactivityNodeSpecs, resolveOutputSocketType, resolveTypeGroupType, standardTypes } from "../BasicBehaveEngine/types/nodes";
 import { InteractivityGraphContext } from "../InteractivityGraphContext";
 import { buildPointerSlotValue, getMessageTemplateSocketIds, getPathTemplateSockets, getRefSlotPointerPrefix } from "./pathTemplate";
 import { PointerConfigField } from "./PointerConfigField";
@@ -723,7 +723,14 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         const link = node?.values?.input?.[socket] ?? value;
         if (link?.node !== undefined) {
             const sourceNode = graph.nodes.find(n => n.uid === link.node);
-            return sourceNode?.values?.output?.[link.socket!]?.type;
+            // Resolve the source's output the same way its outgoing wire is colored
+            // (resolveOutputSocketType in getAuthorGraph) — group-aware — instead of reading the raw
+            // stored `.type`. A grouped source (e.g. a math node whose group resolved to float via a
+            // sibling) can have a stale spec-default `int` on its stored output socket while its wire
+            // is correctly float; reading the raw type here made this input's badge read int and
+            // triggered a false type-group conflict against a float sibling. Going through the same
+            // resolver keeps the badge and the wire in lockstep.
+            return resolveOutputSocketType(sourceNode, link.socket!, graph.nodes);
         }
         return value?.type;
     };
@@ -780,7 +787,8 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         const link = node?.values?.input?.[socket] ?? value;
         if (link?.node !== undefined) {
             const sourceNode = graph.nodes.find(n => n.uid === link.node);
-            const sourceType = sourceNode?.values?.output?.[link.socket!]?.type;
+            // group-aware resolution of the source output (matches the wire color) — see getOwnSocketType
+            const sourceType = resolveOutputSocketType(sourceNode, link.socket!, graph.nodes);
             if (sourceType !== undefined) {
                 return sourceType;
             }

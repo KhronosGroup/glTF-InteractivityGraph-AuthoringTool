@@ -73,12 +73,21 @@ export class PointerSet extends BehaveEngineNode {
         return keys;
     }
 
-    populatePath(path: string, vals: Record<string, any>, indices: Record<string, any>): string {
+    populatePath(path: string, refs: Record<string, any>, indices: Record<string, any>): string {
         let pathCopy = path
-        for (const val of Object.keys(vals)) {
-            const ref = vals[val];
-            const resolvedVal = this.resolveRef(ref);
-            pathCopy = pathCopy.replace(`{${val}}`, resolvedVal);
+        for (const ref of Object.keys(refs)) {
+            const refValue = refs[ref];
+
+            // is refValue is a string and of format /materials/3, extract the last part after the last slash
+            if (typeof refValue === "string" && refValue.includes("/")) {
+                const parts = refValue.split("/").filter(part => part !== "");
+                const lastPart = parts[parts.length - 1];
+                pathCopy = pathCopy.replace(`{${ref}}`, lastPart);
+            }
+            else {
+                const resolvedVal = this.resolveRef(refValue);
+                pathCopy = pathCopy.replace(`{${ref}}`, resolvedVal);
+            }
         }
         for (const index of Object.keys(indices)) {
             pathCopy = pathCopy.replace(`[${index}]`, indices[index]);

@@ -1,5 +1,5 @@
 export type DiagnosticSeverity = 'error' | 'warning';
-export type DiagnosticCategory = 'extension' | 'operation' | 'type' | 'node';
+export type DiagnosticCategory = 'extension' | 'operation' | 'type' | 'node' | 'graph';
 
 export interface IGraphDiagnostic {
     severity: DiagnosticSeverity;

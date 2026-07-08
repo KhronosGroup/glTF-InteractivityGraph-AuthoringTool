@@ -8,6 +8,7 @@ export const categoryLabel: Record<IGraphDiagnostic["category"], string> = {
     operation: "Node operation",
     type: "Data type",
     node: "Node validation",
+    graph: "Graph structure",
 };
 
 export const DiagnosticsPanel: React.FC = () => {

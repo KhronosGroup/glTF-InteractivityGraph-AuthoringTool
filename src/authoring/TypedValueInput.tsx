@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { InteractivityValueType } from "../BasicBehaveEngine/types/InteractivityGraph";
-import { standardTypes } from "../BasicBehaveEngine/types/nodes";
+import { standardTypes } from "./spec/nodes";
 import { RefValuePicker } from "./RefValuePicker";
 
 const VECTOR_MATRIX_LAYOUTS: Partial<Record<InteractivityValueType, { rows: number; cols: number }>> = {

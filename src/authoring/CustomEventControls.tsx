@@ -1,6 +1,6 @@
 import { CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { IInteractivityEvent, IInteractivityGraph, InteractivityValueType } from "../BasicBehaveEngine/types/InteractivityGraph";
-import { standardTypes } from "../BasicBehaveEngine/types/nodes";
+import { standardTypes } from "./spec/nodes";
 import { RefValuePicker } from "./RefValuePicker";
 import "../css/flowNodes.css";
 

@@ -1,5 +1,5 @@
 import { getMessageTemplateSocketIds, getPathTemplateSockets, parsePathTemplate, setPathTemplateSlotKind } from "../src/authoring/pathTemplate";
-import { standardTypes } from "../src/BasicBehaveEngine/types/nodes";
+import { standardTypes } from "../src/authoring/spec/nodes";
 
 describe("authoring path templates", () => {
     it("extracts bracket parameters as pointer index sockets", () => {

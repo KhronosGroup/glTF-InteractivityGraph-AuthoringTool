@@ -31,7 +31,7 @@ export const LoggingEngineComponent: React.FC<LoggingEngineComponentProps> = ({ 
     useEffect(() => {
         return () => {
             // Clean up resources when the component unmounts
-            loggingEngineRef.current?.clearCustomEventListeners();
+            loggingEngineRef.current?.dispose();
             setSupportedPointerTemplates(null);
         };
     }, []);
@@ -67,7 +67,7 @@ export const LoggingEngineComponent: React.FC<LoggingEngineComponentProps> = ({ 
     const runGraph = (behaveGraph: any, setExecutionLog: any, world: any) => {
         console.log(behaveGraph);
         if (loggingEngineRef.current !== null) {
-            loggingEngineRef.current?.clearCustomEventListeners()
+            loggingEngineRef.current?.dispose()
         }
 
         const eventBus = new DOMEventBus();

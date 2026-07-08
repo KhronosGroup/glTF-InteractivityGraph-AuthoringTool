@@ -1,5 +1,5 @@
 import { InteractivityValueType } from "../BasicBehaveEngine/types/InteractivityGraph";
-import { standardTypes } from "../BasicBehaveEngine/types/nodes";
+import { standardTypes } from "./spec/nodes";
 
 /**
  * A catalogue of glTF Object Model JSON pointer templates for the pointer get/set/interpolate

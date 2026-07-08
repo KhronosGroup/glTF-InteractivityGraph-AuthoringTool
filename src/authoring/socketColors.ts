@@ -1,5 +1,5 @@
 import { InteractivityValueType } from "../BasicBehaveEngine/types/InteractivityGraph";
-import { standardTypes } from "../BasicBehaveEngine/types/nodes";
+import { standardTypes } from "./spec/nodes";
 
 /**
  * Color map for interactivity socket types. Each data type gets a distinct color so that a socket

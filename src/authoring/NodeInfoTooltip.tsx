@@ -1,4 +1,4 @@
-import { IInteractivityNode } from "../BasicBehaveEngine/types/InteractivityGraph";
+import { AuthoredNode } from "./spec/AuthoredGraph";
 import { RenderIf } from "../components/RenderIf";
 
 export interface TooltipSocketRow {
@@ -27,7 +27,7 @@ export interface NodeTooltipSections {
 // spec-driven sections for a node *type* with no live graph instance (the Add Node picker): op
 // description plus every flow/value socket (value sockets include their description, flow sockets
 // are name-only since IInteractivityFlow carries no description field), no NodeIndex/connections.
-export const buildNodeTypeTooltipSections = (spec: IInteractivityNode | undefined): NodeTooltipSections => {
+export const buildNodeTypeTooltipSections = (spec: AuthoredNode | undefined): NodeTooltipSections => {
     if (!spec) { return { flowIn: [], valueIn: [], flowOut: [], valueOut: [] }; }
     return {
         description: spec.description,

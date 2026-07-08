@@ -50,7 +50,7 @@ import {Log10} from "../src/BasicBehaveEngine/nodes/math/exponential/Log10";
 import {CubeRoot} from "../src/BasicBehaveEngine/nodes/math/exponential/CubeRoot";
 import {SquareRoot} from "../src/BasicBehaveEngine/nodes/math/exponential/SquareRoot";
 import {Power} from "../src/BasicBehaveEngine/nodes/math/exponential/Power";
-import {standardTypes} from "../src/BasicBehaveEngine/types/nodes";
+import {standardTypes} from "../src/authoring/spec/nodes";
 import {Clamp} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Clamp";
 import {Saturate} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Saturate";
 import {Negate} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Negate";

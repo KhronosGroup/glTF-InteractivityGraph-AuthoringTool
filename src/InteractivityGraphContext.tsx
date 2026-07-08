@@ -1,6 +1,7 @@
 import { createContext, useCallback, useMemo, useRef, useState } from 'react';
-import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityGraph, IInteractivityNode, IInteractivityValue, IInteractivityVariable, NodeSpecFlag } from './BasicBehaveEngine/types/InteractivityGraph';
-import { createNoOpNode, hasNodeSpecFlag, interactivityNodeSpecs, propagateGraphGroupTypes, resolveOutputSocketType, standardTypes } from './BasicBehaveEngine/types/nodes';
+import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityGraph, IInteractivityVariable } from './BasicBehaveEngine/types/InteractivityGraph';
+import { AuthoredGraph, AuthoredNode, AuthoredValue, NodeSpecFlag } from './authoring/spec/AuthoredGraph';
+import { createNoOpNode, hasNodeSpecFlag, interactivityNodeSpecs, propagateGraphGroupTypes, resolveOutputSocketType, standardTypes } from './authoring/spec/nodes';
 import { v4 as uuidv4 } from 'uuid';
 import { Edge, Node } from 'reactflow';
 import { DiagnosticCategory, IGraphDiagnostic } from './diagnostics';
@@ -14,9 +15,10 @@ const edgeStyle = (color: string) => ({ stroke: color, strokeWidth: 2 });
 const typeIndexName = (typeIndex: number | undefined): string =>
     typeIndex === undefined ? "unknown" : (standardTypes[typeIndex]?.name ?? `type#${typeIndex}`);
 interface InteractivityGraphContextType {
-    graph: IInteractivityGraph,
-    needsSyncingToAuthor: boolean,
-    setNeedsSyncingToAuthor: (needsSyncing: boolean) => void,
+    // The editor's single source of truth. Interactive edits mutate this object in place (they
+    // don't trigger a context re-render — the reactflow canvas owns its own visual state); a graph
+    // *load* replaces its identity via setGraph, which is what drives the canvas rebuild.
+    graph: AuthoredGraph,
     diagnostics: IGraphDiagnostic[],
     setDiagnosticsForCategory: (category: DiagnosticCategory, diagnostics: IGraphDiagnostic[]) => void,
     clearDiagnostics: () => void,
@@ -30,8 +32,11 @@ interface InteractivityGraphContextType {
     setGltfObjectModel: (model: GltfObjectModel | null) => void,
     supportedPointerTemplates: ReadonlySet<string> | null,
     setSupportedPointerTemplates: (templates: ReadonlySet<string> | null) => void,
-    getAuthorGraph: (graph: IInteractivityGraph) => [Node[], Edge[], IInteractivityEvent[], IInteractivityVariable[]],
-    getExecutableGraph: () => any,
+    getAuthorGraph: (graph: AuthoredGraph) => [Node[], Edge[], IInteractivityEvent[], IInteractivityVariable[]],
+    // The single sanctioned Authoring -> Engine coupling point: projects the editor's AuthoredGraph
+    // down to a runtime IInteractivityGraph (topologically sorted) for BasicBehaveEngine. Data flows
+    // one way; the engine never reads the AuthoredGraph.
+    getExecutableGraph: () => IInteractivityGraph,
     loadGraphFromJson: (json: any) => void,
     addDeclaration: (declaration: IInteractivityDeclaration) => void,
     getDeclarationIndex: (op: string) => number,
@@ -39,11 +44,14 @@ interface InteractivityGraphContextType {
     setEvents: (events: IInteractivityEvent[]) => void,
     addVariable: (variable: IInteractivityVariable) => void,
     setVariables: (variables: IInteractivityVariable[]) => void,
-    addNode: (node: IInteractivityNode) => void,
+    addNode: (node: AuthoredNode) => void,
     removeNode: (uid: string) => void
 }
 
-const initialGraph: IInteractivityGraph = {
+// The provider's starting graph. Identity matters: the authoring canvas treats "graph is still
+// this exact object" as "nothing has been loaded yet" and skips the rebuild (interactive edits
+// mutate it in place; only a load replaces it via setGraph).
+export const initialGraph: AuthoredGraph = {
     declarations: [],
     nodes: [],
     events: [],
@@ -53,8 +61,6 @@ const initialGraph: IInteractivityGraph = {
 
 const initialContext: InteractivityGraphContextType = {
     graph: initialGraph,
-    needsSyncingToAuthor: false,
-    setNeedsSyncingToAuthor: () => {return null},
     diagnostics: [],
     setDiagnosticsForCategory: () => {return null},
     clearDiagnostics: () => {return null},
@@ -64,8 +70,8 @@ const initialContext: InteractivityGraphContextType = {
     setGltfObjectModel: () => {return null},
     supportedPointerTemplates: null,
     setSupportedPointerTemplates: () => {return null},
-    getAuthorGraph: (graph: IInteractivityGraph) => {return [[], [], [], []]},
-    getExecutableGraph: () => {return null},
+    getAuthorGraph: (graph: AuthoredGraph) => {return [[], [], [], []]},
+    getExecutableGraph: () => ({ declarations: [], nodes: [], types: [], events: [], variables: [] }),
     loadGraphFromJson: () => {return null},
     addDeclaration: () => {return null},
     getDeclarationIndex: () => -1,
@@ -81,9 +87,14 @@ export const InteractivityGraphContext = createContext<InteractivityGraphContext
 
 export const InteractivityGraphProvider = ({ children }: { children: React.ReactNode }) => {
     const usedNodeDeclarationRef = useRef<Set<string>>(new Set());
-    const graphRef = useRef<IInteractivityGraph>(initialGraph);
+    // The graph model is React state so a *load* (setGraph) changes its identity and the authoring
+    // canvas can rebuild off that; interactive edits keep mutating this same object in place (no
+    // setGraph) exactly as before, so they don't force a context re-render.
+    const [graph, setGraph] = useState<AuthoredGraph>(initialGraph);
+    // last cycle state we surfaced as a diagnostic. getExecutableGraph runs during render (JSON
+    // view), so we guard on this ref and defer the setState to avoid an update-during-render loop.
+    const cycleReportedRef = useRef<boolean>(false);
 
-    const [needsSyncingToAuthor, setNeedsSyncingToAuthor] = useState(false);
     const [diagnostics, setDiagnostics] = useState<IGraphDiagnostic[]>([]);
 
     // Replace all diagnostics belonging to a single category, leaving other categories untouched.
@@ -130,21 +141,14 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
     const [gltfObjectModel, setGltfObjectModel] = useState<GltfObjectModel | null>(null);
     const [supportedPointerTemplates, setSupportedPointerTemplates] = useState<ReadonlySet<string> | null>(null);
 
-    const getAuthorGraph = (graph: IInteractivityGraph): [Node[], Edge[], IInteractivityEvent[], IInteractivityVariable[]] => {
-        // TODO: THIS IS NOT JSON WE SHOULD NOT ALLOW FOR NANS OR INFINITIES
-        // const graphJson = JSON.parse(graph.replace(/":[ \t](Infinity|-IsNaN)/g, '":"{{$1}}"'), function(k, v) {
-        //   if (v === '{{Infinity}}') return Infinity;
-        //   else if (v === '{{-Infinity}}') return -Infinity;
-        //   else if (v === '{{NaN}}') return NaN;
-        //   return v;
-        // });  
+    const getAuthorGraph = (graph: AuthoredGraph): [Node[], Edge[], IInteractivityEvent[], IInteractivityVariable[]] => {
         const nodes: Node[] = [];
         const edges: Edge[] = [];
         const events: IInteractivityEvent[] = graph.events;
         const variables: IInteractivityVariable[] = graph.variables;
       
         // loop through all the nodes in our behave graph to extract nodes and edges
-        graph.nodes.forEach((interactivityNode: IInteractivityNode) => {
+        graph.nodes.forEach((interactivityNode: AuthoredNode) => {
           // construct and add the node to the nodes list
           const node: Node = {
             id: interactivityNode.uid!,
@@ -322,7 +326,11 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         return [nodes, edges, events, variables];
       };
 
-    const getUpdatedTypeIndex = (oldType: {signature: string, extensions?: any}): number => {
+    // oldType is undefined when the file's numeric type index is out of bounds of its own `types`
+    // array (a malformed/hand-edited file) - treat that the same as any other unsupported type
+    // (-1) rather than throwing, since every call site already guards against -1.
+    const getUpdatedTypeIndex = (oldType: {signature: string, extensions?: any} | undefined): number => {
+      if (oldType == null) { return -1; }
       const oldTypeSignature = oldType.signature;
       if (oldTypeSignature === "custom") {
         const typeExtensions = JSON.stringify(Object.keys(oldType.extensions || {}).sort())
@@ -341,7 +349,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
       return type.signature;
     }
     const loadGraphFromJson = (json: any) => {
-        const graph: IInteractivityGraph = {
+        const newGraph: AuthoredGraph = {
             declarations: json.declarations,
             nodes: [],
             variables: json.variables,
@@ -367,7 +375,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         setDiagnosticsForCategory('type', typeDiagnostics);
 
         // translate the types to be the standard types
-        for (const declaration of graph.declarations) {
+        for (const declaration of newGraph.declarations) {
             if (declaration.inputValueSockets) {
                 for (const socket of Object.values(declaration.inputValueSockets)) {
                   socket.type = getUpdatedTypeIndex(json.types[socket.type]);
@@ -380,14 +388,14 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
             }
         } 
         
-        if (graph.variables) {
-            for (const variable of graph.variables) {
+        if (newGraph.variables) {
+            for (const variable of newGraph.variables) {
                 variable.type = getUpdatedTypeIndex(json.types[variable.type]);
             }
         }
 
-        if (graph.events) {
-          for (const event of graph.events) {
+        if (newGraph.events) {
+          for (const event of newGraph.events) {
             for (const socket of Object.values(event.values)) {
               socket.type = getUpdatedTypeIndex(json.types[socket.type]);
             }
@@ -395,7 +403,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         }
 
 
-        const loadedNodes: IInteractivityNode[] = [];
+        const loadedNodes: AuthoredNode[] = [];
         const uuids = [];
         // track unsupported node operations (op -> number of nodes using it) so we can surface them
         const unsupportedOps = new Map<string, number>();
@@ -408,16 +416,27 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         }
         for (let i = 0; i < json.nodes.length; i++) {
             const node = json.nodes[i];
-            const nodeOp = json.declarations[node.declaration].op;
+            const declaration = json.declarations?.[node.declaration];
+            if (declaration === undefined) {
+                // malformed/hand-edited file: node.declaration doesn't index a real declaration -
+                // skip just this node with a diagnostic instead of throwing and aborting the load
+                nodeDiagnostics.push({
+                    severity: 'error', category: 'node', nodeUid: uuids[i], nodeIndex: i, nodeOp: undefined,
+                    title: 'Invalid declaration reference',
+                    detail: `Node ${i} references declaration index ${node.declaration}, which does not exist in this file's declarations array. This node was skipped.`,
+                });
+                continue;
+            }
+            const nodeOp = declaration.op;
             let isNoOp = false;
-            let templateNode: IInteractivityNode | undefined = interactivityNodeSpecs.find((schema: IInteractivityNode) => schema.op === nodeOp);
+            let templateNode: AuthoredNode | undefined = interactivityNodeSpecs.find((schema: AuthoredNode) => schema.op === nodeOp);
             if (templateNode === undefined) {
-                templateNode = createNoOpNode(json.declarations[node.declaration]);
+                templateNode = createNoOpNode(declaration);
                 isNoOp = true;
                 unsupportedOps.set(nodeOp, (unsupportedOps.get(nodeOp) ?? 0) + 1);
             }
             
-            const copyOfTemplateNode: IInteractivityNode = JSON.parse(JSON.stringify(templateNode));
+            const copyOfTemplateNode: AuthoredNode = JSON.parse(JSON.stringify(templateNode));
 
             copyOfTemplateNode.uid = uuids[i];
             copyOfTemplateNode.declaration = node.declaration;
@@ -499,7 +518,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
             loadedNodes.push(copyOfTemplateNode);
         }
 
-        graph.nodes = loadedNodes;
+        newGraph.nodes = loadedNodes;
 
         // The loader fills input sockets straight from the file and leaves outputs (and any input the
         // file omitted) at the spec default, so grouped sockets — e.g. a math node's `a`/`b`/output
@@ -510,9 +529,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         // preferConnections: at load a wired input's source type must beat an unconnected sibling's
         // spec-default placeholder, so a whole grouped chain resolves consistently instead of leaking
         // a default `int` downstream (see propagateGraphGroupTypes / resolveTypeGroupType).
-        propagateGraphGroupTypes(graph.nodes, true);
-
-        graphRef.current = graph;
+        propagateGraphGroupTypes(newGraph.nodes, true);
 
         // surface any node operations this tool does not implement (loaded as inert NoOp nodes)
         const opDiagnostics: IGraphDiagnostic[] = [...unsupportedOps.entries()].map(([op, count]) => ({
@@ -524,39 +541,57 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         setDiagnosticsForCategory('operation', opDiagnostics);
         setDiagnosticsForCategory('node', nodeDiagnostics);
 
-        setNeedsSyncingToAuthor(true);
+        // replace the graph's identity: this is the single load signal the authoring canvas
+        // watches to rebuild itself (see the sync effect in AuthoringComponent)
+        setGraph(newGraph);
     }
 
 
     const getExecutableGraph = () => {
-        const graph: any = { declarations: [], nodes: [], variables: [], events: [], types: standardTypes};
+        const executable: any = { declarations: [], nodes: [], variables: [], events: [], types: standardTypes};
 
-        graph.events = [...graphRef.current.events || []];
-        graph.variables = [...graphRef.current.variables || []];
-        graph.declarations = [...graphRef.current.declarations || []];
-        for (const node of graphRef.current.nodes) {
+        executable.events = [...graph.events || []];
+        executable.variables = [...graph.variables || []];
+        executable.declarations = [...graph.declarations || []];
+        for (const node of graph.nodes) {
 
-            // Create stripped values object without typeOptions
-            const strippedValues: Record<string, IInteractivityValue> = {};
+            // Create stripped values object without typeOptions. A static "unset" float value is
+            // authored in-model as NaN (see socketReconciler.ts / AuthoringGraphNode.tsx); JSON has
+            // no NaN/Infinity literal, and JSON.stringify silently turns them into `null` instead of
+            // erroring, which would round-trip back in as a bogus 0 rather than the spec's actual
+            // float default. Omit the socket instead so the runtime falls back to its own default.
+            const strippedValues: Record<string, AuthoredValue> = {};
             Object.entries(node.values?.input || {}).forEach(([key, value]) => {
+                if (Array.isArray(value.value) && value.value.some((v) => typeof v === "number" && !Number.isFinite(v))) {
+                    return;
+                }
                 strippedValues[key] = {...value, typeOptions: undefined};
             });
 
             const behaveNode: any = {
                 id: node.uid,
-                declaration: graph.declarations.findIndex((declaration: IInteractivityDeclaration) => declaration.op === node.op),
+                declaration: executable.declarations.findIndex((declaration: IInteractivityDeclaration) => declaration.op === node.op),
                 values: strippedValues,
                 configuration: node.configuration || {},
                 flows: node.flows?.output || {},
                 metadata: node.metadata
             };
 
-            graph.nodes.push(JSON.parse(JSON.stringify(behaveNode)));
+            executable.nodes.push(JSON.parse(JSON.stringify(behaveNode)));
         }
 
-        topologicalSort(graph.nodes);
+        const hasCycle = !topologicalSort(executable.nodes);
+        if (hasCycle !== cycleReportedRef.current) {
+            cycleReportedRef.current = hasCycle;
+            queueMicrotask(() => setDiagnosticsForCategory('graph', hasCycle ? [{
+                severity: 'error',
+                category: 'graph',
+                title: 'Cycle detected in graph',
+                detail: 'The graph contains a cycle, so a valid execution/export order cannot be resolved. The affected connections must be broken before the graph can run.',
+            }] : []));
+        }
 
-        return graph;
+        return executable;
     };
 
     const topologicalSort = (nodes: any[]) => {
@@ -599,7 +634,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         //run top sort algo
         while (queue.length > 0) {
             const curNode = queue.pop();
-            if (curNode === undefined) {return}
+            if (curNode === undefined) {break}
             sortedList.push(curNode);
     
             //values
@@ -620,88 +655,92 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
             }
         }
     
-        // validate no cycle
-        if (sortedList.length !== nodes.length) {
-            throw Error("Cycle Detected");
-        }
-    
-        const oldIdToTopologicalId = new Map();
-        for (let i = 0; i < sortedList.length; i++) {
-            oldIdToTopologicalId.set(sortedList[i].id, i);
-        }
-    
-        // change nodeIds in graph
-        for (const node of nodes) {
-            node.id = Number(`${oldIdToTopologicalId.get(node.id)}`);
-            if (node.flows !== undefined) {
-                Object.values(node.flows).forEach((flow: any) => {
-                    if (flow.node !== undefined && oldIdToTopologicalId.get(flow.node) !== undefined) {
-                        flow.node = Number(`${oldIdToTopologicalId.get(flow.node)}`);
-                    }
-                })
+        // a cycle leaves some nodes unreachable. return a status instead of throwing so the JSON
+        // view / export don't crash - callers surface a diagnostic and keep the un-sorted graph.
+        const hasCycle = sortedList.length !== nodes.length;
+
+        if (!hasCycle) {
+            const oldIdToTopologicalId = new Map();
+            for (let i = 0; i < sortedList.length; i++) {
+                oldIdToTopologicalId.set(sortedList[i].id, i);
             }
-            if (node.values !== undefined) {
-                Object.values(node.values).forEach((val: any) => {
-                    if (val.node !== undefined && oldIdToTopologicalId.get(val.node) !== undefined) {
-                        val.node = Number(`${oldIdToTopologicalId.get(val.node)}`);
-                    }
-                })
+
+            // change nodeIds in graph
+            for (const node of nodes) {
+                node.id = Number(`${oldIdToTopologicalId.get(node.id)}`);
+                if (node.flows !== undefined) {
+                    Object.values(node.flows).forEach((flow: any) => {
+                        if (flow.node !== undefined && oldIdToTopologicalId.get(flow.node) !== undefined) {
+                            flow.node = Number(`${oldIdToTopologicalId.get(flow.node)}`);
+                        }
+                    })
+                }
+                if (node.values !== undefined) {
+                    Object.values(node.values).forEach((val: any) => {
+                        if (val.node !== undefined && oldIdToTopologicalId.get(val.node) !== undefined) {
+                            val.node = Number(`${oldIdToTopologicalId.get(val.node)}`);
+                        }
+                    })
+                }
             }
+
+            nodes.sort((a, b) => {return a.id - b.id});
         }
-    
-        nodes.sort((a, b) => {return a.id - b.id});
-    
-        // remove fake Links
+
+        // remove fake Links (always, so the returned nodes are clean whether or not we sorted)
         for (const node of nodes) {
             delete node.fakeLinks;
             delete node.id;
         }
+
+        return !hasCycle;
     }
 
+    // These mutators edit the current graph object in place (matching the old ref model) and do
+    // not call setGraph, so they intentionally don't trigger a context re-render — the reactflow
+    // canvas already reflects these edits through its own state. Only a load replaces graph identity.
     const addDeclaration = (declaration: IInteractivityDeclaration) => {
         if (usedNodeDeclarationRef.current.has(declaration.op)) {
             return;
         }
-        graphRef.current.declarations.push(declaration);
+        graph.declarations.push(declaration);
         usedNodeDeclarationRef.current.add(declaration.op);
     };
 
     const getDeclarationIndex = (op: string): number => {
-        return graphRef.current.declarations.findIndex(declaration => declaration.op === op);
+        return graph.declarations.findIndex(declaration => declaration.op === op);
     };
 
     const addEvent = (event: IInteractivityEvent) => {
-        graphRef.current.events.push(event);
+        graph.events.push(event);
     };
 
     // Replace the whole custom-event list. Used by the Custom Events editor, which manages
     // add/edit/delete of events locally and commits the resulting array back in one call.
     const setEvents = (events: IInteractivityEvent[]) => {
-        graphRef.current.events = events;
+        graph.events = events;
     };
 
     const addVariable = (variable: IInteractivityVariable) => {
-        graphRef.current.variables.push(variable);
+        graph.variables.push(variable);
     };
 
     // Replace the whole variable list. Used by the Variables editor, which manages
     // add/edit/delete of variables locally and commits the resulting array back in one call.
     const setVariables = (variables: IInteractivityVariable[]) => {
-        graphRef.current.variables = variables;
+        graph.variables = variables;
     };
 
-    const addNode = (node: IInteractivityNode) => {
-        graphRef.current.nodes.push(node);
+    const addNode = (node: AuthoredNode) => {
+        graph.nodes.push(node);
     };
 
     const removeNode = (uid: string) => {
-        graphRef.current.nodes = graphRef.current.nodes.filter(node => node.uid !== uid);
+        graph.nodes = graph.nodes.filter(node => node.uid !== uid);
     };
 
     const context: InteractivityGraphContextType = {
-        graph: graphRef.current,
-        needsSyncingToAuthor: needsSyncingToAuthor,
-        setNeedsSyncingToAuthor: setNeedsSyncingToAuthor,
+        graph: graph,
         diagnostics: diagnostics,
         setDiagnosticsForCategory: setDiagnosticsForCategory,
         clearDiagnostics: clearDiagnostics,

@@ -14,9 +14,10 @@ import {v4 as uuidv4} from "uuid";
 import {RenderIf} from "./RenderIf";
 import {Button, Col, Container, Row, Form, OverlayTrigger, Popover, Tooltip} from "react-bootstrap";
 import 'reactflow/dist/style.css';
-import {getTypeGroupMembers, hasNodeSpecFlag, interactivityNodeSpecs, knownDeclarations, resolveOutputSocketType, resolveTypeGroupType, standardTypes} from "../BasicBehaveEngine/types/nodes";
-import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityNode, IInteractivityValue, IInteractivityVariable, NodeSpecFlag } from '../BasicBehaveEngine/types/InteractivityGraph';
-import { InteractivityGraphContext } from '../InteractivityGraphContext';
+import {hasNodeSpecFlag, interactivityNodeSpecs, propagateNodeGroupTypes, resolveOutputSocketType, standardTypes, toInteractivityDeclaration} from "../authoring/spec/nodes";
+import { IInteractivityEvent, IInteractivityVariable } from '../BasicBehaveEngine/types/InteractivityGraph';
+import { AuthoredGraph, AuthoredNode, AuthoredValue, NodeSpecFlag } from '../authoring/spec/AuthoredGraph';
+import { InteractivityGraphContext, initialGraph } from '../InteractivityGraphContext';
 import { IGraphDiagnostic } from '../diagnostics';
 import { categoryLabel } from './DiagnosticsPanel';
 import { FLOW_COLOR, getColorForTypeIndex, getNodeCategoryColor } from '../authoring/socketColors';
@@ -25,7 +26,7 @@ import { NodeInfoTooltip, buildNodeTypeTooltipSections } from '../authoring/Node
 import '../css/flowNodes.css';
 
 const nodeTypes = interactivityNodeSpecs.reduce((nodes, node) => {
-    nodes[knownDeclarations[node.declaration].op] = (props: any) => {
+    nodes[node.op!] = (props: any) => {
         return <AuthoringGraphNode {...props} />;
     };
     return nodes;
@@ -223,7 +224,11 @@ export const AuthoringComponent = () => {
     // ids of the edges connecting that upstream hierarchy, highlighted alongside the nodes
     const [ancestorEdgeIds, setAncestorEdgeIds] = useState<Set<string>>(new Set());
 
-    const {graph, needsSyncingToAuthor, setNeedsSyncingToAuthor, getAuthorGraph, addDeclaration, getDeclarationIndex, addNode, removeNode, allDiagnostics} = useContext(InteractivityGraphContext);
+    const {graph, getAuthorGraph, addDeclaration, getDeclarationIndex, addNode, removeNode, allDiagnostics} = useContext(InteractivityGraphContext);
+    // the graph object identity we last rebuilt the canvas from; a load replaces graph identity
+    // (setGraph), which is the signal to rebuild — interactive edits mutate the same object in
+    // place and leave identity untouched, so they never retrigger a rebuild
+    const lastSyncedGraphRef = useRef<AuthoredGraph | null>(null);
 
     // pan/select a node by id from the diagnostics counter popover
     const jumpToNode = useCallback((nodeUid: string) => {
@@ -237,17 +242,17 @@ export const AuthoringComponent = () => {
     const mousePosRef = useRef({x:0, y:0});
     const clipboardRef = useRef<Node[]>([]);
 
-    useEffect(() => {
-        const updatePositions = setInterval(() => {
-            for (const node of nodes) {
-                const graphNode = graph.nodes.find(graphNode => graphNode.uid === node.id);
-                if (graphNode !== undefined) {
-                    graphNode.metadata = {positionX: node.position.x, positionY: node.position.y};
-                }
+    // Persist a node's canvas position into the graph model as soon as a drag ends (reactflow
+    // passes every node moved in the gesture), rather than polling all nodes on a 5s timer. Only
+    // dragged nodes changed position, so only they need writing back.
+    const onNodeDragStop = useCallback((_e: React.MouseEvent, _node: Node, draggedNodes: Node[]) => {
+        for (const dragged of draggedNodes) {
+            const graphNode = graph.nodes.find(graphNode => graphNode.uid === dragged.id);
+            if (graphNode !== undefined) {
+                graphNode.metadata = {positionX: dragged.position.x, positionY: dragged.position.y};
             }
-        }, 5000);
-        return () => clearInterval(updatePositions);
-    }, [nodes, graph])
+        }
+    }, [graph])
 
     useEffect(() => {
         const container = reactFlowRef.current;
@@ -285,30 +290,12 @@ export const AuthoringComponent = () => {
         return false;
     }
 
-    // Re-resolve `group` on `targetNode` (an unconnected sibling's own type > a wired sibling's
-    // source type > default, via the shared resolver — see resolveTypeGroupType) and persist it
-    // onto the sockets whose type follows the group: the outputs, and any input that is neither
-    // wired (its type comes from its source) nor carries a user-set static value (which must keep
-    // its own type). This keeps the node internally consistent and, by writing the outputs, lets
-    // downstream nodes read the resolved type from the model.
-    const propagateGroupType = (targetNode: IInteractivityNode, group: string) => {
-        const spec = interactivityNodeSpecs.find(n => n.op === targetNode.op);
-        const resolvedType = resolveTypeGroupType(targetNode, spec, group, graph.nodes);
-        if (resolvedType === undefined) { return; }
-        const { inputs, outputs } = getTypeGroupMembers(spec, group);
-        for (const name of inputs) {
-            const socket = targetNode.values?.input?.[name];
-            if (socket === undefined) { continue; }
-            const connected = socket.node !== undefined;
-            const hasStatic = !connected && socket.value?.[0] != null;
-            if (!connected && !hasStatic) { socket.type = resolvedType; socket.value = [undefined]; }
-        }
-        for (const name of outputs) {
-            const socket = targetNode.values?.output?.[name];
-            if (socket === undefined) { continue; }
-            socket.type = resolvedType;
-            socket.value = [undefined];
-        }
+    // Re-resolve `group` on `targetNode` and persist it onto the sockets whose type follows the
+    // group (outputs + unwired, valueless inputs). Delegates to the shared writeback used at load
+    // too (propagateNodeGroupTypes); `preferConnections=false` gives the live editor's precedence —
+    // an unconnected sibling's own dropdown-picked type outranks a new wire.
+    const propagateGroupType = (targetNode: AuthoredNode, group: string) => {
+        propagateNodeGroupTypes(targetNode, graph.nodes, false, group);
     };
 
     // Force a node's own component to re-render after we've directly mutated its model data from
@@ -321,10 +308,10 @@ export const AuthoringComponent = () => {
     // handle creation and deletion of edges
     const onConnect = useCallback((vals: Edge<any> | Connection) => {
         const sourceNodeId = vals.source;
-        const sourceNode: IInteractivityNode = graph.nodes.find(node => node.uid === sourceNodeId)!;
+        const sourceNode: AuthoredNode = graph.nodes.find(node => node.uid === sourceNodeId)!;
 
         const targetNodeId = vals.target;
-        const targetNode: IInteractivityNode = graph.nodes.find(node => node.uid === targetNodeId)!;
+        const targetNode: AuthoredNode = graph.nodes.find(node => node.uid === targetNodeId)!;
 
         if (sourceNodeId === targetNodeId) {return}
 
@@ -474,7 +461,7 @@ export const AuthoringComponent = () => {
                 if (inputField !== null) {
                     inputField.style.display = "block";
                 }
-                const typeDropdown = targetNode.querySelector(`#${edge.targetHandle}-typeDropDown`) as HTMLInputElement;
+                const typeDropdown = targetNode.querySelector(`#typeDropDown-${edge.targetHandle}`) as HTMLInputElement;
                 if (typeDropdown !== null) {
                     typeDropdown.style.display = "block";
                 }
@@ -499,7 +486,7 @@ export const AuthoringComponent = () => {
                 // checked/unchecked — defaulting it to `false` instead of `undefined` keeps the
                 // stored value consistent with what the checkbox already displays
                 const isPureBoolSocket = source?.typeOptions?.length === 1 && source.typeOptions[0] === 0;
-                const restored: IInteractivityValue = source !== undefined ? {
+                const restored: AuthoredValue = source !== undefined ? {
                     ...(source.type !== undefined ? { type: source.type } : {}),
                     ...(source.typeOptions !== undefined ? { typeOptions: source.typeOptions } : {}),
                     ...(source.typeGroup !== undefined ? { typeGroup: source.typeGroup } : {}),
@@ -534,9 +521,9 @@ export const AuthoringComponent = () => {
             data: {events: graph.events, variables: graph.variables, types: standardTypes, uid: uid, op: nodeType, recolorEdges: recolorEdges, renameFlowSocket: renameFlowSocket}
         };
 
-        const declaration: IInteractivityDeclaration = knownDeclarations.find(node => node.op === nodeType)!;
-        addDeclaration(declaration);
-        const interactivityNode: IInteractivityNode = JSON.parse(JSON.stringify(interactivityNodeSpecs.find(node => node.op === nodeType)!));
+        const spec = interactivityNodeSpecs.find(node => node.op === nodeType)!;
+        addDeclaration(toInteractivityDeclaration(spec));
+        const interactivityNode: AuthoredNode = JSON.parse(JSON.stringify(spec));
         interactivityNode.declaration = getDeclarationIndex(nodeType);
         interactivityNode.uid = uid;
         
@@ -556,14 +543,14 @@ export const AuthoringComponent = () => {
         const uidMap = new Map<string, string>();
         for (const node of clipboardRef.current) uidMap.set(node.id, uuidv4());
 
-        const newGraphNodes: IInteractivityNode[] = [];
+        const newGraphNodes: AuthoredNode[] = [];
         const newFlowNodes: Node[] = [];
 
         for (const node of clipboardRef.current) {
             const newUid = uidMap.get(node.id)!;
             const srcGn = graph.nodes.find(n => n.uid === node.id);
             if (!srcGn) continue;
-            const newGn: IInteractivityNode = JSON.parse(JSON.stringify(srcGn));
+            const newGn: AuthoredNode = JSON.parse(JSON.stringify(srcGn));
             newGn.uid = newUid;
             if (newGn.flows?.output) {
                 for (const key of Object.keys(newGn.flows.output)) {
@@ -590,8 +577,8 @@ export const AuthoringComponent = () => {
 
         for (const gn of newGraphNodes) {
             if (gn.op) {
-                const decl = knownDeclarations.find(d => d.op === gn.op);
-                if (decl) addDeclaration(decl);
+                const spec = interactivityNodeSpecs.find(n => n.op === gn.op);
+                if (spec) addDeclaration(toInteractivityDeclaration(spec));
             }
             addNode(gn);
         }
@@ -636,33 +623,46 @@ export const AuthoringComponent = () => {
         clipboardRef.current = prev;
     }, [nodes, pasteNodes]);
 
+    // Rebuild the canvas from the model whenever a *new* graph is loaded. loadGraphFromJson swaps
+    // the graph object's identity (setGraph); interactive edits keep the same object, so this only
+    // fires on load. Needs the reactflow instance for fitView, so a load that lands before the
+    // instance is ready leaves lastSyncedGraphRef untouched and retries once the instance arrives.
     useEffect(() => {
-        if (needsSyncingToAuthor) {
-            const result = getAuthorGraph(graph);
-            const loadedNodes: Node[] = result[0];
-            for (const node of loadedNodes) {
-                node.data.op = node.type;
-                node.data.recolorEdges = recolorEdges;
-                node.data.renameFlowSocket = renameFlowSocket;
-                const declarationIndex = knownDeclarations.findIndex(declaration => declaration.op === node.data.op);
-                if (declarationIndex === -1) {
-                    node.type = "NoOp";
-                }
+        if (graph === lastSyncedGraphRef.current) { return; }
+        // the untouched initial graph means nothing has been loaded yet — don't rebuild. Any real
+        // load (even of an empty graph) replaces identity via setGraph, so it won't match this.
+        if (graph === initialGraph) { return; }
+        if (!reactFlowInstance) { return; }
+        lastSyncedGraphRef.current = graph;
+
+        const result = getAuthorGraph(graph);
+        const loadedNodes: Node[] = result[0];
+        for (const node of loadedNodes) {
+            node.data.op = node.type;
+            node.data.recolorEdges = recolorEdges;
+            node.data.renameFlowSocket = renameFlowSocket;
+            const isKnownOp = interactivityNodeSpecs.some(spec => spec.op === node.data.op);
+            if (!isKnownOp) {
+                node.type = "NoOp";
             }
-            // console.log(loadedNodes)
-            // console.log(result[1])
-            setNodes(loadedNodes);
-            setTimeout(() => {
-                // react flow has an issue connecting handles for our custom nodes since they heavily rely on the node data
-                // "Couldn’t create edge for source/target handle id: “some-id”; edge id" I tried to fix this using useUpdateNodeInternals()
-                // to alert the AuthoringGraphNode of changes which would update the handles, it seems the hook does not work properly as advertised
-                // soI am just adding a small delay between the node handles synthesizing synchronously and the edges being created in an async event
-                setEdges(result[1]);
-                reactFlowInstance?.fitView();
-            }, 1000);
-            setNeedsSyncingToAuthor(false);
+            // seed the model with the (possibly auto-laid-out) positions immediately, so an
+            // export right after load carries them instead of waiting for a drag (the old 5s
+            // position timer used to backfill these)
+            const graphNode = graph.nodes.find(graphNode => graphNode.uid === node.id);
+            if (graphNode !== undefined) {
+                graphNode.metadata = {positionX: node.position.x, positionY: node.position.y};
+            }
         }
-    }, [needsSyncingToAuthor, reactFlowInstance]);
+        setNodes(loadedNodes);
+        setTimeout(() => {
+            // react flow has an issue connecting handles for our custom nodes since they heavily rely on the node data
+            // "Couldn’t create edge for source/target handle id: “some-id”; edge id" I tried to fix this using useUpdateNodeInternals()
+            // to alert the AuthoringGraphNode of changes which would update the handles, it seems the hook does not work properly as advertised
+            // soI am just adding a small delay between the node handles synthesizing synchronously and the edges being created in an async event
+            setEdges(result[1]);
+            reactFlowInstance?.fitView();
+        }, 1000);
+    }, [graph, reactFlowInstance]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -769,6 +769,7 @@ export const AuthoringComponent = () => {
                     onInit={setReactFlowInstance}
                     onConnect={onConnect}
                     onEdgesDelete={onEdgesDelete}
+                    onNodeDragStop={onNodeDragStop}
                     onSelectionChange={onSelectionChange}
                     nodeTypes={nodeTypes}
                     edgeTypes={edgeTypes}
@@ -895,7 +896,7 @@ const sortedNodeCategories = Object.keys(nodeTypesByCategory).sort((a, b) => a.l
 const nodePickerSpecByType = interactivityNodeSpecs.reduce((specs, node) => {
     specs[node.op!] = node;
     return specs;
-}, {} as {[nodeType: string]: IInteractivityNode});
+}, {} as {[nodeType: string]: AuthoredNode});
 
 const NodePickerTooltipContent = (props: {nodeType: string}) => {
     const spec = nodePickerSpecByType[props.nodeType];
@@ -1524,11 +1525,19 @@ const CustomEventsComponent = (props: {closeModal: any}) => {
 
 const UploadGraphComponent = (props: { closeModal: any}) => {
     const graphRef = useRef<HTMLTextAreaElement>(null);
+    const [error, setError] = useState<string | null>(null);
     const {loadGraphFromJson} = useContext(InteractivityGraphContext);
     const uploadGraph = () => {
         if (graphRef.current === null || graphRef.current.value === "") {return}
 
-        loadGraphFromJson(JSON.parse(graphRef.current.value));
+        try {
+            loadGraphFromJson(JSON.parse(graphRef.current.value));
+        } catch (e) {
+            // covers both invalid JSON and malformed/incomplete graph structure
+            setError(`Could not load graph: ${e instanceof Error ? e.message : String(e)}`);
+            return;
+        }
+        setError(null);
         props.closeModal();
     }
 
@@ -1544,6 +1553,13 @@ const UploadGraphComponent = (props: { closeModal: any}) => {
                         </Form.Group>
                     </Col>
                 </Row>
+                {error !== null &&
+                    <Row style={{ marginTop: 8 }}>
+                        <Col>
+                            <div style={{ color: "#b00020", fontSize: 13, whiteSpace: "pre-wrap" }}>{error}</div>
+                        </Col>
+                    </Row>
+                }
                 <hr style={{ borderTop: '1px solid #777', margin: '16px 0' }} />
                 <Row style={{ marginTop: 16 }}>
                     <Col xs={12} md={6}>

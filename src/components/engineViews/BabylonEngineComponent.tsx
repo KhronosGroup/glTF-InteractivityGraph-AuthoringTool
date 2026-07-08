@@ -74,6 +74,14 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
 
         createScene();
 
+        // Blocks page-scroll while over the canvas. Registered once here (not in createScene,
+        // which re-runs on every Play/reset) so it doesn't stack up duplicate listeners.
+        const blockWheelPropagation = (e: WheelEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+        };
+        canvasRef.current!.addEventListener("wheel", blockWheelPropagation);
+
         // Run the render loop
         engineRef.current?.runRenderLoop(() => {
             sceneRef.current?.render();
@@ -81,9 +89,10 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
 
         return () => {
             // Clean up resources when the component unmounts
+            canvasRef.current?.removeEventListener("wheel", blockWheelPropagation);
             sceneRef.current?.dispose();
             engineRef.current?.dispose();
-            babylonEngineRef.current?.clearCustomEventListeners();
+            babylonEngineRef.current?.dispose();
             setSupportedPointerTemplates(null);
         };
     }, []);
@@ -129,13 +138,6 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
         sceneRef.current = new Scene(engineRef.current!);
         sceneRef.current?.createDefaultCamera(true, true, true);
         setupCamera();
-        canvasRef.current!.addEventListener("wheel", (e: any) => {
-            e.preventDefault();
-            e.stopPropagation();
-
-            return false;
-        })
-
         // Create lights
         new HemisphericLight('light1', new Vector3(0, 1, 0), sceneRef.current);
         new DirectionalLight('light2', new Vector3(1, -1, 0), sceneRef.current);
@@ -218,7 +220,7 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
 
     const runGraph = (babylonEngineRef: any, behaveGraph: any, scene: any, nodes: Node[], materials: Material[], animations: AnimationGroup[], meshes: AbstractMesh[], shouldOverride: boolean) => {
         if (babylonEngineRef.current !== null) {
-            babylonEngineRef.current.clearCustomEventListeners()
+            babylonEngineRef.current.dispose()
         }
 
         const world = {glTFNodes: nodes, animations: animations, materials: materials, meshes: meshes.filter(m => m.subMeshes !== undefined)};
@@ -375,7 +377,10 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
             // Update the file uploaded state to enable play button
             setFileUploaded(url.split('/').pop() || "model.glb");
             
-            // Setup the engine with the loaded model
+            // Setup the engine with the loaded model. This reuses the existing scene (unlike
+            // resetScene/Play, which disposes it), so the previous decorator's observers must be
+            // torn down explicitly or they'd stack up on every model load.
+            babylonEngineRef.current?.dispose();
             const eventBus = new DOMEventBus();
             babylonEngineRef.current = new BabylonDecorator(new BasicBehaveEngine(60, eventBus), worldInfo, sceneRef.current!);
             attachPointerEventLogging(babylonEngineRef.current);

@@ -12,7 +12,9 @@ import {
     PickingInfo,
     IPointerEvent,
     TransformNode,
-    Material
+    Material,
+    Observer,
+    PointerInfo
 } from "@babylonjs/core";
 import {Vector3} from "@babylonjs/core/Maths/math.vector";
 import {cubicBezier, easeFloat, easeFloat3, easeFloat4, linearFloat, slerpFloat4} from "../BasicBehaveEngine/easingUtils";
@@ -33,30 +35,14 @@ export class BabylonDecorator extends ADecorator {
     world: any;
     hoveredNode: any;
     hoveredNodeIndex: number;
+    private beforeRenderObserver: Observer<Scene> | null = null;
+    private pointerObserver: Observer<PointerInfo> | null = null;
 
     constructor(behaveEngine: IBehaveEngine, world: any, scene: Scene) {
         super(behaveEngine);
         this.world = world;
         this.scene = scene;
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        this.behaveEngine.extractBehaveGraphFromScene = this.extractBehaveGraphFromScene
-
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        this.behaveEngine.stopAnimation = this.stopAnimation
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        this.behaveEngine.stopAnimationAt = this.stopAnimationAt
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        this.behaveEngine.startAnimation = this.startAnimation
-
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        this.behaveEngine.getParentNodeIndex = this.getParentNodeIndex;
-
-        this.behaveEngine.getWorld = this.getWorld;
+        this.bridgeEngineHooks();
         this.registerKnownPointers();
         this.registerBehaveEngineNode("event/onSelect", OnSelect);
         this.registerBehaveEngineNode("event/onHoverIn", OnHoverIn);
@@ -67,7 +53,7 @@ export class BabylonDecorator extends ADecorator {
 
         // dealing with hoverability refactor this once/if babylon has an api for hoverability
         this.hoveredNodeIndex = -1;
-        this.scene.onBeforeRenderObservable.add(() => {
+        this.beforeRenderObserver = this.scene.onBeforeRenderObservable.add(() => {
             const ray = this.scene.createPickingRay(
                 this.scene.pointerX,
                 this.scene.pointerY,
@@ -82,7 +68,7 @@ export class BabylonDecorator extends ADecorator {
             this.hoverOn(hitNodeIndex, 0);
         });
 
-        this.scene.onPointerObservable.add(async (pointerInfo) => {
+        this.pointerObserver = this.scene.onPointerObservable.add(async (pointerInfo) => {
             if (pointerInfo.type === PointerEventTypes.POINTERPICK) {
                 const ray = this.scene.createPickingRay(
                     this.scene.pointerX,
@@ -97,11 +83,10 @@ export class BabylonDecorator extends ADecorator {
                 }
                 let pos : [number, number, number] = [hit.pickedMesh.position.x, hit.pickedMesh.position.y, hit.pickedMesh.position.z];
                     if (hit.pickedPoint != null) {
-                        // Babylon.js uses a left-handed coordinate system, so we negate the x value to convert to right-handed
-                        pos = [-hit.pickedPoint.x, hit.pickedPoint.y, hit.pickedPoint.z];
+                        pos = BabylonDecorator.toRightHandedXYZ(hit.pickedPoint.x, hit.pickedPoint.y, hit.pickedPoint.z);
                     }
-                const hitNodeIndex = this.world.glTFNodes.findIndex((value: { uniqueId: number; }) => value.uniqueId === hit.pickedMesh!.uniqueId);                
-                this.select(hitNodeIndex, 0, pos, [-ray.origin.x, ray.origin.y, ray.origin.z]);
+                const hitNodeIndex = this.world.glTFNodes.findIndex((value: { uniqueId: number; }) => value.uniqueId === hit.pickedMesh!.uniqueId);
+                this.select(hitNodeIndex, 0, pos, BabylonDecorator.toRightHandedXYZ(ray.origin.x, ray.origin.y, ray.origin.z));
             }
         });
 
@@ -109,6 +94,48 @@ export class BabylonDecorator extends ADecorator {
         for (const node of this.world.glTFNodes) {
             node.inheritVisibility = true;
         }
+    }
+
+    /** Babylon.js is left-handed; glTF/KHR_interactivity is right-handed, so X is negated. */
+    private static toRightHandedXYZ(x: number, y: number, z: number): [number, number, number] {
+        return [-x, y, z];
+    }
+
+    // Undoes the left-handed conversion Babylon's glTF loader bakes into its __root__ node
+    // (Y-180° + scale(1,1,-1) == net negate-X). Left-multiplying the world matrix by diag(-1,1,1)
+    // inverts it; in Babylon's column-major array that negates the X-output row (indices 0,4,8,12).
+    // Assumes a left-handed scene (scene.useRightHandedSystem === false), which is how it's created here.
+    private static toRightHandedMatrixArray(m: ArrayLike<number>): number[] {
+        return [
+            -m[0], m[1], m[2], m[3],
+            -m[4], m[5], m[6], m[7],
+            -m[8], m[9], m[10], m[11],
+            -m[12], m[13], m[14], m[15]
+        ];
+    }
+
+    // KHR_texture_transform rotation is negated by Babylon's glTF loader/exporter convention, see
+    // https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/loaders/src/glTF/2.0/Extensions/KHR_texture_transform.ts#L73
+    private static getTextureRotation(texture: {wAng: number} | null | undefined): [number] {
+        return texture == null ? [NaN] : [-1 * texture.wAng];
+    }
+
+    private static setTextureRotation(texture: {wAng: number} | null | undefined, value: number[]): void {
+        if (texture != null) {
+            texture.wAng = -1 * value[0];
+        }
+    }
+
+    public dispose(): void {
+        if (this.beforeRenderObserver != null) {
+            this.scene.onBeforeRenderObservable.remove(this.beforeRenderObserver);
+            this.beforeRenderObserver = null;
+        }
+        if (this.pointerObserver != null) {
+            this.scene.onPointerObservable.remove(this.pointerObserver);
+            this.pointerObserver = null;
+        }
+        super.dispose();
     }
 
     processAddingNodeToQueue = (flow: IInteractivityFlow) => {
@@ -121,13 +148,6 @@ export class BabylonDecorator extends ADecorator {
 
     processNodeStarted = (node: BehaveEngineNode) => {
         //pass
-    }
-
-    resolveRef = (ref: any): any => {
-        if (ref == null || ref === "") {
-            return -1;
-        }
-        return String(ref).split("/").pop();
     }
 
     getWorld = (): any => {
@@ -152,10 +172,6 @@ export class BabylonDecorator extends ADecorator {
         const behaveGraph = rootNode.metadata['behaveGraph'];
         this.loadBehaveGraph(behaveGraph);
     }
-
-    registerJsonPointer = (jsonPtr: string, getterCallback: (path: string) => any, setterCallback: (path: string, value: any) => void, typeName: string, readOnly: boolean) => {
-        this.behaveEngine.registerJsonPointer(jsonPtr, getterCallback, setterCallback, typeName, readOnly);
-    };
 
     registerKnownPointers = () => {
         const maxGltfNode:number = this.world.glTFNodes.length-1;
@@ -216,7 +232,7 @@ export class BabylonDecorator extends ADecorator {
             }
 
             console.log(`Camera position: ${activeCamera.position.x}, ${activeCamera.position.y}, ${activeCamera.position.z}`)
-            return [-1 * activeCamera.position.x, activeCamera.position.y, activeCamera.position.z]
+            return BabylonDecorator.toRightHandedXYZ(activeCamera.position.x, activeCamera.position.y, activeCamera.position.z)
         }, (path, value) => {
             //no-op
         }, "float3", true)
@@ -354,19 +370,11 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/pbrMetallicRoughness/baseColorTexture/extensions/KHR_texture_transform/rotation`, (path) => {
             const parts: string[] = path.split("/");
             const baseColorTexture = this.world.materials[Number(parts[2])].albedoTexture;
-            if (baseColorTexture == null) {
-                return [NaN];
-            }
-
-            // is negated in babylon's loading so negating when getting https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/loaders/src/glTF/2.0/Extensions/KHR_texture_transform.ts#L73
-            return [-1 * baseColorTexture.wAng]
+            return BabylonDecorator.getTextureRotation(baseColorTexture);
         }, (path, value) => {
             const parts: string[] = path.split("/");
             const baseColorTexture = this.world.materials[Number(parts[2])].albedoTexture;
-            if (baseColorTexture != null) {
-                // is negated in babylon's loading so negating when setting https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/loaders/src/glTF/2.0/Extensions/KHR_texture_transform.ts#L73
-                baseColorTexture.wAng = -1 * value[0];
-            }
+            BabylonDecorator.setTextureRotation(baseColorTexture, value);
         }, "float", false);
 
         // METALLIC ROUGHNESS TEXTURE TRANSFORM
@@ -407,19 +415,11 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/pbrMetallicRoughness/metallicRoughnessTexture/extensions/KHR_texture_transform/rotation`, (path) => {
             const parts: string[] = path.split("/");
             const metallicTexture = this.world.materials[Number(parts[2])].metallicTexture;
-            if (metallicTexture == null) {
-                return [NaN];
-            }
-
-            // is negated in babylon's loading so negating when getting https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/loaders/src/glTF/2.0/Extensions/KHR_texture_transform.ts#L73
-            return [-1 * metallicTexture.wAng]
+            return BabylonDecorator.getTextureRotation(metallicTexture);
         }, (path, value) => {
             const parts: string[] = path.split("/");
             const metallicTexture = this.world.materials[Number(parts[2])].metallicTexture;
-            if (metallicTexture != null) {
-                // is negated in babylon's loading so negating when setting https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/loaders/src/glTF/2.0/Extensions/KHR_texture_transform.ts#L73
-                metallicTexture.wAng = -1 * value[0];
-            }
+            BabylonDecorator.setTextureRotation(metallicTexture, value);
         }, "float", false);
 
         // NORMAL TEXTURE TRANSFORM
@@ -460,19 +460,11 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/normalTexture/extensions/KHR_texture_transform/rotation`, (path) => {
             const parts: string[] = path.split("/");
             const normalTexture = this.world.materials[Number(parts[2])].normalTexture;
-            if (normalTexture == null) {
-                return [NaN];
-            }
-
-            // is negated in babylon's loading so negating when getting https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/loaders/src/glTF/2.0/Extensions/KHR_texture_transform.ts#L73
-            return [-1 * normalTexture.wAng]
+            return BabylonDecorator.getTextureRotation(normalTexture);
         }, (path, value) => {
             const parts: string[] = path.split("/");
             const normalTexture = this.world.materials[Number(parts[2])].normalTexture;
-            if (normalTexture != null) {
-                // is negated in babylon's loading so negating when setting https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/loaders/src/glTF/2.0/Extensions/KHR_texture_transform.ts#L73
-                normalTexture.wAng = -1 * value[0];
-            }
+            BabylonDecorator.setTextureRotation(normalTexture, value);
         }, "float", false);
 
         // OCCLUSION TEXTURE TRANSFORM
@@ -513,19 +505,11 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/occlusionTexture/extensions/KHR_texture_transform/rotation`, (path) => {
             const parts: string[] = path.split("/");
             const occlusionTexture = this.world.materials[Number(parts[2])].occlusionTexture;
-            if (occlusionTexture == null) {
-                return [NaN];
-            }
-
-            // is negated in babylon's loading so negating when getting https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/loaders/src/glTF/2.0/Extensions/KHR_texture_transform.ts#L73
-            return [-1 * occlusionTexture.wAng]
+            return BabylonDecorator.getTextureRotation(occlusionTexture);
         }, (path, value) => {
             const parts: string[] = path.split("/");
             const occlusionTexture = this.world.materials[Number(parts[2])].occlusionTexture;
-            if (occlusionTexture != null) {
-                // is negated in babylon's loading so negating when setting https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/loaders/src/glTF/2.0/Extensions/KHR_texture_transform.ts#L73
-                occlusionTexture.wAng = -1 * value[0];
-            }
+            BabylonDecorator.setTextureRotation(occlusionTexture, value);
         }, "float", false);
 
         // EMISSIVE TEXTURE TRANSFORM
@@ -566,19 +550,11 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/emissiveTexture/extensions/KHR_texture_transform/rotation`, (path) => {
             const parts: string[] = path.split("/");
             const emissiveTexture = this.world.materials[Number(parts[2])].emissiveTexture;
-            if (emissiveTexture == null) {
-                return [NaN];
-            }
-
-            // is negated in babylon's loading so negating when getting https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/loaders/src/glTF/2.0/Extensions/KHR_texture_transform.ts#L73
-            return [-1 * emissiveTexture.wAng];
+            return BabylonDecorator.getTextureRotation(emissiveTexture);
         }, (path, value) => {
             const parts: string[] = path.split("/");
             const emissiveTexture = this.world.materials[Number(parts[2])].emissiveTexture;
-            if (emissiveTexture != null) {
-                // is negated in babylon's loading so negating when setting https://github.com/BabylonJS/Babylon.js/blob/master/packages/dev/loaders/src/glTF/2.0/Extensions/KHR_texture_transform.ts#L73
-                emissiveTexture.wAng = -1 * value[0];
-            }
+            BabylonDecorator.setTextureRotation(emissiveTexture, value);
         }, "float", false);
 
         this.registerJsonPointer(`/nodes/${maxGltfNode}/extensions/KHR_node_selectability/selectable`, (path) => {
@@ -695,14 +671,7 @@ export class BabylonDecorator extends ADecorator {
 
             (node as AbstractMesh).computeWorldMatrix(true);
             const globalMatrix = (node as AbstractMesh).getWorldMatrix().asArray();
-            // x by -1
-            // TODO what is the correct way to undo babylon's gltf -> babylon coordinate system conversion?
-            return [
-                -globalMatrix[0], globalMatrix[1], globalMatrix[2], globalMatrix[3],
-                -globalMatrix[4], globalMatrix[5], globalMatrix[6], globalMatrix[7], 
-                -globalMatrix[8], globalMatrix[9], globalMatrix[10], globalMatrix[11],
-                -globalMatrix[12], globalMatrix[13], globalMatrix[14], globalMatrix[15]
-            ];
+            return BabylonDecorator.toRightHandedMatrixArray(globalMatrix);
         }, (path, value) => {
             //no-op
         }, "float4x4", true);

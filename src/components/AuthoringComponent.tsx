@@ -912,6 +912,15 @@ const getNodePickerSearchText = (nodeType: string): string => {
 const NodePickerComponent = (props: {onAddNode: any, closeModal: any, mousePos: any}) => {
     const [filter, setFilter] = useState("");
     const [activeCategory, setActiveCategory] = useState<string | null>(null);
+    const nodeListRef = useRef<HTMLDivElement | null>(null);
+
+    const onNodeListWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+        const el = nodeListRef.current;
+        if (!el) { return; }
+        // node list uses CSS columns, so overflow is horizontal even though scrolling comes from a vertical wheel
+        el.scrollLeft += e.deltaY;
+        e.preventDefault();
+    };
 
     const selectNode = (nodeType: string) => {
         props.onAddNode(nodeType, {x: props.mousePos.x, y: props.mousePos.y});
@@ -968,7 +977,7 @@ const NodePickerComponent = (props: {onAddNode: any, closeModal: any, mousePos: 
                         })
                     }
                 </div>
-                <div style={{ columnWidth: 200, columnGap: 24, maxHeight: "min(40vh, calc(100vh - 260px))", overflowY: "auto", overscrollBehavior: "contain", marginTop: 16, padding: "0 16px 8px" }}>
+                <div ref={nodeListRef} onWheel={onNodeListWheel} style={{ columnWidth: 200, columnGap: 24, maxHeight: "min(40vh, calc(100vh - 260px))", overflowX: "auto", overflowY: "auto", overscrollBehavior: "contain", marginTop: 16, padding: "0 16px 8px" }}>
                     {
                         sortedNodeCategories.map(category => {
                             const nodesInCategory = nodeTypesByCategory[category].filter(nodeType =>

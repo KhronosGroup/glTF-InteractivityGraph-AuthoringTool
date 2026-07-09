@@ -123,7 +123,7 @@ import { DebugLog } from '../src/BasicBehaveEngine/nodes/experimental/Debug';
 import { QuatAngleBetween } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatAngleBetween';
 import { QuatFromUpForward } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatFromUpForward';
 import { QuatSlerp } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatSlerp';
-import { RefEquality } from '../src/BasicBehaveEngine/nodes/ref/Equality';
+import { RefEquality } from '../src/BasicBehaveEngine/nodes/ref/RefEquality';
 import * as glMatrix from 'gl-matrix';
 
 describe('nodes', () => {
@@ -479,7 +479,7 @@ describe('nodes', () => {
                 const parts: string[] = path.split('/');
                 world.nodes[Number(parts[2])].value = value;
             },
-            "float", false
+            "int", false
         );
 
         const res  = pointerGet.processNode();
@@ -492,6 +492,18 @@ describe('nodes', () => {
 
         const resCustom = await pointerGetCustomPtr.processNode();
         expect(resCustom['value']!.value[0]).toBe(1);
+    });
+
+    it('pointer/get returns invalid for unresolved ref pointers', async () => {
+        const pointerGet: PointerGet = new PointerGet({
+            ...defaultProps,
+            graphEngine: new BasicBehaveEngine(60, new DOMEventBus()),
+            configuration: {pointer: { value: ['/nodes/3/camera'] }, type: { value: [9] }},
+        });
+
+        const res = pointerGet.processNode();
+        expect(res['value']!.value).toStrictEqual([null]);
+        expect(res['isValid']!.value).toStrictEqual([false]);
     });
 
     it('math/matCompose',  () => {

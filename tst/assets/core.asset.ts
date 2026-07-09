@@ -13,9 +13,14 @@ import {
 
 jest.setTimeout(30_000);
 
-const cases = loadAssetCases();
+const cases = loadAssetCases({ interGlb: "exclude" });
 
 describe("KHR_interactivity sample assets - core engine", () => {
+    if (cases.length === 0) {
+        it.skip("has no matching single-file assets", () => {});
+        return;
+    }
+
     describe.each(cases)("$entry.name", (assetCase) => {
         const subTests = getAssetSubTests(assetCase.metadata);
         let variables: BasicBehaveEngine["variables"] = [];

@@ -50,23 +50,39 @@ export interface AssetSubTestCase {
     subTest: AssetSubTest;
 }
 
+export type InterGlbMode = "exclude" | "include" | "only";
+
+export interface LoadAssetCasesOptions {
+    interGlb?: InterGlbMode;
+    applyEnvFilters?: boolean;
+}
+
 export const DEFAULT_SAMPLE_ASSETS_ROOT = path.resolve(process.cwd(), "../glTF-Interactivity-Sample-Assets");
 
 export function getSampleAssetsRoot(): string {
     return process.env.KHR_INTERACTIVITY_SAMPLE_ASSETS ?? DEFAULT_SAMPLE_ASSETS_ROOT;
 }
 
-export function loadAssetCases(): AssetCase[] {
+export function loadAssetCases(options: LoadAssetCasesOptions = {}): AssetCase[] {
     const root = path.join(getSampleAssetsRoot(), "Tests", "Interactivity");
     if (!fs.existsSync(root)) {
         throw new Error(`KHR_interactivity sample assets not found at ${root}. Set KHR_INTERACTIVITY_SAMPLE_ASSETS to the repo root.`);
     }
 
-    const nameFilter = process.env.KHR_INTERACTIVITY_ASSET_NAME_FILTER;
-    const filter = process.env.KHR_INTERACTIVITY_ASSET_FILTER;
-    const limit = Number(process.env.KHR_INTERACTIVITY_ASSET_LIMIT ?? "0");
+    const interGlbMode = options.interGlb ?? "exclude";
+    const applyEnvFilters = options.applyEnvFilters ?? true;
+    const nameFilter = applyEnvFilters ? process.env.KHR_INTERACTIVITY_ASSET_NAME_FILTER : undefined;
+    const filter = applyEnvFilters ? process.env.KHR_INTERACTIVITY_ASSET_FILTER : undefined;
+    const limit = applyEnvFilters ? Number(process.env.KHR_INTERACTIVITY_ASSET_LIMIT ?? "0") : 0;
 
     return loadAssetEntries(root)
+        .filter((entry) => {
+            const isInterGlb = entry.name.startsWith("InterGlb/");
+            if (interGlbMode === "only") {
+                return isInterGlb;
+            }
+            return interGlbMode === "include" || !isInterGlb;
+        })
         .filter((entry) => !nameFilter || entry.name === nameFilter)
         .filter((entry) => !filter || entry.name.includes(filter) || entry.label.includes(filter) || entry.tags.includes(filter))
         .slice(0, limit > 0 ? limit : undefined)
@@ -90,6 +106,37 @@ export function loadAssetCases(): AssetCase[] {
                 return { entry, glbPath, metadataPath, metadata, loadError: toError(error) };
             }
         });
+}
+
+export function loadOverviewAssetCase(): AssetCase {
+    const root = path.join(getSampleAssetsRoot(), "Tests", "Interactivity");
+    const metadataPath = path.join(root, "Overview.json");
+    const metadata = JSON.parse(fs.readFileSync(metadataPath, "utf8")) as AssetTestMetadata;
+    const glbPath = path.join(root, metadata.glbFileName);
+    const entry: AssetIndexEntry = {
+        label: metadata.name,
+        name: metadata.name,
+        tags: [],
+        variants: {
+            "glTF-Binary": metadata.glbFileName,
+            "test-Json": path.basename(metadataPath),
+        },
+    };
+
+    try {
+        const gltf = readGlbJson(glbPath);
+        const interactivity = gltf.extensions?.KHR_interactivity;
+        const graphIndex = interactivity?.graph ?? 0;
+        const graph = interactivity?.graphs?.[graphIndex];
+
+        if (!graph) {
+            throw new Error(`No KHR_interactivity graph found in ${glbPath}`);
+        }
+
+        return { entry, glbPath, metadataPath, metadata, gltf, graph };
+    } catch (error) {
+        return { entry, glbPath, metadataPath, metadata, loadError: toError(error) };
+    }
 }
 
 export function loadAssetEntries(root = path.join(getSampleAssetsRoot(), "Tests", "Interactivity")): AssetIndexEntry[] {
@@ -367,6 +414,30 @@ export async function runGraphAndWait(decorator: ADecorator, graph: any): Promis
     const waitMs = Math.max(20, Math.ceil(getGraphSettleSeconds(graph) * 1000));
     await new Promise((resolve) => setTimeout(resolve, waitMs));
     decorator.executeEventQueueTick();
+    decorator.pauseEventQueue();
+    decorator.clearCustomEventListeners();
+}
+
+export async function runGraphsAndWait(decorators: ADecorator[], graphs: any[]): Promise<void> {
+    graphs.forEach((graph, index) => decorators[index].loadBehaveGraph(structuredCloneFallback(graph), false));
+    decorators[0].playEventQueue();
+    const waitSeconds = Math.max(...graphs.map(getGraphSettleSeconds));
+    const waitMs = Math.max(20, Math.ceil(waitSeconds * 1000));
+    await new Promise((resolve) => setTimeout(resolve, waitMs));
+    decorators[0].executeEventQueueTick();
+    decorators.forEach((decorator) => decorator.pauseEventQueue());
+    decorators[0].clearCustomEventListeners();
+}
+
+export function validateGraphLoad(assetCase: AssetCase): void {
+    if (assetCase.loadError) {
+        throw assetCase.loadError;
+    }
+
+    const eventBus = new TestEventBus();
+    const engine = new BasicBehaveEngine(60, eventBus);
+    const decorator = new GenericTestDecorator(engine, createGenericWorldFromGltf(assetCase.gltf));
+    decorator.loadBehaveGraph(structuredCloneFallback(assetCase.graph), false);
     decorator.pauseEventQueue();
     decorator.clearCustomEventListeners();
 }

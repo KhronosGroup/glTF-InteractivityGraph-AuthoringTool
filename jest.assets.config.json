@@ -13,7 +13,11 @@
             }
         ]
     },
-    "verbose": true,
+    "verbose": false,
+    "silent": true,
+    "reporters": [
+        "<rootDir>/tst/assets/assetSummaryReporter.cjs"
+    ],
     "testMatch": [
         "**/*.asset.ts"
     ],

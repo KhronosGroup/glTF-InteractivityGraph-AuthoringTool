@@ -51,6 +51,10 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
     const babylonEngineRef = useRef<BabylonDecorator | null>(null)
     const [fileUploaded, setFileUploaded] = useState<string | null>(null);
     const [clickedHotSpot, setClickedHotSpot] = useState<string | null>(null);
+    // Tracks whether the most recent model selection was a local file upload (vs. a modelUrl
+    // sample/URL). modelUrl stays set in state/URL after a sample load, so resetScene needs this
+    // to know which source should win the next time it (re)loads.
+    const [useUploadedFile, setUseUploadedFile] = useState(false);
 
     const {getExecutableGraph, loadGraphFromJson, setDiagnosticsForCategory, setGltfObjectModel, setSupportedPointerTemplates} = useContext(InteractivityGraphContext);
 
@@ -99,6 +103,7 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
 
     useEffect(() => {
         if (modelUrl && engineRef.current) {
+            setUseUploadedFile(false);
             loadModelFromUrl(modelUrl);
         }
     }, [modelUrl]);
@@ -148,7 +153,9 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
         createScene();
 
         let url: string;
-        if (modelUrl) {
+        if (useUploadedFile && fileInputRef.current?.files?.[0]) {
+            url = URL.createObjectURL(fileInputRef.current.files[0]);
+        } else if (modelUrl) {
             url = modelUrl;
         } else if (fileInputRef.current?.files?.[0]) {
             url = URL.createObjectURL(fileInputRef.current.files[0]);
@@ -420,6 +427,7 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
                         setFileUploaded(null);
                         return;
                     }
+                    setUseUploadedFile(true);
                     setFileUploaded(fileInputRef.current.files[0].name)
                 }}/>
                 <Button variant="outline-light" onClick={() => fileInputRef.current!.click()}>

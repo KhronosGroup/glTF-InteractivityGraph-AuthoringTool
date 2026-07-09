@@ -108,6 +108,32 @@ const MenuBarButton = (props: {id: string, icon: React.ReactNode, label: string,
 
 const MenuBarDivider = () => <div className="graph-menu-bar-divider"/>;
 
+const IconReload = () => (
+    <svg {...iconProps}>
+        <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+    </svg>
+);
+
+// nudges the user that node/socket/wiring edits don't auto-propagate to the running scene — the
+// engine only (re)reads the graph when Play/Reload is pressed (see requestPlay in
+// InteractivityGraphContext). Node drag position is intentionally excluded from "dirty" (see
+// onNodeDragStop), since repositioning doesn't change what the engine executes.
+const ReloadIndicator = (props: { dirty: boolean, onReload: () => void }) => {
+    if (!props.dirty) { return null; }
+    return (
+        <button
+            id={"reload-graph-btn"}
+            className={"graph-menu-bar-btn graph-menu-bar-btn--reload"}
+            title={"The running scene doesn't update automatically as you edit — reload to apply your changes"}
+            onClick={props.onReload}
+        >
+            <IconReload/>
+            Unplayed changes — Reload
+        </button>
+    );
+};
+
 // pinned to the right edge of the graph menu bar: total error/warning count across all
 // diagnostics (extensions, node operations, data types, per-node spec validity). Hovering shows
 // the full list; entries attributed to a specific node (currently only 'node'-category spec
@@ -224,7 +250,7 @@ export const AuthoringComponent = () => {
     // ids of the edges connecting that upstream hierarchy, highlighted alongside the nodes
     const [ancestorEdgeIds, setAncestorEdgeIds] = useState<Set<string>>(new Set());
 
-    const {graph, getAuthorGraph, addDeclaration, getDeclarationIndex, addNode, removeNode, allDiagnostics} = useContext(InteractivityGraphContext);
+    const {graph, getAuthorGraph, addDeclaration, getDeclarationIndex, addNode, removeNode, allDiagnostics, graphDirty, markGraphDirty, requestPlay} = useContext(InteractivityGraphContext);
     // the graph object identity we last rebuilt the canvas from; a load replaces graph identity
     // (setGraph), which is the signal to rebuild — interactive edits mutate the same object in
     // place and leave identity untouched, so they never retrigger a rebuild
@@ -410,6 +436,7 @@ export const AuthoringComponent = () => {
             }
             return addEdge({ ...vals, style: { stroke: edgeColor, strokeWidth: 2 } }, filtered);
         });
+        markGraphDirty();
     }, [nodes, graph, bumpNodeData]);
 
     // recolor a node's outgoing value edges to match its current output socket types
@@ -502,6 +529,7 @@ export const AuthoringComponent = () => {
                 bumpNodeData(edge.target!);
             }
         }
+        markGraphDirty();
     }, [graph, bumpNodeData]);
 
     const onNodesDelete = useCallback((nodes: Node[]) => {
@@ -845,6 +873,7 @@ export const AuthoringComponent = () => {
                                 isActive={authoringComponentModal === AuthoringComponentModelType.UPLOAD_GRAPH}
                                 onClick={() => setAuthoringComponentModal(AuthoringComponentModelType.UPLOAD_GRAPH)}
                             />
+                            <ReloadIndicator dirty={graphDirty} onReload={requestPlay}/>
                             <DiagnosticsCounter diagnostics={allDiagnostics} onJumpToNode={jumpToNode}/>
                         </div>
                     </Panel>

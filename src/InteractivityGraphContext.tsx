@@ -46,7 +46,18 @@ interface InteractivityGraphContextType {
     addVariable: (variable: IInteractivityVariable) => void,
     setVariables: (variables: IInteractivityVariable[]) => void,
     addNode: (node: AuthoredNode) => void,
-    removeNode: (uid: string) => void
+    removeNode: (uid: string) => void,
+    // Whether the graph has structural edits (sockets, wiring, nodes, events, variables — not
+    // node drag position) made since the runtime engine last loaded it. Drives the "Reload" nudge
+    // in the authoring menu bar, since edits don't auto-propagate to the running scene.
+    graphDirty: boolean,
+    markGraphDirty: () => void,
+    clearGraphDirty: () => void,
+    // Lets whichever engine view is currently mounted (Babylon/Logging) register its own "Play"
+    // action, so the authoring menu bar's Reload button can trigger a re-run without needing a
+    // direct reference to that component.
+    registerPlayHandler: (handler: (() => void) | null) => void,
+    requestPlay: () => void,
 }
 
 // The provider's starting graph. Identity matters: the authoring canvas treats "graph is still
@@ -81,7 +92,12 @@ const initialContext: InteractivityGraphContextType = {
     addVariable: () => {return null},
     setVariables: () => {return null},
     addNode: () => {return null},
-    removeNode: () => {return null}
+    removeNode: () => {return null},
+    graphDirty: false,
+    markGraphDirty: () => {return null},
+    clearGraphDirty: () => {return null},
+    registerPlayHandler: () => {return null},
+    requestPlay: () => {return null}
 };
 
 export const InteractivityGraphContext = createContext<InteractivityGraphContextType>(initialContext);
@@ -95,6 +111,20 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
     // last cycle state we surfaced as a diagnostic. getExecutableGraph runs during render (JSON
     // view), so we guard on this ref and defer the setState to avoid an update-during-render loop.
     const cycleReportedRef = useRef<boolean>(false);
+
+    // See graphDirty on the context type: true once a structural edit has been made since the
+    // engine last (re)loaded the graph.
+    const [graphDirty, setGraphDirty] = useState(false);
+    const markGraphDirty = useCallback(() => setGraphDirty(true), []);
+    const clearGraphDirty = useCallback(() => setGraphDirty(false), []);
+
+    const playHandlerRef = useRef<(() => void) | null>(null);
+    const registerPlayHandler = useCallback((handler: (() => void) | null) => {
+        playHandlerRef.current = handler;
+    }, []);
+    const requestPlay = useCallback(() => {
+        playHandlerRef.current?.();
+    }, []);
 
     const [diagnostics, setDiagnostics] = useState<IGraphDiagnostic[]>([]);
 
@@ -566,6 +596,8 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         // replace the graph's identity: this is the single load signal the authoring canvas
         // watches to rebuild itself (see the sync effect in AuthoringComponent)
         setGraph(newGraph);
+        // a fresh load has nothing un-synced yet relative to itself
+        clearGraphDirty();
     }
 
 
@@ -735,30 +767,36 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
 
     const addEvent = (event: IInteractivityEvent) => {
         graph.events.push(event);
+        markGraphDirty();
     };
 
     // Replace the whole custom-event list. Used by the Custom Events editor, which manages
     // add/edit/delete of events locally and commits the resulting array back in one call.
     const setEvents = (events: IInteractivityEvent[]) => {
         graph.events = events;
+        markGraphDirty();
     };
 
     const addVariable = (variable: IInteractivityVariable) => {
         graph.variables.push(variable);
+        markGraphDirty();
     };
 
     // Replace the whole variable list. Used by the Variables editor, which manages
     // add/edit/delete of variables locally and commits the resulting array back in one call.
     const setVariables = (variables: IInteractivityVariable[]) => {
         graph.variables = variables;
+        markGraphDirty();
     };
 
     const addNode = (node: AuthoredNode) => {
         graph.nodes.push(node);
+        markGraphDirty();
     };
 
     const removeNode = (uid: string) => {
         graph.nodes = graph.nodes.filter(node => node.uid !== uid);
+        markGraphDirty();
     };
 
     const context: InteractivityGraphContextType = {
@@ -782,7 +820,12 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         addVariable: addVariable,
         setVariables: setVariables,
         addNode: addNode,
-        removeNode: removeNode
+        removeNode: removeNode,
+        graphDirty: graphDirty,
+        markGraphDirty: markGraphDirty,
+        clearGraphDirty: clearGraphDirty,
+        registerPlayHandler: registerPlayHandler,
+        requestPlay: requestPlay
     };
 
     return <InteractivityGraphContext.Provider value={context}>{children}</InteractivityGraphContext.Provider>;

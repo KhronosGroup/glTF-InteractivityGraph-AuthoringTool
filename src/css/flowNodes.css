@@ -147,6 +147,16 @@
     flex-shrink: 0;
 }
 
+.graph-menu-bar-btn--reload {
+    background: #fdf1d8;
+    color: #8a6116;
+}
+
+.graph-menu-bar-btn--reload:hover {
+    background: #fbe6ba;
+    color: #6b4a0f;
+}
+
 .graph-menu-bar-divider {
     width: 1px;
     align-self: stretch;

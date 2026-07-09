@@ -56,7 +56,7 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
     // to know which source should win the next time it (re)loads.
     const [useUploadedFile, setUseUploadedFile] = useState(false);
 
-    const {getExecutableGraph, loadGraphFromJson, setDiagnosticsForCategory, setGltfObjectModel, setSupportedPointerTemplates} = useContext(InteractivityGraphContext);
+    const {getExecutableGraph, loadGraphFromJson, setDiagnosticsForCategory, setGltfObjectModel, setSupportedPointerTemplates, clearGraphDirty, registerPlayHandler} = useContext(InteractivityGraphContext);
 
     // Inspect the loaded glb's declared extensions (stashed on the scene metadata by the
     // KHR_interactivity loader extension) and surface any this tool does not support. Also publish
@@ -119,8 +119,21 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
             .then((res: {nodes: Node[], materials: Material[], animations: AnimationGroup[], meshes: AbstractMesh[]}) => {
                 runGraph(babylonEngineRef, getExecutableGraph(), sceneRef.current, res.nodes, res.materials, res.animations, res.meshes, shouldOverrideGraph);
                 setGraphRunning(true);
+                clearGraphDirty();
             })
     }
+
+    // let the authoring menu bar's Reload button trigger this engine's Play without a direct
+    // component reference (see registerPlayHandler on InteractivityGraphContext). `play` is
+    // redefined every render (it closes over the current `graph` reference, which changes
+    // identity on a fresh load), so the registered handler is a stable trampoline through a ref
+    // rather than the closure captured by the mount-only effect below.
+    const playRef = useRef(play);
+    playRef.current = play;
+    useEffect(() => {
+        registerPlayHandler(() => playRef.current(false));
+        return () => registerPlayHandler(null);
+    }, []);
 
     const setupCamera = () => {
         const camera = sceneRef.current!.activeCamera as ArcRotateCamera;
@@ -399,6 +412,7 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
             } else {
                 babylonEngineRef.current.loadBehaveGraph(getExecutableGraph());
             }
+            clearGraphDirty();
         } catch (error) {
             console.error("Error loading model from URL:", error);
         }

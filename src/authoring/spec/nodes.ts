@@ -141,6 +141,19 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
             }
         }
     },
+    {
+        op: "math/Tau",
+        description: "Ratio of a circle's circumference to its radius",
+        values: {
+            output: {
+                value: {
+                    typeOptions: [2],
+                    type: 2,
+                    value: [Math.PI * 2]
+                }
+            }
+        }
+    },
     // Math arithmetic
     {
         op: "math/abs",
@@ -1145,6 +1158,7 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
     {
         op: "math/switch",
         description: "Switch between two values based on a condition",
+        flags: [NodeSpecFlag.DynamicSockets],
         configuration: {
             cases: {
                 type: InteractivityConfigurationValueType.INT_ARR,
@@ -1252,6 +1266,7 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
     {
         op: "event/receive",
         description: "This node will fire when an event is received",
+        flags: [NodeSpecFlag.DynamicSockets],
         configuration: {
             event: {
                 type: InteractivityConfigurationValueType.INT,
@@ -1300,6 +1315,40 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
                 out: {
                     node: undefined,
                     socket: undefined
+                }
+            }
+        }
+    },
+    {
+        op: "event/stopPropagation",
+        description: "Stop event propagation",
+        flows: {
+            input: {
+                in: {
+                    node: undefined,
+                    socket: undefined
+                }
+            },
+            output: {
+                out: {
+                    node: undefined,
+                    socket: undefined
+                }
+            }
+        },
+        values: {
+            input: {
+                stopImmediate: {
+                    typeOptions: [0],
+                    type: 0,
+                    description: "Whether to stop immediate propagation",
+                    value: [false]
+                },
+                event: {
+                    typeOptions: [9],
+                    type: 9,
+                    description: "Reference to the event to stop propagating",
+                    value: [undefined]
                 }
             }
         }
@@ -1450,6 +1499,7 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
     {
         op: "flow/waitAll",
         description: "Wait for all the subgraphs to complete",
+        flags: [NodeSpecFlag.DynamicSockets],
         configuration: {
             inputFlows: {
                 type: InteractivityConfigurationValueType.INT,
@@ -1593,8 +1643,8 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
         values: {
             input: {
                 delay: {
-                    typeOptions: [1],
-                    type: 1,
+                    typeOptions: [9],
+                    type: 9,
                     value: [undefined]
                 }
             }
@@ -1730,6 +1780,15 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
                 description: "Index of the custom variable to read",
                 value: [undefined]
             }
+        },
+        values: {
+            output: {
+                value: {
+                    typeOptions: anyType,
+                    type: 0,
+                    value: [undefined]
+                }
+            }
         }
     },
     {
@@ -1772,6 +1831,11 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
         },
         values: {
             input: {
+                value: {
+                    typeOptions: anyType,
+                    type: 0,
+                    value: [undefined]
+                },
                 duration: {
                     typeOptions: [2],
                     type: 2,
@@ -2511,24 +2575,19 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
             },
             output: {
                 translation: {
-                    typeOptions: [3],
-                    type: 3,
+                    typeOptions: [4],
+                    type: 4,
                     value: [undefined, undefined, undefined]
                 },
                 rotation: {
-                    typeOptions: [4],
-                    type: 4,
+                    typeOptions: [5],
+                    type: 5,
                     value: [undefined, undefined, undefined, undefined]
                 },
                 scale: {
-                    typeOptions: [3],
-                    type: 3,
+                    typeOptions: [4],
+                    type: 4,
                     value: [undefined, undefined, undefined]
-                },
-                isValid: {
-                    typeOptions: [0],
-                    type: 0,
-                    value: [undefined]
                 }
             }
         }
@@ -3391,8 +3450,8 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
         values: {
             input: {
                 animation: {
-                    typeOptions: [1],
-                    type: 1,
+                    typeOptions: [9],
+                    type: 9,
                     value: [undefined]
                 },
                 startTime: {
@@ -3437,8 +3496,8 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
         values: {
             input: {
                 animation: {
-                    typeOptions: [1],
-                    type: 1,
+                    typeOptions: [9],
+                    type: 9,
                     value: [undefined]
                 }
             }
@@ -3472,8 +3531,8 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
         values: {
             input: {
                 animation: {
-                    typeOptions: [1],
-                    type: 1,
+                    typeOptions: [9],
+                    type: 9,
                     value: [undefined]
                 },
                 stopTime: {

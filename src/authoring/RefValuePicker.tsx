@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Modal } from "react-bootstrap";
 import { InteractivityGraphContext } from "../InteractivityGraphContext";
 import { RenderIf } from "../components/RenderIf";
-import { GltfObjectNode, REF_CATEGORIES, RefCategory, isGltfObjectModelEmpty } from "./gltfObjectModel";
+import { GltfMeshPrimitive, GltfObject, GltfObjectNode, REF_CATEGORIES, RefCategory, isGltfObjectModelEmpty } from "./gltfObjectModel";
 
 export interface RefValuePickerProps {
     show: boolean;
@@ -45,6 +45,7 @@ export const RefValuePicker: React.FC<RefValuePickerProps> = ({ show, currentVal
     const hintedCategoryId = useMemo<RefCategory["id"] | null>(() => {
         if (!hintSocket) return null;
         const hint = hintSocket.toLowerCase();
+        if (hint.includes("primitive")) return availableCategories.find((c) => c.id === "meshPrimitives")?.id ?? null;
         const match = availableCategories.find((c) => c.id.startsWith(hint) || hint.startsWith(c.id.replace(/s$/, "")));
         return match?.id ?? null;
     }, [hintSocket, availableCategories]);
@@ -64,6 +65,11 @@ export const RefValuePicker: React.FC<RefValuePickerProps> = ({ show, currentVal
 
     const choose = (pointerPrefix: string, index: number) => {
         onSelect(`${pointerPrefix}/${index}`);
+        onClose();
+    };
+
+    const choosePointer = (pointer: string) => {
+        onSelect(pointer);
         onClose();
     };
 
@@ -105,13 +111,52 @@ export const RefValuePicker: React.FC<RefValuePickerProps> = ({ show, currentVal
         return rootIndices.flatMap((root) => buildRows(root, 0));
     };
 
+    const renderMeshPrimitiveGroups = (primitives: GltfMeshPrimitive[]) => {
+        const filtering = search.trim().length > 0;
+        const byMesh = new Map<number, { meshName: string; items: GltfMeshPrimitive[] }>();
+        for (const primitive of primitives) {
+            const group = byMesh.get(primitive.meshIndex) ?? { meshName: primitive.meshName, items: [] };
+            group.items.push(primitive);
+            byMesh.set(primitive.meshIndex, group);
+        }
+        const rows: React.ReactNode[] = [];
+        for (const [meshIndex, group] of byMesh) {
+            const matchingItems = group.items.filter(
+                (item) => matchesSearch(`${group.meshName} ${item.name}`, item.primitiveIndex)
+            );
+            if (filtering && matchingItems.length === 0) continue;
+            rows.push(
+                <div key={`mesh-${meshIndex}`} style={{ padding: "4px 8px", fontSize: 11, fontWeight: 700, color: "#777" }}>
+                    <span style={{ opacity: 0.6, marginRight: 6 }}>#{meshIndex}</span>{group.meshName}
+                </div>
+            );
+            for (const item of matchingItems) {
+                rows.push(
+                    <div
+                        key={item.pointer}
+                        style={rowStyle(currentValue === item.pointer, 1)}
+                        onClick={() => choosePointer(item.pointer)}
+                    >
+                        <span style={{ opacity: 0.6, fontSize: 11 }}>#{item.primitiveIndex}</span>
+                        <span>{item.name}</span>
+                    </div>
+                );
+            }
+        }
+        return rows;
+    };
+
     const renderList = (category: RefCategory) => {
         if (!gltfObjectModel) return null;
         if (category.tree) {
             const rows = renderNodeTree(gltfObjectModel.nodes, gltfObjectModel.rootNodes);
             return rows.length > 0 ? rows : <div style={{ padding: 8, color: "#999", fontSize: 13 }}>No matches</div>;
         }
-        const objects = gltfObjectModel[category.id].filter((object) => matchesSearch(object.name, object.index));
+        if (category.grouped && category.id === "meshPrimitives") {
+            const rows = renderMeshPrimitiveGroups(gltfObjectModel.meshPrimitives);
+            return rows.length > 0 ? rows : <div style={{ padding: 8, color: "#999", fontSize: 13 }}>No matches</div>;
+        }
+        const objects = (gltfObjectModel[category.id] as GltfObject[]).filter((object) => matchesSearch(object.name, object.index));
         if (objects.length === 0) {
             return <div style={{ padding: 8, color: "#999", fontSize: 13 }}>No matches</div>;
         }

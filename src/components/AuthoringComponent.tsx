@@ -1724,12 +1724,13 @@ const CustomEventsComponent = (props: {closeModal: any}) => {
 const UploadGraphComponent = (props: { closeModal: any}) => {
     const graphRef = useRef<HTMLTextAreaElement>(null);
     const [error, setError] = useState<string | null>(null);
-    const {loadGraphFromJson} = useContext(InteractivityGraphContext);
+    const {loadGraphFromJson, markGraphDirty} = useContext(InteractivityGraphContext);
     const uploadGraph = () => {
         if (graphRef.current === null || graphRef.current.value === "") {return}
 
         try {
             loadGraphFromJson(JSON.parse(graphRef.current.value));
+            markGraphDirty();
         } catch (e) {
             // covers both invalid JSON and malformed/incomplete graph structure
             setError(`Could not load graph: ${e instanceof Error ? e.message : String(e)}`);

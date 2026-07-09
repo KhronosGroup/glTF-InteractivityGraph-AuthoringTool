@@ -102,6 +102,28 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
     }, []);
 
     useEffect(() => {
+        const resizeEngine = () => {
+            engineRef.current?.resize();
+        };
+
+        // Ensure the initial back-buffer matches the displayed canvas size.
+        resizeEngine();
+
+        window.addEventListener("resize", resizeEngine);
+
+        let observer: ResizeObserver | null = null;
+        if (canvasRef.current && typeof ResizeObserver !== "undefined") {
+            observer = new ResizeObserver(() => resizeEngine());
+            observer.observe(canvasRef.current);
+        }
+
+        return () => {
+            window.removeEventListener("resize", resizeEngine);
+            observer?.disconnect();
+        };
+    }, []);
+
+    useEffect(() => {
         if (modelUrl && engineRef.current) {
             setUseUploadedFile(false);
             loadModelFromUrl(modelUrl);

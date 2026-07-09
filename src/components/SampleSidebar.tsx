@@ -23,7 +23,7 @@ interface SampleSidebarProps {
 }
 
 /**
- * Sidebar component for loading example models from the glTF-Interactivity-Sample-Assets repository
+ * Sidebar component for loading example models from the glTF-Test-Assets-Interactivity repository
  * 
  * This component provides a side drawer that loads and displays available sample models.
  * When a model is selected, it calls the onSelectModel callback with the model URL.
@@ -39,7 +39,7 @@ export const SampleSidebar: React.FC<SampleSidebarProps> = ({ onSelectModel }) =
   const [debugData, setDebugData] = useState<unknown>(null);
 
   // Base URL for the assets
-  const baseRepoUrl = 'https://raw.githubusercontent.com/needle-tools/glTF-Interactivity-Sample-Assets/main/';
+  const baseRepoUrl = 'https://raw.githubusercontent.com/KhronosGroup/glTF-Test-Assets-Interactivity/main/';
   const sampleBasePath = 'Models/';
   const testBasePath = 'Tests/Interactivity/';
 
@@ -56,7 +56,7 @@ export const SampleSidebar: React.FC<SampleSidebarProps> = ({ onSelectModel }) =
     try {
       // Fetch sample models
       const sampleResponse = await fetch(
-        'https://raw.githubusercontent.com/needle-tools/glTF-Interactivity-Sample-Assets/main/Models/model-index.json'
+        'https://raw.githubusercontent.com/KhronosGroup/glTF-Test-Assets-Interactivity/main/Models/model-index.json'
       );
       
       if (!sampleResponse.ok) {
@@ -68,7 +68,7 @@ export const SampleSidebar: React.FC<SampleSidebarProps> = ({ onSelectModel }) =
       
       // Fetch test models
       const testResponse = await fetch(
-        'https://raw.githubusercontent.com/needle-tools/glTF-Interactivity-Sample-Assets/main/Tests/Interactivity/test-index.json'
+        'https://raw.githubusercontent.com/KhronosGroup/glTF-Test-Assets-Interactivity/main/Tests/Interactivity/test-index.json'
       );
       
       if (!testResponse.ok) {
@@ -77,7 +77,7 @@ export const SampleSidebar: React.FC<SampleSidebarProps> = ({ onSelectModel }) =
 
             // Fetch test models
       const mathTestResponse = await fetch(
-        'https://raw.githubusercontent.com/needle-tools/glTF-Interactivity-Sample-Assets/main/Tests/Interactivity/mathtests-index.json'
+        'https://raw.githubusercontent.com/KhronosGroup/glTF-Test-Assets-Interactivity/main/Tests/Interactivity/mathtests-index.json'
       );
       
       if (!mathTestResponse.ok) {
@@ -208,7 +208,7 @@ export const SampleSidebar: React.FC<SampleSidebarProps> = ({ onSelectModel }) =
           {sampleModels.length > 0 && (
             <>
               <h5 className="mt-3 mb-2">Sample Models</h5>
-              <a href="https://github.com/needle-tools/glTF-Interactivity-Sample-Assets" target="_blank">See on GitHub</a>
+              <a href="https://github.com/KhronosGroup/glTF-Test-Assets-Interactivity" target="_blank">See on GitHub</a>
               <ListGroup>
                 {sampleModels.map((model, index) => (
                   <ListGroup.Item 
@@ -251,7 +251,7 @@ export const SampleSidebar: React.FC<SampleSidebarProps> = ({ onSelectModel }) =
           {testModels.length > 0 && (
             <>
               <h5 className="mt-4 mb-2">Test Assets</h5>
-              <a href="https://github.com/needle-tools/glTF-Interactivity-Sample-Assets/" target="_blank">See on GitHub</a>
+              <a href="https://github.com/KhronosGroup/glTF-Test-Assets-Interactivity/" target="_blank">See on GitHub</a>
               <ListGroup>
                 {testModels.map((model, index) => (
                   <ListGroup.Item 
@@ -285,7 +285,7 @@ export const SampleSidebar: React.FC<SampleSidebarProps> = ({ onSelectModel }) =
           {mathTestModels.length > 0 && (
             <>
               <h5 className="mt-4 mb-2">Math Test Assets</h5>
-              <a href="https://github.com/needle-tools/glTF-Interactivity-Sample-Assets/" target="_blank">See on GitHub</a>
+              <a href="https://github.com/KhronosGroup/glTF-Test-Assets-Interactivity/" target="_blank">See on GitHub</a>
               <ListGroup>
                 {mathTestModels.map((model, index) => (
                   <ListGroup.Item 

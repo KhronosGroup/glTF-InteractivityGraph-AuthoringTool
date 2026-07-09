@@ -727,6 +727,18 @@ export const AuthoringComponent = () => {
        setAuthoringComponentModal(AuthoringComponentModelType.NONE)
     }
 
+    const shouldAllowNativeContextMenu = (target: EventTarget | null): boolean => {
+        if (!(target instanceof Element)) { return false; }
+        return target.closest(
+            'input, textarea, select, option, button, a, [contenteditable=""], [contenteditable="true"], [data-allow-context-menu="true"]'
+        ) !== null;
+    };
+
+    const suppressBrowserContextMenu = (e: React.MouseEvent) => {
+        if (shouldAllowNativeContextMenu(e.target)) { return; }
+        e.preventDefault();
+    };
+
     // walk every edge feeding into `nodeId` (flow or value, either counts as "connected"),
     // then repeat from each source found, so the whole upstream hierarchy is collected — not
     // just its direct predecessors. Also collects the edges walked along the way, so the wires
@@ -785,7 +797,8 @@ export const AuthoringComponent = () => {
                 ref={reactFlowRef}
                 style={{width: "90%", height: "90%", border: "1px solid black", margin: "0 auto"}}
                 data-testid={"authoring-view"}
-                onContextMenu={(e) => e.preventDefault()}
+                onContextMenuCapture={suppressBrowserContextMenu}
+                onContextMenu={suppressBrowserContextMenu}
             >
                 <ReactFlow
                     id={"flow-container"}

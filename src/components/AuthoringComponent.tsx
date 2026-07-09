@@ -9,7 +9,7 @@ import ReactFlow, {
 } from 'reactflow';
 import {AuthoringGraphNode} from "../authoring/AuthoringGraphNode";
 import {DeletableEdge} from "../authoring/DeletableEdge";
-import React, {useCallback, useContext, useEffect, useRef, useState} from "react";
+import React, {useCallback, useContext, useEffect, useMemo, useRef, useState} from "react";
 import {v4 as uuidv4} from "uuid";
 import {RenderIf} from "./RenderIf";
 import {Button, Col, Container, Row, Form, OverlayTrigger, Popover, Tooltip} from "react-bootstrap";
@@ -46,6 +46,7 @@ const edgeTypes: EdgeTypes = {
 
 enum AuthoringComponentModelType {
     NODE_PICKER,
+    GRAPH_SEARCH,
     JSON_VIEW,
     NODE_LIST,
     UPLOAD_GRAPH,
@@ -92,6 +93,13 @@ const IconNodeTypes = () => (
 const IconUpload = () => (
     <svg {...iconProps}>
         <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
+    </svg>
+);
+
+const IconSearch = () => (
+    <svg {...iconProps}>
+        <circle cx="11" cy="11" r="7"/>
+        <line x1="20" y1="20" x2="16.6" y2="16.6"/>
     </svg>
 );
 
@@ -263,6 +271,14 @@ export const AuthoringComponent = () => {
         setNodes((prev) => prev.map((n) => ({ ...n, selected: n.id === nodeUid })));
         reactFlowInstance.setCenter(target.position.x, target.position.y, { zoom: 1, duration: 500 });
     }, [nodes, reactFlowInstance, setNodes]);
+
+    const jumpToNodeIndex = useCallback((nodeIndex: number): boolean => {
+        if (!Number.isInteger(nodeIndex) || nodeIndex < 0 || nodeIndex >= graph.nodes.length) { return false; }
+        const targetUid = graph.nodes[nodeIndex]?.uid;
+        if (targetUid === undefined) { return false; }
+        jumpToNode(targetUid);
+        return true;
+    }, [graph.nodes, jumpToNode]);
 
     //to handle the node picker props
     const mousePosRef = useRef({x:0, y:0});
@@ -831,6 +847,13 @@ export const AuthoringComponent = () => {
                     <RenderIf shouldShow={authoringComponentModal === AuthoringComponentModelType.NODE_PICKER}>
                         <NodePickerComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)} onAddNode={onAddNode} mousePos={mousePosRef.current}/>
                     </RenderIf>
+                    <RenderIf shouldShow={authoringComponentModal === AuthoringComponentModelType.GRAPH_SEARCH}>
+                        <GraphSearchComponent
+                            closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)}
+                            onJumpToNode={jumpToNode}
+                            onJumpToIndex={jumpToNodeIndex}
+                        />
+                    </RenderIf>
                     <RenderIf shouldShow={authoringComponentModal === AuthoringComponentModelType.UPLOAD_GRAPH}>
                         <UploadGraphComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)}/>
                     </RenderIf>
@@ -871,6 +894,13 @@ export const AuthoringComponent = () => {
                                 label={"JSON View"}
                                 isActive={authoringComponentModal === AuthoringComponentModelType.JSON_VIEW}
                                 onClick={() => setAuthoringComponentModal(AuthoringComponentModelType.JSON_VIEW)}
+                            />
+                            <MenuBarButton
+                                id={"search-graph-btn"}
+                                icon={<IconSearch/>}
+                                label={"Search Graph"}
+                                isActive={authoringComponentModal === AuthoringComponentModelType.GRAPH_SEARCH}
+                                onClick={() => setAuthoringComponentModal(AuthoringComponentModelType.GRAPH_SEARCH)}
                             />
                             <MenuBarButton
                                 id={"show-node-list-btn"}
@@ -1228,6 +1258,123 @@ const NodeListComponent = (props: {closeModal: any}) => {
         </Panel>
     )
 }
+
+const getNodeConfigStringValues = (node: AuthoredNode): string[] => {
+    const strings: string[] = [];
+    for (const [key, entry] of Object.entries(node.configuration ?? {})) {
+        for (const value of [...(entry.value ?? []), ...(entry.defaultValue ?? [])]) {
+            if (typeof value === "string" && value.trim() !== "") {
+                strings.push(`${key}: ${value}`);
+            }
+        }
+    }
+    return strings;
+};
+
+const GraphSearchComponent = (props: {
+    closeModal: any,
+    onJumpToNode: (nodeUid: string) => void,
+    onJumpToIndex: (nodeIndex: number) => boolean,
+}) => {
+    const {graph} = useContext(InteractivityGraphContext);
+    const [query, setQuery] = useState("");
+    const [indexInput, setIndexInput] = useState("");
+    const [indexError, setIndexError] = useState<string | null>(null);
+
+    const trimmedQuery = query.trim().toLowerCase();
+
+    const results = useMemo(() => {
+        if (trimmedQuery === "") { return []; }
+        const hits: Array<{ node: AuthoredNode; index: number; configStrings: string[] }> = [];
+        for (let index = 0; index < graph.nodes.length; index++) {
+            const node = graph.nodes[index];
+            const configStrings = getNodeConfigStringValues(node);
+            const haystack = `${node.op ?? ""} ${configStrings.join(" ")}`.toLowerCase();
+            if (haystack.includes(trimmedQuery)) {
+                hits.push({ node, index, configStrings });
+            }
+        }
+        return hits;
+    }, [graph.nodes, trimmedQuery]);
+
+    const doIndexJump = () => {
+        const parsed = Number.parseInt(indexInput.trim(), 10);
+        if (!Number.isInteger(parsed) || !props.onJumpToIndex(parsed)) {
+            setIndexError(`Node index "${indexInput}" was not found.`);
+            return;
+        }
+        setIndexError(null);
+        props.closeModal();
+    };
+
+    return (
+        <Panel id={"graph-search-panel"} position={"top-center"} style={{border: "1px solid gray", background: "white", zIndex: 10}}>
+            <Container style={{padding: 16, width: 720, maxWidth: "92vw"}}>
+                <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
+                    <h3 style={{margin: 0}}>Search Graph</h3>
+                    <Button variant={"outline-danger"} size={"sm"} onClick={() => props.closeModal()}>Close</Button>
+                </div>
+                <hr style={{ borderTop: "1px solid #777", margin: "12px 0" }} />
+
+                <div style={{display: "grid", gridTemplateColumns: "1fr auto", gap: 8, alignItems: "end"}}>
+                    <Form.Group style={{marginBottom: 0}}>
+                        <Form.Label style={{fontSize: 12, color: "#666", marginBottom: 4}}>Find by Op or config string value</Form.Label>
+                        <Form.Control
+                            autoFocus={true}
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            placeholder={"Examples: math/matMul, pointer/set, /nodes/[index]/translation"}
+                        />
+                    </Form.Group>
+                    <div style={{fontSize: 12, color: "#666", marginBottom: 8}}>{trimmedQuery === "" ? "" : `${results.length} result(s)`}</div>
+                </div>
+
+                <div style={{display: "grid", gridTemplateColumns: "1fr auto", gap: 8, marginTop: 10}}>
+                    <Form.Control
+                        value={indexInput}
+                        onChange={(e) => setIndexInput(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); doIndexJump(); } }}
+                        placeholder={"Jump directly to Node Index (e.g. 42)"}
+                    />
+                    <Button variant={"outline-primary"} onClick={doIndexJump}>Go</Button>
+                </div>
+                {indexError !== null && <div style={{marginTop: 6, color: "#b00020", fontSize: 12}}>{indexError}</div>}
+
+                <div style={{marginTop: 12, border: "1px solid #ddd", borderRadius: 6, maxHeight: "min(44vh, calc(100vh - 290px))", overflowY: "auto", textAlign: "left", padding: 8}}>
+                    {trimmedQuery === "" && (
+                        <div style={{fontSize: 13, color: "#777", padding: "8px 6px"}}>
+                            Search matches node operation names and string values in node configuration (including pointer templates).
+                        </div>
+                    )}
+                    {trimmedQuery !== "" && results.length === 0 && (
+                        <div style={{fontSize: 13, color: "#777", padding: "8px 6px"}}>No matching nodes.</div>
+                    )}
+                    {results.map(({node, index, configStrings}) => (
+                        <button
+                            key={`${node.uid ?? index}`}
+                            className="graph-search-result"
+                            onClick={() => {
+                                if (node.uid !== undefined) {
+                                    props.onJumpToNode(node.uid);
+                                } else {
+                                    props.onJumpToIndex(index);
+                                }
+                                props.closeModal();
+                            }}
+                        >
+                            <div className="graph-search-result-title">#{index} {node.op ?? "Unknown op"}</div>
+                            {configStrings.length > 0 && (
+                                <div className="graph-search-result-config" title={configStrings.join("\n")}>
+                                    {configStrings.join("  |  ")}
+                                </div>
+                            )}
+                        </button>
+                    ))}
+                </div>
+            </Container>
+        </Panel>
+    );
+};
 
 // shared between the Variables and Custom Events editors' type dropdowns
 const typeSignatureName = (type: any): string => {

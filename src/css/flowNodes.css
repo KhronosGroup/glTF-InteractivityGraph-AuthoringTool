@@ -175,6 +175,37 @@
     background: #e9ecef;
 }
 
+.graph-search-result {
+    width: 100%;
+    text-align: left;
+    border: 1px solid #e6e6e6;
+    background: #fff;
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin: 0 0 8px;
+    cursor: pointer;
+}
+
+.graph-search-result:hover {
+    background: #eef2f8;
+    border-color: #d4deee;
+}
+
+.graph-search-result-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #2c3e62;
+}
+
+.graph-search-result-config {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #666;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 /* shared rich tooltip body (NodeInfoTooltip): used by both the Add Node picker entries and the
    graph canvas node header — op description + flow/value sockets (+ NodeIndex / connections) */
 .node-info-tooltip .tooltip-inner {

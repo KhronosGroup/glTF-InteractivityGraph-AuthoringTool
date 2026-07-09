@@ -2260,7 +2260,7 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
         }
     },
     {
-        op: "math/rotate2d",
+        op: "math/rotate2D",
         description: "Rotate a 2D vector by an angle in radians",
         values: {
             input: {

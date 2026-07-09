@@ -1,4 +1,4 @@
-import { CSSProperties, useCallback, useContext, useEffect, useReducer, useState } from "react";
+import { CSSProperties, useCallback, useContext, useEffect, useReducer, useRef, useState } from "react";
 import { Handle, Position, useReactFlow, useUpdateNodeInternals } from "reactflow";
 import { OverlayTrigger, Tooltip } from "react-bootstrap";
 
@@ -106,7 +106,7 @@ const getComponentTitle = (layout: { rows: number; cols: number }, row: number, 
  */
 
 export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
-    const { graph, gltfObjectModel, diagnostics, reportNodeWarnings } = useContext(InteractivityGraphContext);
+    const { graph, gltfObjectModel, diagnostics, reportNodeWarnings, markGraphDirty } = useContext(InteractivityGraphContext);
     const updateNodeInternals = useUpdateNodeInternals();
     const { deleteElements } = useReactFlow();
     const uid = props.data.uid;
@@ -127,35 +127,65 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     const outputValues = node?.values?.output ?? {};
     const configuration = node?.configuration ?? {};
 
+    // The config-driven socket reconciler (evaluateConfigurationWhichChangeSockets) runs once
+    // automatically on every node mount/resolve — including right after a graph load — and
+    // normalises the model (backfilling spec descriptions, resolving type-group types, restoring
+    // spec defaults, normalising pointer slots, reordering keys via mergeValue/FlowSockets). Those
+    // are reconciler-driven normalisations, not user edits, yet they legitimately change the model,
+    // so a value-diff can't tell them apart from a real edit. Instead we suppress dirty-marking for
+    // the duration of that automatic pass (see the reconcile useEffect below) and only mark the
+    // graph dirty for setter calls triggered by genuine user actions.
+    const suppressDirtyRef = useRef(false);
+    const markDirtyIfChanged = () => {
+        if (!suppressDirtyRef.current) {
+            markGraphDirty();
+        }
+    };
+
     const setInputFlows = (next: Updater<Record<string, IInteractivityFlow>>) => {
         if (!node) { return; }
         node.flows = node.flows ?? {};
-        node.flows.input = applyUpdate(next, node.flows.input ?? {});
+        const prev = node.flows.input ?? {};
+        const resolved = applyUpdate(next, prev);
+        node.flows.input = resolved;
+        markDirtyIfChanged();
         forceRender();
     };
     const setOutputFlows = (next: Updater<Record<string, IInteractivityFlow>>) => {
         if (!node) { return; }
         node.flows = node.flows ?? {};
-        node.flows.output = applyUpdate(next, node.flows.output ?? {});
+        const prev = node.flows.output ?? {};
+        const resolved = applyUpdate(next, prev);
+        node.flows.output = resolved;
+        markDirtyIfChanged();
         forceRender();
     };
     const setInputValues = (next: Updater<Record<string, AuthoredValue>>) => {
         if (!node) { return; }
         node.values = node.values ?? {};
-        node.values.input = applyUpdate(next, node.values.input ?? {});
+        const prev = node.values.input ?? {};
+        const resolved = applyUpdate(next, prev);
+        node.values.input = resolved;
+        markDirtyIfChanged();
         forceRender();
     };
     const setOutputValues = (next: Updater<Record<string, AuthoredValue>>) => {
         if (!node) { return; }
         node.values = node.values ?? {};
-        node.values.output = applyUpdate(next, node.values.output ?? {});
+        const prev = node.values.output ?? {};
+        const resolved = applyUpdate(next, prev);
+        node.values.output = resolved;
         // output socket types may have changed; recolor this node's outgoing wires to match
         props.data.recolorEdges?.(props.data.uid);
+        markDirtyIfChanged();
         forceRender();
     };
     const setConfiguration = (next: Updater<Record<string, IInteractivityConfigurationValue>>) => {
         if (!node) { return; }
-        node.configuration = applyUpdate(next, node.configuration ?? {});
+        const prev = node.configuration ?? {};
+        const resolved = applyUpdate(next, prev);
+        node.configuration = resolved;
+        markDirtyIfChanged();
         forceRender();
     };
 
@@ -169,7 +199,15 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     // straight from node now, so there is nothing to seed into local mirrors first.
     useEffect(() => {
         if (node) {
-            evaluateConfigurationWhichChangeSockets(node.configuration || {}, node.values?.input || {}, node.values?.output || {}, node.flows?.input || {}, node.flows?.output || {});
+            // automatic normalisation pass — suppress dirty-marking so a fresh load (or any
+            // model normalisation that isn't a user edit) doesn't spuriously prompt for a reload.
+            // The setters run synchronously within this call, so the flag reliably brackets them.
+            suppressDirtyRef.current = true;
+            try {
+                evaluateConfigurationWhichChangeSockets(node.configuration || {}, node.values?.input || {}, node.values?.output || {}, node.flows?.input || {}, node.flows?.output || {});
+            } finally {
+                suppressDirtyRef.current = false;
+            }
         }
     }, [node]);
 
@@ -264,12 +302,18 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         }
     }, [inputValues, outputValues, node]);
 
+    // shared handler for the `event`/`variable`/`type` selects and the generic fallback text
+    // input: casts the raw string from evt.target.value according to the config's declared type
+    // (they're all INT indices, except the plain-text fallback which can also be STRING/untyped).
     const onChangeConfiguration = useCallback((evt: { target: { value: any; }; }) => {
         const configurationId = (evt.target as HTMLInputElement).id;
-        // TODO: how can I properly pares the value for config without knowing type
-        setConfiguration({ ...configuration, [configurationId]: { value: [evt.target.value] } });
-        evaluateConfigurationWhichChangeSockets({ ...configuration, [configurationId]: { value: [evt.target.value] } }, inputValues, outputValues, inputFlows, outputFlows);
-    }, [inputValues, outputValues, inputFlows, outputFlows, node]);
+        const configSpec = nodeSpec?.configuration?.[configurationId];
+        const rawValue = evt.target.value;
+        const value = configSpec?.type === InteractivityConfigurationValueType.INT ? Number(rawValue) : rawValue;
+        const newConfiguration = { ...configuration, [configurationId]: { value: [value] } };
+        setConfiguration(newConfiguration);
+        evaluateConfigurationWhichChangeSockets(newConfiguration, inputValues, outputValues, inputFlows, outputFlows);
+    }, [configuration, inputValues, outputValues, inputFlows, outputFlows, node]);
 
     // Handle the pointer config combobox: set the pointer template and, on a catalogue selection,
     // auto-select the matching data type. Free-text edits pass no type and only update the pointer.

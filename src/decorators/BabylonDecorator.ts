@@ -307,9 +307,27 @@ export class BabylonDecorator extends ADecorator {
             material.emissiveFactor = value;
         }, "float3", false);
 
-        //TODO: find babylon mapping for /materials/{}/normalTexture/scale
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/normalTexture/scale`, (path) => {
+            const parts: string[] = path.split("/");
+            const bumpTexture = (this.world.materials[Number(parts[2])] as PBRMaterial).bumpTexture;
+            return bumpTexture === null ? [NaN] : [bumpTexture.level];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const material = this.world.materials[Number(parts[2])] as PBRMaterial;
+            if (material.bumpTexture) {
+                material.bumpTexture.level = value;
+            }
+        }, "float", false);
 
-        //TODO: find babylon mapping for /materials/{}/occlusionTexture/strength
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/occlusionTexture/strength`, (path) => {
+            const parts: string[] = path.split("/");
+            const ambientTextureStrength = (this.world.materials[Number(parts[2])] as PBRMaterial).ambientTextureStrength;
+            return ambientTextureStrength === null ? [NaN] : [ambientTextureStrength];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const material = this.world.materials[Number(parts[2])] as PBRMaterial;
+            material.ambientTextureStrength = value;
+        }, "float", false);
 
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/extensions/KHR_materials_emissive_strength/emissiveStrength`, (path) => {
             const parts: string[] = path.split("/");

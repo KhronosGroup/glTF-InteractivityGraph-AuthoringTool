@@ -2,6 +2,7 @@ import { createContext, useCallback, useMemo, useRef, useState } from 'react';
 import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityGraph, IInteractivityVariable } from './BasicBehaveEngine/types/InteractivityGraph';
 import { AuthoredGraph, AuthoredNode, AuthoredValue, NodeSpecFlag } from './authoring/spec/AuthoredGraph';
 import { createNoOpNode, hasNodeSpecFlag, interactivityNodeSpecs, propagateGraphGroupTypes, resolveOutputSocketType, standardTypes } from './authoring/spec/nodes';
+import { computeConfigDrivenSockets } from './authoring/socketReconciler';
 import { v4 as uuidv4 } from 'uuid';
 import { Edge, Node } from 'reactflow';
 import { DiagnosticCategory, IGraphDiagnostic } from './diagnostics';
@@ -519,6 +520,27 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         }
 
         newGraph.nodes = loadedNodes;
+
+        // Config-driven output sockets (pointer/get's `value`, variable/get's `value`, ...) are spec
+        // defaulted to `bool` (type 0) and only get their real type from `configuration` via the
+        // reconciler, which normally runs per-node when its AuthoringGraphNode mounts - too late for
+        // the group-type propagation below, which runs synchronously right here and would otherwise
+        // resolve a downstream type-group (e.g. math/matMul's `a`/`b`/`value`) against that bool
+        // placeholder instead of the pointer/variable's actual type. Resolve these first so
+        // propagateGraphGroupTypes below sees the real types.
+        for (const loadedNode of loadedNodes) {
+            if (loadedNode.configuration === undefined) { continue; }
+            const generated = computeConfigDrivenSockets(loadedNode.configuration, loadedNode.values?.input ?? {}, {
+                nodeType: loadedNode.op,
+                events: newGraph.events ?? {},
+                variables: newGraph.variables ?? [],
+            });
+            for (const [key, value] of Object.entries(generated.outputValues)) {
+                loadedNode.values = loadedNode.values ?? {};
+                loadedNode.values.output = loadedNode.values.output ?? {};
+                loadedNode.values.output[key] = value;
+            }
+        }
 
         // The loader fills input sockets straight from the file and leaves outputs (and any input the
         // file omitted) at the spec default, so grouped sockets — e.g. a math node's `a`/`b`/output

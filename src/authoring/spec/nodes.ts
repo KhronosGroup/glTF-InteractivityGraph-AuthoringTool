@@ -71,21 +71,14 @@ export const standardTypes: IInteractivityValueType[] = [
     {
         name: "ref",
         signature: InteractivityValueType.REF
-    },
-    {
-        name: "AMZN_interactivity_string",
-        signature: InteractivityValueType.CUSTOM,
-        extensions: {
-            AMZN_interactivity_string: {}
-        }
     }
 ]
 
-// 0: bool, 1: int, 2: float, 3: float2, 4: float3, 5: float4, 6: float2x2, 7: float3x3, 8: float4x4, 9: ref, 10: AMZN_interactivity_string
+// 0: bool, 1: int, 2: float, 3: float2, 4: float3, 5: float4, 6: float2x2, 7: float3x3, 8: float4x4, 9: ref
 const floatNTypes = [2,3,4,5];
 const floatNxNTypes = [6,7,8];
 const floatVectorTypes = [3,4,5];
-export const anyType = [0,1,2,3,4,5,6,7,8,9,10];
+export const anyType = [0,1,2,3,4,5,6,7,8,9];
 
 const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
     // Math constants

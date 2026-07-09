@@ -471,8 +471,6 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                 // type (AuthoredValue.value: any[]) so the runtime's parseType/resolveRef —
                 // which read val[0] — and the spec-shaped export both see "/nodes/0", not "/".
                 return [value === "" || value == null ? undefined : String(value)]
-            case "AMZN_interactivity_string":
-                return String(value)
             default:
                 return String(value)
         }

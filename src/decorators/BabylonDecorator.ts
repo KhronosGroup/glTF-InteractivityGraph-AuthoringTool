@@ -14,7 +14,8 @@ import {
     TransformNode,
     Material,
     Observer,
-    PointerInfo
+    PointerInfo,
+    SpotLight
 } from "@babylonjs/core";
 import {Vector3} from "@babylonjs/core/Maths/math.vector";
 import {cubicBezier, easeFloat, easeFloat3, easeFloat4, linearFloat, slerpFloat4} from "../BasicBehaveEngine/easingUtils";
@@ -178,6 +179,54 @@ export class BabylonDecorator extends ADecorator {
         const maxGlTFMaterials: number = this.world.materials.length-1;
         const maxAnimations: number = this.world.animations.length-1;
 
+        // Babylon's glTF loader tags every object it creates from a glTF property with the
+        // originating JSON pointer in `_internalMetadata.gltf.pointers`. `this.world.meshes` holds
+        // one Babylon Mesh *per glTF primitive* (tagged `/meshes/{m}/primitives/{p}`), not one per
+        // glTF mesh definition, so glTF mesh indices/counts have to be derived from those pointers
+        // rather than from array position/length.
+        const meshPrimitivePointerRegex = /^\/meshes\/(\d+)\/primitives\/(\d+)$/;
+        const glTFMeshPrimitives: {meshIndex: number, primitiveIndex: number, babylonMesh: any}[] = [];
+        for (const m of this.world.meshes) {
+            const pointer = m._internalMetadata?.gltf?.pointers?.find((p: string) => meshPrimitivePointerRegex.test(p));
+            if (pointer !== undefined) {
+                const match = pointer.match(meshPrimitivePointerRegex)!;
+                glTFMeshPrimitives.push({meshIndex: Number(match[1]), primitiveIndex: Number(match[2]), babylonMesh: m});
+            }
+        }
+        const maxGlTFMeshIndex: number = Math.max(0, ...glTFMeshPrimitives.map(p => p.meshIndex));
+        const getMeshPrimitives = (meshIndex: number) => glTFMeshPrimitives
+            .filter(p => p.meshIndex === meshIndex)
+            .sort((a, b) => a.primitiveIndex - b.primitiveIndex);
+
+        const cameraPointerRegex = /^\/cameras\/\d+$/;
+        const glTFCameras = this.scene.cameras
+            .filter((c: any) => c._internalMetadata?.gltf?.pointers?.some((p: string) => cameraPointerRegex.test(p)))
+            .sort((a: any, b: any) => {
+                const aIndex = Number(a._internalMetadata.gltf.pointers.find((p: string) => cameraPointerRegex.test(p)).split("/").pop());
+                const bIndex = Number(b._internalMetadata.gltf.pointers.find((p: string) => cameraPointerRegex.test(p)).split("/").pop());
+                return aIndex - bIndex;
+            });
+
+        const skinPointerRegex = /^\/skins\/\d+$/;
+        const glTFSkeletons = this.scene.skeletons
+            .filter((s: any) => s._internalMetadata?.gltf?.pointers?.some((p: string) => skinPointerRegex.test(p)))
+            .sort((a: any, b: any) => {
+                const aIndex = Number(a._internalMetadata.gltf.pointers.find((p: string) => skinPointerRegex.test(p)).split("/").pop());
+                const bIndex = Number(b._internalMetadata.gltf.pointers.find((p: string) => skinPointerRegex.test(p)).split("/").pop());
+                return aIndex - bIndex;
+            });
+        const getSkeletonJointNodeIndices = (skeleton: any): number[] => skeleton.bones
+            .map((bone: any) => bone.getTransformNode()?.metadata?.nodeIndex)
+            .filter((idx: number | undefined) => idx !== undefined);
+        const getSkeletonRootNodeIndex = (skeleton: any): number | undefined => {
+            const rootBone = skeleton.bones.find((bone: any) => bone.getParent() == null);
+            return rootBone?.getTransformNode()?.metadata?.nodeIndex;
+        };
+
+        const rootLevelNodeIndices = this.world.glTFNodes
+            .map((_: any, idx: number) => idx)
+            .filter((idx: number) => this.getParentNodeIndex(idx) === undefined);
+
         this.registerJsonPointer(`/nodes/${maxGltfNode}/scale`, (path) => {
             const parts: string[] = path.split("/");
             return [(this.world.glTFNodes[Number(parts[2])] as AbstractMesh).scaling.x,
@@ -297,6 +346,16 @@ export class BabylonDecorator extends ADecorator {
             material.alphaCutoff = value;
         }, "float", false);
 
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/doubleSided`, (path) => {
+            const parts: string[] = path.split("/");
+            const material = this.world.materials[Number(parts[2])] as Material;
+            return [material.backFaceCulling === false];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const material = this.world.materials[Number(parts[2])] as Material;
+            material.backFaceCulling = !value;
+        }, "bool", false);
+
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/emissiveFactor`, (path) => {
             const parts: string[] = path.split("/");
             const emissiveFactor = (this.world.materials[Number(parts[2])]).emissiveFactor;
@@ -347,6 +406,128 @@ export class BabylonDecorator extends ADecorator {
             const parts: string[] = path.split("/");
             const material = this.world.materials[Number(parts[2])];
             material.subSurface.refractionIntensity = value;
+        }, "float", false);
+
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/extensions/KHR_materials_ior/ior`, (path) => {
+            const parts: string[] = path.split("/");
+            const ior = (this.world.materials[Number(parts[2])] as PBRMaterial).indexOfRefraction;
+            return ior === undefined ? [NaN] : [ior];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            (this.world.materials[Number(parts[2])] as PBRMaterial).indexOfRefraction = value;
+        }, "float", false);
+
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/extensions/KHR_materials_volume/thicknessFactor`, (path) => {
+            const parts: string[] = path.split("/");
+            const thickness = (this.world.materials[Number(parts[2])] as PBRMaterial).subSurface.maximumThickness;
+            return thickness === undefined ? [NaN] : [thickness];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            (this.world.materials[Number(parts[2])] as PBRMaterial).subSurface.maximumThickness = value;
+        }, "float", false);
+
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/extensions/KHR_materials_volume/attenuationColor`, (path) => {
+            const parts: string[] = path.split("/");
+            const tintColor = (this.world.materials[Number(parts[2])] as PBRMaterial).subSurface.tintColor;
+            return tintColor === undefined ? [NaN, NaN, NaN] : [tintColor.r, tintColor.g, tintColor.b];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            (this.world.materials[Number(parts[2])] as PBRMaterial).subSurface.tintColor = new Color3(value[0], value[1], value[2]);
+        }, "float3", false);
+
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/extensions/KHR_materials_specular/specularFactor`, (path) => {
+            const parts: string[] = path.split("/");
+            const specularFactor = (this.world.materials[Number(parts[2])] as PBRMaterial).metallicF0Factor;
+            return specularFactor === undefined ? [NaN] : [specularFactor];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            (this.world.materials[Number(parts[2])] as PBRMaterial).metallicF0Factor = value;
+        }, "float", false);
+
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/extensions/KHR_materials_specular/specularColorFactor`, (path) => {
+            const parts: string[] = path.split("/");
+            const specularColor = (this.world.materials[Number(parts[2])] as PBRMaterial).metallicReflectanceColor;
+            return specularColor === undefined ? [NaN, NaN, NaN] : [specularColor.r, specularColor.g, specularColor.b];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            (this.world.materials[Number(parts[2])] as PBRMaterial).metallicReflectanceColor = new Color3(value[0], value[1], value[2]);
+        }, "float3", false);
+
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/extensions/KHR_materials_sheen/sheenColorFactor`, (path) => {
+            const parts: string[] = path.split("/");
+            const sheenColor = (this.world.materials[Number(parts[2])] as PBRMaterial).sheen.color;
+            return sheenColor === undefined ? [NaN, NaN, NaN] : [sheenColor.r, sheenColor.g, sheenColor.b];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const sheen = (this.world.materials[Number(parts[2])] as PBRMaterial).sheen;
+            sheen.isEnabled = true;
+            sheen.color = new Color3(value[0], value[1], value[2]);
+        }, "float3", false);
+
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/extensions/KHR_materials_sheen/sheenRoughnessFactor`, (path) => {
+            const parts: string[] = path.split("/");
+            const sheenRoughness = (this.world.materials[Number(parts[2])] as PBRMaterial).sheen.roughness;
+            return sheenRoughness === undefined || sheenRoughness === null ? [NaN] : [sheenRoughness];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const sheen = (this.world.materials[Number(parts[2])] as PBRMaterial).sheen;
+            sheen.isEnabled = true;
+            sheen.roughness = value;
+        }, "float", false);
+
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/extensions/KHR_materials_clearcoat/clearcoatFactor`, (path) => {
+            const parts: string[] = path.split("/");
+            const clearcoat = (this.world.materials[Number(parts[2])] as PBRMaterial).clearCoat.intensity;
+            return clearcoat === undefined ? [NaN] : [clearcoat];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const clearCoat = (this.world.materials[Number(parts[2])] as PBRMaterial).clearCoat;
+            clearCoat.isEnabled = true;
+            clearCoat.intensity = value;
+        }, "float", false);
+
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/extensions/KHR_materials_clearcoat/clearcoatRoughnessFactor`, (path) => {
+            const parts: string[] = path.split("/");
+            const clearcoatRoughness = (this.world.materials[Number(parts[2])] as PBRMaterial).clearCoat.roughness;
+            return clearcoatRoughness === undefined ? [NaN] : [clearcoatRoughness];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const clearCoat = (this.world.materials[Number(parts[2])] as PBRMaterial).clearCoat;
+            clearCoat.isEnabled = true;
+            clearCoat.roughness = value;
+        }, "float", false);
+
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/extensions/KHR_materials_iridescence/iridescenceFactor`, (path) => {
+            const parts: string[] = path.split("/");
+            const iridescence = (this.world.materials[Number(parts[2])] as PBRMaterial).iridescence.intensity;
+            return iridescence === undefined ? [NaN] : [iridescence];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const iridescence = (this.world.materials[Number(parts[2])] as PBRMaterial).iridescence;
+            iridescence.isEnabled = true;
+            iridescence.intensity = value;
+        }, "float", false);
+
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/extensions/KHR_materials_anisotropy/anisotropyStrength`, (path) => {
+            const parts: string[] = path.split("/");
+            const anisotropy = (this.world.materials[Number(parts[2])] as PBRMaterial).anisotropy.intensity;
+            return anisotropy === undefined ? [NaN] : [anisotropy];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const anisotropy = (this.world.materials[Number(parts[2])] as PBRMaterial).anisotropy;
+            anisotropy.isEnabled = true;
+            anisotropy.intensity = value;
+        }, "float", false);
+
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}/extensions/KHR_materials_anisotropy/anisotropyRotation`, (path) => {
+            const parts: string[] = path.split("/");
+            const anisotropyAngle = (this.world.materials[Number(parts[2])] as PBRMaterial).anisotropy.angle;
+            return anisotropyAngle === undefined ? [NaN] : [anisotropyAngle];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const anisotropy = (this.world.materials[Number(parts[2])] as PBRMaterial).anisotropy;
+            anisotropy.isEnabled = true;
+            anisotropy.angle = value;
         }, "float", false);
 
 
@@ -651,6 +832,86 @@ export class BabylonDecorator extends ADecorator {
             //no-op
         }, "int", true);
 
+        this.registerJsonPointer('/meshes.length', (path) => {
+            return [glTFMeshPrimitives.length === 0 ? 0 : maxGlTFMeshIndex + 1];
+        }, (path, value) => {
+            //no-op
+        }, "int", true);
+
+        this.registerJsonPointer(`/meshes/${maxGlTFMeshIndex}/primitives.length`, (path) => {
+            const parts: string[] = path.split("/");
+            return [getMeshPrimitives(Number(parts[2])).length];
+        }, (path, value) => {
+            //no-op
+        }, "int", true);
+
+        this.registerJsonPointer('/cameras.length', (path) => {
+            return [glTFCameras.length];
+        }, (path, value) => {
+            //no-op
+        }, "int", true);
+
+        this.registerJsonPointer('/scene', (path) => {
+            return [0];
+        }, (path, value) => {
+            //no-op
+        }, "int", true);
+
+        this.registerJsonPointer('/scenes.length', (path) => {
+            return [1];
+        }, (path, value) => {
+            //no-op
+        }, "int", true);
+
+        this.registerJsonPointer('/scenes/0/nodes.length', (path) => {
+            return [rootLevelNodeIndices.length];
+        }, (path, value) => {
+            //no-op
+        }, "int", true);
+
+        const maxSceneNode: number = Math.max(0, rootLevelNodeIndices.length - 1);
+        this.registerJsonPointer(`/scenes/0/nodes/${maxSceneNode}`, (path) => {
+            const parts: string[] = path.split("/");
+            const nodeIndex = rootLevelNodeIndices[Number(parts[4])];
+            return [nodeIndex === undefined ? null : `/nodes/${nodeIndex}/`];
+        }, (path, value) => {
+            //no-op
+        }, "ref", true);
+
+        this.registerJsonPointer('/skins.length', (path) => {
+            return [glTFSkeletons.length];
+        }, (path, value) => {
+            //no-op
+        }, "int", true);
+
+        const maxSkin: number = Math.max(0, glTFSkeletons.length - 1);
+        this.registerJsonPointer(`/skins/${maxSkin}/joints.length`, (path) => {
+            const parts: string[] = path.split("/");
+            const skeleton = glTFSkeletons[Number(parts[2])];
+            return [skeleton === undefined ? 0 : getSkeletonJointNodeIndices(skeleton).length];
+        }, (path, value) => {
+            //no-op
+        }, "int", true);
+
+        const maxSkinJoint: number = Math.max(0, ...glTFSkeletons.map((s: any) => getSkeletonJointNodeIndices(s).length - 1));
+        this.registerJsonPointer(`/skins/${maxSkin}/joints/${maxSkinJoint}`, (path) => {
+            const parts: string[] = path.split("/");
+            const skeleton = glTFSkeletons[Number(parts[2])];
+            const jointNodeIndex = skeleton === undefined ? undefined : getSkeletonJointNodeIndices(skeleton)[Number(parts[4])];
+            return [jointNodeIndex === undefined ? null : `/nodes/${jointNodeIndex}/`];
+        }, (path, value) => {
+            //no-op
+        }, "ref", true);
+
+        this.registerJsonPointer(`/skins/${maxSkin}/skeleton`, (path) => {
+            const parts: string[] = path.split("/");
+            const skeleton = glTFSkeletons[Number(parts[2])];
+            const rootNodeIndex = skeleton === undefined ? undefined : getSkeletonRootNodeIndex(skeleton);
+            return [rootNodeIndex === undefined ? null : `/nodes/${rootNodeIndex}/`];
+        }, (path, value) => {
+            //no-op
+        }, "ref", true);
+
         this.registerJsonPointer('/materials.length', (path) => {
             return [this.world.materials.length];
         }, (path, value) => {
@@ -697,11 +958,16 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/nodes/${maxGltfNode}/mesh`, (path) => {
             const parts: string[] = path.split("/");
             const node = this.world.glTFNodes[Number(parts[2])];
-            const mesh = this.world.meshes.includes(node)
-                ? node
-                : node.getChildMeshes?.()[0];
-            const meshIndex = this.world.meshes.indexOf(mesh);
-            return [meshIndex === -1 ? null : `/meshes/${meshIndex}`];
+            const candidates = this.world.meshes.includes(node) ? [node] : (node.getChildMeshes?.() ?? []);
+            let meshIndex: number | undefined = undefined;
+            for (const candidate of candidates) {
+                const pointer = candidate._internalMetadata?.gltf?.pointers?.find((p: string) => meshPrimitivePointerRegex.test(p));
+                if (pointer !== undefined) {
+                    meshIndex = Number(pointer.match(meshPrimitivePointerRegex)![1]);
+                    break;
+                }
+            }
+            return [meshIndex === undefined ? null : `/meshes/${meshIndex}/`];
         }, (path, value) => {
             //no-op
         }, "ref", true);
@@ -711,24 +977,97 @@ export class BabylonDecorator extends ADecorator {
             const node = this.world.glTFNodes[Number(parts[2])];
             const child = node.getChildren()[Number(parts[4])];
             const childIndex = this.world.glTFNodes.indexOf(child);
-            return [childIndex === -1 ? null : `/nodes/${childIndex}`];
+            return [childIndex === -1 ? null : `/nodes/${childIndex}/`];
         }, (path, value) => {
             //no-op
         }, "ref", true);
 
-        this.registerJsonPointer(`/meshes/${maxGltfNode}/primitives/${maxGltfNode}/material`, (path) => {
+        this.registerJsonPointer(`/nodes/${maxGltfNode}/children.length`, (path) => {
             const parts: string[] = path.split("/");
-            const mesh = this.world.meshes[Number(parts[2])];
-            const primitive = mesh.subMeshes[Number(parts[4])];
-            console.log("results", mesh, primitive, this.world.materials.indexOf(primitive._mesh.material));
-            return [this.world.materials.indexOf(primitive._mesh.material)];
+            const node = this.world.glTFNodes[Number(parts[2])];
+            return [node.getChildren().filter((c: Node) => this.world.glTFNodes.indexOf(c) !== -1).length];
+        }, (path, value) => {
+            //no-op
+        }, "int", true);
+
+        this.registerJsonPointer(`/meshes/${maxGlTFMeshIndex}/primitives/${maxGltfNode}/material`, (path) => {
+            const parts: string[] = path.split("/");
+            const primitive = getMeshPrimitives(Number(parts[2]))[Number(parts[4])];
+            if (primitive === undefined || primitive.babylonMesh.material == null) {
+                return [null];
+            }
+            const materialIndex = this.world.materials.indexOf(primitive.babylonMesh.material);
+            return [materialIndex === -1 ? null : `/materials/${materialIndex}/`];
         }, (path, value) => {
             const parts: string[] = path.split("/");
-            const mesh = this.world.meshes[Number(parts[2])];
-            const primitive = mesh.subMeshes[Number(parts[4])];
-            primitive.materialIndex = value;
-            primitive._mesh.material = this.world.materials[value];
-        }, "int", false);
+            const primitive = getMeshPrimitives(Number(parts[2]))[Number(parts[4])];
+            if (primitive === undefined) return;
+            const materialIndex = typeof value === "string"
+                ? Number(value.split("/").filter((p: string) => p !== "").pop())
+                : Number(value);
+            primitive.babylonMesh.material = this.world.materials[materialIndex];
+        }, "ref", true);
+
+        this.registerJsonPointer(`/nodes/${maxGltfNode}/camera`, (path) => {
+            const parts: string[] = path.split("/");
+            const node = this.world.glTFNodes[Number(parts[2])] as Node;
+            const cameraChild = node.getChildren().find((child: Node) => child instanceof Camera) as any;
+            const pointer = cameraChild?._internalMetadata?.gltf?.pointers?.find((p: string) => cameraPointerRegex.test(p));
+            return [pointer === undefined ? null : `${pointer}/`];
+        }, (path, value) => {
+            //no-op
+        }, "ref", true);
+
+        this.registerJsonPointer(`/nodes/${maxGltfNode}/parent`, (path) => {
+            const parts: string[] = path.split("/");
+            const parentIndex = this.getParentNodeIndex(Number(parts[2]));
+            return [parentIndex === undefined ? null : `/nodes/${parentIndex}/`];
+        }, (path, value) => {
+            //no-op
+        }, "ref", true);
+
+        const maxNodeWeight: number = Math.max(0, ...this.world.glTFNodes.map((n: any) => (n.morphTargetManager?.numTargets ?? 0) - 1));
+        this.registerJsonPointer(`/nodes/${maxGltfNode}/weights/${maxNodeWeight}`, (path) => {
+            const parts: string[] = path.split("/");
+            const node = this.world.glTFNodes[Number(parts[2])] as any;
+            const target = node.morphTargetManager?.getTarget(Number(parts[4]));
+            return target === undefined ? [NaN] : [target.influence];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const node = this.world.glTFNodes[Number(parts[2])] as any;
+            const target = node.morphTargetManager?.getTarget(Number(parts[4]));
+            if (target !== undefined) target.influence = value;
+        }, "float", false);
+
+        this.registerJsonPointer(`/nodes/${maxGltfNode}/weights.length`, (path) => {
+            const parts: string[] = path.split("/");
+            const node = this.world.glTFNodes[Number(parts[2])] as any;
+            return [node.morphTargetManager?.numTargets ?? 0];
+        }, (path, value) => {
+            //no-op
+        }, "int", true);
+
+        const maxMeshWeight: number = Math.max(0, ...glTFMeshPrimitives.map(p => (p.babylonMesh.morphTargetManager?.numTargets ?? 0) - 1));
+        this.registerJsonPointer(`/meshes/${maxGlTFMeshIndex}/weights/${maxMeshWeight}`, (path) => {
+            const parts: string[] = path.split("/");
+            const primitive = getMeshPrimitives(Number(parts[2]))[0];
+            const target = primitive?.babylonMesh.morphTargetManager?.getTarget(Number(parts[4]));
+            return target === undefined ? [NaN] : [target.influence];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            for (const primitive of getMeshPrimitives(Number(parts[2]))) {
+                const target = primitive.babylonMesh.morphTargetManager?.getTarget(Number(parts[4]));
+                if (target !== undefined) target.influence = value;
+            }
+        }, "float", false);
+
+        this.registerJsonPointer(`/meshes/${maxGlTFMeshIndex}/weights.length`, (path) => {
+            const parts: string[] = path.split("/");
+            const primitive = getMeshPrimitives(Number(parts[2]))[0];
+            return [primitive?.babylonMesh.morphTargetManager?.numTargets ?? 0];
+        }, (path, value) => {
+            //no-op
+        }, "int", true);
 
         this.registerJsonPointer(`/animations/${maxAnimations}/extensions/KHR_interactivity/isPlaying`, (path) => {
             const parts: string[] = path.split("/");
@@ -780,6 +1119,66 @@ export class BabylonDecorator extends ADecorator {
         }, (path, value) => {
             //no-op
         }, "float", true);
+
+        const lightPointerRegex = /^\/extensions\/KHR_lights_punctual\/lights\/\d+$/;
+        const glTFLights = this.scene.lights
+            .filter((l: any) => l._internalMetadata?.gltf?.pointers?.some((p: string) => lightPointerRegex.test(p)))
+            .sort((a: any, b: any) => {
+                const aIndex = Number(a._internalMetadata.gltf.pointers.find((p: string) => lightPointerRegex.test(p)).split("/").pop());
+                const bIndex = Number(b._internalMetadata.gltf.pointers.find((p: string) => lightPointerRegex.test(p)).split("/").pop());
+                return aIndex - bIndex;
+            });
+        const maxLight: number = Math.max(0, glTFLights.length - 1);
+
+        this.registerJsonPointer(`/extensions/KHR_lights_punctual/lights/${maxLight}/color`, (path) => {
+            const parts: string[] = path.split("/");
+            const color = glTFLights[Number(parts[4])]?.diffuse;
+            return color === undefined ? [NaN, NaN, NaN] : [color.r, color.g, color.b];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const light = glTFLights[Number(parts[4])];
+            if (light !== undefined) light.diffuse = new Color3(value[0], value[1], value[2]);
+        }, "float3", false);
+
+        this.registerJsonPointer(`/extensions/KHR_lights_punctual/lights/${maxLight}/intensity`, (path) => {
+            const parts: string[] = path.split("/");
+            const intensity = glTFLights[Number(parts[4])]?.intensity;
+            return intensity === undefined ? [NaN] : [intensity];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const light = glTFLights[Number(parts[4])];
+            if (light !== undefined) light.intensity = value;
+        }, "float", false);
+
+        this.registerJsonPointer(`/extensions/KHR_lights_punctual/lights/${maxLight}/range`, (path) => {
+            const parts: string[] = path.split("/");
+            const range = glTFLights[Number(parts[4])]?.range;
+            return range === undefined ? [NaN] : [range];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const light = glTFLights[Number(parts[4])];
+            if (light !== undefined) light.range = value;
+        }, "float", false);
+
+        this.registerJsonPointer(`/extensions/KHR_lights_punctual/lights/${maxLight}/spot/innerConeAngle`, (path) => {
+            const parts: string[] = path.split("/");
+            const light = glTFLights[Number(parts[4])];
+            return light instanceof SpotLight ? [light.innerAngle / 2] : [NaN];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const light = glTFLights[Number(parts[4])];
+            if (light instanceof SpotLight) light.innerAngle = value * 2;
+        }, "float", false);
+
+        this.registerJsonPointer(`/extensions/KHR_lights_punctual/lights/${maxLight}/spot/outerConeAngle`, (path) => {
+            const parts: string[] = path.split("/");
+            const light = glTFLights[Number(parts[4])];
+            return light instanceof SpotLight ? [light.angle / 2] : [NaN];
+        }, (path, value) => {
+            const parts: string[] = path.split("/");
+            const light = glTFLights[Number(parts[4])];
+            if (light instanceof SpotLight) light.angle = value * 2;
+        }, "float", false);
     }
 
     private swimDownSelectability(node: Node, parentSelctability: boolean) {

@@ -722,8 +722,15 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     const liveWarningLinesKey = liveWarningLines.join("\n");
     useEffect(() => {
         reportNodeWarnings(uid, nodeIndex, node?.op, liveWarningLinesKey === "" ? [] : liveWarningLinesKey.split("\n"));
-        return () => reportNodeWarnings(uid, nodeIndex, node?.op, []);
     }, [uid, nodeIndex, node?.op, liveWarningLinesKey, reportNodeWarnings]);
+
+    // clear this node's reported warnings only on true unmount (node deleted/type changed) - not
+    // on every warning-content change above, which would otherwise clear-then-reinstate on every
+    // edit and undo the "bail out if unchanged" dedup in reportNodeWarnings (see its definition),
+    // doubling re-renders on every warning change instead of skipping them when nothing moved.
+    useEffect(() => {
+        return () => reportNodeWarnings(uid, nodeIndex, node?.op, []);
+    }, [uid]);
 
     const headerTooltipSections: NodeTooltipSections = {
         nodeIndex,

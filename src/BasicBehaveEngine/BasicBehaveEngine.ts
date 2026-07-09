@@ -741,8 +741,13 @@ export class BasicBehaveEngine implements IBehaveEngine {
             if (node.values !== undefined) {
                 for (const key of Object.keys(node.values)) {
                     if (node.values[key].node !== undefined) {
-                        if (Number(node.values[key].node) >= index) {
-                            throw Error(`Invalid reference, node ${index} references ${node.values[key].node}`);
+                        const referencedNode = Number(node.values[key].node);
+                        if (referencedNode >= index) {
+                            const opOf = (idx: number) => {
+                                const declIdx = (nodes[idx] as any)?.declaration;
+                                return behaviorGraph.declarations?.[declIdx]?.op ?? `declaration ${declIdx}`;
+                            };
+                            throw Error(`Invalid reference: node ${index} ('${opOf(index)}', socket '${key}') references node ${referencedNode} ('${opOf(referencedNode)}'), but a node may only reference nodes that appear earlier in the array (index < ${index}). Reorder the nodes so that node ${referencedNode} comes before node ${index}.`);
                         }
                     }
                 }

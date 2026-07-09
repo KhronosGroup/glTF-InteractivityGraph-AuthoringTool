@@ -1,5 +1,6 @@
 import { IInteractivityConfigurationValue, IInteractivityDeclaration, IInteractivityEvent, IInteractivityFlow, IInteractivityValue, IInteractivityValueType, IInteractivityVariable } from "./types/InteractivityGraph";
 import {BasicBehaveEngine} from "./BasicBehaveEngine";
+import { isNoOpNode } from "./nodes/experimental/noOpRegistry";
 
 export interface IBehaviourNodeProps {
     index: number,
@@ -18,7 +19,6 @@ export interface IBehaviourNodeProps {
 export class BehaveEngineNode {
     REQUIRED_VALUES: Record<string, IInteractivityValue> = {};
     REQUIRED_CONFIGURATIONS: Record<string, IInteractivityConfigurationValue> = {};
-
     index: number;
     name: string | undefined;
     world: any;
@@ -175,6 +175,9 @@ export class BehaveEngineNode {
                 //this node has not been evaluated yet, so we need to process it in order to get the output
                 const dependentNodeValues = dependentNode.processNode();
                 if (dependentNodeValues === undefined || dependentNodeValues[val.socket!] === undefined) {
+                    if (isNoOpNode(dependentNode)) {
+                        throw new Error(`"${this.name}" depends on output socket "${val.socket}" of "${dependentNode.name}", which does not execute or produce output because this tool does not implement its operation.`);
+                    }
                     throw new Error(`Output socket ${val.socket} is missing on ${dependentNode.name}`);
                 }
                 const dependentValue = dependentNodeValues[val.socket!];

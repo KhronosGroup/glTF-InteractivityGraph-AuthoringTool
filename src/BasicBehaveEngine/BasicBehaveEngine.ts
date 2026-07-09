@@ -26,6 +26,7 @@ import {Sign} from "./nodes/math/arithmetic/Sign";
 import {Truncate} from "./nodes/math/arithmetic/Truncate";
 import {Floor} from "./nodes/math/arithmetic/Floor";
 import {Ceil} from "./nodes/math/arithmetic/Ceil";
+import {Round} from "./nodes/math/arithmetic/Round";
 import {Negate} from "./nodes/math/arithmetic/Negate";
 import {Add} from "./nodes/math/arithmetic/Add";
 import {Subtract} from "./nodes/math/arithmetic/Subtract";
@@ -54,6 +55,7 @@ import {SquareRoot} from "./nodes/math/exponential/SquareRoot";
 import {CubeRoot} from "./nodes/math/exponential/CubeRoot";
 import {Random} from "./nodes/experimental/Random";
 import {Dot} from "./nodes/math/vector/Dot";
+import {Cross} from "./nodes/math/vector/Cross";
 import {Normalize} from "./nodes/math/vector/Normalize";
 import {Rotate2D} from "./nodes/math/vector/Rotate2D";
 import {Rotate3D} from "./nodes/math/vector/Rotate3D";
@@ -80,10 +82,14 @@ import {IntToFloat} from "./nodes/math/typeConversion/IntToFloat";
 import {Extract2} from "./nodes/math/extract/Extract2";
 import {Extract3} from "./nodes/math/extract/Extract3";
 import {Extract4} from "./nodes/math/extract/Extract4";
+import {Extract2x2} from "./nodes/math/extract/Extract2x2";
+import {Extract3x3} from "./nodes/math/extract/Extract3x3";
 import {Extract4x4} from "./nodes/math/extract/Extract4x4";
 import {Combine2} from "./nodes/math/combine/Combine2";
 import {Combine3} from "./nodes/math/combine/Combine3";
 import {Combine4} from "./nodes/math/combine/Combine4";
+import {Combine2x2} from "./nodes/math/combine/Combine2x2";
+import {Combine3x3} from "./nodes/math/combine/Combine3x3";
 import {Combine4x4} from "./nodes/math/combine/Combine4x4";
 import {PointerInterpolate} from "./nodes/pointer/PointerInterpolate";
 import {QuatMul} from "./nodes/math/quaternion/QuatMul";
@@ -168,6 +174,7 @@ export const behaveEngineNodeRegistry: ReadonlyArray<[string, any]> = [
     ["math/floor", Floor],
     ["math/fract", Fraction],
     ["math/ceil", Ceil],
+    ["math/round", Round],
     ["math/neg", Negate],
     ["math/add", Add],
     ["math/sub", Subtract],
@@ -209,6 +216,7 @@ export const behaveEngineNodeRegistry: ReadonlyArray<[string, any]> = [
     ["math/ge", GreaterThanOrEqualTo],
     ["math/gt", GreaterThan],
     ["math/dot", Dot],
+    ["math/cross", Cross],
     ["math/normalize", Normalize],
     ["math/rotate2D", Rotate2D],
     ["math/rotate3D", Rotate3D],
@@ -221,10 +229,14 @@ export const behaveEngineNodeRegistry: ReadonlyArray<[string, any]> = [
     ["math/extract2", Extract2],
     ["math/extract3", Extract3],
     ["math/extract4", Extract4],
+    ["math/extract2x2", Extract2x2],
+    ["math/extract3x3", Extract3x3],
     ["math/extract4x4", Extract4x4],
     ["math/combine2", Combine2],
     ["math/combine3", Combine3],
     ["math/combine4", Combine4],
+    ["math/combine2x2", Combine2x2],
+    ["math/combine3x3", Combine3x3],
     ["math/combine4x4", Combine4x4],
     ["type/boolToInt", BoolToInt],
     ["type/boolToFloat", BoolToFloat],

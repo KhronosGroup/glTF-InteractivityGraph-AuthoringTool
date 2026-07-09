@@ -202,7 +202,6 @@ export const EngineSelector: React.FC<EngineSelectorProps> = ({ setEngineType, c
             <h2>glTF Interactivity Editor and Viewer</h2>
             <p style={{marginBottom: "0"}}>This web app allows interacting with, graph inspection and authoring of glTF files using the <a href="https://github.com/KhronosGroup/glTF/blob/interactivity/extensions/2.0/Khronos/KHR_interactivity/Specification.adoc" target="_blank">KHR_interactivity</a> extension.</p>
             <p style={{marginBottom: "0"}}>You can load samples and test assets and inspect their graphs, or create your own files with the experimental graph UI.</p>
-            <p>Maintained by <a href="https://needle.tools">Needle</a>. Forked from Khronos' <a href="https://github.com/KhronosGroup/glTF-InteractivityGraph-AuthoringTool">Interactivity Graph Authoring Tool</a>.</p>
             <div data-testid={"engine-selector"}>
                 <Tabs
                     activeKey={activeKey}

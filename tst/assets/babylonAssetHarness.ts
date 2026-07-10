@@ -1,56 +1,37 @@
-import { NullEngine, PBRMaterial, Quaternion, Scene as BabylonScene, TransformNode, Mesh as BabylonMesh } from "@babylonjs/core";
+import fs from "fs";
+import path from "path";
+import { NullEngine, Scene as BabylonScene, SceneLoader } from "@babylonjs/core";
+import "@babylonjs/loaders/glTF";
+import { GLTFFileLoader, GLTFLoaderAnimationStartMode } from "@babylonjs/loaders";
+import { GLTFLoader } from "@babylonjs/loaders/glTF/2.0";
+import { buildBabylonDecoratorWorld, buildBabylonLoadedModel } from "../../src/components/engineViews/babylonLoadedModel";
+import { KHR_interactivity, KHR_INTERACTIVITY_EXTENSION_NAME } from "../../src/loaderExtensions/KHR_interactivity";
 
 export { NullEngine, BabylonScene };
 
-export function createBabylonWorld(gltf: any, scene: BabylonScene): any {
-    const materials = (gltf.materials ?? []).map((material: any, index: number) => {
-        const pbr = material.pbrMetallicRoughness ?? {};
-        const mat = new PBRMaterial(material.name ?? `material-${index}`, scene);
-        const color = pbr.baseColorFactor ?? [1, 1, 1, 1];
-        mat.albedoColor.set(color[0], color[1], color[2]);
-        mat.alpha = color[3];
-        mat.roughness = pbr.roughnessFactor ?? 1;
-        mat.metallic = pbr.metallicFactor ?? 1;
-        mat.alphaCutOff = material.alphaCutoff ?? 0;
-        return mat;
-    });
+let loaderConfigured = false;
 
-    const nodes = (gltf.nodes ?? []).map((node: any, index: number) => {
-        const materialIndex = gltf.meshes?.[node.mesh]?.primitives?.[0]?.material;
-        const transform = node.mesh !== undefined
-            ? new BabylonMesh(node.name ?? `node-${index}`, scene)
-            : new TransformNode(node.name ?? `node-${index}`, scene);
-        transform.metadata = {
-            nodeIndex: index,
-            selectable: node.extensions?.KHR_node_selectability?.selectable ?? true,
-            hoverable: node.extensions?.KHR_node_hoverability?.hoverable ?? true,
-        };
-        (transform as any)._internalMetadata = {
-            gltf: {
-                pointers: node.mesh !== undefined
-                    ? [`/nodes/${index}`, `/meshes/${node.mesh}/primitives/0`]
-                    : [`/nodes/${index}`],
-            },
-        };
-        transform.position.fromArray(node.translation ?? [0, 0, 0]);
-        transform.scaling.fromArray(node.scale ?? [1, 1, 1]);
-        transform.rotationQuaternion = Quaternion.FromArray(node.rotation ?? [0, 0, 0, 1]);
-        if (transform instanceof BabylonMesh && materialIndex !== undefined) {
-            transform.material = materials[materialIndex];
-        }
-        return transform;
-    });
+export async function loadBabylonWorldFromGlb(glbPath: string, scene: BabylonScene): Promise<any> {
+    configureBabylonLoader();
 
-    (gltf.nodes ?? []).forEach((node: any, index: number) => {
-        for (const childIndex of node.children ?? []) {
-            nodes[childIndex].parent = nodes[index];
-        }
-    });
+    const container = await SceneLoader.LoadAssetContainerAsync("", createGlbDataUrl(glbPath), scene, undefined, ".glb", path.basename(glbPath));
+    container.addAllToScene();
 
-    return {
-        glTFNodes: nodes,
-        materials,
-        animations: [],
-        meshes: nodes.filter((node: TransformNode) => node instanceof BabylonMesh),
-    };
+    return buildBabylonDecoratorWorld(buildBabylonLoadedModel(container));
+}
+
+function configureBabylonLoader(): void {
+    if (!loaderConfigured) {
+        GLTFLoader.RegisterExtension(KHR_INTERACTIVITY_EXTENSION_NAME, (loader) => new KHR_interactivity(loader));
+        SceneLoader.OnPluginActivatedObservable.add((loader) => {
+            if (loader.name === "gltf") {
+                (loader as GLTFFileLoader).animationStartMode = GLTFLoaderAnimationStartMode.NONE;
+            }
+        });
+        loaderConfigured = true;
+    }
+}
+
+function createGlbDataUrl(glbPath: string): string {
+    return `data:model/gltf-binary;base64,${fs.readFileSync(path.resolve(glbPath)).toString("base64")}`;
 }

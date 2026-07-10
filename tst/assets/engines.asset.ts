@@ -1,7 +1,7 @@
 import { jest } from "@jest/globals";
 import { BasicBehaveEngine } from "../../src/BasicBehaveEngine/BasicBehaveEngine";
 import { BabylonDecorator } from "../../src/decorators/BabylonDecorator";
-import { BabylonScene, createBabylonWorld, NullEngine } from "./babylonAssetHarness";
+import { BabylonScene, loadBabylonWorldFromGlb, NullEngine } from "./babylonAssetHarness";
 import {
     assertAssetSubTest,
     formatError,
@@ -37,7 +37,7 @@ describe("KHR_interactivity sample assets - Babylon engine", () => {
             try {
                 const eventBus = new TestEventBus();
                 const engine = new BasicBehaveEngine(60, eventBus);
-                const world = createBabylonWorld(assetCase.gltf, scene);
+                const world = await loadBabylonWorldFromGlb(assetCase.glbPath, scene);
                 const decorator = new BabylonDecorator(engine, world, scene);
 
                 await runGraphAndWait(decorator, assetCase.graph);

@@ -2,16 +2,13 @@ import React, {useEffect, useRef, useState, useContext} from "react";
 import {Button, Container, Modal} from "react-bootstrap";
 import {
     AbstractMesh,
-    AnimationGroup,
     ArcRotateCamera,
     DirectionalLight,
     FramingBehavior,
     Engine,
-    HemisphericLight, Material,
+    HemisphericLight,
     Mesh,
-    Node,
     SceneLoader,
-    TransformNode,
     Vector3
 } from "@babylonjs/core";
 import {Scene} from "@babylonjs/core/scene";
@@ -28,6 +25,7 @@ import { attachPointerEventLogging, SendCustomEventPanel } from "../../authoring
 import { computeExtensionDiagnostics } from "../../diagnostics";
 import { buildNormalizedTemplateSet } from "../../authoring/pointerCatalogue";
 import { selectModelGraph } from "./modelGraphSelection";
+import { BabylonLoadedModel, buildBabylonDecoratorWorld, buildBabylonLoadedModel } from "./babylonLoadedModel";
 
 enum BabylonEngineModal {
     CUSTOM_EVENT = "CUSTOM_EVENT",
@@ -139,8 +137,8 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
 
     const play = (shouldOverrideGraph: boolean) => {
         resetScene()
-            .then((res: {nodes: Node[], materials: Material[], animations: AnimationGroup[], meshes: AbstractMesh[]}) => {
-                runGraph(babylonEngineRef, getExecutableGraph(), sceneRef.current, res.nodes, res.materials, res.animations, res.meshes, shouldOverrideGraph);
+            .then((res: BabylonLoadedModel) => {
+                runGraph(babylonEngineRef, getExecutableGraph(), sceneRef.current, res, shouldOverrideGraph);
                 setGraphRunning(true);
                 clearGraphDirty();
             })
@@ -210,63 +208,17 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
         reportGlbExtensionDiagnostics();
 
         sceneRef.current?.createDefaultCamera(true, true, true);
-        // Sort materials by _internalMetadata.gltf.pointer
-        container.materials = container.materials.filter(mat => mat._internalMetadata?.gltf?.pointers !== undefined)
-        container.materials = container.materials.sort((a, b) => {
-            const aPointer = a._internalMetadata?.gltf?.pointers?.[0] ?? "";
-            const bPointer = b._internalMetadata?.gltf?.pointers?.[0] ?? "";
-            const aIndex = Number(aPointer.split('/')[2]);
-            const bIndex = Number(bPointer.split('/')[2]);
-            if (aIndex < bIndex) return -1;
-            if (aIndex > bIndex) return 1;
-            return 0;
-        });
-        console.log(container.materials);
-        //TODO: the true meshes of glTF are not the ones babylon exposes as objects (these are instantiated node meshes) we should find a way to pass the mesh itself and not the instantiation via a node
-        // or else we have cases where two nodes refere to the single mesh => we will have 2 meshes where really we only truly have one in glTF
-        return {
-            nodes: buildGlTFNodeLayout(container.rootNodes[0]), 
-            animations: container.animationGroups, 
-            materials: container.materials,
-            meshes: container.meshes,
-        };
+        const loadedModel = buildBabylonLoadedModel(container);
+        console.log(loadedModel.materials);
+        return loadedModel;
     };
 
-    const buildGlTFNodeLayout = (rootNode: Node): Node[] => {
-        const pattern = /^\/nodes\/\d+$/;
-        const finalNodes: TransformNode[] = [];
-        const seenNodeIndices:Set<number> = new Set<number>();
-
-        function traverse(node: TransformNode) {
-            node.metadata.nodePointer = node._internalMetadata.gltf.pointers.find((pointer: string) => pattern.test(pointer));
-            if (node.metadata.nodePointer != null) {
-                const nodeIndex = Number(node.metadata.nodePointer.split('/')[2]);
-                if (!seenNodeIndices.has(nodeIndex)) {
-                    seenNodeIndices.add(nodeIndex);
-                    node.metadata.nodeIndex = nodeIndex;
-                    finalNodes.push(node);
-                }
-            }
-
-            if (node.getChildTransformNodes()) {
-                for (const childNode of node.getChildTransformNodes()) {
-                    traverse(childNode);
-                }
-            }
-        }
-
-        rootNode.getChildren<TransformNode>().forEach((child: TransformNode) => traverse(child));
-
-        finalNodes.sort((a, b) => a.metadata.nodeIndex - b.metadata.nodeIndex);
-        return finalNodes;
-    }
-
-    const runGraph = (babylonEngineRef: any, behaveGraph: any, scene: any, nodes: Node[], materials: Material[], animations: AnimationGroup[], meshes: AbstractMesh[], shouldOverride: boolean) => {
+    const runGraph = (babylonEngineRef: any, behaveGraph: any, scene: any, loadedModel: BabylonLoadedModel, shouldOverride: boolean) => {
         if (babylonEngineRef.current !== null) {
             babylonEngineRef.current.dispose()
         }
 
-        const world = {glTFNodes: nodes, animations: animations, materials: materials, meshes: meshes.filter(m => m.subMeshes !== undefined)};
+        const world = buildBabylonDecoratorWorld(loadedModel);
         const eventBus = new DOMEventBus();
         babylonEngineRef.current = new BabylonDecorator(new BasicBehaveEngine(60, eventBus), world, scene)
         const runtimeTemplates = buildNormalizedTemplateSet(babylonEngineRef.current.getRegisteredJsonPointers());
@@ -409,12 +361,7 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
 
             sceneRef.current?.createDefaultCamera(true, true, true);
 
-            const worldInfo = {
-                glTFNodes: buildGlTFNodeLayout(container.rootNodes[0]), 
-                animations: container.animationGroups, 
-                materials: container.materials,
-                meshes: container.meshes,
-            };
+            const worldInfo = buildBabylonDecoratorWorld(buildBabylonLoadedModel(container));
             
             // Update the file uploaded state to enable play button
             setFileUploaded(url.split('/').pop() || "model.glb");

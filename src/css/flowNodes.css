@@ -53,19 +53,19 @@
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
-    width: 240px;
+    width: 280px;
     min-height: 120px;
     padding: 10px 14px;
     color: #ffffff;
 }
 
 .flow-node-lod-label {
-    font-size: 20px;
-    font-weight: 700;
+    font-size: 38px;
+    font-weight: 600;
     text-align: center;
     line-height: 1.2;
     word-break: break-word;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    color: #000000ab;
 }
 
 /* handles must exist so existing edges stay valid, but carry no visual weight in the box */

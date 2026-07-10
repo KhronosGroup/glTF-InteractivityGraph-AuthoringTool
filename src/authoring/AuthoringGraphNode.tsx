@@ -805,7 +805,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                 style={{ background: getNodeCategoryColor(node?.op || "") }}
                 title={node?.op}
             >
-                <span className={"flow-node-lod-label"}>{node?.op}</span>
+                <span className={"flow-node-lod-label"}>{node?.op?.replace(/^[^/]+\//, "")}</span>
                 {targetHandleIds.map((id) => (
                     <Handle key={`lod-t-${id}`} type="target" position={Position.Left} id={id} className={"flow-node-lod-handle"} />
                 ))}

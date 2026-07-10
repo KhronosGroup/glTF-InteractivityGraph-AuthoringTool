@@ -19,6 +19,7 @@ class AssetSummaryReporter {
     onRunComplete(_contexts, results) {
         const rows = collectRows(results);
         const validation = collectValidation(results);
+        const failures = collectFailures(results);
         if (rows.size === 0 && validation.totalAssets === 0) {
             return;
         }
@@ -37,6 +38,10 @@ class AssetSummaryReporter {
             process.stdout.write(`, ${validation.validSubtests}/${validation.totalSubtests} subtests behind valid graphs\n`);
             if (validation.invalidAssets.length > 0) {
                 process.stdout.write(`Invalid graphs: ${formatInvalidAssets(validation.invalidAssets)}\n`);
+                process.stdout.write("Invalid graph details:\n");
+                for (const asset of validation.invalidAssets) {
+                    process.stdout.write(`- ${asset.name}: ${asset.reason ?? "graph did not validate"} (${asset.subtests} subtests)\n`);
+                }
             }
             process.stdout.write("\n");
         }
@@ -62,6 +67,18 @@ class AssetSummaryReporter {
             }
             process.stdout.write("\n\n");
         } else {
+            process.stdout.write("\n");
+        }
+
+        if (failures.length > 0) {
+            process.stdout.write("Failing assets:\n");
+            for (const failure of failures) {
+                process.stdout.write(`- ${failure.engine} ${failure.asset}: ${failure.failed}/${failure.total} failed`);
+                if (failure.reason) {
+                    process.stdout.write(` - ${failure.reason}`);
+                }
+                process.stdout.write("\n");
+            }
             process.stdout.write("\n");
         }
     }
@@ -119,12 +136,43 @@ function collectValidation(results) {
                 stats.validAssets += 1;
                 stats.validSubtests += subtests;
             } else {
-                stats.invalidAssets.push({ name, subtests });
+                stats.invalidAssets.push({ name, subtests, reason: cleanFailureMessage(assertion.failureMessages?.[0]) });
             }
         }
     }
 
     return stats;
+}
+
+function collectFailures(results) {
+    const byAsset = new Map();
+    for (const testResult of results.testResults) {
+        if (path.basename(testResult.testFilePath) === "validation.asset.ts") {
+            continue;
+        }
+        for (const assertion of testResult.testResults ?? []) {
+            if (assertion.status !== "passed" && assertion.status !== "failed") {
+                continue;
+            }
+
+            const engine = getEngine(testResult.testFilePath, assertion.ancestorTitles);
+            const asset = getAssetName(testResult.testFilePath, assertion);
+            const key = `${engine}\0${asset}`;
+            const stats = getOrCreate(byAsset, key, () => ({ engine, asset, failed: 0, total: 0, reason: undefined }));
+
+            stats.total += 1;
+            if (assertion.status === "failed") {
+                stats.failed += 1;
+                stats.reason = stats.reason ?? cleanFailureMessage(assertion.failureMessages?.[0]);
+            }
+        }
+    }
+
+    return [...byAsset.values()]
+        .filter((failure) => failure.failed > 0)
+        .sort((a, b) => engineRank(a.engine) - engineRank(b.engine)
+            || b.failed - a.failed
+            || a.asset.localeCompare(b.asset));
 }
 
 function collectEngines(rows) {
@@ -157,7 +205,7 @@ function getCategory(testFilePath, assertion) {
     if (file === "validation.asset.ts") {
         return "Validation";
     }
-    if (file === "interglb.asset.ts") {
+    if (file.startsWith("interglb")) {
         return "InterGlb";
     }
     if (file === "overview.asset.ts") {
@@ -170,6 +218,16 @@ function getCategory(testFilePath, assertion) {
         return "extras";
     }
     return rawCategory;
+}
+
+function getAssetName(testFilePath, assertion) {
+    const file = path.basename(testFilePath);
+    if (file === "overview.asset.ts") {
+        return "Overview";
+    }
+
+    const assetTitle = [...assertion.ancestorTitles].reverse().find((title) => title.includes("/"));
+    return assetTitle ?? assertion.ancestorTitles[assertion.ancestorTitles.length - 1] ?? assertion.title.split(" / ")[0];
 }
 
 function formatCell(engine, stats) {
@@ -212,11 +270,32 @@ function getValidationSubtestCount(title) {
 
 function formatInvalidAssets(invalidAssets) {
     const sorted = [...invalidAssets].sort((a, b) => b.subtests - a.subtests || a.name.localeCompare(b.name));
-    const visible = sorted.slice(0, 8).map((asset) => `${asset.name} (${asset.subtests})`);
-    if (sorted.length > visible.length) {
-        visible.push(`+${sorted.length - visible.length} more`);
-    }
+    const visible = sorted.map((asset) => `${asset.name} (${asset.subtests})`);
     return visible.join(", ");
+}
+
+function cleanFailureMessage(message) {
+    if (!message) {
+        return undefined;
+    }
+
+    const stripped = message
+        .replace(/\u001b\[[0-9;]*m/g, "")
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean);
+    const first = stripped.find((line) => line.includes("expected "))
+        ?? stripped.find((line) => line.includes("did not load or execute"))
+        ?? stripped.find((line) => line.includes("did not validate"))
+        ?? stripped.find((line) => line.startsWith("Error: "))
+        ?? stripped[0];
+    if (!first) {
+        return undefined;
+    }
+
+    const normalized = first.replace(/^Error:\s*/, "");
+    const expectedIndex = normalized.indexOf("expected ");
+    return (expectedIndex === -1 ? normalized : normalized.slice(expectedIndex)).slice(0, 240);
 }
 
 function sameStats(a, b) {

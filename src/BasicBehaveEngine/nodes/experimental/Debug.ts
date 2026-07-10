@@ -72,6 +72,13 @@ export class DebugLog extends BehaveEngineNode {
 }
 
 function formatValue(value: any, typeName: string): string {
+    if (value === null) {
+        return "null";
+    }
+    if (value === undefined) {
+        return "undefined";
+    }
+
     switch (typeName) {
         case "bool":
         case "int":

@@ -6,6 +6,7 @@ export class Receive extends BehaveEngineNode {
     _defaultValues: Record<string, any> = {};
 
     _event: number;
+    _eventRefOutput: { value: string[]; type: number };
     constructor(props: IBehaviourNodeProps) {
         super(props);
         this.name = "CustomEventReceiveNode";
@@ -14,6 +15,7 @@ export class Receive extends BehaveEngineNode {
 
         const {event} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
         this._event = event[0];
+        this._eventRefOutput = { value: [`/extensions/KHR_interactivity/events/${this._event + 2}`], type: this.getTypeIndex('ref') };
 
         this.setUpEventListener();
     }
@@ -36,6 +38,7 @@ export class Receive extends BehaveEngineNode {
                 type: value.type,
             }
         });
+        defaultValues.event = this._eventRefOutput;
         this._defaultValues = defaultValues;
         this.outValues = JSON.parse(JSON.stringify(defaultValues));
 
@@ -49,6 +52,7 @@ export class Receive extends BehaveEngineNode {
                 const typeIndex = Object.entries(customEventDesc.values).find(([key, _]) => key === ceKey)?.[1]?.type;
                 const typeName: string = this.getType(Number(typeIndex));
                 const rawVal = ce[ceKey];
+                console.log(`[Receive: ${customEventDesc.id}] Parsing type`, typeName, rawVal);
                 const val = this.parseType(typeName, [rawVal]);
                 this.outValues[ceKey] = {
                     value: val,

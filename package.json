@@ -43,7 +43,10 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest",
+    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
+    "test:assets": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config jest.assets.config.json --runInBand",
+    "test:assets:core": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config jest.assets.config.json --runInBand tst/assets/validation.asset.ts tst/assets/core.asset.ts",
+    "test:assets:e2e": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config jest.assets.config.json --runInBand tst/assets/validation.asset.ts tst/assets/engines.asset.ts",
     "cy:open": "cypress open",
     "cy:run": "cypress run",
     "posttest": "generate-coverage-data",

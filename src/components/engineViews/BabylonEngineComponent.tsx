@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState, useContext} from "react";
-import {Button, Col, Container, Form, Modal, Row, Tab, Tabs} from "react-bootstrap";
+import {Button, Container, Modal} from "react-bootstrap";
 import {
     AbstractMesh,
     AnimationGroup,
@@ -24,6 +24,10 @@ import {BasicBehaveEngine} from "../../BasicBehaveEngine/BasicBehaveEngine";
 import {GLTFFileLoader, GLTFLoaderAnimationStartMode} from "@babylonjs/loaders";
 import { InteractivityGraphContext } from "../../InteractivityGraphContext";
 import { DOMEventBus } from "../../BasicBehaveEngine/eventBuses/DOMEventBus";
+import { attachPointerEventLogging, SendCustomEventPanel } from "../../authoring/CustomEventControls";
+import { computeExtensionDiagnostics } from "../../diagnostics";
+import { buildNormalizedTemplateSet } from "../../authoring/pointerCatalogue";
+import { selectModelGraph } from "./modelGraphSelection";
 
 enum BabylonEngineModal {
     CUSTOM_EVENT = "CUSTOM_EVENT",
@@ -34,27 +38,54 @@ GLTFLoader.RegisterExtension(KHR_INTERACTIVITY_EXTENSION_NAME, (loader) => {
     return new KHR_interactivity(loader);
 });
 
+interface BabylonEngineComponentProps {
+    modelUrl?: string | null;
+}
 
-
-export const BabylonEngineComponent = () => {
+export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ modelUrl }) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const engineRef = useRef<Engine | null>(null);
     const sceneRef = useRef<Scene>();
-    const [activeKey, setActiveKey] = useState("1");
     const [graphRunning, setGraphRunning] = useState(false);
     const [openModal, setOpenModal] = useState<BabylonEngineModal>(BabylonEngineModal.NONE);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const babylonEngineRef = useRef<BabylonDecorator | null>(null)
     const [fileUploaded, setFileUploaded] = useState<string | null>(null);
     const [clickedHotSpot, setClickedHotSpot] = useState<string | null>(null);
+    // Tracks whether the most recent model selection was a local file upload (vs. a modelUrl
+    // sample/URL). modelUrl stays set in state/URL after a sample load, so resetScene needs this
+    // to know which source should win the next time it (re)loads.
+    const [useUploadedFile, setUseUploadedFile] = useState(false);
 
-    const {getExecutableGraph, loadGraphFromJson} = useContext(InteractivityGraphContext);
+    const {getExecutableGraph, loadGraphFromJson, setDiagnosticsForCategory, setGltfObjectModel, setSupportedPointerTemplates, clearGraphDirty, registerPlayHandler} = useContext(InteractivityGraphContext);
+
+    // Inspect the loaded glb's declared extensions (stashed on the scene metadata by the
+    // KHR_interactivity loader extension) and surface any this tool does not support. Also publish
+    // the addressable-object snapshot for the ref-value picker.
+    const reportGlbExtensionDiagnostics = () => {
+        const metadata = sceneRef.current?.metadata;
+        setDiagnosticsForCategory(
+            "extension",
+            computeExtensionDiagnostics(metadata?.gltfExtensionsUsed, metadata?.gltfExtensionsRequired)
+        );
+        if (metadata?.gltfObjectModel) {
+            setGltfObjectModel(metadata.gltfObjectModel);
+        }
+    };
 
     useEffect(() => {
         // Create the Babylon.js engines
         engineRef.current = new Engine(canvasRef.current, true);
 
         createScene();
+
+        // Blocks page-scroll while over the canvas. Registered once here (not in createScene,
+        // which re-runs on every Play/reset) so it doesn't stack up duplicate listeners.
+        const blockWheelPropagation = (e: WheelEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+        };
+        canvasRef.current!.addEventListener("wheel", blockWheelPropagation);
 
         // Run the render loop
         engineRef.current?.runRenderLoop(() => {
@@ -63,11 +94,42 @@ export const BabylonEngineComponent = () => {
 
         return () => {
             // Clean up resources when the component unmounts
+            canvasRef.current?.removeEventListener("wheel", blockWheelPropagation);
             sceneRef.current?.dispose();
             engineRef.current?.dispose();
-            babylonEngineRef.current?.clearCustomEventListeners();
+            babylonEngineRef.current?.dispose();
+            setSupportedPointerTemplates(null);
         };
     }, []);
+
+    useEffect(() => {
+        const resizeEngine = () => {
+            engineRef.current?.resize();
+        };
+
+        // Ensure the initial back-buffer matches the displayed canvas size.
+        resizeEngine();
+
+        window.addEventListener("resize", resizeEngine);
+
+        let observer: ResizeObserver | null = null;
+        if (canvasRef.current && typeof ResizeObserver !== "undefined") {
+            observer = new ResizeObserver(() => resizeEngine());
+            observer.observe(canvasRef.current);
+        }
+
+        return () => {
+            window.removeEventListener("resize", resizeEngine);
+            observer?.disconnect();
+        };
+    }, []);
+
+    useEffect(() => {
+        if (modelUrl && engineRef.current) {
+            setUseUploadedFile(false);
+            loadModelFromUrl(modelUrl);
+        }
+    }, [modelUrl]);
 
     useEffect(() => {
         if (fileUploaded !== null) {
@@ -80,8 +142,21 @@ export const BabylonEngineComponent = () => {
             .then((res: {nodes: Node[], materials: Material[], animations: AnimationGroup[], meshes: AbstractMesh[]}) => {
                 runGraph(babylonEngineRef, getExecutableGraph(), sceneRef.current, res.nodes, res.materials, res.animations, res.meshes, shouldOverrideGraph);
                 setGraphRunning(true);
+                clearGraphDirty();
             })
     }
+
+    // let the authoring menu bar's Reload button trigger this engine's Play without a direct
+    // component reference (see registerPlayHandler on InteractivityGraphContext). `play` is
+    // redefined every render (it closes over the current `graph` reference, which changes
+    // identity on a fresh load), so the registered handler is a stable trampoline through a ref
+    // rather than the closure captured by the mount-only effect below.
+    const playRef = useRef(play);
+    playRef.current = play;
+    useEffect(() => {
+        registerPlayHandler(() => playRef.current(false));
+        return () => registerPlayHandler(null);
+    }, []);
 
     const setupCamera = () => {
         const camera = sceneRef.current!.activeCamera as ArcRotateCamera;
@@ -104,13 +179,6 @@ export const BabylonEngineComponent = () => {
         sceneRef.current = new Scene(engineRef.current!);
         sceneRef.current?.createDefaultCamera(true, true, true);
         setupCamera();
-        canvasRef.current!.addEventListener("wheel", (e: any) => {
-            e.preventDefault();
-            e.stopPropagation();
-
-            return false;
-        })
-
         // Create lights
         new HemisphericLight('light1', new Vector3(0, 1, 0), sceneRef.current);
         new DirectionalLight('light2', new Vector3(1, -1, 0), sceneRef.current);
@@ -120,9 +188,17 @@ export const BabylonEngineComponent = () => {
         sceneRef.current?.dispose();
         createScene();
 
-        const file = fileInputRef.current!.files![0]
-
-        const url = URL.createObjectURL(file);
+        let url: string;
+        if (useUploadedFile && fileInputRef.current?.files?.[0]) {
+            url = URL.createObjectURL(fileInputRef.current.files[0]);
+        } else if (modelUrl) {
+            url = modelUrl;
+        } else if (fileInputRef.current?.files?.[0]) {
+            url = URL.createObjectURL(fileInputRef.current.files[0]);
+        } else {
+            console.warn("No model URL or file provided for Babylon engine");
+            return { nodes: [], animations: [], materials: [], meshes: [] };
+        }
 
         SceneLoader.OnPluginActivatedObservable.add( (loader) => {
             if (loader.name === "gltf") {
@@ -131,6 +207,7 @@ export const BabylonEngineComponent = () => {
         });
         const container = await SceneLoader.LoadAssetContainerAsync("", url, sceneRef.current, undefined, ".glb");
         container.addAllToScene();
+        reportGlbExtensionDiagnostics();
 
         sceneRef.current?.createDefaultCamera(true, true, true);
         // Sort materials by _internalMetadata.gltf.pointer
@@ -186,19 +263,25 @@ export const BabylonEngineComponent = () => {
 
     const runGraph = (babylonEngineRef: any, behaveGraph: any, scene: any, nodes: Node[], materials: Material[], animations: AnimationGroup[], meshes: AbstractMesh[], shouldOverride: boolean) => {
         if (babylonEngineRef.current !== null) {
-            babylonEngineRef.current.clearCustomEventListeners()
+            babylonEngineRef.current.dispose()
         }
 
         const world = {glTFNodes: nodes, animations: animations, materials: materials, meshes: meshes.filter(m => m.subMeshes !== undefined)};
         const eventBus = new DOMEventBus();
         babylonEngineRef.current = new BabylonDecorator(new BasicBehaveEngine(60, eventBus), world, scene)
+        const runtimeTemplates = buildNormalizedTemplateSet(babylonEngineRef.current.getRegisteredJsonPointers());
+        setSupportedPointerTemplates(runtimeTemplates);
+        attachPointerEventLogging(babylonEngineRef.current);
 
         const extractedBehaveGraph = babylonEngineRef.current.extractBehaveGraphFromScene()
-        if ((!behaveGraph.nodes || behaveGraph.nodes.length === 0 || shouldOverride) && extractedBehaveGraph) {
-            loadGraphFromJson(extractedBehaveGraph);
-            babylonEngineRef.current.loadBehaveGraph(getExecutableGraph());
-        } else {
-            babylonEngineRef.current.loadBehaveGraph(behaveGraph);
+        try {
+            const selection = selectModelGraph(behaveGraph, extractedBehaveGraph, shouldOverride);
+            if (selection.replaceAuthoringGraph) {
+                loadGraphFromJson(JSON.parse(JSON.stringify(selection.graph)));
+            }
+            babylonEngineRef.current.loadBehaveGraph(selection.graph);
+        } catch (error) {
+            console.warn("KHR_interactivity graph execution stopped", error);
         }
     }
 
@@ -307,6 +390,53 @@ export const BabylonEngineComponent = () => {
         camera.radius = distance;
     }
 
+    const loadModelFromUrl = async (url: string) => {
+        try {
+            // Create a scene if it doesn't exist
+            if (!sceneRef.current) {
+                createScene();
+            }
+            
+            SceneLoader.OnPluginActivatedObservable.add((loader) => {
+                if (loader.name === "gltf") {
+                    (loader as GLTFFileLoader).animationStartMode = GLTFLoaderAnimationStartMode.NONE;
+                }
+            });
+            
+            const container = await SceneLoader.LoadAssetContainerAsync("", url, sceneRef.current, undefined, ".glb");
+            container.addAllToScene();
+            reportGlbExtensionDiagnostics();
+
+            sceneRef.current?.createDefaultCamera(true, true, true);
+
+            const worldInfo = {
+                glTFNodes: buildGlTFNodeLayout(container.rootNodes[0]), 
+                animations: container.animationGroups, 
+                materials: container.materials,
+                meshes: container.meshes,
+            };
+            
+            // Update the file uploaded state to enable play button
+            setFileUploaded(url.split('/').pop() || "model.glb");
+            
+            // Setup the engine with the loaded model. This reuses the existing scene (unlike
+            // resetScene/Play, which disposes it), so the previous decorator's observers must be
+            // torn down explicitly or they'd stack up on every model load.
+            babylonEngineRef.current?.dispose();
+            const eventBus = new DOMEventBus();
+            babylonEngineRef.current = new BabylonDecorator(new BasicBehaveEngine(60, eventBus), worldInfo, sceneRef.current!);
+            attachPointerEventLogging(babylonEngineRef.current);
+
+            const extractedBehaveGraph = babylonEngineRef.current.extractBehaveGraphFromScene();
+            const selection = selectModelGraph(getExecutableGraph(), extractedBehaveGraph, true);
+            loadGraphFromJson(JSON.parse(JSON.stringify(selection.graph)));
+            babylonEngineRef.current.loadBehaveGraph(selection.graph);
+            clearGraphDirty();
+        } catch (error) {
+            console.error("Error loading model from URL:", error);
+        }
+    };
+
     return (
         <div style={{width: "90vw", margin: "0 auto"}}>
             <div style={{background: "#3d5987", padding: 16, borderTopLeftRadius: 16, borderTopRightRadius: 16}}>
@@ -330,6 +460,7 @@ export const BabylonEngineComponent = () => {
                         setFileUploaded(null);
                         return;
                     }
+                    setUseUploadedFile(true);
                     setFileUploaded(fileInputRef.current.files[0].name)
                 }}/>
                 <Button variant="outline-light" onClick={() => fileInputRef.current!.click()}>
@@ -349,49 +480,14 @@ export const BabylonEngineComponent = () => {
 
             <canvas ref={canvasRef} style={{ width: '100%', height: '700px' }} data-testid={"babylon-engine-canvas"} />
 
-            <Modal show={openModal === BabylonEngineModal.CUSTOM_EVENT}>
+            <Modal size="lg" show={openModal === BabylonEngineModal.CUSTOM_EVENT} onHide={() => setOpenModal(BabylonEngineModal.NONE)}>
                 <Container style={{padding: 16}}>
                     <h3>Send Custom Event</h3>
-                    <Tabs
-                        activeKey={activeKey}
-                        onSelect={(key: any) => setActiveKey(key)}
-                    >
-                        {getExecutableGraph().events?.map((customEvent: any, index: number) => {
-                            return (
-                                <Tab title={customEvent.id} eventKey={index + 1}>
-                                    <Row style={{textAlign: "left"}}>
-                                        {Object.keys(customEvent.values).map((val: any) => {
-                                            return (
-                                                <Col md={12}>
-                                                    <Form.Group>
-                                                        <Form.Label>{val}</Form.Label>
-                                                        <Form.Control id={val} type="text"/>
-                                                    </Form.Group>
-                                                </Col>
-                                            )
-                                        })}
-                                        <hr style={{ borderTop: '1px solid #777', margin: '16px 0' }} />
-                                        <Button variant={"outline-primary"} onClick={() => {
-                                            const payload: any = {};
-                                            for (const val of Object.keys(customEvent.values)) {
-                                                payload[val] = (document.getElementById(val) as HTMLInputElement).value;
-                                            }
-                                            babylonEngineRef.current?.dispatchCustomEvent(`KHR_INTERACTIVITY:${customEvent.id}`, payload)
-                                            setOpenModal(BabylonEngineModal.NONE);
-                                        }}>Send</Button>
-                                    </Row>
-                                </Tab>
-                            )
-                        })}
-                    </Tabs>
+                    <SendCustomEventPanel graph={getExecutableGraph()} />
                     <hr style={{ borderTop: '1px solid #777', margin: '16px 0' }} />
-                    <Row style={{ marginTop: 16 }}>
-                        <Col xs={12} md={12}>
-                            <Button variant={"outline-danger"} style={{width: "100%"}} onClick={() => setOpenModal(BabylonEngineModal.NONE)}>
-                                Cancel
-                            </Button>
-                        </Col>
-                    </Row>
+                    <Button variant={"outline-secondary"} style={{width: "100%"}} onClick={() => setOpenModal(BabylonEngineModal.NONE)}>
+                        Close
+                    </Button>
                 </Container>
             </Modal>
 

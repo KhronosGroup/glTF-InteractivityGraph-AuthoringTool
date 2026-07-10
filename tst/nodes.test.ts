@@ -50,7 +50,7 @@ import {Log10} from "../src/BasicBehaveEngine/nodes/math/exponential/Log10";
 import {CubeRoot} from "../src/BasicBehaveEngine/nodes/math/exponential/CubeRoot";
 import {SquareRoot} from "../src/BasicBehaveEngine/nodes/math/exponential/SquareRoot";
 import {Power} from "../src/BasicBehaveEngine/nodes/math/exponential/Power";
-import {standardTypes} from "../src/BasicBehaveEngine/types/nodes";
+import {standardTypes} from "../src/authoring/spec/nodes";
 import {Clamp} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Clamp";
 import {Saturate} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Saturate";
 import {Negate} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Negate";
@@ -123,6 +123,7 @@ import { DebugLog } from '../src/BasicBehaveEngine/nodes/experimental/Debug';
 import { QuatAngleBetween } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatAngleBetween';
 import { QuatFromUpForward } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatFromUpForward';
 import { QuatSlerp } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatSlerp';
+import { RefEquality } from '../src/BasicBehaveEngine/nodes/ref/RefEquality';
 import * as glMatrix from 'gl-matrix';
 
 describe('nodes', () => {
@@ -478,7 +479,7 @@ describe('nodes', () => {
                 const parts: string[] = path.split('/');
                 world.nodes[Number(parts[2])].value = value;
             },
-            "float", false
+            "int", false
         );
 
         const res  = pointerGet.processNode();
@@ -491,6 +492,18 @@ describe('nodes', () => {
 
         const resCustom = await pointerGetCustomPtr.processNode();
         expect(resCustom['value']!.value[0]).toBe(1);
+    });
+
+    it('pointer/get returns invalid for unresolved ref pointers', async () => {
+        const pointerGet: PointerGet = new PointerGet({
+            ...defaultProps,
+            graphEngine: new BasicBehaveEngine(60, new DOMEventBus()),
+            configuration: {pointer: { value: ['/nodes/3/camera'] }, type: { value: [9] }},
+        });
+
+        const res = pointerGet.processNode();
+        expect(res['value']!.value).toStrictEqual([null]);
+        expect(res['isValid']!.value).toStrictEqual([false]);
     });
 
     it('math/matCompose',  () => {
@@ -2013,6 +2026,24 @@ describe('nodes', () => {
         eq = new Equality({
             ...defaultProps,
             values: {a: { value: [-10.5, 0.5, 9] , type: 4}, b: { value: [-10.5, 0.5, 9] , type: 4}}
+        });
+
+        val = eq.processNode()['value'].value;
+        expect(val[0]).toBe(true);
+    });
+
+    it("ref/eq", () => {
+        let eq: RefEquality = new RefEquality({
+            ...defaultProps,
+            values: {a: { value: ["/meshes/0"], type: 9}, b: { value: ["/nodes/0"], type: 9}}
+        });
+
+        let val = eq.processNode()['value'].value;
+        expect(val[0]).toBe(false);
+
+        eq = new RefEquality({
+            ...defaultProps,
+            values: {a: { value: ["/meshes/0"], type: 9}, b: { value: ["/meshes/0"], type: 9}}
         });
 
         val = eq.processNode()['value'].value;

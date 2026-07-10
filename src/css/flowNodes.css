@@ -1,34 +1,1229 @@
+/* ---- top-edge graph loading progress bar (LoadingProgressBar) ---- */
+
+.graph-loading-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    z-index: 2000;
+    background: rgba(177, 140, 217, 0.15);
+    pointer-events: none;
+}
+
+.graph-loading-bar__fill {
+    height: 100%;
+    background: #b18cd9;
+    transition: width 120ms linear;
+    box-shadow: 0 0 6px rgba(177, 140, 217, 0.8);
+}
+
+.graph-loading-bar__label {
+    position: absolute;
+    top: 6px;
+    right: 10px;
+    font-size: 11px;
+    color: #6b4f8a;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: rgba(255, 255, 255, 0.85);
+    padding: 1px 6px;
+    border-radius: 6px;
+}
+
 .flow-node {
     border: 1px solid #000000;
 
     border-radius: 5px;
     background: white;
+    min-width: 240px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+     /* Render containment: skip layout/paint for off-screen mounted nodes.
+         contain-intrinsic-size provides a stable approximate box while content is not rendered.
+         Header tooltips portal out of the node, so paint containment does not clip them. */
+    content-visibility: auto;
+    contain-intrinsic-size: auto 240px auto 200px;
+}
+
+/* LOD box: flat variant drawn when zoomed out past LOD_ZOOM_THRESHOLD.
+    Fixed dimensions keep viewport culling measurable; handles are hidden so only this box paints.
+    .flow-node--warning still applies on type mismatch. */
+.flow-node--lod {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: 240px;
+    min-height: 120px;
+    padding: 10px 14px;
+    color: #ffffff;
+}
+
+.flow-node-lod-label {
+    font-size: 20px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.2;
+    word-break: break-word;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* handles must exist so existing edges stay valid, but carry no visual weight in the box */
+.flow-node-lod-handle {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* ---- top menu bar (replaces the old top-right stacked button panel) ---- */
+
+.graph-menu-bar {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    gap: 2px;
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid #e2e2e2;
+    border-radius: 12px;
+    padding: 6px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(6px);
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* error/warning counter: pinned to the right edge of the bar so it doesn't disturb the
+   centered button group */
+.graph-diagnostics-counter {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: default;
+}
+
+.diagnostics-counter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border-radius: 999px;
+    padding: 4px 9px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.diagnostics-counter-chip--error {
+    background: #fbe2e2;
+    color: #b32323;
+}
+
+.diagnostics-counter-chip--warning {
+    background: #fdf1d8;
+    color: #8a6116;
+}
+
+.diagnostics-counter-popover {
+    max-width: 420px;
+}
+
+.diagnostics-counter-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 320px;
+    overflow-y: auto;
+    text-align: left;
+}
+
+.diagnostics-counter-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 4px 0;
+    font-size: 12.5px;
+    border-bottom: 1px solid #eee;
+}
+
+.diagnostics-counter-item:last-child {
+    border-bottom: none;
+}
+
+.diagnostics-counter-badge {
+    flex-shrink: 0;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.diagnostics-counter-badge--error {
+    color: #e02020;
+}
+
+.diagnostics-counter-badge--warning {
+    color: #b8860b;
+}
+
+.diagnostics-counter-item-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    text-align: left;
+    color: #2a5db0;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 12.5px;
+}
+
+.diagnostics-counter-item-btn:hover {
+    color: #163d80;
+}
+
+.diagnostics-counter-item-text {
+    color: #333;
+}
+
+.graph-menu-bar-btn {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #444;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.12s ease, color 0.12s ease;
+}
+
+.graph-menu-bar-btn:hover {
+    background: #eef2f8;
+    color: #1c1c1c;
+}
+
+.graph-menu-bar-btn.is-active {
+    background: #e2ebfa;
+    color: #3d5987;
+}
+
+.graph-menu-bar-btn svg {
+    flex-shrink: 0;
+}
+
+.graph-menu-bar-btn--reload {
+    background: #fdf1d8;
+    color: #8a6116;
+}
+
+.graph-menu-bar-btn--reload:hover {
+    background: #fbe6ba;
+    color: #6b4a0f;
+}
+
+.graph-menu-bar-divider {
+    width: 1px;
+    align-self: stretch;
+    margin: 4px 2px;
+    background: #e2e2e2;
+}
+
+.node-picker-item {
+    padding: 2px 6px;
+    margin: 0 -6px 4px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.node-picker-item:hover {
+    background: #e9ecef;
+}
+
+.graph-search-result {
+    width: 100%;
+    text-align: left;
+    border: 1px solid #e6e6e6;
+    background: #fff;
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin: 0 0 8px;
+    cursor: pointer;
+}
+
+.graph-search-result:hover {
+    background: #eef2f8;
+    border-color: #d4deee;
+}
+
+.graph-search-result-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #2c3e62;
+}
+
+.graph-search-result-config {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #666;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* shared rich tooltip body (NodeInfoTooltip): used by both the Add Node picker entries and the
+   graph canvas node header — op description + flow/value sockets (+ NodeIndex / connections) */
+.node-info-tooltip .tooltip-inner {
+    max-width: 360px;
+    text-align: left;
+}
+
+.node-info-tooltip-index {
+    font-size: 11px;
+    font-weight: 700;
+    color: #9db3cc;
+    margin-bottom: 4px;
+}
+
+.node-info-tooltip-section {
+    margin-top: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9db3cc;
+}
+
+.node-info-tooltip-row {
+    line-height: 1.35;
+}
+
+.node-info-tooltip-socket {
+    font-family: monospace;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.node-info-tooltip-desc {
+    color: #c8c8c8;
+}
+
+.node-info-tooltip-conn {
+    color: #7fd0a0;
+    font-style: italic;
+}
+
+.node-info-tooltip-warning {
+    color: #ff6b6b;
+    line-height: 1.35;
+}
+
+/* pointer nodes carry long JSON pointer strings, so give them more room */
+.flow-node.flow-node--pointer {
+    min-width: 400px;
+}
+
+/* selection state: reactflow adds `.selected` to the node wrapper when a node is clicked or
+   caught by the drag-selection rectangle. Draw the selection border with `outline` so it doesn't
+   affect layout, and `outline-offset` to leave a margin between the node and the border. */
+.react-flow__node.selected .flow-node {
+    outline: 4px solid #628fd8;
+    outline-offset: 4px;
+    box-shadow: 0 0 0 4px rgba(77, 112, 168, 0.15);
+}
+
+/* upstream hierarchy of the currently-selected node (see onSelectionChange in
+   AuthoringComponent): every node feeding into it, directly or transitively. Uses the same
+   accent color as the other "live" highlights (event flash / trigger button) so it reads as
+   "active", distinct from the blue selection outline. */
+.react-flow__node.ancestor-highlight .flow-node {
+    outline: 4px solid #f5d9b8;
+    outline-offset: 4px;
+    box-shadow: 0 0 0 7px rgba(248, 168, 72, 0.25);
+}
+
+.flow-node-header {
+    padding: 6px 8px;
+    margin-bottom: 8px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.flow-node-header h2 {
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0;
+    color: #1c1c1c;
+}
+
+/* "x" button to remove the node entirely; only shown while hovering the node so it doesn't
+   clutter the header at rest (see .edge-delete-btn for the equivalent on edges) */
+.flow-node-delete-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    border: 0px solid rgba(0, 0, 0, 0.35);
+    border-radius: 6px;
+    background: #ffc3c8;
+    color: #1c1c1c;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.1s ease, background 0.1s ease, color 0.1s ease;
+}
+
+.flow-node:hover .flow-node-delete-btn {
+    opacity: 1;
+}
+
+.flow-node-delete-btn:hover {
+    background: #d05c65;
+    border-color: #d05c65;
+    color: white;
+}
+
+.flow-node-body {
+    padding: 16px;
+}
+
+/* consistent vertical layout for the configuration section */
+.flow-node-config {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.flow-node-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.flow-node-field > label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    text-align: left;
+}
+
+.flow-node-hint {
+    font-size: 11px;
+    color: #777;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* unified control styling for the config inputs / selects */
+.flow-node-field select,
+.flow-node-field > input,
+.flow-node-control {
+    box-sizing: border-box;
+    width: 100%;
+    height: 30px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 0 8px;
+    font-size: 13px;
+    background: white;
+    color: #222;
+}
+
+.flow-node-field select {
+    cursor: pointer;
+}
+
+.flow-node-field select:focus,
+.flow-node-field input:focus,
+.flow-node-control:focus {
+    outline: none;
+    border-color: #3d5987;
+    box-shadow: 0 0 0 2px rgba(61, 89, 135, 0.15);
 }
 
 .flow-node-socket label {
     display: block;
-    color: #777;
-    font-size: 12px;
-    margin-right: 4px;
+    color: #555;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 0;
 }
 
-.flow-node-socket input {
-    width: 96px;
-    border-radius: 8px;
-    margin-left: 4px;
+/* unified control styling for socket value inputs / type dropdowns */
+.flow-node-socket input,
+.flow-node-socket select {
+    box-sizing: border-box;
+    width: 140px;
+    height: 28px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 0 8px;
+    font-size: 13px;
+    background: white;
+    color: #222;
+}
+
+.flow-node-socket select {
+    cursor: pointer;
+}
+
+.flow-node-socket input:focus,
+.flow-node-socket select:focus {
+    outline: none;
+    border-color: #3d5987;
+    box-shadow: 0 0 0 2px rgba(61, 89, 135, 0.15);
+}
+
+/* per-component vector/matrix editor: a grid of small number fields */
+.flow-node-vec-grid {
+    width: fit-content;
+}
+
+/* higher specificity than `.flow-node-socket input` so the fixed 140px width is overridden */
+.flow-node-vec-grid .flow-node-vec-cell {
+    box-sizing: border-box;
+    width: 46px;
+    height: 26px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 0 4px;
+    font-size: 12px;
+    font-family: monospace;
+    text-align: right;
+    background: white;
+    color: #222;
+}
+
+.flow-node-vec-grid .flow-node-vec-cell:focus {
+    outline: none;
+    border-color: #3d5987;
+    box-shadow: 0 0 0 2px rgba(61, 89, 135, 0.15);
+}
+
+/* hide the number-input spinners so cells stay compact and consistent */
+.flow-node-vec-grid .flow-node-vec-cell::-webkit-outer-spin-button,
+.flow-node-vec-grid .flow-node-vec-cell::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.flow-node-vec-grid .flow-node-vec-cell {
+    -moz-appearance: textfield;
 }
 
 .flow-node-row {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    gap: 16px;
     position: relative;
-    line-height: 2;
 }
 
 .flow-node-socket {
     position: relative;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
+    gap: 3px;
+    margin-bottom: 10px;
+}
+
+/* label + type badge row */
+.flow-node-socket-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.flow-node-outputs .flow-node-socket-head {
+    flex-direction: row-reverse;
+}
+
+/* editable output-flow socket name (flow/sequence, flow/multiGate) */
+.flow-node-flow-name {
+    box-sizing: border-box;
+    width: 96px;
+    height: 24px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 0 6px;
+    font-size: 12px;
+    text-align: right;
+    background: white;
+    color: #222;
+}
+
+.flow-node-flow-name:focus {
+    outline: none;
+    border-color: #3d5987;
+    box-shadow: 0 0 0 2px rgba(61, 89, 135, 0.15);
+}
+
+.flow-node-type-badge {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #ffffff;
+    border-radius: 4px;
+    padding: 1px 5px;
+    line-height: 1.6;
+    white-space: nowrap;
+}
+
+/* editable variant: the badge itself acts as the type selector */
+.flow-node-type-badge--editable {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+}
+
+.flow-node-type-badge--editable:hover {
+    filter: brightness(1.08);
+}
+
+.flow-node-type-badge-arrow {
+    font-size: 11px;
+    line-height: 1;
+    font-weight: 900;
+    margin-left: 1px;
+    padding-left: 4px;
+    border-left: 1px solid rgba(255, 255, 255, 0.55);
+    opacity: 1;
+}
+
+/* transparent native select overlaying the badge; keeps the OS dropdown behaviour */
+.flow-node-type-badge-select {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: none;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* wired input socket whose source type doesn't match what the socket declares as acceptable */
+.flow-node-type-warning {
+    color: #e02020;
+    font-size: 16px;
+    line-height: 1;
+    cursor: help;
+    flex-shrink: 0;
+}
+
+/* header warning: sits in front of the node name when any socket has a type mismatch */
+.flow-node-header-warning {
+    color: #e02020;
+    font-size: 32px;
+    line-height: 1;
+    cursor: help;
+    flex-shrink: 0;
+}
+
+/* node has a header warning (type mismatch): call it out with a red dotted border.
+   Lives inside react-flow's zoom-transformed pane, so this thickness scales with
+   zoom automatically — no manual zoom-adjustment needed, just make it thick enough
+   to still read at typical zoomed-out levels. */
+.flow-node.flow-node--warning {
+    border: 5px dotted #e02020;
+}
+
+/* a socket name the op's spec doesn't declare (typo, or a hand-edited/broken glTF) - kept visible
+   instead of silently dropped, but locked from editing since there is nothing valid to edit into */
+.flow-node-socket--unknown .flow-node-socket-head label {
+    color: #e02020;
+}
+
+.flow-node-socket--unknown .flow-node-control,
+.flow-node-socket--unknown input,
+.flow-node-socket--unknown select,
+.flow-node-socket--unknown .flow-node-vec-cell,
+.flow-node-socket--unknown button {
+    pointer-events: none;
+    opacity: 0.65;
+    border-color: #e02020 !important;
+    background: #fdecea !important;
+    color: #a33 !important;
+}
+
+/* output column: right-align labels so they sit next to their handles */
+.flow-node-outputs .flow-node-socket {
+    align-items: flex-end;
+}
+
+.flow-node-outputs .flow-node-socket label {
+    text-align: right;
+}
+
+/* small add-socket button (flow/sequence, flow/multiGate) */
+.flow-node-add {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: white;
+    color: #3d5987;
+    font-weight: 700;
+    cursor: pointer;
+    margin: 4px 0 0 auto;
+}
+
+.flow-node-add:hover {
+    background: #eef5ff;
+}
+
+/* hover "×" button to remove an edge (see DeletableEdge). Positioned by an inline transform
+   at the edge midpoint; visibility is driven by the component's hover/selected state. */
+.edge-delete-btn {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid #d05c65;
+    border-radius: 50%;
+    background: white;
+    color: #d05c65;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    /* no transform transition: the button jumps between anchors and should reposition instantly */
+    transition: opacity 0.1s ease;
+}
+
+.edge-delete-btn:hover {
+    background: #d05c65;
+    color: white;
+}
+
+/* make the whole edge easier to grab for hover/select/reconnect */
+.react-flow__edge-interaction {
+    cursor: pointer;
+}
+
+/* ---- variables multi-select config (variable/set) ---- */
+
+.vars-config {
+    position: relative;
+    width: 100%;
+}
+
+/* clickable summary box: shows selected variables as chips + a dropdown arrow */
+.vars-config-trigger {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 30px;
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 3px 8px;
+    background: white;
+    cursor: pointer;
+}
+
+.vars-config-trigger:hover {
+    border-color: #3d5987;
+}
+
+.vars-config-chips {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+}
+
+.vars-config-placeholder {
+    color: #999;
+    font-size: 13px;
+    line-height: 22px;
+}
+
+.vars-config-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #eef2f8;
+    border: 1px solid #d5deeb;
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 12px;
+    color: #222;
+}
+
+.vars-config-chip-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.vars-config-chip-x {
+    cursor: pointer;
+    color: #888;
+    font-weight: 700;
+    line-height: 1;
+    padding-left: 1px;
+}
+
+.vars-config-chip-x:hover {
+    color: #d05c65;
+}
+
+.vars-config-arrow {
+    color: #666;
+    font-size: 11px;
+    font-weight: 900;
+    flex-shrink: 0;
+}
+
+/* dropdown list of every declared variable as a checkbox row */
+.vars-config-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 20;
+    max-height: 200px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 4px;
+}
+
+.vars-config-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #222;
+}
+
+.vars-config-option:hover {
+    background: #eef2f8;
+}
+
+.vars-config-option input {
+    cursor: pointer;
+    margin: 0;
+}
+
+.vars-config-option-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.vars-config-option-type {
+    font-size: 10px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    flex-shrink: 0;
+}
+
+.vars-config-empty {
+    padding: 8px;
+    color: #999;
+    font-size: 13px;
+    font-style: italic;
+}
+
+/* ---- editable int[] list (e.g. `cases` config) ---- */
+.int-arr-config {
+    width: 100%;
+}
+
+.int-arr-config-chips {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    min-height: 30px;
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 4px 6px;
+    background: white;
+}
+
+.int-arr-config-chip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    width: 100%;
+    box-sizing: border-box;
+    background: #eef2f8;
+    border: 1px solid #d5deeb;
+    border-radius: 6px;
+    padding: 2px 6px 2px 8px;
+    font-size: 12px;
+    font-family: monospace;
+    color: #222;
+}
+
+.int-arr-config-chip-x {
+    cursor: pointer;
+    color: #888;
+    font-weight: 700;
+    line-height: 1;
+    padding-left: 1px;
+}
+
+.int-arr-config-chip-x:hover {
+    color: #d05c65;
+}
+
+.int-arr-config-input {
+    flex: 1;
+    min-width: 48px;
+    border: none;
+    outline: none;
+    font-size: 13px;
+    color: #222;
+    background: transparent;
+}
+
+/* ---- custom event controls (event/send monitor + event/receive trigger) ---- */
+
+/* event/send: live fire chronology */
+.flow-node-event-monitor {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.flow-node-event-monitor-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.flow-node-event-monitor-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* small dot that flashes each frame the event fires */
+.flow-node-event-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #cbcbcb;
+    flex-shrink: 0;
+}
+
+.flow-node-event-dot.is-live {
+    background: #f8a848;
+    animation: flow-node-event-flash 0.35s ease-out;
+}
+
+@keyframes flow-node-event-flash {
+    0% { transform: scale(1.8); box-shadow: 0 0 0 4px rgba(248, 168, 72, 0.45); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(248, 168, 72, 0); }
+}
+
+.flow-node-event-clear {
+    margin-left: auto;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: white;
+    color: #666;
+    font-size: 11px;
+    padding: 1px 8px;
+    cursor: pointer;
+}
+
+.flow-node-event-clear:hover:not(:disabled) {
+    background: #f3f3f3;
+}
+
+.flow-node-event-clear:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.flow-node-event-log {
+    max-height: 132px;
+    max-width: 280px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    border: 1px solid #e2e2e2;
+    border-radius: 6px;
+    background: #1c1c1c;
+    padding: 4px 6px;
+    font-family: monospace;
+    font-size: 11px;
+}
+
+.flow-node-event-log-empty {
+    color: #888;
+    font-style: italic;
+}
+
+.flow-node-event-log-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    padding: 1px 0;
+    min-width: 0;
+}
+
+.flow-node-event-log-time {
+    color: #7fd0ff;
+    flex-shrink: 0;
+}
+
+.flow-node-event-log-count {
+    color: #f8a848;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.flow-node-event-log-detail {
+    color: #b9e69b;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* event/receive: manual trigger UI */
+.flow-node-event-trigger {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.flow-node-event-trigger .flow-node-field > label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.flow-node-event-arg-type {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #ffffff;
+    background: #868484;
+    border-radius: 4px;
+    padding: 1px 5px;
+}
+
+.flow-node-event-trigger-btn {
+    height: 32px;
+    border: 1px solid #f8a848;
+    border-radius: 6px;
+    background: #f8a848;
+    color: #1c1c1c;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.flow-node-event-trigger-btn:hover {
+    filter: brightness(1.06);
+}
+
+.flow-node-event-trigger-btn.is-flash {
+    animation: flow-node-event-btn-flash 0.22s ease-out;
+}
+
+@keyframes flow-node-event-btn-flash {
+    0% { transform: scale(0.96); box-shadow: 0 0 0 4px rgba(248, 168, 72, 0.5); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(248, 168, 72, 0); }
+}
+
+.flow-node-event-trigger-btn:disabled {
+    opacity: 0.45;
+    cursor: default;
+    filter: none;
+}
+
+/* "Send Custom Event" panel used in the engine (Three/Babylon) modals */
+.send-event-panel {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    text-align: left;
+}
+
+.send-event-empty {
+    color: #888;
+    font-style: italic;
+    padding: 12px 0;
+}
+
+.send-event-list {
+    flex: 0 0 210px;
+    max-height: 340px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 1px solid #e2e2e2;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+}
+
+.send-event-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    align-items: flex-start;
+    text-align: left;
+    padding: 8px 10px;
+    background: white;
+    border: none;
+    border-left: 3px solid transparent;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+}
+
+.send-event-item:last-child {
+    border-bottom: none;
+}
+
+.send-event-item:hover {
+    background: #f3f5f9;
+}
+
+.send-event-item.is-selected {
+    background: #eaf0fb;
+    border-left-color: #3d5987;
+}
+
+.send-event-item.is-orphan .send-event-item-id {
+    color: #999;
+}
+
+.send-event-item-id {
+    font-family: monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: #222;
+    word-break: break-all;
+}
+
+.send-event-item-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.send-event-arg-count {
+    font-size: 10px;
+    color: #888;
+}
+
+.send-event-badge {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-radius: 4px;
+    padding: 1px 5px;
+}
+
+.send-event-badge.is-ok {
+    background: #2e7d32;
+    color: #ffffff;
+}
+
+.send-event-badge.is-none {
+    background: #e0e0e0;
+    color: #777;
+}
+
+.send-event-detail {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.send-event-detail-title {
+    font-family: monospace;
+    font-size: 15px;
+    font-weight: 700;
+    color: #222;
+    margin-bottom: 8px;
+    word-break: break-all;
+}
+
+.send-event-status {
+    font-size: 12px;
+    line-height: 1.35;
+    padding: 8px 10px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+.send-event-status code {
+    font-family: monospace;
+    font-size: 11px;
+}
+
+.send-event-status.is-ok {
+    background: #eef7ef;
+    border: 1px solid #b7dbb9;
+    color: #2e6b31;
+}
+
+.send-event-status.is-warn {
+    background: #fff4e5;
+    border: 1px solid #f8a848;
+    color: #7a4a00;
+}
+
+.send-event-noargs {
+    font-size: 12px;
+    font-style: italic;
+    color: #888;
     margin-bottom: 8px;
 }

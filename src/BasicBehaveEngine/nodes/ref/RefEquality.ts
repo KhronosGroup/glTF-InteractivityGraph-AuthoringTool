@@ -16,14 +16,13 @@ export class RefEquality extends BehaveEngineNode {
         const typeA: string = this.getType(typeIndexA);
         const typeIndexB = this.values['b'].type!
         const typeB: string = this.getType(typeIndexB);
-        // if (typeA !== typeB) {
-        //     throw Error("input types not equivalent")
-        // }
-        // if (typeA !== "ref") {
-        //     throw Error("input types not ref")
-        // }
+        if (typeA !== typeB) {
+            throw Error(`input types not equivalent: a=${typeA}, b=${typeB}, values=${JSON.stringify(this.values)}`)
+        }
+        if (typeA !== "ref") {
+            throw Error(`input types not ref: a=${typeA}, b=${typeB}, values=${JSON.stringify(this.values)}`)
+        }
         const val: boolean = a === b;
         return {'value': {value: [val], type: this.getTypeIndex('bool')}};
     }
 }
-

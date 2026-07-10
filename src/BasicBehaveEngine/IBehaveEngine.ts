@@ -87,6 +87,11 @@ export interface IBehaveEngine {
     ) => void;
 
     /**
+     * Returns the full list of registered JSON pointer paths.
+     */
+    getRegisteredJsonPointers: () => string[];
+
+    /**
      * Register a Behave Engine node type along with its corresponding class.
      * @param type - The type of the Behave Engine node.
      * @param behaveEngineNode - The class representing the Behave Engine node.

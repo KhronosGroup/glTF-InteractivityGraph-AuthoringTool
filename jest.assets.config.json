@@ -1,0 +1,27 @@
+{
+    "preset": "ts-jest/presets/default-esm",
+    "testEnvironment": "node",
+    "moduleDirectories": [
+        "node_modules",
+        "src"
+    ],
+    "transform": {
+        "^.+\\.tsx?$": [
+            "ts-jest",
+            {
+                "useESM": true
+            }
+        ]
+    },
+    "verbose": false,
+    "silent": true,
+    "reporters": [
+        "<rootDir>/tst/assets/assetSummaryReporter.cjs"
+    ],
+    "testMatch": [
+        "**/*.asset.ts"
+    ],
+    "moduleNameMapper": {
+        "^uuid$": "uuid"
+    }
+}

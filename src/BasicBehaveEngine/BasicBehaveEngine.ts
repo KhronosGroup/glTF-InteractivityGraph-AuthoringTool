@@ -26,6 +26,7 @@ import {Sign} from "./nodes/math/arithmetic/Sign";
 import {Truncate} from "./nodes/math/arithmetic/Truncate";
 import {Floor} from "./nodes/math/arithmetic/Floor";
 import {Ceil} from "./nodes/math/arithmetic/Ceil";
+import {Round} from "./nodes/math/arithmetic/Round";
 import {Negate} from "./nodes/math/arithmetic/Negate";
 import {Add} from "./nodes/math/arithmetic/Add";
 import {Subtract} from "./nodes/math/arithmetic/Subtract";
@@ -54,6 +55,7 @@ import {SquareRoot} from "./nodes/math/exponential/SquareRoot";
 import {CubeRoot} from "./nodes/math/exponential/CubeRoot";
 import {Random} from "./nodes/experimental/Random";
 import {Dot} from "./nodes/math/vector/Dot";
+import {Cross} from "./nodes/math/vector/Cross";
 import {Normalize} from "./nodes/math/vector/Normalize";
 import {Rotate2D} from "./nodes/math/vector/Rotate2D";
 import {Rotate3D} from "./nodes/math/vector/Rotate3D";
@@ -80,10 +82,14 @@ import {IntToFloat} from "./nodes/math/typeConversion/IntToFloat";
 import {Extract2} from "./nodes/math/extract/Extract2";
 import {Extract3} from "./nodes/math/extract/Extract3";
 import {Extract4} from "./nodes/math/extract/Extract4";
+import {Extract2x2} from "./nodes/math/extract/Extract2x2";
+import {Extract3x3} from "./nodes/math/extract/Extract3x3";
 import {Extract4x4} from "./nodes/math/extract/Extract4x4";
 import {Combine2} from "./nodes/math/combine/Combine2";
 import {Combine3} from "./nodes/math/combine/Combine3";
 import {Combine4} from "./nodes/math/combine/Combine4";
+import {Combine2x2} from "./nodes/math/combine/Combine2x2";
+import {Combine3x3} from "./nodes/math/combine/Combine3x3";
 import {Combine4x4} from "./nodes/math/combine/Combine4x4";
 import {PointerInterpolate} from "./nodes/pointer/PointerInterpolate";
 import {QuatMul} from "./nodes/math/quaternion/QuatMul";
@@ -130,6 +136,144 @@ import { SmoothStep } from "./nodes/math/arithmetic/SmoothStep";
 import { Slerp } from "./nodes/math/vector/Slerp";
 import { RgbToOkLCh } from "./nodes/math/color/RgbToOkLCh";
 import { RgbFromOkLCh } from "./nodes/math/color/RgbFromOkLCh";
+
+
+// Single source of truth for op -> runtime BehaveEngineNode class. registerKnownBehaviorNodes
+// iterates this; tools/tests import it to check parity with the authoring palette (tst/opRegistryParity.test.ts).
+export const behaveEngineNodeRegistry: ReadonlyArray<[string, any]> = [
+    ["event/onStart", OnStartNode],
+    ["event/onTick", OnTickNode],
+    ["flow/branch", Branch],
+    ["flow/setDelay", SetDelay],
+    ["flow/cancelDelay", CancelDelay],
+    ["flow/doN", DoN],
+    ["flow/for", ForLoop],
+    ["flow/multiGate", MultiGate],
+    ["flow/sequence", Sequence],
+    ["flow/switch", Switch],
+    ["flow/throttle", Throttle],
+    ["flow/waitAll", WaitAll],
+    ["flow/while", WhileLoop],
+    ["pointer/get", PointerGet],
+    ["pointer/set", PointerSet],
+    ["pointer/interpolate", PointerInterpolate],
+    ["ADBE/output_console_node", OutputConsole],
+    ["math/abs", AbsoluteValue],
+    ["event/receive", Receive],
+    ["event/send", Send],
+    ["variable/get", VariableGet],
+    ["variable/set", VariableSet],
+    ["variable/interpolate", VariableInterpolate],
+    ["math/E", Euler],
+    ["math/Inf", Inf],
+    ["math/NaN", NotANumber],
+    ["math/Pi", Pi],
+    ["math/Tau", Tau],
+    ["math/sign", Sign],
+    ["math/trunc", Truncate],
+    ["math/floor", Floor],
+    ["math/fract", Fraction],
+    ["math/ceil", Ceil],
+    ["math/round", Round],
+    ["math/neg", Negate],
+    ["math/add", Add],
+    ["math/sub", Subtract],
+    ["math/mul", Multiply],
+    ["math/div", Divide],
+    ["math/rem", Remainder],
+    ["math/min", Min],
+    ["math/max", Max],
+    ["math/mix", Mix],
+    ["math/saturate", Saturate],
+    ["math/clamp", Clamp],
+    ["math/smoothStep", SmoothStep],
+    ["math/rad", DegreeToRadians],
+    ["math/deg", RadiansToDegrees],
+    ["math/sin", Sine],
+    ["math/cos", Cosine],
+    ["math/tan", Tangent],
+    ["math/asin", Arcsine],
+    ["math/acos", Arccosine],
+    ["math/atan", Arctangent],
+    ["math/atan2", Arctangent2],
+    ["math/sinh", HyperbolicSine],
+    ["math/cosh", HyperbolicCosine],
+    ["math/tanh", HyperbolicTangent],
+    ["math/asinh", InverseHyperbolicSine],
+    ["math/acosh", InverseHyperbolicCosine],
+    ["math/atanh", InverseHyperbolicTangent],
+    ["math/exp", Exponential],
+    ["math/log", Log],
+    ["math/log2", Log2],
+    ["math/log10", Log10],
+    ["math/pow", Power],
+    ["math/sqrt", SquareRoot],
+    ["math/cbrt", CubeRoot],
+    ["math/random", Random],
+    ["math/lt", LessThan],
+    ["math/le", LessThanOrEqualTo],
+    ["math/eq", Equality],
+    ["math/ge", GreaterThanOrEqualTo],
+    ["math/gt", GreaterThan],
+    ["math/dot", Dot],
+    ["math/cross", Cross],
+    ["math/normalize", Normalize],
+    ["math/rotate2D", Rotate2D],
+    ["math/rotate3D", Rotate3D],
+    ["math/length", VectorLength],
+    ["math/slerp", Slerp],
+    ["math/isInf", IsInfNode],
+    ["math/isNaN", IsNaNNode],
+    ["math/select", Select],
+    ["math/switch", MathSwitch],
+    ["math/extract2", Extract2],
+    ["math/extract3", Extract3],
+    ["math/extract4", Extract4],
+    ["math/extract2x2", Extract2x2],
+    ["math/extract3x3", Extract3x3],
+    ["math/extract4x4", Extract4x4],
+    ["math/combine2", Combine2],
+    ["math/combine3", Combine3],
+    ["math/combine4", Combine4],
+    ["math/combine2x2", Combine2x2],
+    ["math/combine3x3", Combine3x3],
+    ["math/combine4x4", Combine4x4],
+    ["type/boolToInt", BoolToInt],
+    ["type/boolToFloat", BoolToFloat],
+    ["type/floatToBool", FloatToBool],
+    ["type/floatToInt", FloatToInt],
+    ["type/intToBool", IntToBool],
+    ["type/intToFloat", IntToFloat],
+    ["math/not", Not],
+    ["math/xor", Xor],
+    ["math/or", Or],
+    ["math/and", And],
+    ["math/lsl", LeftShift],
+    ["math/asr", RightShift],
+    ["math/clz", CountLeadingZeros],
+    ["math/ctz", CountTrailingZeros],
+    ["math/popcnt", CountOneBits],
+    ["math/quatMul", QuatMul],
+    ["math/quatConjugate", QuatConjugate],
+    ["math/quatFromAxisAngle", QuatFromAxisAngle],
+    ["math/quatAngleBetween", QuatAngleBetween],
+    ["math/quatSlerp", QuatSlerp],
+    ["math/quatToAxisAngle", QuatToAxisAngle],
+    ["math/quatFromDirections", QuatFromDirections],
+    ["math/quatFromUpForward", QuatFromUpForward],
+    ["math/matDecompose", MatDecompose],
+    ["math/matCompose", MatCompose],
+    ["math/determinant", Determinant],
+    ["math/transform", Transform],
+    ["math/transpose", Transpose],
+    ["math/matMul", MatMul],
+    ["math/inverse", Inverse],
+    ["debug/log", DebugLog],
+    ["event/stopPropagation", EventStopPropagation],
+    ["ref/eq", RefEquality],
+    ["math/rgbToOkLCh", RgbToOkLCh],
+    ["math/rgbFromOkLCh", RgbFromOkLCh],
+];
 
 
 export class BasicBehaveEngine implements IBehaveEngine {
@@ -363,6 +507,10 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.jsonPtrTrie.addPath(jsonPtr, getterCallback, setterCallback, typeName, readOnly);
     }
 
+    public getRegisteredJsonPointers = (): string[] => {
+        return this.jsonPtrTrie.getRegisteredPaths();
+    }
+
     public isValidJsonPtr = (jsonPtr: string): boolean => {
         return this.jsonPtrTrie.isPathValid(jsonPtr);
     }
@@ -399,6 +547,17 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.eventBus.addEvent({func});
     }
 
+    private registerGraphEventPointers = (): void => {
+        const eventCountWithLifecycleEvents = (this.events?.length ?? 0) + 2;
+        this.registerJsonPointer(
+            `/extensions/KHR_interactivity/events/${eventCountWithLifecycleEvents}`,
+            (path) => [path],
+            () => undefined,
+            "ref",
+            true
+        );
+    }
+
     public loadBehaveGraph = (behaveGraph: any, runGraph = true) => {
         this.hoverableNodesIndices.clear();
         this.selectableNodesIndices.clear();
@@ -417,6 +576,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.events = behaveGraph.events;
         this.types = behaveGraph.types;
         this.idToBehaviourNodeMap.clear();
+        this.registerGraphEventPointers();
 
         const defaultProps = {
             idToBehaviourNodeMap: this.idToBehaviourNodeMap,
@@ -579,132 +739,9 @@ export class BasicBehaveEngine implements IBehaveEngine {
     }
 
     private registerKnownBehaviorNodes = () => {
-        this.registerBehaveEngineNode("event/onStart", OnStartNode);
-        this.registerBehaveEngineNode("event/onTick", OnTickNode);
-        this.registerBehaveEngineNode("flow/branch", Branch);
-        this.registerBehaveEngineNode("flow/setDelay", SetDelay);
-        this.registerBehaveEngineNode("flow/cancelDelay", CancelDelay);
-        this.registerBehaveEngineNode("flow/doN", DoN);
-        this.registerBehaveEngineNode("flow/for", ForLoop);
-        this.registerBehaveEngineNode("flow/multiGate", MultiGate);
-        this.registerBehaveEngineNode("flow/sequence", Sequence);
-        this.registerBehaveEngineNode("flow/switch", Switch);
-        this.registerBehaveEngineNode("flow/throttle", Throttle);
-        this.registerBehaveEngineNode("flow/waitAll", WaitAll);
-        this.registerBehaveEngineNode("flow/while", WhileLoop);
-        this.registerBehaveEngineNode("pointer/get", PointerGet);
-        this.registerBehaveEngineNode("pointer/set", PointerSet);
-        this.registerBehaveEngineNode("pointer/interpolate", PointerInterpolate)
-        this.registerBehaveEngineNode("ADBE/output_console_node", OutputConsole);
-        this.registerBehaveEngineNode("math/abs", AbsoluteValue);
-        this.registerBehaveEngineNode("event/receive", Receive);
-        this.registerBehaveEngineNode("event/send", Send);
-        this.registerBehaveEngineNode("variable/get", VariableGet);
-        this.registerBehaveEngineNode("variable/set", VariableSet);
-        this.registerBehaveEngineNode("variable/interpolate", VariableInterpolate);
-        this.registerBehaveEngineNode("math/E", Euler);
-        this.registerBehaveEngineNode("math/Inf", Inf);
-        this.registerBehaveEngineNode("math/NaN", NotANumber);
-        this.registerBehaveEngineNode("math/Pi", Pi);
-        this.registerBehaveEngineNode("math/Tau", Tau);
-        this.registerBehaveEngineNode("math/sign", Sign);
-        this.registerBehaveEngineNode("math/trunc", Truncate);
-        this.registerBehaveEngineNode("math/floor", Floor);
-        this.registerBehaveEngineNode("math/fract", Fraction);
-        this.registerBehaveEngineNode("math/ceil", Ceil);
-        this.registerBehaveEngineNode("math/neg", Negate);
-        this.registerBehaveEngineNode("math/add", Add);
-        this.registerBehaveEngineNode("math/sub", Subtract);
-        this.registerBehaveEngineNode("math/mul", Multiply);
-        this.registerBehaveEngineNode("math/div", Divide);
-        this.registerBehaveEngineNode("math/rem", Remainder);
-        this.registerBehaveEngineNode("math/min", Min);
-        this.registerBehaveEngineNode("math/max", Max);
-        this.registerBehaveEngineNode("math/mix", Mix);
-        this.registerBehaveEngineNode("math/saturate", Saturate);
-        this.registerBehaveEngineNode("math/clamp", Clamp);
-        this.registerBehaveEngineNode("math/smoothStep", SmoothStep);
-        this.registerBehaveEngineNode("math/rad", DegreeToRadians);
-        this.registerBehaveEngineNode("math/deg", RadiansToDegrees);
-        this.registerBehaveEngineNode("math/sin", Sine);
-        this.registerBehaveEngineNode("math/cos", Cosine);
-        this.registerBehaveEngineNode("math/tan", Tangent);
-        this.registerBehaveEngineNode("math/asin", Arcsine);
-        this.registerBehaveEngineNode("math/acos", Arccosine);
-        this.registerBehaveEngineNode("math/atan", Arctangent);
-        this.registerBehaveEngineNode("math/atan2", Arctangent2);
-        this.registerBehaveEngineNode("math/sinh", HyperbolicSine);
-        this.registerBehaveEngineNode("math/cosh", HyperbolicCosine);
-        this.registerBehaveEngineNode("math/tanh", HyperbolicTangent);
-        this.registerBehaveEngineNode("math/asinh", InverseHyperbolicSine);
-        this.registerBehaveEngineNode("math/acosh", InverseHyperbolicCosine);
-        this.registerBehaveEngineNode("math/atanh", InverseHyperbolicTangent);
-        this.registerBehaveEngineNode("math/exp", Exponential);
-        this.registerBehaveEngineNode("math/log", Log);
-        this.registerBehaveEngineNode("math/log2", Log2);
-        this.registerBehaveEngineNode("math/log10", Log10);
-        this.registerBehaveEngineNode("math/pow", Power);
-        this.registerBehaveEngineNode("math/sqrt", SquareRoot);
-        this.registerBehaveEngineNode("math/cbrt", CubeRoot);
-        this.registerBehaveEngineNode("math/random", Random);
-        this.registerBehaveEngineNode("math/lt", LessThan);
-        this.registerBehaveEngineNode("math/le", LessThanOrEqualTo);
-        this.registerBehaveEngineNode("math/eq", Equality);
-        this.registerBehaveEngineNode("math/ge", GreaterThanOrEqualTo);
-        this.registerBehaveEngineNode("math/gt", GreaterThan);
-        this.registerBehaveEngineNode("math/dot", Dot);
-        this.registerBehaveEngineNode("math/normalize", Normalize);
-        this.registerBehaveEngineNode("math/rotate2D", Rotate2D);
-        this.registerBehaveEngineNode("math/rotate3D", Rotate3D);
-        this.registerBehaveEngineNode("math/length", VectorLength);
-        this.registerBehaveEngineNode("math/slerp", Slerp);
-        this.registerBehaveEngineNode("math/isInf", IsInfNode);
-        this.registerBehaveEngineNode("math/isNaN", IsNaNNode);
-        this.registerBehaveEngineNode("math/select", Select);
-        this.registerBehaveEngineNode("math/switch", MathSwitch);
-        this.registerBehaveEngineNode("math/extract2", Extract2);
-        this.registerBehaveEngineNode("math/extract3", Extract3);
-        this.registerBehaveEngineNode("math/extract4", Extract4);
-        this.registerBehaveEngineNode("math/extract4x4", Extract4x4);
-        this.registerBehaveEngineNode("math/combine2", Combine2);
-        this.registerBehaveEngineNode("math/combine3", Combine3);
-        this.registerBehaveEngineNode("math/combine4", Combine4);
-        this.registerBehaveEngineNode("math/combine4x4", Combine4x4);
-        this.registerBehaveEngineNode("type/boolToInt", BoolToInt);
-        this.registerBehaveEngineNode("type/boolToFloat", BoolToFloat);
-        this.registerBehaveEngineNode("type/floatToBool", FloatToBool);
-        this.registerBehaveEngineNode("type/floatToInt", FloatToInt);
-        this.registerBehaveEngineNode("type/intToBool", IntToBool);
-        this.registerBehaveEngineNode("type/intToFloat", IntToFloat);
-        this.registerBehaveEngineNode("math/not", Not);
-        this.registerBehaveEngineNode("math/xor", Xor);
-        this.registerBehaveEngineNode("math/or", Or);
-        this.registerBehaveEngineNode("math/and", And);
-        this.registerBehaveEngineNode("math/lsl", LeftShift);
-        this.registerBehaveEngineNode("math/asr", RightShift);
-        this.registerBehaveEngineNode("math/clz", CountLeadingZeros);
-        this.registerBehaveEngineNode("math/ctz", CountTrailingZeros);
-        this.registerBehaveEngineNode("math/popcnt", CountOneBits);
-        this.registerBehaveEngineNode("math/quatMul", QuatMul);
-        this.registerBehaveEngineNode("math/quatConjugate", QuatConjugate);
-        this.registerBehaveEngineNode("math/quatFromAxisAngle", QuatFromAxisAngle);
-        this.registerBehaveEngineNode("math/quatAngleBetween", QuatAngleBetween);
-        this.registerBehaveEngineNode("math/quatSlerp", QuatSlerp);
-        this.registerBehaveEngineNode("math/quatToAxisAngle", QuatToAxisAngle);
-        this.registerBehaveEngineNode("math/quatFromDirections", QuatFromDirections);
-        this.registerBehaveEngineNode("math/quatFromUpForward", QuatFromUpForward);
-        this.registerBehaveEngineNode("math/matDecompose", MatDecompose);
-        this.registerBehaveEngineNode("math/matCompose", MatCompose);
-        this.registerBehaveEngineNode("math/determinant", Determinant);
-        this.registerBehaveEngineNode("math/transform", Transform);
-        this.registerBehaveEngineNode("math/transpose", Transpose);
-        this.registerBehaveEngineNode("math/matMul", MatMul);
-        this.registerBehaveEngineNode("math/inverse", Inverse);
-        this.registerBehaveEngineNode("debug/log", DebugLog);
-        this.registerBehaveEngineNode("event/stopPropagation", EventStopPropagation);
-        this.registerBehaveEngineNode("ref/eq", RefEquality);
-        this.registerBehaveEngineNode("math/rgbToOkLCh", RgbToOkLCh);
-        this.registerBehaveEngineNode("math/rgbFromOkLCh", RgbFromOkLCh);
+        for (const [op, behaveEngineNode] of behaveEngineNodeRegistry) {
+            this.registerBehaveEngineNode(op, behaveEngineNode);
+        }
     }
 
     protected validateGraph = (behaviorGraph: any) => {
@@ -716,8 +753,13 @@ export class BasicBehaveEngine implements IBehaveEngine {
             if (node.values !== undefined) {
                 for (const key of Object.keys(node.values)) {
                     if (node.values[key].node !== undefined) {
-                        if (Number(node.values[key].node) >= index) {
-                            throw Error(`Invalid reference, node ${index} references ${node.values[key].node}`);
+                        const referencedNode = Number(node.values[key].node);
+                        if (referencedNode >= index) {
+                            const opOf = (idx: number) => {
+                                const declIdx = (nodes[idx] as any)?.declaration;
+                                return behaviorGraph.declarations?.[declIdx]?.op ?? `declaration ${declIdx}`;
+                            };
+                            throw Error(`Invalid reference: node ${index} ('${opOf(index)}', socket '${key}') references node ${referencedNode} ('${opOf(referencedNode)}'), but a node may only reference nodes that appear earlier in the array (index < ${index}). Reorder the nodes so that node ${referencedNode} comes before node ${index}.`);
                         }
                     }
                 }

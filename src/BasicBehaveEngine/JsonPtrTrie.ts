@@ -119,6 +119,25 @@ export class JsonPtrTrie {
         }
     }
 
+    /**
+     * Returns all registered paths exactly as they were added to the trie.
+     */
+    public getRegisteredPaths(): string[] {
+        const paths: string[] = [];
+
+        const walk = (node: TrieNode, segments: string[]) => {
+            if (node.isEndOfPath) {
+                paths.push(segments.join("/"));
+            }
+            for (const [segment, child] of node.children.entries()) {
+                walk(child, [...segments, segment]);
+            }
+        };
+
+        walk(this.root, []);
+        return paths.sort();
+    }
+
     private traversePath(path: string): TrieNode | undefined {
         // while (path.endsWith('/')) {
         //     path = path.slice(0, -1);

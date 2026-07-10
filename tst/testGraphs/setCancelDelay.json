@@ -227,13 +227,5 @@
 		{
 			"name": "ref",
 			"signature": "ref"
-		},
-		{
-			"name": "AMZN_interactivity_string",
-			"signature": "custom",
-			"extensions": {
-				"AMZN_interactivity_string": {}
-			}
-		}
-	]
+		}]
 }

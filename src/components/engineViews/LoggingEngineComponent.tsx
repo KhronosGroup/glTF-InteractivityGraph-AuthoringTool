@@ -5,13 +5,19 @@ import {BasicBehaveEngine} from "../../BasicBehaveEngine/BasicBehaveEngine";
 import {LoggingDecorator} from "../../decorators/LoggingDecorator";
 import { InteractivityGraphContext } from "../../InteractivityGraphContext";
 import { DOMEventBus } from "../../BasicBehaveEngine/eventBuses/DOMEventBus";
+import { buildNormalizedTemplateSet } from "../../authoring/pointerCatalogue";
 
 enum LoggingEngineModal {
     WORLD = "WORLD",
     CUSTOM_EVENT = "CUSTOM_EVENT",
     NONE = "NONE"
 }
-export const LoggingEngineComponent = () => {
+
+interface LoggingEngineComponentProps {
+    modelUrl?: string | null;
+}
+
+export const LoggingEngineComponent: React.FC<LoggingEngineComponentProps> = ({ modelUrl }) => {
     const [executionLog, setExecutionLog] = useState("");
     const [openModal, setOpenModal] = useState<LoggingEngineModal>(LoggingEngineModal.NONE);
     const [world, setWorld] = useState("{}");
@@ -20,35 +26,80 @@ export const LoggingEngineComponent = () => {
     const worldInputRef = useRef<HTMLTextAreaElement | null>(null);
     const loggingEngineRef = useRef<LoggingDecorator | null>(null);
 
-    const {getExecutableGraph} = useContext(InteractivityGraphContext);
+    const {getExecutableGraph, setSupportedPointerTemplates, clearGraphDirty, registerPlayHandler} = useContext(InteractivityGraphContext);
 
     useEffect(() => {
         return () => {
             // Clean up resources when the component unmounts
-            loggingEngineRef.current?.clearCustomEventListeners();
+            loggingEngineRef.current?.dispose();
+            setSupportedPointerTemplates(null);
         };
-    }, [])
+    }, []);
 
+    const play = () => {
+        setExecutionLog("");
+        runGraph(getExecutableGraph(), setExecutionLog, JSON.parse(world));
+        setGraphRunning(true);
+        clearGraphDirty();
+    };
+
+    // let the authoring menu bar's Reload button trigger this engine's Play without a direct
+    // component reference (see registerPlayHandler on InteractivityGraphContext). `play` closes
+    // over `world`/`getExecutableGraph`, which change across renders, so the registered handler
+    // is a stable trampoline through a ref rather than the closure captured by this mount-only effect.
+    const playRef = useRef(play);
+    playRef.current = play;
+    useEffect(() => {
+        registerPlayHandler(() => playRef.current());
+        return () => registerPlayHandler(null);
+    }, []);
+
+    // Effect to handle model URL
+    useEffect(() => {
+        if (modelUrl) {
+            // For the logging engine, we don't need to load the actual model,
+            // but we can simulate it by setting some world data
+            setWorld(JSON.stringify({
+                modelUrl: modelUrl,
+                simulated: true,
+                timestamp: new Date().toISOString()
+            }, null, 2));
+            
+            // Auto-run the engine with this world data
+            setTimeout(() => {
+                setExecutionLog("");
+                runGraph(
+                    getExecutableGraph(), 
+                    setExecutionLog, 
+                    {
+                        modelUrl: modelUrl,
+                        simulated: true,
+                        timestamp: new Date().toISOString()
+                    }
+                );
+                setGraphRunning(true);
+                clearGraphDirty();
+            }, 100);
+        }
+    }, [modelUrl]);
 
     const runGraph = (behaveGraph: any, setExecutionLog: any, world: any) => {
         console.log(behaveGraph);
         if (loggingEngineRef.current !== null) {
-            loggingEngineRef.current?.clearCustomEventListeners()
+            loggingEngineRef.current?.dispose()
         }
 
         const eventBus = new DOMEventBus();
         loggingEngineRef.current = new LoggingDecorator(new BasicBehaveEngine(1, eventBus), (line: string) => setExecutionLog((prev: string) => prev + "\n" + line), world)
+        const runtimeTemplates = buildNormalizedTemplateSet(loggingEngineRef.current.getRegisteredJsonPointers());
+        setSupportedPointerTemplates(runtimeTemplates);
         loggingEngineRef.current?.loadBehaveGraph(behaveGraph);
     }
 
     return (
         <div style={{width: "90vw", margin: "0 auto"}}>
             <div style={{background: "#3d5987", padding: 16, borderTopLeftRadius: 16, borderTopRightRadius: 16}}>
-                <Button variant="outline-light" data-testid={"logging-engine-play-btn"} onClick={() => {
-                    setExecutionLog("");
-                    runGraph(getExecutableGraph(), setExecutionLog, JSON.parse(world));
-                    setGraphRunning(true);
-                }}>
+                <Button variant="outline-light" data-testid={"logging-engine-play-btn"} onClick={play}>
                     Play
                 </Button>
                 <Spacer width={16} height={0}/>

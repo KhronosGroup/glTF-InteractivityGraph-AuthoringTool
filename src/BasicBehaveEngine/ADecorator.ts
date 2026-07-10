@@ -19,13 +19,43 @@ export abstract class ADecorator implements IBehaveEngine {
     abstract processAddingNodeToQueue: (flow: IInteractivityFlow) => void;
     abstract processExecutingNextNode: (flow: IInteractivityFlow) => void;
     abstract registerKnownPointers: () => void;
-    abstract registerJsonPointer: (jsonPtr: string, getterCallback: (path: string) => any, setterCallback: (path: string, value: any) => void, typeName: string, readOnly: boolean) => void;
     abstract getWorld: () => any;
     abstract getParentNodeIndex: (nodeIndex: number) => number | undefined;
     abstract startAnimation: (animationIndex: number, startTime: number, endTime: number, speed: number, callback: () => void) => void;
     abstract stopAnimation: (animationIndex: number) => void;
     abstract stopAnimationAt: (animationIndex: number, stopTime: number, callback: () => void) => void
-    abstract resolveRef: (ref: any) => any;
+
+    // Shared by every decorator: resolve a "#/..."-style JSON pointer ref down to its trailing id.
+    resolveRef = (ref: any): any => {
+        if (ref == null || ref === "") {
+            return -1;
+        }
+        return String(ref).split("/").pop();
+    }
+
+    registerJsonPointer = (jsonPtr: string, getterCallback: (path: string) => any, setterCallback: (path: string, value: any) => void, typeName: string, readOnly: boolean) => {
+        this.behaveEngine.registerJsonPointer(jsonPtr, getterCallback, setterCallback, typeName, readOnly);
+    };
+
+    /**
+     * BasicBehaveEngine calls some of its own hooks internally (e.g. `this.getWorld()`,
+     * `this.getParentNodeIndex()`) so the decorator's implementation has to be reachable via the
+     * wrapped engine's own properties, not just via the decorator instance. Subclasses must call
+     * this once, after their own hook fields (getWorld/getParentNodeIndex/startAnimation/
+     * stopAnimation/stopAnimationAt) are assigned, to bridge them onto the engine.
+     */
+    protected bridgeEngineHooks(): void {
+        this.behaveEngine.getWorld = this.getWorld;
+        this.behaveEngine.getParentNodeIndex = this.getParentNodeIndex;
+        this.behaveEngine.startAnimation = this.startAnimation;
+        this.behaveEngine.stopAnimation = this.stopAnimation;
+        this.behaveEngine.stopAnimationAt = this.stopAnimationAt;
+    }
+
+    /** Tears down listeners/observers registered by this decorator. Call before discarding it. */
+    dispose(): void {
+        this.clearCustomEventListeners();
+    }
 
     registerRigidBodyNodes() {
         this.behaveEngine.registerBehaveEngineNode("rigid_body/applyImpulse", ApplyImpulse);
@@ -90,6 +120,10 @@ export abstract class ADecorator implements IBehaveEngine {
         this.behaveEngine.registerBehaveEngineNode(type, behaveEngineNode);
     }
 
+    getRegisteredJsonPointers(): string[] {
+        return this.behaveEngine.getRegisteredJsonPointers();
+    }
+
     isSlerpPath(path: string): boolean {
         return this.behaveEngine.isSlerpPath(path);
     }
@@ -127,11 +161,11 @@ export abstract class ADecorator implements IBehaveEngine {
     }
 
     getPathValue(path: string) {
-        this.behaveEngine.getPathValue(path);
+        return this.behaveEngine.getPathValue(path);
     }
 
     getPathtypeName(path: string) {
-        this.behaveEngine.getPathtypeName(path);
+        return this.behaveEngine.getPathtypeName(path);
     }
 
     addEntryToValueEvaluationCache(key: string, val: IInteractivityValue): void {

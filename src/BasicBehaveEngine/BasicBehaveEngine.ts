@@ -68,7 +68,6 @@ import {Equality} from "./nodes/math/comparison/Equality";
 import {GreaterThanOrEqualTo} from "./nodes/math/comparison/GreaterThanOrEqualTo";
 import {GreaterThan} from "./nodes/math/comparison/GreaterThan";
 import {Inf} from "./nodes/math/constants/Inf";
-import {OutputConsole} from "./nodes/experimental/OutputConsole";
 import {SetDelay} from "./nodes/flow/SetDelay";
 import {CancelDelay} from "./nodes/flow/CancelDelay";
 import {NotANumber} from "./nodes/math/constants/NotANumber";
@@ -161,7 +160,6 @@ export const behaveEngineNodeRegistry: ReadonlyArray<[string, any]> = [
     ["pointer/get", PointerGet],
     ["pointer/set", PointerSet],
     ["pointer/interpolate", PointerInterpolate],
-    ["ADBE/output_console_node", OutputConsole],
     ["math/abs", AbsoluteValue],
     ["event/receive", Receive],
     ["event/send", Send],

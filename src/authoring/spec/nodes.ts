@@ -9,8 +9,8 @@ export const hasNodeSpecFlag = (spec: AuthoredNode | undefined, flag: NodeSpecFl
 // Projects an authoring node spec down to the runtime glTF declaration shape (op/extension plus,
 // for extension-defined ops only, the raw socket types the core spec can't infer). Core
 // KHR_interactivity ops get their socket types from the op's fixed spec, not a per-file
-// declaration, so only extension ops (rigid_body/*, event/onSelect, event/onHoverIn/Out,
-// ADBE/output_console_node) carry inputValueSockets/outputValueSockets here.
+// declaration, so only extension ops (rigid_body/*, event/onSelect, event/onHoverIn/Out)
+// carry inputValueSockets/outputValueSockets here.
 export const toInteractivityDeclaration = (spec: AuthoredNode): IInteractivityDeclaration => {
     if (!spec.extension) {
         return { op: spec.op! };
@@ -3586,35 +3586,6 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
                 event: {
                     typeOptions: [9],
                     type: 9,
-                    value: [undefined]
-                }
-            }
-        }
-    },
-    // Custom (ADBE)
-    {
-        op: "ADBE/output_console_node",
-        extension: "ADBE_output_console_node",
-        description: "Output a message to the console",
-        flows: {
-            input: {
-                in: {
-                    node: undefined,
-                    socket: undefined
-                }
-            },
-            output: {
-                out: {
-                    node: undefined,
-                    socket: undefined
-                }
-            }
-        },
-        values: {
-            input: {
-                message: {
-                    typeOptions: anyType,
-                    type: 0,
                     value: [undefined]
                 }
             }

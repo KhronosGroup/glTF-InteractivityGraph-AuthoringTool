@@ -95,7 +95,7 @@ function loadWhackAMoleAsset(): { glbPath: string; gltf?: any; graph?: any; load
 function getGraphReferencedAnimationIndices(graph: any): number[] {
     const indices = new Set<number>();
     for (const node of graph.nodes ?? []) {
-        const op = graph.declarations?.[node.declaration]?.op ?? node.op;
+        const op = graph.declarations?.[node.declaration]?.op;
         const pointer = node.configuration?.pointer?.value?.[0];
         if (op !== "pointer/get" || typeof pointer !== "string" || !pointer.startsWith("/animations/[index]/")) {
             continue;

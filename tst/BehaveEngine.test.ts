@@ -175,4 +175,31 @@ describe('BehaveEngine', () => {
     loggingBehaveEngine.loadBehaveGraph(behaviorGraph);
     expect(engine.variables![0].value![0]).toEqual(true);
    });
+
+   it("rejects old node.op-only graphs without declaration indices", () => {
+    const behaviorGraph = {
+        declarations: [],
+        types: [{ signature: "bool" }],
+        variables: [{ type: 0, value: [false] }],
+        events: [],
+        nodes: [{
+            op: "event/onStart",
+            flows: {
+                start: { node: 1, socket: "in" },
+            },
+        }, {
+            op: "variable/set",
+            values: {
+                variable: { type: 0, value: [0] },
+                value: { type: 0, value: [true] },
+            },
+        }],
+    };
+
+    const eventBus = new DOMEventBus();
+    const engine = new BasicBehaveEngine(1, eventBus);
+    loggingBehaveEngine = new LoggingDecorator(engine, () => undefined, {});
+
+    expect(() => loggingBehaveEngine.loadBehaveGraph(behaviorGraph as any)).toThrow(/Unrecognized node declaration/);
+   });
 });

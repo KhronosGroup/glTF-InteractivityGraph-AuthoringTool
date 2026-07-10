@@ -2,9 +2,9 @@ import React, { useContext } from "react";
 import { InteractivityGraphContext } from "../InteractivityGraphContext";
 
 /**
- * Thin top-edge progress bar (YouTube-style) driven by the context `loadingState`. During a chunked
- * graph load the pipeline reports its current phase (`step`) and overall `progress` (0..1); this
- * renders a determinate fill so a big graph shows visible advancement instead of a frozen UI.
+ * In-canvas loading status driven by the context `loadingState`. During a chunked graph load the
+ * pipeline reports its current phase (`step`) and overall `progress` (0..1); this renders both the
+ * active operation and an exact percentage over the graph viewport.
  * Renders nothing while idle.
  */
 export const LoadingProgressBar: React.FC = () => {
@@ -18,8 +18,13 @@ export const LoadingProgressBar: React.FC = () => {
 
     return (
         <div className="graph-loading-bar" data-testid="graph-loading-bar">
-            <div className="graph-loading-bar__fill" style={{ width: `${pct}%` }} />
-            <span className="graph-loading-bar__label">{loadingState.step}</span>
+            <div className="graph-loading-bar__header">
+                <span className="graph-loading-bar__label">{loadingState.step}</span>
+                <span className="graph-loading-bar__percent">{Math.round(pct)}%</span>
+            </div>
+            <div className="graph-loading-bar__track">
+                <div className="graph-loading-bar__fill" style={{ width: `${pct}%` }} />
+            </div>
         </div>
     );
 };

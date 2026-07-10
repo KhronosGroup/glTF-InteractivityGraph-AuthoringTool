@@ -23,6 +23,7 @@ import { categoryLabel } from './DiagnosticsPanel';
 import { FLOW_COLOR, getColorForTypeIndex, getNodeCategoryColor } from '../authoring/socketColors';
 import { TypedValueInput } from '../authoring/TypedValueInput';
 import { NodeInfoTooltip, buildNodeTypeTooltipSections } from '../authoring/NodeInfoTooltip';
+import { LoadingProgressBar } from './LoadingProgressBar';
 import { applyNodePreset, getNodePresetSearchText, NodePreset, nodePresets } from '../authoring/nodePresets';
 import { joinSearchTerms } from '../authoring/searchText';
 import '../css/flowNodes.css';
@@ -980,6 +981,7 @@ export const AuthoringComponent = () => {
                             <ReloadIndicator dirty={graphDirty} onReload={requestPlay}/>
                             <DiagnosticsCounter diagnostics={allDiagnostics} onJumpToNode={jumpToNode}/>
                         </div>
+                        <LoadingProgressBar />
                     </Panel>
 
                     <Panel position={"bottom-center"}>

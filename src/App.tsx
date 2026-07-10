@@ -9,7 +9,6 @@ import {Spacer} from "./components/Spacer";
 import { InteractivityGraphProvider } from './InteractivityGraphContext';
 import { SampleSidebar } from './components/SampleSidebar';
 import { DiagnosticsPanel } from './components/DiagnosticsPanel';
-import { LoadingProgressBar } from './components/LoadingProgressBar';
 
 // Storage key for persisting the engine type
 const ENGINE_TYPE_STORAGE_KEY = 'interactivity-graph-engine-type';
@@ -132,8 +131,6 @@ export const App = () => {
   return (
     <InteractivityGraphProvider>
         <div style={{width: "100vw", height: "100vh"}}>
-
-        <LoadingProgressBar />
 
         <EngineSelector setEngineType={handleEngineTypeChange} currentEngineType={engineType} />
 

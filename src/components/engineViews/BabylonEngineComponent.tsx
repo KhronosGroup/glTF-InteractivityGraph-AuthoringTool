@@ -24,7 +24,7 @@ import { DOMEventBus } from "../../BasicBehaveEngine/eventBuses/DOMEventBus";
 import { attachPointerEventLogging, SendCustomEventPanel } from "../../authoring/CustomEventControls";
 import { computeExtensionDiagnostics } from "../../diagnostics";
 import { buildNormalizedTemplateSet } from "../../authoring/pointerCatalogue";
-import { selectModelGraph } from "./modelGraphSelection";
+import { loadSelectedModelGraph } from "./babylonGraphExecution";
 import { BabylonLoadedModel, buildBabylonDecoratorWorld, buildBabylonLoadedModel } from "./babylonLoadedModel";
 
 enum BabylonEngineModal {
@@ -137,8 +137,8 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
 
     const play = (shouldOverrideGraph: boolean) => {
         resetScene()
-            .then((res: BabylonLoadedModel) => {
-                runGraph(babylonEngineRef, getExecutableGraph(), sceneRef.current, res, shouldOverrideGraph);
+            .then(async (res: BabylonLoadedModel) => {
+                await runGraph(babylonEngineRef, getExecutableGraph(), sceneRef.current, res, shouldOverrideGraph);
                 setGraphRunning(true);
                 clearGraphDirty();
             })
@@ -213,7 +213,7 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
         return loadedModel;
     };
 
-    const runGraph = (babylonEngineRef: any, behaveGraph: any, scene: any, loadedModel: BabylonLoadedModel, shouldOverride: boolean) => {
+    const runGraph = async (babylonEngineRef: any, behaveGraph: any, scene: any, loadedModel: BabylonLoadedModel, shouldOverride: boolean) => {
         if (babylonEngineRef.current !== null) {
             babylonEngineRef.current.dispose()
         }
@@ -227,12 +227,13 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
 
         const extractedBehaveGraph = babylonEngineRef.current.extractBehaveGraphFromScene()
         try {
-            const selection = selectModelGraph(behaveGraph, extractedBehaveGraph, shouldOverride);
-            const runtimeGraph = JSON.parse(JSON.stringify(selection.graph));
-            if (selection.replaceAuthoringGraph) {
-                loadGraphFromJson(JSON.parse(JSON.stringify(selection.graph)));
-            }
-            babylonEngineRef.current.loadBehaveGraph(runtimeGraph);
+            await loadSelectedModelGraph({
+                authoredGraph: behaveGraph,
+                embeddedGraph: extractedBehaveGraph,
+                replaceAuthoringGraph: shouldOverride,
+                loadGraphFromJson,
+                loadBehaveGraph: (graph) => babylonEngineRef.current!.loadBehaveGraph(graph),
+            });
         } catch (error) {
             console.warn("KHR_interactivity graph execution stopped", error);
         }
@@ -376,10 +377,13 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
             attachPointerEventLogging(babylonEngineRef.current);
 
             const extractedBehaveGraph = babylonEngineRef.current.extractBehaveGraphFromScene();
-            const selection = selectModelGraph(getExecutableGraph(), extractedBehaveGraph, true);
-            const runtimeGraph = JSON.parse(JSON.stringify(selection.graph));
-            await loadGraphFromJson(JSON.parse(JSON.stringify(selection.graph)));
-            babylonEngineRef.current.loadBehaveGraph(runtimeGraph);
+            await loadSelectedModelGraph({
+                authoredGraph: getExecutableGraph(),
+                embeddedGraph: extractedBehaveGraph,
+                replaceAuthoringGraph: true,
+                loadGraphFromJson,
+                loadBehaveGraph: (graph) => babylonEngineRef.current!.loadBehaveGraph(graph),
+            });
             clearGraphDirty();
         } catch (error) {
             console.error("Error loading model from URL:", error);

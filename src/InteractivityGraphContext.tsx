@@ -10,7 +10,7 @@ import { FLOW_COLOR, UNKNOWN_COLOR, getColorForTypeIndex } from './authoring/soc
 import { GltfObjectModel } from './authoring/gltfObjectModel';
 import { runChunked, isAbortError } from './utils/frameBudget';
 import { ensureInteractivityDeclaration } from './authoring/declarations';
-import { toExecutableConfigurationValue, toExecutableValue } from './authoring/executableGraph';
+import { getExecutableDeclarationIndex, toExecutableConfigurationValue, toExecutableValue } from './authoring/executableGraph';
 
 const edgeStyle = (color: string) => ({ stroke: color, strokeWidth: 2 });
 
@@ -66,7 +66,7 @@ interface InteractivityGraphContextType {
     // down to a runtime IInteractivityGraph (topologically sorted) for BasicBehaveEngine. Data flows
     // one way; the engine never reads the AuthoredGraph.
     getExecutableGraph: () => IInteractivityGraph,
-    loadGraphFromJson: (json: any) => void,
+    loadGraphFromJson: (json: any) => Promise<void>,
     addDeclaration: (declaration: IInteractivityDeclaration) => number,
     addEvent: (event: IInteractivityEvent) => void,
     setEvents: (events: IInteractivityEvent[]) => void,
@@ -115,7 +115,7 @@ const initialContext: InteractivityGraphContextType = {
     setSupportedPointerTemplates: () => {return null},
     getAuthorGraph: (graph: AuthoredGraph, options?: GetAuthorGraphOptions) => {return [[], [], [], []]},
     getExecutableGraph: () => ({ declarations: [], nodes: [], types: [], events: [], variables: [] }),
-    loadGraphFromJson: () => {return null},
+    loadGraphFromJson: async () => {return undefined},
     addDeclaration: () => -1,
     addEvent: () => {return null},
     setEvents: () => {return null},
@@ -751,18 +751,6 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         }
 
         return executable;
-    };
-
-    const getExecutableDeclarationIndex = (node: AuthoredNode, declarations: IInteractivityDeclaration[]): number => {
-        if (
-            Number.isInteger(node.declaration)
-            && node.declaration >= 0
-            && declarations[node.declaration]?.op === node.op
-        ) {
-            return node.declaration;
-        }
-
-        return declarations.findIndex((declaration: IInteractivityDeclaration) => declaration.op === node.op);
     };
 
     const topologicalSort = (nodes: any[]) => {

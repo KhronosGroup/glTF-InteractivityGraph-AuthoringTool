@@ -233,17 +233,6 @@ const DiagnosticsCounter = (props: { diagnostics: IGraphDiagnostic[], onJumpToNo
     );
 };
 
-const isOverScrollableElement = (target: Element | null, boundary: Element | null): boolean => {
-    let el = target;
-    while (el && el !== boundary) {
-        const { overflowY, overflowX } = window.getComputedStyle(el);
-        if ((overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight) return true;
-        if ((overflowX === 'auto' || overflowX === 'scroll') && el.scrollWidth > el.clientWidth) return true;
-        el = el.parentElement;
-    }
-    return false;
-};
-
 export const AuthoringComponent = () => {
     const reactFlowRef = useRef<HTMLDivElement | null>(null);
     const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
@@ -295,30 +284,6 @@ export const AuthoringComponent = () => {
             }
         }
     }, [graph])
-
-    useEffect(() => {
-        const container = reactFlowRef.current;
-        if (!container || !reactFlowInstance) return;
-        const handleWheel = (e: WheelEvent) => {
-            if (isOverScrollableElement(e.target as Element, container)) return;
-            e.preventDefault();
-            const { x, y, zoom } = reactFlowInstance.getViewport();
-            const factor = e.deltaY < 0 ? 1.2 : 1 / 1.2;
-            const newZoom = Math.min(2, Math.max(0.1, zoom * factor));
-            const rect = container.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
-            const flowX = (mouseX - x) / zoom;
-            const flowY = (mouseY - y) / zoom;
-            reactFlowInstance.setViewport({
-                x: mouseX - flowX * newZoom,
-                y: mouseY - flowY * newZoom,
-                zoom: newZoom,
-            }, { duration: 0 });
-        };
-        container.addEventListener('wheel', handleWheel, { passive: false });
-        return () => container.removeEventListener('wheel', handleWheel);
-    }, [reactFlowInstance]);
 
     const hasIntersection = (arr1: any[], arr2: any[]): boolean => {
         const set1 = new Set(arr1);
@@ -906,9 +871,9 @@ export const AuthoringComponent = () => {
                     onPaneContextMenu={handleRightClick}
                     panOnDrag={[2]}
                     selectionOnDrag={true}
-                    zoomOnScroll={false}
+                    zoomOnScroll={true}
                     zoomOnDoubleClick={false}
-                    preventScrolling={false}
+                    preventScrolling={true}
                     deleteKeyCode="Delete"
                     fitView
                 >
@@ -1120,7 +1085,7 @@ const NodePickerComponent = (props: {onAddNode: any, closeModal: any, mousePos: 
                         })
                     }
                 </div>
-                <div ref={nodeListRef} onWheel={onNodeListWheel} style={{ columnWidth: 200, columnGap: 24, maxHeight: "min(40vh, calc(100vh - 260px))", overflowX: "auto", overflowY: "auto", overscrollBehavior: "contain", marginTop: 16, padding: "0 16px 8px" }}>
+                <div ref={nodeListRef} className="nowheel" onWheel={onNodeListWheel} style={{ columnWidth: 200, columnGap: 24, maxHeight: "min(40vh, calc(100vh - 260px))", overflowX: "auto", overflowY: "auto", overscrollBehavior: "contain", marginTop: 16, padding: "0 16px 8px" }}>
                     {
                         sortedNodeCategories.map(category => {
                             const nodesInCategory = nodeTypesByCategory[category].filter(nodeType =>
@@ -1845,4 +1810,3 @@ const UploadGraphComponent = (props: { closeModal: any}) => {
         </Panel>
     );
 }
-

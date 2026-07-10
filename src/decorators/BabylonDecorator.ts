@@ -1110,7 +1110,7 @@ export class BabylonDecorator extends ADecorator {
             const parts: string[] = path.split("/");
             const animation: AnimationGroup = this.world.animations[Number(parts[2])];
             const fps = 60;
-            return [animation.from / fps];
+            return [animation === undefined ? NaN : animation.from / fps];
         }, (path, value) => {
             //no-op
         }, "float", true);
@@ -1118,11 +1118,8 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/animations/${maxAnimations}/extensions/KHR_interactivity/maxTime`, (path) => {
             const parts: string[] = path.split("/");
             const animation: AnimationGroup = this.world.animations[Number(parts[2])];
-            if (animation === undefined) {
-                throw new Error(`Animation pointer ${path} resolved outside ${this.world.animations.length} loaded animation(s)`);
-            }
             const fps = 60;
-            return [animation.to / fps];
+            return [animation === undefined ? NaN : animation.to / fps];
         }, (path, value) => {
             //no-op
         }, "float", true);

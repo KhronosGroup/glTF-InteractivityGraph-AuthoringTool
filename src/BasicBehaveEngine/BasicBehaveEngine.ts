@@ -396,7 +396,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
 
             const callback = this.selectableNodesIndices.get(nodeIndex);
             if (callback !== undefined) {
-                callback(nodeIndex, controllerIndex, selectionPoint, selectionRayOrigin);
+                callback(`/nodes/${nodeIndex}`, controllerIndex, selectionPoint, selectionRayOrigin);
                 return;
             }
 

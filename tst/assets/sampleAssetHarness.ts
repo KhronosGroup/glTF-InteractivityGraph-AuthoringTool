@@ -3,8 +3,8 @@ import path from "path";
 import { ADecorator } from "../../src/BasicBehaveEngine/ADecorator";
 import { BasicBehaveEngine } from "../../src/BasicBehaveEngine/BasicBehaveEngine";
 import { IEventBus, IEventQueueItem, IInterpolateAction } from "../../src/BasicBehaveEngine/IBehaveEngine";
-import { BehaveEngineNode } from "../../src/BasicBehaveEngine/BehaveEngineNode";
-import { IInteractivityFlow, IInteractivityVariable } from "../../src/BasicBehaveEngine/types/InteractivityGraph";
+import { IInteractivityVariable } from "../../src/BasicBehaveEngine/types/InteractivityGraph";
+import { createGlTFObjectModelFromGltf, GlTFObjectModelDecorator, readGlbJsonFromArrayBuffer } from "../../src/objectModel/glTFObjectModel";
 
 export interface AssetIndexEntry {
     label: string;
@@ -196,22 +196,8 @@ export function getAssetSubTests(metadata: AssetTestMetadata): AssetSubTestCase[
 
 export function readGlbJson(glbPath: string): any {
     const bytes = fs.readFileSync(glbPath);
-    if (bytes.toString("ascii", 0, 4) !== "glTF") {
-        throw new Error(`${glbPath} is not a GLB file`);
-    }
-
-    let offset = 12;
-    while (offset < bytes.length) {
-        const chunkLength = bytes.readUInt32LE(offset);
-        const chunkType = bytes.toString("ascii", offset + 4, offset + 8);
-        if (chunkType === "JSON") {
-            const json = bytes.subarray(offset + 8, offset + 8 + chunkLength).toString("utf8").trim();
-            return JSON.parse(json);
-        }
-        offset += 8 + chunkLength;
-    }
-
-    throw new Error(`${glbPath} does not contain a JSON chunk`);
+    const arrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+    return readGlbJsonFromArrayBuffer(arrayBuffer);
 }
 
 export class TestEventBus implements IEventBus {
@@ -257,175 +243,6 @@ export class TestEventBus implements IEventBus {
     };
 }
 
-export class GenericTestDecorator extends ADecorator {
-    constructor(behaveEngine: BasicBehaveEngine, public world: any) {
-        super(behaveEngine);
-        this.behaveEngine.getWorld = this.getWorld;
-        this.behaveEngine.getParentNodeIndex = this.getParentNodeIndex;
-        this.behaveEngine.resolveRef = this.resolveRef;
-        this.registerKnownPointers();
-    }
-
-    processNodeStarted = (_node: BehaveEngineNode): void => {};
-    processAddingNodeToQueue = (_flow: IInteractivityFlow): void => {};
-    processExecutingNextNode = (_flow: IInteractivityFlow): void => {};
-    startAnimation = (_animationIndex: number, _startTime: number, _endTime: number, _speed: number, callback: () => void): void => callback();
-    stopAnimation = (_animationIndex: number): void => {};
-    stopAnimationAt = (_animationIndex: number, _stopTime: number, callback: () => void): void => callback();
-    resolveRef = (ref: any): any => {
-        if (ref == null || ref === "") {
-            return -1;
-        }
-        return String(ref).split("/").pop();
-    };
-    getWorld = (): any => this.world;
-    getParentNodeIndex = (nodeIndex: number): number | undefined => this.world.parents[nodeIndex];
-    registerJsonPointer = (jsonPtr: string, getter: (path: string) => any, setter: (path: string, value: any) => void, typeName: string, readOnly: boolean): void => {
-        this.behaveEngine.registerJsonPointer(jsonPtr, getter, setter, typeName, readOnly);
-    };
-
-    registerKnownPointers = (): void => {
-        const nodeCount = this.world.nodes.length;
-        const materialCount = this.world.materials.length;
-        const meshCount = this.world.meshes.length;
-        const animationCount = this.world.animations.length;
-        const lightCount = this.world.lights.length;
-        const maxWeights = Math.max(1, ...this.world.nodes.map((node: any) => node.weights?.length ?? 0));
-        const maxChildren = Math.max(1, ...this.world.nodes.map((node: any) => node.children?.length ?? 0));
-        const maxPrimitiveCount = Math.max(1, ...this.world.meshes.map((mesh: any) => mesh.primitives?.length ?? 0));
-
-        this.pointer("/nodes.length", () => [nodeCount], () => {}, "int", true);
-        this.pointer("/materials.length", () => [materialCount], () => {}, "int", true);
-        this.pointer("/animations.length", () => [animationCount], () => {}, "int", true);
-
-        this.pointer(`/nodes/${nodeCount}/translation`, (p) => this.node(p).translation, (p, v) => this.node(p).translation = v, "float3");
-        this.pointer(`/nodes/${nodeCount}/scale`, (p) => this.node(p).scale, (p, v) => this.node(p).scale = v, "float3");
-        this.pointer(`/nodes/${nodeCount}/rotation`, (p) => this.node(p).rotation, (p, v) => this.node(p).rotation = v, "float4");
-        this.pointer(`/nodes/${nodeCount}/matrix`, (p) => this.localMatrix(this.part(p, 2)), () => {}, "float4x4", true);
-        this.pointer(`/nodes/${nodeCount}/globalMatrix`, (p) => this.globalMatrix(this.part(p, 2)), () => {}, "float4x4", true);
-        this.pointer(`/nodes/${nodeCount}/mesh`, (p) => this.node(p).mesh == null ? [null] : [`/meshes/${this.node(p).mesh}`], () => {}, "ref", true);
-        this.pointer(`/nodes/${nodeCount}/children/${maxChildren}`, (p) => {
-            const childIndex = this.node(p).children?.[this.part(p, 4)];
-            return childIndex == null ? [null] : [`/nodes/${childIndex}`];
-        }, () => {}, "ref", true);
-        this.pointer(`/nodes/${nodeCount}/weights/${maxWeights}`, (p) => [this.node(p).weights[this.part(p, 4)] ?? 0], (p, v) => this.node(p).weights[this.part(p, 4)] = scalar(v), "float");
-        this.pointer(`/nodes/${nodeCount}/extensions/KHR_node_visibility/visible`, (p) => [this.node(p).visible], (p, v) => this.node(p).visible = scalar(v), "bool");
-        this.pointer(`/nodes/${nodeCount}/extensions/KHR_node_selectability/selectable`, (p) => [this.node(p).selectable], (p, v) => this.node(p).selectable = scalar(v), "bool");
-        this.pointer(`/nodes/${nodeCount}/extensions/KHR_node_hoverability/hoverable`, (p) => [this.node(p).hoverable], (p, v) => this.node(p).hoverable = scalar(v), "bool");
-
-        this.pointer(`/materials/${materialCount}/pbrMetallicRoughness/baseColorFactor`, (p) => this.material(p).baseColorFactor, (p, v) => this.material(p).baseColorFactor = v, "float4");
-        this.pointer(`/materials/${materialCount}/pbrMetallicRoughness/roughnessFactor`, (p) => [this.material(p).roughnessFactor], (p, v) => this.material(p).roughnessFactor = scalar(v), "float");
-        this.pointer(`/materials/${materialCount}/pbrMetallicRoughness/metallicFactor`, (p) => [this.material(p).metallicFactor], (p, v) => this.material(p).metallicFactor = scalar(v), "float");
-        this.pointer(`/materials/${materialCount}/alphaCutoff`, (p) => [this.material(p).alphaCutoff], (p, v) => this.material(p).alphaCutoff = scalar(v), "float");
-        this.pointer(`/materials/${materialCount}/emissiveFactor`, (p) => this.material(p).emissiveFactor, (p, v) => this.material(p).emissiveFactor = v, "float3");
-        this.pointer(`/materials/${materialCount}/normalTexture/scale`, (p) => [this.material(p).normalTextureScale], (p, v) => this.material(p).normalTextureScale = scalar(v), "float");
-        this.pointer(`/materials/${materialCount}/occlusionTexture/strength`, (p) => [this.material(p).occlusionTextureStrength], (p, v) => this.material(p).occlusionTextureStrength = scalar(v), "float");
-        this.pointer(`/materials/${materialCount}/extensions/KHR_materials_emissive_strength/emissiveStrength`, (p) => [this.material(p).emissiveStrength], (p, v) => this.material(p).emissiveStrength = scalar(v), "float");
-        this.pointer(`/materials/${materialCount}/extensions/KHR_materials_transmission/transmissionFactor`, (p) => [this.material(p).transmissionFactor], (p, v) => this.material(p).transmissionFactor = scalar(v), "float");
-        for (const texturePath of ["pbrMetallicRoughness/baseColorTexture", "pbrMetallicRoughness/metallicRoughnessTexture", "normalTexture", "occlusionTexture", "emissiveTexture"]) {
-            this.pointer(`/materials/${materialCount}/${texturePath}/extensions/KHR_texture_transform/offset`, (p) => this.textureTransform(p, texturePath).offset, (p, v) => this.textureTransform(p, texturePath).offset = v, "float2");
-            this.pointer(`/materials/${materialCount}/${texturePath}/extensions/KHR_texture_transform/scale`, (p) => this.textureTransform(p, texturePath).scale, (p, v) => this.textureTransform(p, texturePath).scale = v, "float2");
-            this.pointer(`/materials/${materialCount}/${texturePath}/extensions/KHR_texture_transform/rotation`, (p) => [this.textureTransform(p, texturePath).rotation], (p, v) => this.textureTransform(p, texturePath).rotation = scalar(v), "float");
-        }
-
-        this.pointer(`/meshes/${meshCount}/primitives/${maxPrimitiveCount}/material`, (p) => [this.mesh(p).primitives[this.part(p, 4)]?.material ?? -1], (p, v) => this.mesh(p).primitives[this.part(p, 4)].material = scalar(v), "int");
-
-        this.pointer(`/extensions/KHR_lights_punctual/lights/${lightCount}/color`, (p) => this.light(p).color, (p, v) => this.light(p).color = v, "float3");
-        this.pointer(`/extensions/KHR_lights_punctual/lights/${lightCount}/intensity`, (p) => [this.light(p).intensity], (p, v) => this.light(p).intensity = scalar(v), "float");
-        this.pointer(`/extensions/KHR_lights_punctual/lights/${lightCount}/range`, (p) => [this.light(p).range], (p, v) => this.light(p).range = scalar(v), "float");
-        this.pointer(`/extensions/KHR_lights_punctual/lights/${lightCount}/spot/innerConeAngle`, (p) => [this.light(p).spot.innerConeAngle], (p, v) => this.light(p).spot.innerConeAngle = scalar(v), "float");
-        this.pointer(`/extensions/KHR_lights_punctual/lights/${lightCount}/spot/outerConeAngle`, (p) => [this.light(p).spot.outerConeAngle], (p, v) => this.light(p).spot.outerConeAngle = scalar(v), "float");
-
-        this.pointer(`/animations/${animationCount}/extensions/KHR_interactivity/playhead`, () => [0], () => {}, "float", true);
-        this.pointer(`/animations/${animationCount}/extensions/KHR_interactivity/virtualPlayhead`, () => [0], () => {}, "float", true);
-        this.pointer(`/animations/${animationCount}/extensions/KHR_interactivity/minTime`, () => [0], () => {}, "float", true);
-        this.pointer(`/animations/${animationCount}/extensions/KHR_interactivity/maxTime`, (p) => [this.animation(p).maxTime], () => {}, "float", true);
-        this.pointer(`/animations/${animationCount}/extensions/KHR_interactivity/isPlaying`, () => [false], () => {}, "bool", true);
-    };
-
-    private pointer(path: string, getter: (path: string) => any, setter: (path: string, value: any) => void, typeName: string, readOnly = false): void {
-        this.registerJsonPointer(path, getter, setter, typeName, readOnly);
-    }
-
-    private part(pathValue: string, index: number): number {
-        return Number(pathValue.split("/")[index]);
-    }
-
-    private node(pathValue: string): any {
-        return this.world.nodes[this.part(pathValue, 2)];
-    }
-
-    private localMatrix(nodeIndex: number): number[] {
-        const node = this.world.nodes[nodeIndex];
-        if (node.matrix) {
-            return matrixWithTranslation(node.matrix, node.translation);
-        }
-        return composeTrsMatrix(node.translation, node.rotation, node.scale);
-    }
-
-    private globalMatrix(nodeIndex: number): number[] {
-        const parentIndex = this.world.parents[nodeIndex];
-        const local = this.localMatrix(nodeIndex);
-        if (parentIndex === undefined) {
-            return local;
-        }
-
-        return multiplyMatrices(this.globalMatrix(parentIndex), local);
-    }
-
-    private material(pathValue: string): any {
-        return this.world.materials[this.part(pathValue, 2)];
-    }
-
-    private mesh(pathValue: string): any {
-        return this.world.meshes[this.part(pathValue, 2)];
-    }
-
-    private animation(pathValue: string): any {
-        return this.world.animations[this.part(pathValue, 2)];
-    }
-
-    private light(pathValue: string): any {
-        return this.world.lights[this.part(pathValue, 4)];
-    }
-
-    private textureTransform(pathValue: string, texturePath: string): any {
-        const material = this.material(pathValue);
-        material.textureTransforms[texturePath] = material.textureTransforms[texturePath] ?? { offset: [0, 0], scale: [1, 1], rotation: 0 };
-        return material.textureTransforms[texturePath];
-    }
-}
-
-export function createGenericWorldFromGltf(gltf: any): any {
-    return {
-        nodes: (gltf.nodes ?? []).map((node: any) => ({
-            translation: node.translation ?? matrixTranslation(node.matrix) ?? [0, 0, 0],
-            scale: node.scale ?? [1, 1, 1],
-            rotation: node.rotation ?? [0, 0, 0, 1],
-            matrix: node.matrix,
-            mesh: node.mesh,
-            children: node.children ?? [],
-            weights: node.weights ?? [],
-            visible: node.extensions?.KHR_node_visibility?.visible ?? true,
-            selectable: node.extensions?.KHR_node_selectability?.selectable ?? true,
-            hoverable: node.extensions?.KHR_node_hoverability?.hoverable ?? true,
-        })),
-        parents: buildParentMap(gltf.nodes ?? []),
-        materials: (gltf.materials ?? []).map(createGenericMaterial),
-        meshes: (gltf.meshes ?? []).map((mesh: any) => ({ primitives: mesh.primitives ?? [] })),
-        animations: (gltf.animations ?? []).map((animation: any) => ({ maxTime: animation.samplers?.length ?? 0 })),
-        lights: (gltf.extensions?.KHR_lights_punctual?.lights ?? []).map((light: any) => ({
-            color: light.color ?? [1, 1, 1],
-            intensity: light.intensity ?? 1,
-            range: light.range ?? 0,
-            spot: {
-                innerConeAngle: light.spot?.innerConeAngle ?? 0,
-                outerConeAngle: light.spot?.outerConeAngle ?? Math.PI / 4,
-            },
-        })),
-    };
-}
-
 export async function runGraphAndWait(decorator: ADecorator, graph: any): Promise<void> {
     decorator.loadBehaveGraph(structuredCloneFallback(graph));
     const waitMs = Math.max(20, Math.ceil(getGraphSettleSeconds(graph) * 1000));
@@ -453,7 +270,7 @@ export function validateGraphLoad(assetCase: AssetCase): void {
 
     const eventBus = new TestEventBus();
     const engine = new BasicBehaveEngine(60, eventBus);
-    const decorator = new GenericTestDecorator(engine, createGenericWorldFromGltf(assetCase.gltf));
+    const decorator = new GlTFObjectModelDecorator(engine, createGlTFObjectModelFromGltf(assetCase.gltf));
     decorator.loadBehaveGraph(structuredCloneFallback(assetCase.graph), false);
     decorator.pauseEventQueue();
     decorator.clearCustomEventListeners();
@@ -540,10 +357,6 @@ function toError(error: unknown): Error {
     return error instanceof Error ? error : new Error(String(error));
 }
 
-function scalar(value: any): any {
-    return Array.isArray(value) ? value[0] : value;
-}
-
 function isNaNLike(value: unknown): boolean {
     return value === "NaN" || Number.isNaN(Number(value));
 }
@@ -556,18 +369,6 @@ function isNegativeInfinityLike(value: unknown): boolean {
     return value === "-Infinity" || Number(value) === -Infinity;
 }
 
-function matrixTranslation(matrix: number[] | undefined): number[] | undefined {
-    return matrix === undefined ? undefined : [matrix[12], matrix[13], matrix[14]];
-}
-
-function matrixWithTranslation(matrix: number[], translation: number[]): number[] {
-    const result = [...matrix];
-    result[12] = translation[0];
-    result[13] = translation[1];
-    result[14] = translation[2];
-    return result;
-}
-
 function formatTestValue(value: unknown): string {
     return JSON.stringify(value, (_key, innerValue) => {
         if (typeof innerValue === "number" && !Number.isFinite(innerValue)) {
@@ -575,84 +376,6 @@ function formatTestValue(value: unknown): string {
         }
         return innerValue;
     }) ?? "undefined";
-}
-
-function composeTrsMatrix(translation: number[], rotation: number[], scale: number[]): number[] {
-    const [x, y, z, w] = rotation;
-    const x2 = x + x;
-    const y2 = y + y;
-    const z2 = z + z;
-    const xx = x * x2;
-    const xy = x * y2;
-    const xz = x * z2;
-    const yy = y * y2;
-    const yz = y * z2;
-    const zz = z * z2;
-    const wx = w * x2;
-    const wy = w * y2;
-    const wz = w * z2;
-    const sx = scale[0];
-    const sy = scale[1];
-    const sz = scale[2];
-
-    return [
-        (1 - (yy + zz)) * sx,
-        (xy + wz) * sx,
-        (xz - wy) * sx,
-        0,
-        (xy - wz) * sy,
-        (1 - (xx + zz)) * sy,
-        (yz + wx) * sy,
-        0,
-        (xz + wy) * sz,
-        (yz - wx) * sz,
-        (1 - (xx + yy)) * sz,
-        0,
-        translation[0],
-        translation[1],
-        translation[2],
-        1,
-    ];
-}
-
-function multiplyMatrices(a: number[], b: number[]): number[] {
-    const out = new Array(16).fill(0);
-    for (let row = 0; row < 4; row++) {
-        for (let column = 0; column < 4; column++) {
-            out[column * 4 + row] =
-                a[0 * 4 + row] * b[column * 4 + 0]
-                + a[1 * 4 + row] * b[column * 4 + 1]
-                + a[2 * 4 + row] * b[column * 4 + 2]
-                + a[3 * 4 + row] * b[column * 4 + 3];
-        }
-    }
-    return out;
-}
-
-function buildParentMap(nodes: any[]): Record<number, number> {
-    const parents: Record<number, number> = {};
-    nodes.forEach((node, parentIndex) => {
-        for (const childIndex of node.children ?? []) {
-            parents[childIndex] = parentIndex;
-        }
-    });
-    return parents;
-}
-
-function createGenericMaterial(material: any): any {
-    const pbr = material.pbrMetallicRoughness ?? {};
-    return {
-        baseColorFactor: pbr.baseColorFactor ?? [1, 1, 1, 1],
-        roughnessFactor: pbr.roughnessFactor ?? 1,
-        metallicFactor: pbr.metallicFactor ?? 1,
-        alphaCutoff: material.alphaCutoff ?? 0.5,
-        emissiveFactor: material.emissiveFactor ?? [0, 0, 0],
-        normalTextureScale: material.normalTexture?.scale ?? 1,
-        occlusionTextureStrength: material.occlusionTexture?.strength ?? 1,
-        emissiveStrength: material.extensions?.KHR_materials_emissive_strength?.emissiveStrength ?? 1,
-        transmissionFactor: material.extensions?.KHR_materials_transmission?.transmissionFactor ?? 0,
-        textureTransforms: {},
-    };
 }
 
 function structuredCloneFallback<T>(value: T): T {

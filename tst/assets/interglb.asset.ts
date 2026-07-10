@@ -1,5 +1,6 @@
 import { jest } from "@jest/globals";
 import { BasicBehaveEngine } from "../../src/BasicBehaveEngine/BasicBehaveEngine";
+import { createGlTFObjectModelFromGltf, GlTFObjectModelDecorator } from "../../src/objectModel/glTFObjectModel";
 import {
     assertInterGlbPairSubTests,
     createInterGlbRunState,
@@ -8,8 +9,6 @@ import {
     shouldRunInterGlbSuite,
 } from "./interglbHarness";
 import {
-    createGenericWorldFromGltf,
-    GenericTestDecorator,
     TestEventBus,
 } from "./sampleAssetHarness";
 
@@ -24,7 +23,7 @@ describeIfEnabled("KHR_interactivity InterGlb paired assets - core engine", () =
         const eventBus = new TestEventBus();
         const engines = interGlbPairCases.map(() => new BasicBehaveEngine(60, eventBus));
         const decorators = interGlbPairCases.map((assetCase, index) => (
-            new GenericTestDecorator(engines[index], createGenericWorldFromGltf(assetCase.gltf))
+            new GlTFObjectModelDecorator(engines[index], createGlTFObjectModelFromGltf(assetCase.gltf))
         ));
 
         await runInterGlbPair(state, engines, decorators);

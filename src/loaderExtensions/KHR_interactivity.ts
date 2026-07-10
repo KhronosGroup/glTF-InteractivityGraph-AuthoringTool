@@ -12,7 +12,10 @@ export class KHR_interactivity implements IGLTFLoaderExtension {
 
     constructor(loader: GLTFLoader) {
         this._loader = loader;
-        this.enabled = this._loader.isExtensionUsed(this.name);
+        // onLoading also captures the raw glTF object model used by the authoring pickers.
+        // That snapshot is needed for every glTF, including files without KHR_interactivity.
+        // The hook is read-only when the extension is absent, so it is safe to keep enabled.
+        this.enabled = true;
     }
 
     dispose(): void {

@@ -258,7 +258,7 @@ export const AuthoringComponent = () => {
     // ids of the edges connecting that upstream hierarchy, highlighted alongside the nodes
     const [ancestorEdgeIds, setAncestorEdgeIds] = useState<Set<string>>(new Set());
 
-    const {graph, getAuthorGraph, addDeclaration, getDeclarationIndex, addNode, removeNode, allDiagnostics, graphDirty, markGraphDirty, requestPlay, setLoadingState, setDiagnosticsPaused} = useContext(InteractivityGraphContext);
+    const {graph, getAuthorGraph, addDeclaration, addNode, removeNode, allDiagnostics, graphDirty, markGraphDirty, requestPlay, setLoadingState, setDiagnosticsPaused} = useContext(InteractivityGraphContext);
     // the graph object identity we last rebuilt the canvas from; a load replaces graph identity
     // (setGraph), which is the signal to rebuild — interactive edits mutate the same object in
     // place and leave identity untouched, so they never retrigger a rebuild
@@ -566,9 +566,8 @@ export const AuthoringComponent = () => {
         };
 
         const spec = interactivityNodeSpecs.find(node => node.op === nodeType)!;
-        addDeclaration(toInteractivityDeclaration(spec));
         const interactivityNode: AuthoredNode = JSON.parse(JSON.stringify(spec));
-        interactivityNode.declaration = getDeclarationIndex(nodeType);
+        interactivityNode.declaration = addDeclaration(toInteractivityDeclaration(spec));
         interactivityNode.uid = uid;
         
         addNode(interactivityNode);

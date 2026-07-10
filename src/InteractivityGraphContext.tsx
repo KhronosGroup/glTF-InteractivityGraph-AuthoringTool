@@ -9,6 +9,7 @@ import { DiagnosticCategory, IGraphDiagnostic } from './diagnostics';
 import { FLOW_COLOR, UNKNOWN_COLOR, getColorForTypeIndex } from './authoring/socketColors';
 import { GltfObjectModel } from './authoring/gltfObjectModel';
 import { runChunked, isAbortError } from './utils/frameBudget';
+import { ensureInteractivityDeclaration } from './authoring/declarations';
 
 const edgeStyle = (color: string) => ({ stroke: color, strokeWidth: 2 });
 
@@ -65,8 +66,7 @@ interface InteractivityGraphContextType {
     // one way; the engine never reads the AuthoredGraph.
     getExecutableGraph: () => IInteractivityGraph,
     loadGraphFromJson: (json: any) => void,
-    addDeclaration: (declaration: IInteractivityDeclaration) => void,
-    getDeclarationIndex: (op: string) => number,
+    addDeclaration: (declaration: IInteractivityDeclaration) => number,
     addEvent: (event: IInteractivityEvent) => void,
     setEvents: (events: IInteractivityEvent[]) => void,
     addVariable: (variable: IInteractivityVariable) => void,
@@ -115,8 +115,7 @@ const initialContext: InteractivityGraphContextType = {
     getAuthorGraph: (graph: AuthoredGraph, options?: GetAuthorGraphOptions) => {return [[], [], [], []]},
     getExecutableGraph: () => ({ declarations: [], nodes: [], types: [], events: [], variables: [] }),
     loadGraphFromJson: () => {return null},
-    addDeclaration: () => {return null},
-    getDeclarationIndex: () => -1,
+    addDeclaration: () => -1,
     addEvent: () => {return null},
     setEvents: () => {return null},
     addVariable: () => {return null},
@@ -133,7 +132,6 @@ const initialContext: InteractivityGraphContextType = {
 export const InteractivityGraphContext = createContext<InteractivityGraphContextType>(initialContext);
 
 export const InteractivityGraphProvider = ({ children }: { children: React.ReactNode }) => {
-    const usedNodeDeclarationRef = useRef<Set<string>>(new Set());
     // The graph model is React state so a *load* (setGraph) changes its identity and the authoring
     // canvas can rebuild off that; interactive edits keep mutating this same object in place (no
     // setGraph) exactly as before, so they don't force a context re-render.
@@ -851,17 +849,8 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
     // These mutators edit the current graph object in place (matching the old ref model) and do
     // not call setGraph, so they intentionally don't trigger a context re-render — the reactflow
     // canvas already reflects these edits through its own state. Only a load replaces graph identity.
-    const addDeclaration = (declaration: IInteractivityDeclaration) => {
-        if (usedNodeDeclarationRef.current.has(declaration.op)) {
-            return;
-        }
-        graph.declarations.push(declaration);
-        usedNodeDeclarationRef.current.add(declaration.op);
-    };
-
-    const getDeclarationIndex = (op: string): number => {
-        return graph.declarations.findIndex(declaration => declaration.op === op);
-    };
+    const addDeclaration = (declaration: IInteractivityDeclaration): number =>
+        ensureInteractivityDeclaration(graph.declarations, declaration);
 
     const addEvent = (event: IInteractivityEvent) => {
         graph.events.push(event);
@@ -916,7 +905,6 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         loadGraphFromJson: loadGraphFromJson,
         getExecutableGraph: getExecutableGraph,
         addDeclaration: addDeclaration,
-        getDeclarationIndex: getDeclarationIndex,
         addEvent: addEvent,
         setEvents: setEvents,
         addVariable: addVariable,

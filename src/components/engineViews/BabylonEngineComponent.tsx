@@ -27,6 +27,7 @@ import { DOMEventBus } from "../../BasicBehaveEngine/eventBuses/DOMEventBus";
 import { attachPointerEventLogging, SendCustomEventPanel } from "../../authoring/CustomEventControls";
 import { computeExtensionDiagnostics } from "../../diagnostics";
 import { buildNormalizedTemplateSet } from "../../authoring/pointerCatalogue";
+import { selectModelGraph } from "./modelGraphSelection";
 
 enum BabylonEngineModal {
     CUSTOM_EVENT = "CUSTOM_EVENT",
@@ -274,12 +275,11 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
 
         const extractedBehaveGraph = babylonEngineRef.current.extractBehaveGraphFromScene()
         try {
-            if ((!behaveGraph.nodes || behaveGraph.nodes.length === 0 || shouldOverride) && extractedBehaveGraph) {
-                loadGraphFromJson(JSON.parse(JSON.stringify(extractedBehaveGraph)));
-                babylonEngineRef.current.loadBehaveGraph(extractedBehaveGraph);
-            } else {
-                babylonEngineRef.current.loadBehaveGraph(behaveGraph);
+            const selection = selectModelGraph(behaveGraph, extractedBehaveGraph, shouldOverride);
+            if (selection.replaceAuthoringGraph) {
+                loadGraphFromJson(JSON.parse(JSON.stringify(selection.graph)));
             }
+            babylonEngineRef.current.loadBehaveGraph(selection.graph);
         } catch (error) {
             console.warn("KHR_interactivity graph execution stopped", error);
         }
@@ -428,12 +428,9 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
             attachPointerEventLogging(babylonEngineRef.current);
 
             const extractedBehaveGraph = babylonEngineRef.current.extractBehaveGraphFromScene();
-            if (extractedBehaveGraph) {
-                loadGraphFromJson(JSON.parse(JSON.stringify(extractedBehaveGraph)));
-                babylonEngineRef.current.loadBehaveGraph(extractedBehaveGraph);
-            } else {
-                babylonEngineRef.current.loadBehaveGraph(getExecutableGraph());
-            }
+            const selection = selectModelGraph(getExecutableGraph(), extractedBehaveGraph, true);
+            loadGraphFromJson(JSON.parse(JSON.stringify(selection.graph)));
+            babylonEngineRef.current.loadBehaveGraph(selection.graph);
             clearGraphDirty();
         } catch (error) {
             console.error("Error loading model from URL:", error);

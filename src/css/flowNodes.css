@@ -45,6 +45,16 @@
     contain-intrinsic-size: auto 240px auto 200px;
 }
 
+/* In-node dropdowns normally inherit the node's paint containment. Lift it only while an overlay
+   is open so a large catalogue can render outside the node without disabling viewport culling. */
+.flow-node.flow-node--overlay-open {
+    content-visibility: visible;
+}
+
+.react-flow__node.react-flow__node--overlay-open {
+    z-index: 1000 !important;
+}
+
 /* LOD box: flat variant drawn when zoomed out past LOD_ZOOM_THRESHOLD.
     Fixed dimensions keep viewport culling measurable; handles are hidden so only this box paints.
     .flow-node--warning still applies on type mismatch. */

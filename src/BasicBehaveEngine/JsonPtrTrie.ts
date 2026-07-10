@@ -60,7 +60,6 @@ export class JsonPtrTrie {
                 }
 
                 currentNode.children.set(pathPiece, nodeToSet);
-                currentNode.isEndOfPath = false;
             }
 
             currentNode = currentNode.children.get(pathPiece)!;

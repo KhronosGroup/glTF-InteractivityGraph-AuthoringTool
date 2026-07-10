@@ -1,4 +1,4 @@
-import { CSSProperties, useCallback, useContext, useEffect, useReducer, useRef, useState } from "react";
+import { CSSProperties, useCallback, useContext, useEffect, useLayoutEffect, useReducer, useRef, useState } from "react";
 import { Handle, Position, useReactFlow, useStore, useUpdateNodeInternals } from "reactflow";
 import { OverlayTrigger, Tooltip } from "react-bootstrap";
 
@@ -117,7 +117,14 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     // LOD threshold, not on every zoom delta.
     const isLod = useStore((s) => s.transform[2] < LOD_ZOOM_THRESHOLD);
     const uid = props.data.uid;
-    const [node, setNode] = useState<AuthoredNode | null>(null);
+    // Resolve the model node for the first render. Starting at null made the first committed
+    // render contain no value handles; loadGraphFromJson could then install the saved edges while
+    // React Flow still had that empty handle set cached. This is especially visible for a
+    // config-driven pointer/get `value` output feeding animation/start or animation/stop: the
+    // connection remains in the model/tooltips but has no drawable edge.
+    const [node, setNode] = useState<AuthoredNode | null>(() =>
+        graph.nodes.find(graphNode => graphNode.uid === uid) ?? null
+    );
     // which ref input socket currently has the object picker open (null = closed)
     const [refPickerSocket, setRefPickerSocket] = useState<string | null>(null);
     // whether the node-index configuration's node picker dialog is open
@@ -218,15 +225,22 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         }
     }, [node]);
 
-    // Adding/renaming flow sockets changes the Handle ids, but reactflow caches each node's
-    // handle geometry. Refresh it so edges retargeted to the new socket id re-attach instead of
-    // detaching (see the "Couldn't create edge for source handle id" note in AuthoringComponent).
-    // isLod is in the deps because crossing the LOD threshold swaps the whole handle set (detailed
-    // per-socket handles <-> the LOD box's collapsed handles), so reactflow must re-measure or edges
-    // detach on the transition (same "Couldn't create edge for handle" hazard as socket renames).
-    useEffect(() => {
+    // Adding/renaming a socket changes the Handle ids, but reactflow caches each node's handle
+    // geometry. Refresh it so edges retargeted to the new socket id re-attach instead of detaching
+    // (see the "Couldn't create edge for source handle id" note in AuthoringComponent). This must
+    // track *every* handle-producing set: input/output flows AND input/output values — a value
+    // socket materialized/renamed after mount (e.g. output types resolved by the deferred
+    // propagation, or config-driven sockets changing on an edit) otherwise leaves reactflow with
+    // stale handleBounds and edges into that socket permanently error. isLod is here too because
+    // crossing the LOD threshold swaps the whole handle set (detailed per-socket handles <-> the LOD
+    // box's collapsed handles).
+    useLayoutEffect(() => {
         updateNodeInternals(uid);
-    }, [uid, updateNodeInternals, isLod, Object.keys(inputFlows).join(","), Object.keys(outputFlows).join(",")]);
+    }, [
+        uid, updateNodeInternals, isLod,
+        Object.keys(inputFlows).join(","), Object.keys(outputFlows).join(","),
+        Object.keys(inputValues).join(","), Object.keys(outputValues).join(","),
+    ]);
 
     const onChangeParameter = useCallback((evt: { target: { value: any; }; }) => {
         const socketId = (evt.target as HTMLInputElement).id.replace("in-", "");

@@ -14,7 +14,7 @@ import {v4 as uuidv4} from "uuid";
 import {RenderIf} from "./RenderIf";
 import {Button, Col, Container, Row, Form, OverlayTrigger, Popover, Tooltip} from "react-bootstrap";
 import 'reactflow/dist/style.css';
-import {hasNodeSpecFlag, interactivityNodeSpecs, propagateNodeGroupTypes, resolveOutputSocketType, standardTypes, toInteractivityDeclaration} from "../authoring/spec/nodes";
+import {hasNodeSpecFlag, interactivityNodeSpecs, propagateGraphGroupTypes, propagateNodeGroupTypes, resolveOutputSocketType, standardTypes, toInteractivityDeclaration} from "../authoring/spec/nodes";
 import { IInteractivityEvent, IInteractivityVariable } from '../BasicBehaveEngine/types/InteractivityGraph';
 import { AuthoredGraph, AuthoredNode, AuthoredValue, NodeSpecFlag } from '../authoring/spec/AuthoredGraph';
 import { InteractivityGraphContext, initialGraph } from '../InteractivityGraphContext';
@@ -258,7 +258,7 @@ export const AuthoringComponent = () => {
     // ids of the edges connecting that upstream hierarchy, highlighted alongside the nodes
     const [ancestorEdgeIds, setAncestorEdgeIds] = useState<Set<string>>(new Set());
 
-    const {graph, getAuthorGraph, addDeclaration, getDeclarationIndex, addNode, removeNode, allDiagnostics, graphDirty, markGraphDirty, requestPlay} = useContext(InteractivityGraphContext);
+    const {graph, getAuthorGraph, addDeclaration, getDeclarationIndex, addNode, removeNode, allDiagnostics, graphDirty, markGraphDirty, requestPlay, setLoadingState, setDiagnosticsPaused} = useContext(InteractivityGraphContext);
     // the graph object identity we last rebuilt the canvas from; a load replaces graph identity
     // (setGraph), which is the signal to rebuild — interactive edits mutate the same object in
     // place and leave identity untouched, so they never retrigger a rebuild
@@ -679,33 +679,101 @@ export const AuthoringComponent = () => {
         if (!reactFlowInstance) { return; }
         lastSyncedGraphRef.current = graph;
 
-        const result = getAuthorGraph(graph);
-        const loadedNodes: Node[] = result[0];
-        for (const node of loadedNodes) {
-            node.data.op = node.type;
-            node.data.recolorEdges = recolorEdges;
-            node.data.renameFlowSocket = renameFlowSocket;
-            const isKnownOp = interactivityNodeSpecs.some(spec => spec.op === node.data.op);
-            if (!isKnownOp) {
-                node.type = "NoOp";
+        // A newer load supersedes this rebuild: setGraph swaps identity, re-running this effect; the
+        // cleanup flips `cancelled` so the in-flight async build bails at its next checkpoint instead
+        // of interleaving batches / stale state onto the newer graph.
+        let cancelled = false;
+        const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
+        const rebuild = async () => {
+            // "Arranging": lay out nodes and build edges. Types are deferred (deferTypes) so value
+            // wires come back painted neutral gray and the expensive per-edge type resolve is skipped
+            // here — they're recolored once propagation runs below.
+            setLoadingState({ active: true, step: "Arranging", progress: 0.78 });
+            const result = getAuthorGraph(graph, { deferTypes: true });
+            const loadedNodes: Node[] = result[0];
+            const loadedEdges: Edge[] = result[1];
+            for (const node of loadedNodes) {
+                node.data.op = node.type;
+                node.data.recolorEdges = recolorEdges;
+                node.data.renameFlowSocket = renameFlowSocket;
+                const isKnownOp = interactivityNodeSpecs.some(spec => spec.op === node.data.op);
+                if (!isKnownOp) {
+                    node.type = "NoOp";
+                }
+                // seed the model with the (possibly auto-laid-out) positions immediately, so an
+                // export right after load carries them instead of waiting for a drag (the old 5s
+                // position timer used to backfill these)
+                const graphNode = graph.nodes.find(graphNode => graphNode.uid === node.id);
+                if (graphNode !== undefined) {
+                    graphNode.metadata = {positionX: node.position.x, positionY: node.position.y};
+                }
             }
-            // seed the model with the (possibly auto-laid-out) positions immediately, so an
-            // export right after load carries them instead of waiting for a drag (the old 5s
-            // position timer used to backfill these)
-            const graphNode = graph.nodes.find(graphNode => graphNode.uid === node.id);
-            if (graphNode !== undefined) {
-                graphNode.metadata = {positionX: node.position.x, positionY: node.position.y};
+
+            // "Rendering": mount nodes in frame-budgeted batches so a big graph never blocks the main
+            // thread in one reconcile. fitView (after edges) zooms out, so most batches paint cheaply.
+            // Each AuthoringGraphNode registers its own handles via updateNodeInternals on mount, so
+            // by the time all batches are in the handles exist for the edges below.
+            setLoadingState({ active: true, step: "Rendering", progress: 0.82 });
+            const NODE_BATCH = 250;
+            if (loadedNodes.length === 0) {
+                setNodes([]);
             }
-        }
-        setNodes(loadedNodes);
-        setTimeout(() => {
-            // react flow has an issue connecting handles for our custom nodes since they heavily rely on the node data
-            // "Couldn’t create edge for source/target handle id: “some-id”; edge id" I tried to fix this using useUpdateNodeInternals()
-            // to alert the AuthoringGraphNode of changes which would update the handles, it seems the hook does not work properly as advertised
-            // soI am just adding a small delay between the node handles synthesizing synchronously and the edges being created in an async event
-            setEdges(result[1]);
+            for (let i = 0; i < loadedNodes.length; i += NODE_BATCH) {
+                const batch = loadedNodes.slice(i, i + NODE_BATCH);
+                if (i === 0) {
+                    setNodes(batch);
+                } else {
+                    setNodes(prev => [...prev, ...batch]);
+                }
+                const done = Math.min(i + NODE_BATCH, loadedNodes.length) / loadedNodes.length;
+                setLoadingState({ active: true, step: "Rendering", progress: 0.82 + done * 0.08 });
+                await nextFrame();
+                if (cancelled) { return; }
+            }
+
+            // "Connecting": let React commit the nodes and reactflow synthesize their custom handles
+            // before wiring edges. Replaces the old fixed 1000ms setTimeout (a handle-race hack) with
+            // a short rAF settle — the nodes' own updateNodeInternals(uid) on mount does the actual
+            // handle registration; we just wait a couple frames for it to land.
+            setLoadingState({ active: true, step: "Connecting", progress: 0.9 });
+            await nextFrame();
+            await nextFrame();
+            if (cancelled) { return; }
+            setEdges(loadedEdges);
             reactFlowInstance?.fitView();
-        }, 1000);
+
+            // "Resolving types": now that the canvas is on-screen, run the deferred O(n²) type-group
+            // fixpoint (mutates the model in place), then recolor the gray value wires to their
+            // resolved type colors and bump node data so any detailed (zoomed-in) node repaints.
+            setLoadingState({ active: true, step: "Resolving types", progress: 0.95 });
+            await nextFrame();
+            if (cancelled) { return; }
+            propagateGraphGroupTypes(graph.nodes, true);
+            const nodeByUid = new Map<string, AuthoredNode>();
+            graph.nodes.forEach(n => { if (n.uid !== undefined) { nodeByUid.set(n.uid, n); } });
+            setEdges(eds => eds.map((edge) => {
+                const sourceNode = nodeByUid.get(edge.source);
+                if (sourceNode === undefined) { return edge; }
+                // flow wires already carry the flow color from getAuthorGraph; only value wires were
+                // painted gray and need resolving
+                if (sourceNode.flows?.output?.[edge.sourceHandle!] !== undefined) { return edge; }
+                const stroke = getColorForTypeIndex(resolveOutputSocketType(sourceNode, edge.sourceHandle!, graph.nodes));
+                if ((edge.style as any)?.stroke === stroke) { return edge; }
+                return { ...edge, style: { ...(edge.style || {}), stroke, strokeWidth: 2 } };
+            }));
+            // in-place propagation doesn't change node identity, so force every mounted node to
+            // re-read its (now resolved) socket types
+            setNodes(nds => nds.map(n => ({ ...n, data: { ...n.data } })));
+
+            // "Checking": the graph is fully built and typed — release the buffered live per-node
+            // warnings and clear the loading bar.
+            setDiagnosticsPaused(false);
+            setLoadingState(null);
+        };
+
+        rebuild();
+        return () => { cancelled = true; };
     }, [graph, reactFlowInstance]);
 
     useEffect(() => {
@@ -831,6 +899,10 @@ export const AuthoringComponent = () => {
                     nodeTypes={nodeTypes}
                     edgeTypes={edgeTypes}
                     minZoom={0.1}
+                    // Viewport culling: only mount nodes/edges intersecting the viewport (+ overscan)
+                    // so frame cost tracks the visible window, not the whole graph. Reactflow culls by
+                    // node width/height, so nodes carry explicit dimensions (see .flow-node in flowNodes.css).
+                    onlyRenderVisibleElements={true}
                     onPaneClick={handleLeftClick}
                     onPaneContextMenu={handleRightClick}
                     panOnDrag={[2]}

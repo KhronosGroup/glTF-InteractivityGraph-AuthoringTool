@@ -1,13 +1,14 @@
 import { createContext, useCallback, useMemo, useRef, useState } from 'react';
 import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityGraph, IInteractivityVariable } from './BasicBehaveEngine/types/InteractivityGraph';
 import { AuthoredGraph, AuthoredNode, AuthoredValue, NodeSpecFlag } from './authoring/spec/AuthoredGraph';
-import { createNoOpNode, hasNodeSpecFlag, interactivityNodeSpecs, propagateGraphGroupTypes, resolveOutputSocketType, standardTypes } from './authoring/spec/nodes';
+import { createNoOpNode, hasNodeSpecFlag, interactivityNodeSpecs, resolveOutputSocketType, standardTypes } from './authoring/spec/nodes';
 import { computeConfigDrivenSockets } from './authoring/socketReconciler';
 import { v4 as uuidv4 } from 'uuid';
 import { Edge, Node } from 'reactflow';
 import { DiagnosticCategory, IGraphDiagnostic } from './diagnostics';
-import { FLOW_COLOR, getColorForTypeIndex } from './authoring/socketColors';
+import { FLOW_COLOR, UNKNOWN_COLOR, getColorForTypeIndex } from './authoring/socketColors';
 import { GltfObjectModel } from './authoring/gltfObjectModel';
+import { runChunked, isAbortError } from './utils/frameBudget';
 
 const edgeStyle = (color: string) => ({ stroke: color, strokeWidth: 2 });
 
@@ -15,6 +16,24 @@ const edgeStyle = (color: string) => ({ stroke: color, strokeWidth: 2 });
 // load-time spec-validity diagnostics
 const typeIndexName = (typeIndex: number | undefined): string =>
     typeIndex === undefined ? "unknown" : (standardTypes[typeIndex]?.name ?? `type#${typeIndex}`);
+
+// Progress of an in-flight chunked graph load, surfaced to the LoadingProgressBar. `step` is the
+// current phase label (Reading graph -> Building nodes -> ... -> Checking) and `progress` is 0..1
+// within/across those phases. null when no load is running.
+export interface LoadingState {
+    active: boolean;
+    step: string;
+    progress: number;
+}
+
+export interface GetAuthorGraphOptions {
+    // When true, value edges are emitted in the neutral UNKNOWN_COLOR and resolveOutputSocketType is
+    // skipped, so a big graph can build its canvas before the (deferred) type-propagation pass runs;
+    // the wires are recolored to their resolved type colors afterwards (see AuthoringComponent). When
+    // false (default) edges resolve their real type color immediately, as on an interactive edit.
+    deferTypes?: boolean;
+}
+
 interface InteractivityGraphContextType {
     // The editor's single source of truth. Interactive edits mutate this object in place (they
     // don't trigger a context re-render — the reactflow canvas owns its own visual state); a graph
@@ -29,11 +48,18 @@ interface InteractivityGraphContextType {
     // problems introduced by editing the graph in the UI, not just ones found at load time
     allDiagnostics: IGraphDiagnostic[],
     reportNodeWarnings: (nodeUid: string, nodeIndex: number, nodeOp: string | undefined, warnings: string[]) => void,
+    // Progress of the current chunked load (null when idle). Drives the LoadingProgressBar.
+    loadingState: LoadingState | null,
+    setLoadingState: (state: LoadingState | null) => void,
+    // While true, live per-node warnings are buffered instead of committed so the hundreds of nodes
+    // mounting during a load don't each trigger a context setState. Flushed once on unpause.
+    diagnosticsPaused: boolean,
+    setDiagnosticsPaused: (paused: boolean) => void,
     gltfObjectModel: GltfObjectModel | null,
     setGltfObjectModel: (model: GltfObjectModel | null) => void,
     supportedPointerTemplates: ReadonlySet<string> | null,
     setSupportedPointerTemplates: (templates: ReadonlySet<string> | null) => void,
-    getAuthorGraph: (graph: AuthoredGraph) => [Node[], Edge[], IInteractivityEvent[], IInteractivityVariable[]],
+    getAuthorGraph: (graph: AuthoredGraph, options?: GetAuthorGraphOptions) => [Node[], Edge[], IInteractivityEvent[], IInteractivityVariable[]],
     // The single sanctioned Authoring -> Engine coupling point: projects the editor's AuthoredGraph
     // down to a runtime IInteractivityGraph (topologically sorted) for BasicBehaveEngine. Data flows
     // one way; the engine never reads the AuthoredGraph.
@@ -78,11 +104,15 @@ const initialContext: InteractivityGraphContextType = {
     clearDiagnostics: () => {return null},
     allDiagnostics: [],
     reportNodeWarnings: () => {return null},
+    loadingState: null,
+    setLoadingState: () => {return null},
+    diagnosticsPaused: false,
+    setDiagnosticsPaused: () => {return null},
     gltfObjectModel: null,
     setGltfObjectModel: () => {return null},
     supportedPointerTemplates: null,
     setSupportedPointerTemplates: () => {return null},
-    getAuthorGraph: (graph: AuthoredGraph) => {return [[], [], [], []]},
+    getAuthorGraph: (graph: AuthoredGraph, options?: GetAuthorGraphOptions) => {return [[], [], [], []]},
     getExecutableGraph: () => ({ declarations: [], nodes: [], types: [], events: [], variables: [] }),
     loadGraphFromJson: () => {return null},
     addDeclaration: () => {return null},
@@ -144,24 +174,54 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
     // reportNodeWarnings below and its call site in AuthoringGraphNode
     const [nodeWarnings, setNodeWarnings] = useState<Record<string, IGraphDiagnostic[]>>({});
 
+    // Loading progress + diagnostics pause. The pause is mirrored into a ref so the stable
+    // reportNodeWarnings callback can read the current value without being recreated. While paused,
+    // node warnings accumulate in pendingNodeWarningsRef (null value = "clear this uid") and are
+    // committed in one setState when setDiagnosticsPaused(false) flushes them.
+    const [loadingState, setLoadingState] = useState<LoadingState | null>(null);
+    const [diagnosticsPaused, setDiagnosticsPausedState] = useState(false);
+    const diagnosticsPausedRef = useRef(false);
+    const pendingNodeWarningsRef = useRef<Map<string, IGraphDiagnostic[] | null>>(new Map());
+
     const reportNodeWarnings = useCallback((nodeUid: string, nodeIndex: number, nodeOp: string | undefined, warnings: string[]) => {
+        const diags: IGraphDiagnostic[] | null = warnings.length === 0
+            ? null
+            : warnings.map((title) => ({ severity: 'warning', category: 'node', nodeUid, nodeIndex, nodeOp, title }));
+        if (diagnosticsPausedRef.current) {
+            pendingNodeWarningsRef.current.set(nodeUid, diags);
+            return;
+        }
         setNodeWarnings(prev => {
             const existing = prev[nodeUid];
-            if (warnings.length === 0) {
+            if (diags === null) {
                 if (existing === undefined) { return prev; }
                 const next = { ...prev };
                 delete next[nodeUid];
                 return next;
             }
             // bail out if unchanged so this doesn't retrigger a render loop every frame
-            if (existing !== undefined && existing.length === warnings.length && existing.every((d, i) => d.title === warnings[i])) {
+            if (existing !== undefined && existing.length === diags.length && existing.every((d, i) => d.title === diags[i].title)) {
                 return prev;
             }
-            return {
-                ...prev,
-                [nodeUid]: warnings.map((title) => ({ severity: 'warning', category: 'node', nodeUid, nodeIndex, nodeOp, title })),
-            };
+            return { ...prev, [nodeUid]: diags };
         });
+    }, []);
+
+    const setDiagnosticsPaused = useCallback((paused: boolean) => {
+        diagnosticsPausedRef.current = paused;
+        setDiagnosticsPausedState(paused);
+        if (!paused && pendingNodeWarningsRef.current.size > 0) {
+            const pending = pendingNodeWarningsRef.current;
+            pendingNodeWarningsRef.current = new Map();
+            setNodeWarnings(prev => {
+                const next = { ...prev };
+                pending.forEach((diags, uid) => {
+                    if (diags === null) { delete next[uid]; }
+                    else { next[uid] = diags; }
+                });
+                return next;
+            });
+        }
     }, []);
 
     const allDiagnostics = useMemo(
@@ -172,12 +232,18 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
     const [gltfObjectModel, setGltfObjectModel] = useState<GltfObjectModel | null>(null);
     const [supportedPointerTemplates, setSupportedPointerTemplates] = useState<ReadonlySet<string> | null>(null);
 
-    const getAuthorGraph = (graph: AuthoredGraph): [Node[], Edge[], IInteractivityEvent[], IInteractivityVariable[]] => {
+    const getAuthorGraph = (graph: AuthoredGraph, options: GetAuthorGraphOptions = {}): [Node[], Edge[], IInteractivityEvent[], IInteractivityVariable[]] => {
+        const { deferTypes = false } = options;
         const nodes: Node[] = [];
         const edges: Edge[] = [];
         const events: IInteractivityEvent[] = graph.events;
         const variables: IInteractivityVariable[] = graph.variables;
-      
+
+        // uid -> model node, built once so the per-edge source lookup below (and the layout BFS) is
+        // O(1) instead of an O(n) graph.nodes.find per edge (was O(n*e) on load of a big graph)
+        const nodeByUid = new Map<string, AuthoredNode>();
+        graph.nodes.forEach((n) => { if (n.uid !== undefined) { nodeByUid.set(n.uid, n); } });
+
         // loop through all the nodes in our behave graph to extract nodes and edges
         graph.nodes.forEach((interactivityNode: AuthoredNode) => {
           // construct and add the node to the nodes list
@@ -217,16 +283,20 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
             for (const [key, value] of Object.entries(interactivityNode.values.input || {})) {
               if (value.node !== undefined) {
                 // if the value is derived from the output of another node, create an edge linking to that node
-                // color the edge by the source output socket's data type
-                const sourceNode = graph.nodes.find(n => n.uid === value.node);
-                const sourceType = resolveOutputSocketType(sourceNode, value.socket!, graph.nodes);
+                // color the edge by the source output socket's data type - unless types are deferred
+                // (chunked load), in which case skip the resolve and paint neutral gray for now
+                let edgeColor = UNKNOWN_COLOR;
+                if (!deferTypes) {
+                  const sourceNode = nodeByUid.get(String(value.node));
+                  edgeColor = getColorForTypeIndex(resolveOutputSocketType(sourceNode, value.socket!, graph.nodes));
+                }
                 edges.push({
                   id: uuidv4(),
                   source: String(value.node),
                   sourceHandle: value.socket,
                   target: String(interactivityNode.uid!),
                   targetHandle: key,
-                  style: edgeStyle(getColorForTypeIndex(sourceType)),
+                  style: edgeStyle(edgeColor),
                 });
                 node.data.linked[key] = true;
               } else if (value.value !== undefined) {
@@ -256,6 +326,14 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
       
         // set up structure for nodes if one does not exist
         if (!nodes.some(node => node.position.y !== 0 || node.position.x !== 0)) {
+          // Precompute O(1) lookups reused across the layout below: reactflow node by id, outgoing
+          // edges per source, and the set of nodes that are some edge's target (i.e. non-roots).
+          // Replaces the per-iteration nodes.find / edges.filter / edges.some that made the BFS
+          // O(n*e) on a big graph.
+          const nodeById = new Map<string, Node>();
+          nodes.forEach((node) => nodeById.set(node.id, node));
+          const outEdgesBySource = new Map<string, string[]>();
+          const targetIds = new Set<string>();
           // Build adjacency list
           const adjacencyList: Record<string, string[]> = {};
           edges.forEach((edge) => {
@@ -268,6 +346,8 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
             }
             adjacencyList[source].push(target);
             adjacencyList[target].push(source);
+            (outEdgesBySource.get(source) ?? outEdgesBySource.set(source, []).get(source)!).push(target);
+            targetIds.add(target);
           });
       
           const visited: Record<string, boolean> = {};
@@ -304,14 +384,12 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
             let layerYAdditive = 0;
             let lastMaxY = 0;
       
-            console.log("DISJOINT GRAPHS");
-            console.log(disjointGraphs);
-            disjointGraphs.forEach((disjointGraph) => {  
+            disjointGraphs.forEach((disjointGraph) => {
               // Each layer is a vertical column of a disjoint graph. Since we start at the leftmost column where x = -500 (starting point).
-              let lastLayer: string[] = disjointGraph.filter(nodeId => !edges.some(edge => edge.target === nodeId));
+              let lastLayer: string[] = disjointGraph.filter(nodeId => !targetIds.has(nodeId));
               let y = 0;
               for (let i = 0; i < lastLayer.length; i++) {
-                const node = nodes.find(node => node.id === lastLayer[i])!;
+                const node = nodeById.get(lastLayer[i])!;
                 node.position.x = -500;
                 y = 500 * i + layerYAdditive;
                 node.position.y = y;
@@ -319,19 +397,18 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
                   lastMaxY = y;
                 }
               }
-      
+
               let nextLayer: string[] = [];
               for (const nodeId of lastLayer) {
-                const nodeOutEdges: Edge[] = edges.filter(edge => edge.source === nodeId);
-                nextLayer.push(...nodeOutEdges.map(edge => edge.target));
+                nextLayer.push(...(outEdgesBySource.get(nodeId) ?? []));
               }
               nextLayer = [...new Set(nextLayer)];
-      
+
               let xOffset = 0;
               while (nextLayer.length > 0) {
                 lastLayer = nextLayer;
                 for (let i = 0; i < lastLayer.length; i++) {
-                  const node = nodes.find(node => node.id === lastLayer[i])!;
+                  const node = nodeById.get(lastLayer[i])!;
                   node.position.x = xOffset;
                   y = 500 * i + layerYAdditive;
                   node.position.y = y;
@@ -339,11 +416,10 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
                     lastMaxY = y;
                   }
                 }
-      
+
                 nextLayer = [];
                 for (const nodeId of lastLayer) {
-                  const nodeOutEdges: Edge[] = edges.filter(edge => edge.source === nodeId);
-                  nextLayer.push(...nodeOutEdges.map(edge => edge.target));
+                  nextLayer.push(...(outEdgesBySource.get(nodeId) ?? []));
                 }
                 nextLayer = [...new Set(nextLayer)];
                 xOffset += 500;
@@ -379,7 +455,19 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
       }
       return type.signature;
     }
-    const loadGraphFromJson = (json: any) => {
+    // Cancellation token for the in-flight chunked load. A second load flips the previous token's
+    // `current` to true so runChunked bails at its next item boundary, then installs a fresh token —
+    // this stops two loads from interleaving their batches onto the same graph.
+    const loadCancelRef = useRef<{ current: boolean } | null>(null);
+
+    const loadGraphFromJson = async (json: any) => {
+        if (loadCancelRef.current) { loadCancelRef.current.current = true; }
+        const cancelled = { current: false };
+        loadCancelRef.current = cancelled;
+
+        setDiagnosticsPaused(true);
+        setLoadingState({ active: true, step: "Reading graph", progress: 0 });
+
         const newGraph: AuthoredGraph = {
             declarations: json.declarations,
             nodes: [],
@@ -397,13 +485,14 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
                 }
             }
         }
+        // collected now, committed together in the final "Checking" phase (below) so diagnostics
+        // don't flicker in mid-load while nodes are still mounting
         const typeDiagnostics: IGraphDiagnostic[] = [...unsupportedTypes].map((label) => ({
             severity: 'warning',
             category: 'type',
             title: `Unsupported data type: ${label}`,
             detail: `This graph declares the data type "${label}", which this tool does not recognise. Values using it may not display or execute correctly.`,
         }));
-        setDiagnosticsForCategory('type', typeDiagnostics);
 
         // translate the types to be the standard types
         for (const declaration of newGraph.declarations) {
@@ -435,7 +524,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
 
 
         const loadedNodes: AuthoredNode[] = [];
-        const uuids = [];
+        const uuids: string[] = [];
         // track unsupported node operations (op -> number of nodes using it) so we can surface them
         const unsupportedOps = new Map<string, number>();
         // per-node spec-validity diagnostics (unknown socket names / socket type mismatches
@@ -445,8 +534,10 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         for (let i = 0; i < json.nodes.length; i++) {
             uuids.push(uuidv4());
         }
-        for (let i = 0; i < json.nodes.length; i++) {
-            const node = json.nodes[i];
+        try {
+        // "Reading graph": instantiate each node from its spec template, frame-budgeted so a big
+        // graph doesn't block the main thread in one pass. Progress drives the loading bar.
+        await runChunked(json.nodes, (node: any, i: number) => {
             const declaration = json.declarations?.[node.declaration];
             if (declaration === undefined) {
                 // malformed/hand-edited file: node.declaration doesn't index a real declaration -
@@ -456,7 +547,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
                     title: 'Invalid declaration reference',
                     detail: `Node ${i} references declaration index ${node.declaration}, which does not exist in this file's declarations array. This node was skipped.`,
                 });
-                continue;
+                return;
             }
             const nodeOp = declaration.op;
             let isNoOp = false;
@@ -467,7 +558,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
                 unsupportedOps.set(nodeOp, (unsupportedOps.get(nodeOp) ?? 0) + 1);
             }
             
-            const copyOfTemplateNode: AuthoredNode = JSON.parse(JSON.stringify(templateNode));
+            const copyOfTemplateNode: AuthoredNode = structuredClone(templateNode);
 
             copyOfTemplateNode.uid = uuids[i];
             copyOfTemplateNode.declaration = node.declaration;
@@ -547,19 +638,20 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
             }
 
             loadedNodes.push(copyOfTemplateNode);
-        }
+        }, { cancelled, onProgress: (p) => setLoadingState({ active: true, step: "Reading graph", progress: p * 0.45 }) });
 
         newGraph.nodes = loadedNodes;
 
-        // Config-driven output sockets (pointer/get's `value`, variable/get's `value`, ...) are spec
-        // defaulted to `bool` (type 0) and only get their real type from `configuration` via the
-        // reconciler, which normally runs per-node when its AuthoringGraphNode mounts - too late for
-        // the group-type propagation below, which runs synchronously right here and would otherwise
-        // resolve a downstream type-group (e.g. math/matMul's `a`/`b`/`value`) against that bool
-        // placeholder instead of the pointer/variable's actual type. Resolve these first so
+        // "Building nodes": Config-driven output sockets (pointer/get's `value`, variable/get's
+        // `value`, ...) are spec defaulted to `bool` (type 0) and only get their real type from
+        // `configuration` via the reconciler, which normally runs per-node when its AuthoringGraphNode
+        // mounts - too late for the group-type propagation below, which would otherwise resolve a
+        // downstream type-group (e.g. math/matMul's `a`/`b`/`value`) against that bool placeholder
+        // instead of the pointer/variable's actual type. Resolve these first so
         // propagateGraphGroupTypes below sees the real types.
-        for (const loadedNode of loadedNodes) {
-            if (loadedNode.configuration === undefined) { continue; }
+        setLoadingState({ active: true, step: "Building nodes", progress: 0.45 });
+        await runChunked(loadedNodes, (loadedNode) => {
+            if (loadedNode.configuration === undefined) { return; }
             const generated = computeConfigDrivenSockets(loadedNode.configuration, loadedNode.values?.input ?? {}, {
                 nodeType: loadedNode.op,
                 events: newGraph.events ?? {},
@@ -570,19 +662,16 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
                 loadedNode.values.output = loadedNode.values.output ?? {};
                 loadedNode.values.output[key] = value;
             }
-        }
+        }, { cancelled, onProgress: (p) => setLoadingState({ active: true, step: "Building nodes", progress: 0.45 + p * 0.25 }) });
 
-        // The loader fills input sockets straight from the file and leaves outputs (and any input the
-        // file omitted) at the spec default, so grouped sockets — e.g. a math node's `a`/`b`/output
-        // sharing type `T` — can be left inconsistent (output/omitted input stuck at the default
-        // `int` while the group actually resolves to `float`). The interactive connect / type paths
-        // keep these in sync as the user edits, but nothing runs on load; do it explicitly here so
-        // stored types match the resolved type (no spurious type-group warnings, correct exports).
-        // preferConnections: at load a wired input's source type must beat an unconnected sibling's
-        // spec-default placeholder, so a whole grouped chain resolves consistently instead of leaking
-        // a default `int` downstream (see propagateGraphGroupTypes / resolveTypeGroupType).
-        propagateGraphGroupTypes(newGraph.nodes, true);
-
+        // "Checking": commit the load-time diagnostics that don't depend on type propagation
+        // (unsupported data types / node ops, per-node spec validity). These are safe to show as
+        // soon as the model is built. The O(n²) type-group *propagation* — and the live per-node
+        // warnings that depend on it — are deferred to the canvas rebuild (AuthoringComponent), which
+        // runs the fixpoint after the graph is on-screen, recolors the (initially gray) value wires,
+        // then unpauses live diagnostics and clears the loading bar. So diagnosticsPaused stays true
+        // here; the graph-identity swap below hands those final phases to the component.
+        setLoadingState({ active: true, step: "Checking", progress: 0.72 });
         // surface any node operations this tool does not implement (loaded as inert NoOp nodes)
         const opDiagnostics: IGraphDiagnostic[] = [...unsupportedOps.entries()].map(([op, count]) => ({
             severity: 'warning',
@@ -590,14 +679,23 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
             title: `Unsupported node operation: ${op}`,
             detail: `${count} node${count > 1 ? 's' : ''} in this graph use "${op}", which this tool does not implement. ${count > 1 ? 'They are' : 'It is'} shown as a NoOp node and will not execute.`,
         }));
+        setDiagnosticsForCategory('type', typeDiagnostics);
         setDiagnosticsForCategory('operation', opDiagnostics);
         setDiagnosticsForCategory('node', nodeDiagnostics);
 
-        // replace the graph's identity: this is the single load signal the authoring canvas
-        // watches to rebuild itself (see the sync effect in AuthoringComponent)
+        // hand off to the canvas: replace the graph's identity — the single load signal the authoring
+        // canvas watches to rebuild itself (see the rebuild effect in AuthoringComponent), which owns
+        // the remaining "Arranging → Rendering → Connecting → Resolving types → Checking" phases and
+        // clears the loading bar / unpauses diagnostics when done.
+        setLoadingState({ active: true, step: "Arranging", progress: 0.75 });
         setGraph(newGraph);
         // a fresh load has nothing un-synced yet relative to itself
         clearGraphDirty();
+        } catch (e) {
+            // a superseding load cancelled this one - leave its state alone for the new load to own
+            if (isAbortError(e)) { return; }
+            throw e;
+        }
     }
 
 
@@ -806,6 +904,10 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         clearDiagnostics: clearDiagnostics,
         allDiagnostics: allDiagnostics,
         reportNodeWarnings: reportNodeWarnings,
+        loadingState: loadingState,
+        setLoadingState: setLoadingState,
+        diagnosticsPaused: diagnosticsPaused,
+        setDiagnosticsPaused: setDiagnosticsPaused,
         gltfObjectModel: gltfObjectModel,
         setGltfObjectModel: setGltfObjectModel,
         supportedPointerTemplates: supportedPointerTemplates,

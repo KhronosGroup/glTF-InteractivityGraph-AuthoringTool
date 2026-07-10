@@ -1,3 +1,35 @@
+/* ---- top-edge graph loading progress bar (LoadingProgressBar) ---- */
+
+.graph-loading-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    z-index: 2000;
+    background: rgba(177, 140, 217, 0.15);
+    pointer-events: none;
+}
+
+.graph-loading-bar__fill {
+    height: 100%;
+    background: #b18cd9;
+    transition: width 120ms linear;
+    box-shadow: 0 0 6px rgba(177, 140, 217, 0.8);
+}
+
+.graph-loading-bar__label {
+    position: absolute;
+    top: 6px;
+    right: 10px;
+    font-size: 11px;
+    color: #6b4f8a;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: rgba(255, 255, 255, 0.85);
+    padding: 1px 6px;
+    border-radius: 6px;
+}
+
 .flow-node {
     border: 1px solid #000000;
 
@@ -5,6 +37,41 @@
     background: white;
     min-width: 240px;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+     /* Render containment: skip layout/paint for off-screen mounted nodes.
+         contain-intrinsic-size provides a stable approximate box while content is not rendered.
+         Header tooltips portal out of the node, so paint containment does not clip them. */
+    content-visibility: auto;
+    contain-intrinsic-size: auto 240px auto 200px;
+}
+
+/* LOD box: flat variant drawn when zoomed out past LOD_ZOOM_THRESHOLD.
+    Fixed dimensions keep viewport culling measurable; handles are hidden so only this box paints.
+    .flow-node--warning still applies on type mismatch. */
+.flow-node--lod {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: 240px;
+    min-height: 120px;
+    padding: 10px 14px;
+    color: #ffffff;
+}
+
+.flow-node-lod-label {
+    font-size: 20px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.2;
+    word-break: break-word;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* handles must exist so existing edges stay valid, but carry no visual weight in the box */
+.flow-node-lod-handle {
+    opacity: 0;
+    pointer-events: none;
 }
 
 /* ---- top menu bar (replaces the old top-right stacked button panel) ---- */

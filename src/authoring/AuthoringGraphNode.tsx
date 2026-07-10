@@ -1,5 +1,5 @@
 import { CSSProperties, useCallback, useContext, useEffect, useReducer, useRef, useState } from "react";
-import { Handle, Position, useReactFlow, useUpdateNodeInternals } from "reactflow";
+import { Handle, Position, useReactFlow, useStore, useUpdateNodeInternals } from "reactflow";
 import { OverlayTrigger, Tooltip } from "react-bootstrap";
 
 import { RenderIf } from "../components/RenderIf";
@@ -57,6 +57,10 @@ const handleStyle = (color: string, side: "left" | "right", top: number | undefi
     ...(top !== undefined ? { top } : {}),
 });
 
+// Below this canvas zoom, render a flat category-colored box instead of the full
+// socket/editor UI. Shared so every consumer reacts to the same threshold crossing.
+export const LOD_ZOOM_THRESHOLD = 0.35;
+
 export interface IAuthoringGraphNodeProps {
     data: any
     dragging?: boolean
@@ -109,6 +113,9 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     const { graph, gltfObjectModel, diagnostics, reportNodeWarnings, markGraphDirty } = useContext(InteractivityGraphContext);
     const updateNodeInternals = useUpdateNodeInternals();
     const { deleteElements } = useReactFlow();
+    // Select a boolean from zoom so this node re-renders only when it crosses the
+    // LOD threshold, not on every zoom delta.
+    const isLod = useStore((s) => s.transform[2] < LOD_ZOOM_THRESHOLD);
     const uid = props.data.uid;
     const [node, setNode] = useState<AuthoredNode | null>(null);
     // which ref input socket currently has the object picker open (null = closed)
@@ -214,9 +221,12 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     // Adding/renaming flow sockets changes the Handle ids, but reactflow caches each node's
     // handle geometry. Refresh it so edges retargeted to the new socket id re-attach instead of
     // detaching (see the "Couldn't create edge for source handle id" note in AuthoringComponent).
+    // isLod is in the deps because crossing the LOD threshold swaps the whole handle set (detailed
+    // per-socket handles <-> the LOD box's collapsed handles), so reactflow must re-measure or edges
+    // detach on the transition (same "Couldn't create edge for handle" hazard as socket renames).
     useEffect(() => {
         updateNodeInternals(uid);
-    }, [uid, updateNodeInternals, Object.keys(inputFlows).join(","), Object.keys(outputFlows).join(",")]);
+    }, [uid, updateNodeInternals, isLod, Object.keys(inputFlows).join(","), Object.keys(outputFlows).join(",")]);
 
     const onChangeParameter = useCallback((evt: { target: { value: any; }; }) => {
         const socketId = (evt.target as HTMLInputElement).id.replace("in-", "");
@@ -774,7 +784,43 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         return () => reportNodeWarnings(uid, nodeIndex, node?.op, []);
     }, [uid]);
 
-    const headerTooltipSections: NodeTooltipSections = {
+    // LOD early-return: when zoomed out, render a flat box and skip heavy per-node UI.
+    // Keep invisible handles for all socket ids so existing edges remain valid.
+    // typeMismatchLines is already computed, so warning styling still applies.
+    if (isLod) {
+        // handle ids must match the detailed render exactly (see the socket JSX further below):
+        // targets = input flows + input values (+ the NoOp "in" flow); sources = output flows + values
+        const targetHandleIds = [
+            ...Object.keys(inputFlows),
+            ...Object.keys(inputValues),
+            ...(isNoOp ? ["in"] : []),
+        ];
+        const sourceHandleIds = [
+            ...Object.keys(outputFlows),
+            ...Object.keys(outputValues),
+        ];
+        return (
+            <div
+                className={`flow-node flow-node--lod${typeMismatchLines.length > 0 ? " flow-node--warning" : ""}`}
+                style={{ background: getNodeCategoryColor(node?.op || "") }}
+                title={node?.op}
+            >
+                <span className={"flow-node-lod-label"}>{node?.op}</span>
+                {targetHandleIds.map((id) => (
+                    <Handle key={`lod-t-${id}`} type="target" position={Position.Left} id={id} className={"flow-node-lod-handle"} />
+                ))}
+                {sourceHandleIds.map((id) => (
+                    <Handle key={`lod-s-${id}`} type="source" position={Position.Right} id={id} className={"flow-node-lod-handle"} />
+                ))}
+            </div>
+        );
+    }
+
+    // built lazily - the connected-index lookups below (findFlowSourceIndices / nodeIndexForUid /
+    // findValueConsumerIndices) each reverse-scan the whole graph, so running them for every node on
+    // every render is O(N²) per pass. The function overlay on OverlayTrigger only invokes this while
+    // the tooltip is actually shown, so the scans run on hover, not for every node every render.
+    const buildHeaderTooltipSections = (): NodeTooltipSections => ({
         nodeIndex,
         description: node?.description,
         warnings: typeMismatchLines,
@@ -795,7 +841,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
             description: value.description,
             connectedNodeIndices: findValueConsumerIndices(socket),
         })),
-    };
+    });
 
     const headerContent = (
         <div className={"flow-node-header"} style={{ background: getNodeCategoryColor(node?.op || "") }}>
@@ -825,11 +871,11 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                 <OverlayTrigger
                     placement="bottom"
                     delay={{ show: 300, hide: 0 }}
-                    overlay={
-                        <Tooltip id={`node-header-tooltip-${uid}`} className="node-info-tooltip">
-                            <NodeInfoTooltip sections={headerTooltipSections} />
+                    overlay={(p) => (
+                        <Tooltip {...p} id={`node-header-tooltip-${uid}`} className="node-info-tooltip">
+                            <NodeInfoTooltip sections={buildHeaderTooltipSections()} />
                         </Tooltip>
-                    }
+                    )}
                 >
                     {headerContent}
                 </OverlayTrigger>

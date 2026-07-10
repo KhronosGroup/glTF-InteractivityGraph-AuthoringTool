@@ -13,6 +13,13 @@ export const FLOW_COLOR = "#b18cd9";
 /** Fallback for unknown / custom types. */
 export const DEFAULT_SOCKET_COLOR = "#868484";
 
+/**
+ * Neutral gray for sockets/wires whose type has not been resolved yet. During a chunked load the
+ * type-propagation pass is deferred until after the canvas is on-screen, so edges paint in this color
+ * first and are recolored to their resolved type color once "Resolving types" completes.
+ */
+export const UNKNOWN_COLOR = "#5c5c5c";
+
 export const TYPE_COLORS: Record<string, string> = {
     [InteractivityValueType.BOOLEAN]: "#d05c65", // red
     [InteractivityValueType.INT]: "#4e9a51",     // green

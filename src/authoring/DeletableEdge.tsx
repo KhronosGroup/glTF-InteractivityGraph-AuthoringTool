@@ -13,6 +13,10 @@ import {
 const BUTTON_INSET_PX = 40;
 const REVEAL_RADIUS_PX = 80;
 
+// Above this many registered anchors, the per-rAF O(E) cursor scan is too expensive,
+// so hover-reveal is disabled instead of scanning every mousemove.
+const HOVER_REVEAL_MAX_EDGES = 600;
+
 type EdgeEnd = "source" | "target";
 type Point = {x: number; y: number};
 type Anchors = Record<EdgeEnd, Point>;
@@ -48,6 +52,11 @@ const updateNearest = () => {
         publishNearest(null, null);
         return;
     }
+    // Hard cap: in very dense views, skip reveal instead of scanning thousands of anchors every rAF.
+    if (anchorRegistry.size > HOVER_REVEAL_MAX_EDGES) {
+        publishNearest(null, null);
+        return;
+    }
     const bounds = domNode.getBoundingClientRect();
     const [tx, ty, zoom] = state.transform;
     const cursorX = (event.clientX - bounds.left - tx) / zoom;
@@ -57,7 +66,13 @@ const updateNearest = () => {
     let bestDist = REVEAL_RADIUS_PX / zoom;
     anchorRegistry.forEach((anchors, id) => {
         for (const end of ["source", "target"] as EdgeEnd[]) {
-            const dist = Math.hypot(anchors[end].x - cursorX, anchors[end].y - cursorY);
+            const a = anchors[end];
+            const dx = a.x - cursorX;
+            const dy = a.y - cursorY;
+            // Cheap bounding-box reject before sqrt: if either axis exceeds bestDist,
+            // this anchor cannot beat the current best.
+            if (Math.abs(dx) > bestDist || Math.abs(dy) > bestDist) { continue; }
+            const dist = Math.hypot(dx, dy);
             if (dist <= bestDist) {
                 bestDist = dist;
                 bestId = id;

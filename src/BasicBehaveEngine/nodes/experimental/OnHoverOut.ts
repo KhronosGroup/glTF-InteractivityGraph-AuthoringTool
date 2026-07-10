@@ -1,38 +1,40 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class OnHoverOut extends BehaveEngineNode {
-    REQUIRED_CONFIGURATIONS = {stopPropagation: {defaultValue: [false]}, nodeIndex: {defaultValue: [-1]}}
+    REQUIRED_CONFIGURATIONS = {nodeIndex: {defaultValue: [-1]}}
     _nodeIndex: number;
-    _stopPropagation: boolean;
     constructor(props: IBehaviourNodeProps) {
         super(props);
         this.name = 'OnHoverOut';
         this.validateValues(this.values);
         this.validateConfigurations(this.configuration);
 
-        const {nodeIndex, stopPropagation} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
+        const {nodeIndex} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
         this._nodeIndex = Number(nodeIndex[0]);
-        this._stopPropagation = stopPropagation[0];
 
-        this.outValues.hoverNodeIndex = {
-            type: this.getTypeIndex('int'),
-            value: [-1],
+        this.outValues.hoveredNode = {
+            type: this.getTypeIndex('ref'),
+            value: [null],
         };
         this.outValues.controllerIndex = {
             type: this.getTypeIndex('int'),
             value: [-1],
+        };
+        this.outValues.event = {
+            type: this.getTypeIndex('ref'),
+            value: [this._nodeIndex],
         };
 
         this.setUpOnHoverOut();
     }
 
     setUpOnHoverOut() {
-        const callback = (selectedNodeIndex: number | undefined, controllerIndex: number, firstCommonHoverNodeIndex: number | undefined) => {
+        const callback = (selectedNodeRef: unknown, controllerIndex: number, firstCommonHoverNodeIndex: number | undefined) => {
             const hoverInformation = this.graphEngine.hoverableNodesIndices.get(this._nodeIndex);
             if (hoverInformation) {
-                this.outValues.hoverNodeIndex = {
-                    type: this.getTypeIndex('int'),
-                    value: [selectedNodeIndex ?? -1],
+                this.outValues.hoveredNode = {
+                    type: this.getTypeIndex('ref'),
+                    value: [selectedNodeRef ?? null],
                 };
                 this.outValues.controllerIndex = {
                     type: this.getTypeIndex('int'),
@@ -42,10 +44,12 @@ export class OnHoverOut extends BehaveEngineNode {
                 this.addEventToWorkQueue(this.flows.out);
             }
 
-            if (!this._stopPropagation) {
-                const parentNodeIndex = this.graphEngine.getParentNodeIndex(this._nodeIndex);
-                this.graphEngine.alertOnHoverOut(selectedNodeIndex, controllerIndex, parentNodeIndex, firstCommonHoverNodeIndex);
-            }
+            this.graphEngine.queueFunctionCall(() => {
+                if (!this.graphEngine.propagationCancelled.has(this._nodeIndex)) {
+                    const parentNodeIndex = this.graphEngine.getParentNodeIndex(this._nodeIndex);
+                    this.graphEngine.alertOnHoverOut(selectedNodeRef, controllerIndex, parentNodeIndex, firstCommonHoverNodeIndex);
+                }
+            });
         }
         const hoverInformation = this.graphEngine.hoverableNodesIndices.get(this._nodeIndex);
         if (hoverInformation) {

@@ -21,6 +21,7 @@ import {VariableSet} from "./nodes/variable/VariableSet";
 import {AbsoluteValue} from "./nodes/math/arithmetic/AbsoluteValue";
 import {Euler} from "./nodes/math/constants/Euler";
 import {Pi} from "./nodes/math/constants/Pi";
+import {Tau} from "./nodes/math/constants/Tau";
 import {Sign} from "./nodes/math/arithmetic/Sign";
 import {Truncate} from "./nodes/math/arithmetic/Truncate";
 import {Floor} from "./nodes/math/arithmetic/Floor";
@@ -123,6 +124,12 @@ import { cubicBezier, linearFloat, slerpFloat4 } from "./easingUtils";
 import { Determinant } from "./nodes/math/matrix/Determinant";
 import { Transform } from "./nodes/math/vector/Transform";
 import { Transpose } from "./nodes/math/matrix/Transpose";
+import { RefEquality } from "./nodes/ref/RefEquality";
+import { EventStopPropagation } from "./nodes/event/StopPropagation";
+import { SmoothStep } from "./nodes/math/arithmetic/SmoothStep";
+import { Slerp } from "./nodes/math/vector/Slerp";
+import { RgbToOkLCh } from "./nodes/math/color/RgbToOkLCh";
+import { RgbFromOkLCh } from "./nodes/math/color/RgbFromOkLCh";
 
 
 export class BasicBehaveEngine implements IBehaveEngine {
@@ -144,10 +151,10 @@ export class BasicBehaveEngine implements IBehaveEngine {
     private valueEvaluationCache: Map<string, IInteractivityValue>;
     private _timerID: NodeJS.Timeout | null;
     public hoverableNodesIndices: Map<number, IHoverInformation>;
-    public selectableNodesIndices: Map<number, (selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) => void>;
+    public selectableNodesIndices: Map<number, (selectedNodeRef: any, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) => void>;
     public lastHoveredNodeIndices: Map<number, number | undefined>;
     public rigidBodyTriggerNodeIndices: Map<number, IRigidBodyTriggerInformation>;
-
+    public propagationCancelled: Set<number>;
 
     constructor(fps: number, eventBus: IEventBus) {
         this.registry = new Map<string, any>();
@@ -168,8 +175,9 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this._timerID = null;
         this.hoverableNodesIndices = new Map<number, IHoverInformation>();
         this.lastHoveredNodeIndices = new Map<number, number>();
-        this.selectableNodesIndices = new Map<number, (selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) => void>();
+        this.selectableNodesIndices = new Map<number, (selectedNodeRef: any, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) => void>();
         this.rigidBodyTriggerNodeIndices = new Map<number, IRigidBodyTriggerInformation>();
+        this.propagationCancelled = new Set<number>();
 
         this.registerKnownBehaviorNodes();
     }
@@ -211,6 +219,12 @@ export class BasicBehaveEngine implements IBehaveEngine {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public resolveRef(ref: any): any {
+        // Implemented by decorators
+        return ref;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public rayCastRigidBodies(rayStart: [number, number, number], rayEnd: [number, number, number], collisionFilterIndex: number): {hitNodeIndex: number, hitFraction: number | undefined, hitNormal: [number, number, number] | undefined} {
         // Implemented by decorators
         return {hitNodeIndex: -1, hitFraction: undefined, hitNormal: undefined};
@@ -230,18 +244,23 @@ export class BasicBehaveEngine implements IBehaveEngine {
         }
     }
 
-    public select(selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) {
-        this.alertOnSelect(selectedNodeIndex, controllerIndex, selectionPoint, selectionRayOrigin, selectedNodeIndex);
-    }
+    public select(nodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) {
+        for (;;) {
+            if (this.propagationCancelled.has(nodeIndex)) {
+                break;
+            }
 
-    public alertOnSelect(selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined, currentNodeIndex: number | undefined) {
-        while (currentNodeIndex !== undefined) {
-            const callback = this.selectableNodesIndices.get(currentNodeIndex);
+            const callback = this.selectableNodesIndices.get(nodeIndex);
             if (callback !== undefined) {
-                callback(selectedNodeIndex, controllerIndex, selectionPoint, selectionRayOrigin);
+                callback(nodeIndex, controllerIndex, selectionPoint, selectionRayOrigin);
                 return;
             }
-            currentNodeIndex = this.getParentNodeIndex(currentNodeIndex);
+
+            const parent = this.getParentNodeIndex(nodeIndex);
+            if (parent === undefined) {
+                return;
+            }
+            nodeIndex = parent;
         }
     }
 
@@ -274,22 +293,22 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.lastHoveredNodeIndices.set(controllerIndex, nodeIndex);
     }
 
-    public alertOnHoverIn(selectedNodeIndex: number | undefined, controllerIndex: number, currentHoverNodeIndex: number | undefined, firstCommonHoverNodeIndex: number | undefined) {
+    public alertOnHoverIn(selectedNodeRef: unknown, controllerIndex: number, currentHoverNodeIndex: number | undefined, firstCommonHoverNodeIndex: number | undefined) {
         while (currentHoverNodeIndex !== undefined && currentHoverNodeIndex !== firstCommonHoverNodeIndex) {
             const hoverInformation = this.hoverableNodesIndices.get(currentHoverNodeIndex);
             if (hoverInformation?.callbackHoverIn !== undefined) {
-                hoverInformation.callbackHoverIn(selectedNodeIndex, controllerIndex, firstCommonHoverNodeIndex);
+                hoverInformation.callbackHoverIn(selectedNodeRef, controllerIndex, firstCommonHoverNodeIndex);
                 break;
             }
             currentHoverNodeIndex = this.getParentNodeIndex(currentHoverNodeIndex);
         }
     }
 
-    public alertOnHoverOut(selectedNodeIndex: number | undefined, controllerIndex: number, currentHoverNodeIndex: number | undefined, firstCommonHoverNodeIndex: number | undefined) {
+    public alertOnHoverOut(selectedNodeRef: unknown, controllerIndex: number, currentHoverNodeIndex: number | undefined, firstCommonHoverNodeIndex: number | undefined) {
         while (currentHoverNodeIndex !== undefined && currentHoverNodeIndex !== firstCommonHoverNodeIndex) {
             const hoverInformation = this.hoverableNodesIndices.get(currentHoverNodeIndex);
             if (hoverInformation?.callbackHoverOut !== undefined) {
-                hoverInformation.callbackHoverOut(selectedNodeIndex, controllerIndex, firstCommonHoverNodeIndex);
+                hoverInformation.callbackHoverOut(selectedNodeRef, controllerIndex, firstCommonHoverNodeIndex);
                 break;
             }
             currentHoverNodeIndex = this.getParentNodeIndex(currentHoverNodeIndex);
@@ -376,10 +395,15 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.eventBus.clearCustomEventListeners();
     }
 
+    public queueFunctionCall = (func: () => void): void => {
+        this.eventBus.addEvent({func});
+    }
+
     public loadBehaveGraph = (behaveGraph: any, runGraph = true) => {
         this.hoverableNodesIndices.clear();
         this.selectableNodesIndices.clear();
         this.lastHoveredNodeIndices.clear();
+        this.propagationCancelled.clear();
         this._pauseDuration = 0;
         this._pauseTickTime = NaN;
         try {
@@ -419,6 +443,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
             }
             const behaviourNodeProps: IBehaviourNodeProps = {
                 ...defaultProps,
+                index: index,
                 flows:node.flows || {},
                 values: node.values || {},
                 configuration: node.configuration || {},
@@ -426,7 +451,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
                 types: behaveGraph.types,
                 graphEngine: this,
                 declaration: nodeDeclaration,
-                addEventToWorkQueue: this.addEventToWorkQueue
+                addEventToWorkQueue: this.addEventToWorkQueue,
             };
             const nodeType = nodeDeclaration.op;
             let behaviourNode: BehaveEngineNode;
@@ -581,6 +606,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/Inf", Inf);
         this.registerBehaveEngineNode("math/NaN", NotANumber);
         this.registerBehaveEngineNode("math/Pi", Pi);
+        this.registerBehaveEngineNode("math/Tau", Tau);
         this.registerBehaveEngineNode("math/sign", Sign);
         this.registerBehaveEngineNode("math/trunc", Truncate);
         this.registerBehaveEngineNode("math/floor", Floor);
@@ -597,6 +623,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/mix", Mix);
         this.registerBehaveEngineNode("math/saturate", Saturate);
         this.registerBehaveEngineNode("math/clamp", Clamp);
+        this.registerBehaveEngineNode("math/smoothStep", SmoothStep);
         this.registerBehaveEngineNode("math/rad", DegreeToRadians);
         this.registerBehaveEngineNode("math/deg", RadiansToDegrees);
         this.registerBehaveEngineNode("math/sin", Sine);
@@ -630,6 +657,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/rotate2D", Rotate2D);
         this.registerBehaveEngineNode("math/rotate3D", Rotate3D);
         this.registerBehaveEngineNode("math/length", VectorLength);
+        this.registerBehaveEngineNode("math/slerp", Slerp);
         this.registerBehaveEngineNode("math/isInf", IsInfNode);
         this.registerBehaveEngineNode("math/isNaN", IsNaNNode);
         this.registerBehaveEngineNode("math/select", Select);
@@ -673,6 +701,10 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.registerBehaveEngineNode("math/matMul", MatMul);
         this.registerBehaveEngineNode("math/inverse", Inverse);
         this.registerBehaveEngineNode("debug/log", DebugLog);
+        this.registerBehaveEngineNode("event/stopPropagation", EventStopPropagation);
+        this.registerBehaveEngineNode("ref/eq", RefEquality);
+        this.registerBehaveEngineNode("math/rgbToOkLCh", RgbToOkLCh);
+        this.registerBehaveEngineNode("math/rgbFromOkLCh", RgbFromOkLCh);
     }
 
     protected validateGraph = (behaviorGraph: any) => {
@@ -704,13 +736,12 @@ export class BasicBehaveEngine implements IBehaveEngine {
 
     protected addEventToWorkQueue = (flow: IInteractivityFlow) => {
         if (flow === undefined || flow.node === undefined) {return}
-        const nextNode: BehaveEngineNode | undefined = this.idToBehaviourNodeMap.get(Number(flow.node));
 
+        const nextNode = this.idToBehaviourNodeMap.get(Number(flow.node));
         if (nextNode === undefined) {return}
-        const nodeToPush = this.idToBehaviourNodeMap.get(Number(flow.node))!;
 
         this.processAddingNodeToQueue(flow);
-        this.eventBus.addEvent({behaveNode: nodeToPush, inSocketId: flow.socket});
+        this.eventBus.addEvent({behaveNode: nextNode, inSocketId: flow.socket});
     }
 
     public executeEventQueueTick = () => {
@@ -725,6 +756,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
             this._pauseTickTime = NaN;
         }
 
+        this.propagationCancelled.clear();
         const eventQueueCopy = [...this.eventBus.getEventList()];
         this.eventBus.clearEventList();
         while (eventQueueCopy.length > 0) {

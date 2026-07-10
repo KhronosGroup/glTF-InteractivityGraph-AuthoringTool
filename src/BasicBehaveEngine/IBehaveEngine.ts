@@ -2,8 +2,8 @@ import { IInteractivityFlow, IInteractivityValue } from "./types/InteractivityGr
 import {BehaveEngineNode} from "./BehaveEngineNode";
 
 export interface IHoverInformation {
-    callbackHoverIn?: (selectedNodeIndex: number | undefined, controllerIndex: number, firstCommonHoverNodeIndex: number | undefined) => void;
-    callbackHoverOut?: (selectedNodeIndex: number | undefined, controllerIndex: number, firstCommonHoverNodeIndex: number | undefined) => void;
+    callbackHoverIn?: (selectedNodeRef: unknown, controllerIndex: number, firstCommonHoverNodeIndex: number | undefined) => void;
+    callbackHoverOut?: (selectedNodeRef: unknown, controllerIndex: number, firstCommonHoverNodeIndex: number | undefined) => void;
 }
 
 export interface IRigidBodyTriggerInformation {
@@ -38,6 +38,13 @@ export interface IBehaveEngine {
      * Register known pointers to be used within the Behave Engine.
      */
     registerKnownPointers: () => void;
+
+    /**
+     * Resolve a reference to its actual value within the Behave Engine.
+     * @param ref - The reference to be resolved.
+     * @returns The resolved value.
+     */
+    resolveRef: (ref: any) => any;
 
     /**
      * Get the parent node index of a given node index.

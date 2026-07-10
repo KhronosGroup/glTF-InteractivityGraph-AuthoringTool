@@ -14,15 +14,17 @@ export class AnimationStart extends BehaveEngineNode {
         const {animation, startTime, endTime, speed} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
 
         this.graphEngine.processNodeStarted(this);
+        
+        const animationIndex = this.refToIndex(animation);
 
-        if (speed <= 0 || this.graphEngine.getWorld().animations.length <= animation || animation < 0) {
+        if (speed <= 0 || this.graphEngine.getWorld().animations.length <= animationIndex || animationIndex < 0) {
             if (this.flows.err) {
                 this.processFlow(this.flows.err);
             }
         } else {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            this.graphEngine.startAnimation(animation, startTime, endTime, speed, () => {
+            this.graphEngine.startAnimation(animationIndex, startTime, endTime, speed, () => {
                 if (this.flows.done) {
                     this.addEventToWorkQueue(this.flows.done);
                 }

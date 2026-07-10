@@ -120,6 +120,10 @@ export class JsonPtrTrie {
     }
 
     private traversePath(path: string): TrieNode | undefined {
+        // while (path.endsWith('/')) {
+        //     path = path.slice(0, -1);
+        // }
+
         const pathPieces = path.split('/');
         let currentNode = this.root;
 

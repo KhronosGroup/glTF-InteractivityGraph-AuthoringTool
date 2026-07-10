@@ -19,7 +19,7 @@ export class Equality extends BehaveEngineNode {
         if (typeA !== typeB) {
             throw Error("input types not equivalent")
         }
-        let val: any;
+        let val: boolean;
 
         switch (typeA) {
             case "bool":

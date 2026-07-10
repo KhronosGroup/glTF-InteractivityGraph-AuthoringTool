@@ -9,7 +9,7 @@ export class NoOpNode extends BehaveEngineNode {
 
         Object.entries(this.declaration.outputValueSockets || {}).forEach(([key, value]) => {
             const typeName = this.getType(value.type);
-            const defaultValue = this.getDefualtValueForType(typeName);
+            const defaultValue = this.getDefaultValueForType(typeName);
             outValues[key] = { value: defaultValue, type: value.type };
         });
         this.outValues = outValues;

@@ -10,7 +10,7 @@ export class SetDelay extends BehaveEngineNode {
         this.validateValues(this.values);
 
         this._runningDelayIndices = [];
-        this.outValues.lastDelayIndex = { value: [-1], type: this.getTypeIndex('int')}
+        this.outValues.lastDelay = { value: [-1], type: this.getTypeIndex('ref')}
     }
 
     override processNode(flowSocket?: string) {
@@ -19,7 +19,7 @@ export class SetDelay extends BehaveEngineNode {
         this.graphEngine.processNodeStarted(this);
 
         if (flowSocket === "cancel") {
-            this.outValues.lastDelayIndex = { value: [-1], type: this.getTypeIndex('int')}
+            this.outValues.lastDelay = { value: [-1], type: this.getTypeIndex('ref')}
             for (let i = 0; i < this._runningDelayIndices.length; i++) {
                 const delayId = this.graphEngine.getScheduledDelay(this._runningDelayIndices[i]);
                 clearTimeout(delayId);
@@ -39,7 +39,7 @@ export class SetDelay extends BehaveEngineNode {
             }, duration * 1000);
             this.graphEngine.pushScheduledDelay(delayId);
             this._runningDelayIndices.push(delayIndex);
-            this.outValues.lastDelayIndex = { value: [delayIndex], type: this.getTypeIndex('int')}
+            this.outValues.lastDelay = { value: [delayIndex], type: this.getTypeIndex('ref')}
 
             this.processFlow(this.flows.out);
         }

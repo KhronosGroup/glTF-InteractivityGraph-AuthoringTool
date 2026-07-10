@@ -41,7 +41,7 @@ export class LoggingDecorator extends ADecorator {
     }
 
     processNodeStarted = (node: BehaveEngineNode) => {
-        this.addToLog(`Running ${node.name}: input values: ${JSON.stringify(node.values)}, output flows: ${JSON.stringify(node.flows)}`)
+        this.addToLog(`Running #${node.index} ${node.name}: input values: ${JSON.stringify(node.values)}, output flows: ${JSON.stringify(node.flows)}`)
     }
 
     getWorld = (): any => {
@@ -51,6 +51,10 @@ export class LoggingDecorator extends ADecorator {
 
     getParentNodeIndex = (nodeIndex: number): number | undefined => {
         return undefined;
+    }
+
+    resolveRef = (ref: any): any => {
+        return ref;
     }
 
     registerJsonPointer = (jsonPtr: string, getterCallback: (path: string) => any, setterCallback: (path: string, value: any) => void, typeName: string, readOnly: boolean) => {

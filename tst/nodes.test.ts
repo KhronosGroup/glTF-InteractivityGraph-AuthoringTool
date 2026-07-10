@@ -138,6 +138,7 @@ describe('nodes', () => {
         graphEngine = new BasicBehaveEngine(60, eventBus);
 
         defaultProps = {
+            index: 0,
             declaration: {
                 op: "NoOp",
                 inputValueSockets: {},
@@ -238,14 +239,14 @@ describe('nodes', () => {
         setDelay.processFlow = jest.fn<(flow: IInteractivityFlow) => Promise<void>>();
         setDelay.processNode('in');
         setDelay.processNode('cancel');
-        expect(setDelay.outValues.lastDelayIndex.value![0]).toBe(-1);
+        expect(setDelay.outValues.lastDelay.value![0]).toBe(-1);
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
         expect(setDelay.addEventToWorkQueue).not.toHaveBeenCalled()
         expect(setDelay.processFlow).toHaveBeenCalledWith({ socket: 'in', node: 1 });
 
         setDelay.processNode('in');
-        expect(setDelay.outValues.lastDelayIndex.value![0]).toBe(1);
+        expect(setDelay.outValues.lastDelay.value![0]).toBe(1);
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
         expect(setDelay.addEventToWorkQueue).toHaveBeenCalledWith({ socket: 'in', node: 2 });
@@ -256,7 +257,7 @@ describe('nodes', () => {
         graphEngine.clearScheduledDelays();
         const cancelDelay: CancelDelay = new CancelDelay({
             ...defaultProps,
-            values: {delayIndex: { value: [0], type: 1 }},
+            values: {delay: { value: [0], type: 1 }},
             flows: {out: { node: 1, socket: 'in' }}
         });
         cancelDelay.processFlow = jest.fn<(flow: IInteractivityFlow) => Promise<void>>();

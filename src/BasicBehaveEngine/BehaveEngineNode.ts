@@ -2,6 +2,7 @@ import { IInteractivityConfigurationValue, IInteractivityDeclaration, IInteracti
 import {BasicBehaveEngine} from "./BasicBehaveEngine";
 
 export interface IBehaviourNodeProps {
+    index: number,
     graphEngine: BasicBehaveEngine,
     idToBehaviourNodeMap: Map<number, BehaveEngineNode>
     declaration: IInteractivityDeclaration,
@@ -11,13 +12,14 @@ export interface IBehaviourNodeProps {
     events: IInteractivityEvent[],
     types:IInteractivityValueType[],
     configuration: Record<string, IInteractivityConfigurationValue>,
-    addEventToWorkQueue: any
+    addEventToWorkQueue: any,
 }
 
 export class BehaveEngineNode {
     REQUIRED_VALUES: Record<string, IInteractivityValue> = {};
     REQUIRED_CONFIGURATIONS: Record<string, IInteractivityConfigurationValue> = {};
 
+    index: number;
     name: string | undefined;
     world: any;
     graphEngine: BasicBehaveEngine;
@@ -33,7 +35,8 @@ export class BehaveEngineNode {
     addEventToWorkQueue: any;
 
     constructor(props: IBehaviourNodeProps) {
-        const {flows, values, idToBehaviourNodeMap, graphEngine, variables, events, types, configuration, addEventToWorkQueue, declaration} = props;
+        const {index, flows, values, idToBehaviourNodeMap, graphEngine, variables, events, types, configuration, addEventToWorkQueue, declaration} = props;
+        this.index = index;
         this.idToBehaviourNodeMap = idToBehaviourNodeMap;
         this.graphEngine = graphEngine;
         this.variables = variables;
@@ -213,8 +216,10 @@ export class BehaveEngineNode {
         return typeNames.indexOf(name);
     }
 
-    protected getDefualtValueForType(type: string): any {
+    protected getDefaultValueForType(type: string): any {
         switch (type) {
+            case "ref":
+                return [null];
             case "bool":
                 return [false];
             case "int":
@@ -254,6 +259,8 @@ export class BehaveEngineNode {
                 return val;
             case "float4x4":
                 return val;
+            case "ref":
+                return val[0];
             default:
                 return val
         }
@@ -261,5 +268,11 @@ export class BehaveEngineNode {
 
     private evaluateConfiguration(configuration: IInteractivityConfigurationValue): any {
         return configuration.value;
+    }
+
+    protected refToIndex(ref: string): number {
+        const refParts = ref.split("/");
+        const lastPart = refParts[refParts.length - 1];
+        return Number(lastPart);
     }
 }

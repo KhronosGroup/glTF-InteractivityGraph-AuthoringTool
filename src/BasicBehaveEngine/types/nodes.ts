@@ -71,6 +71,9 @@ export const knownDeclarations: IInteractivityDeclaration[] = [
         op: "math/mix"
     },
     {
+        op: "math/smoothStep"
+    },
+    {
         op: "math/eq"
     },
     {
@@ -177,6 +180,9 @@ export const knownDeclarations: IInteractivityDeclaration[] = [
     },
     {
         op: "math/cross"
+    },
+    {
+        op: "math/slerp"
     },
     {
         op: "math/rotate2d"
@@ -537,6 +543,12 @@ export const knownDeclarations: IInteractivityDeclaration[] = [
     },
     {
         op: "math/quatSlerp"
+    },
+    {
+        op: "math/rgbToOkLCh"
+    },
+    {
+        op: "math/rgbFromOkLCh"
     }
 ]
 
@@ -830,6 +842,40 @@ const mathQuaternionNodeSpecs: IInteractivityNode[] = [
                     type: 5,
                     value: [undefined]
                 }
+            }
+        }
+    },
+    {
+        op: "math/rgbToOkLCh",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/rgbToOkLCh"),
+        description: "Convert linear RGB to OkLCh",
+        values: {
+            input: {
+                r: { typeOptions: [2], type: 2, value: [undefined] },
+                g: { typeOptions: [2], type: 2, value: [undefined] },
+                b: { typeOptions: [2], type: 2, value: [undefined] }
+            },
+            output: {
+                l: { typeOptions: [2], type: 2, value: [undefined] },
+                c: { typeOptions: [2], type: 2, value: [undefined] },
+                h: { typeOptions: [2], type: 2, value: [undefined] }
+            }
+        }
+    },
+    {
+        op: "math/rgbFromOkLCh",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/rgbFromOkLCh"),
+        description: "Convert OkLCh to linear RGB",
+        values: {
+            input: {
+                l: { typeOptions: [2], type: 2, value: [undefined] },
+                c: { typeOptions: [2], type: 2, value: [undefined] },
+                h: { typeOptions: [2], type: 2, value: [undefined] }
+            },
+            output: {
+                r: { typeOptions: [2], type: 2, value: [undefined] },
+                g: { typeOptions: [2], type: 2, value: [undefined] },
+                b: { typeOptions: [2], type: 2, value: [undefined] }
             }
         }
     }
@@ -2248,6 +2294,37 @@ const mathVectorNodeSpecs: IInteractivityNode[] = [
         }
     },
     {
+        op: "math/slerp",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/slerp"),
+        description: "Spherical linear interpolation between two vectors",
+        values: {
+            input: {
+                a: {
+                    typeOptions: [3, 4],
+                    type: 3,
+                    value: [undefined, undefined]
+                },
+                b: {
+                    typeOptions: [3, 4],
+                    type: 3,
+                    value: [undefined, undefined]
+                },
+                c: {
+                    typeOptions: [2],
+                    type: 2,
+                    value: [undefined]
+                }
+            },
+            output: {
+                value: {
+                    typeOptions: [3, 4],
+                    type: 3,
+                    value: [undefined, undefined]
+                }
+            }
+        }
+    },
+    {
         op: "math/rotate2d",
         declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/rotate2d"),
         description: "Rotate a 2D vector by an angle in radians",
@@ -3491,6 +3568,37 @@ const mathArithmeticNodeSpecs: IInteractivityNode[] = [
             output: {
                 value: {
                     typeOptions: [...floatNTypes, ...floatNxNTypes],
+                    type: 2,
+                    value: [undefined]
+                }
+            }
+        }
+    },
+    {
+        op: "math/smoothStep",
+        declaration: knownDeclarations.findIndex(declaration => declaration.op === "math/smoothStep"),
+        description: "Smooth step (Hermite interpolation)",
+        values: {
+            input: {
+                a: {
+                    typeOptions: floatNTypes,
+                    type: 2,
+                    value: [undefined]
+                },
+                b: {
+                    typeOptions: floatNTypes,
+                    type: 2,
+                    value: [undefined]
+                },
+                c: {
+                    typeOptions: floatNTypes,
+                    type: 2,
+                    value: [undefined]
+                }
+            },
+            output: {
+                value: {
+                    typeOptions: floatNTypes,
                     type: 2,
                     value: [undefined]
                 }

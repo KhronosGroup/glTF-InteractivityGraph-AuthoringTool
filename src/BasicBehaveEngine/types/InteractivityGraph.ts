@@ -8,7 +8,8 @@ export enum InteractivityValueType {
     FLOAT2X2 = "float2x2",
     FLOAT3X3 = "float3x3",
     FLOAT4X4 = "float4x4",
-    CUSTOM = "custom"
+    CUSTOM = "custom",
+    REF = "ref"
 }
 
 export interface IInteractivityValueType {

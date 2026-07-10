@@ -14,14 +14,16 @@ export class AnimationStopAt extends BehaveEngineNode {
         const {animation, stopTime} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
         this.graphEngine.processNodeStarted(this);
 
-        if (this.graphEngine.getWorld().length <= animation || animation < 0) {
+        const animationIndex = this.refToIndex(animation);
+
+        if (this.graphEngine.getWorld().animations.length <= animationIndex || animationIndex < 0) {
             if (this.flows.err) {
                 this.processFlow(this.flows.err);
             }
         } else {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            this.graphEngine.stopAnimationAt(animation, stopTime, () => {
+            this.graphEngine.stopAnimationAt(animationIndex, stopTime, () => {
                 if (this.flows.done) {
                     this.addEventToWorkQueue(this.flows.done);
                 }

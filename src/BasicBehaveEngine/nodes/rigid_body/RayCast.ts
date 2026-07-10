@@ -7,7 +7,7 @@ export class RayCast extends BehaveEngineNode {
         super(props);
         this.name = "RayCast";
         this.validateValues(this.values);
-        this.outValues.hitNodeIndex = { value: [-1], type: this.getTypeIndex('int')};
+        this.outValues.hitNode = { value: [-1], type: this.getTypeIndex('ref')};
         this.outValues.hitFraction = { value: [NaN], type: this.getTypeIndex('float')};
         this.outValues.hitNormal = { value: [NaN, NaN, NaN], type: this.getTypeIndex('vec3')};
 
@@ -21,14 +21,14 @@ export class RayCast extends BehaveEngineNode {
 
         const hitResult = this.graphEngine.rayCastRigidBodies(rayStart, rayEnd, collisionFilterIndex);
         if (hitResult.hitNodeIndex < 0) {
-            this.outValues.hitNodeIndex = { value: [-1], type: this.getTypeIndex('int')};
+            this.outValues.hitNode = { value: [-1], type: this.getTypeIndex('ref')};
             this.outValues.hitFraction = { value: [NaN], type: this.getTypeIndex('float')};
             this.outValues.hitNormal = { value: [NaN, NaN, NaN], type: this.getTypeIndex('vec3')};
             if (this.flows.miss) {
                 this.processFlow(this.flows.miss);
             }
         } else {
-            this.outValues.hitNodeIndex = { value: [hitResult.hitNodeIndex], type: this.getTypeIndex('int')};
+            this.outValues.hitNode = { value: [hitResult.hitNodeIndex], type: this.getTypeIndex('ref')};
             this.outValues.hitFraction = { value: [hitResult.hitFraction], type: this.getTypeIndex('float')};
             this.outValues.hitNormal = { value: hitResult.hitNormal, type: this.getTypeIndex('vec3')};
             if (this.flows.hit) {

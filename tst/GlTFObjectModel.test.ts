@@ -37,6 +37,17 @@ describe("GlTFObjectModelDecorator", () => {
         expect(decorator.getPathValue("/materials/0/alphaCutoff")).toEqual([0.25]);
     });
 
+    it("exposes exact animation object refs without normalizing object model paths", () => {
+        const decorator = createDecorator({
+            animations: [{ channels: [], samplers: [] }],
+        });
+
+        expect(decorator.isValidJsonPtr("/animations/0/")).toBe(true);
+        expect(decorator.getPathtypeName("/animations/0/")).toBe("ref");
+        expect(decorator.getPathValue("/animations/0/")).toEqual(["/animations/0/"]);
+        expect(decorator.isValidJsonPtr("/animations/0")).toBe(false);
+    });
+
     it("registers draft node extension pointers from generated schema metadata", () => {
         const decorator = createDecorator({
             nodes: [{

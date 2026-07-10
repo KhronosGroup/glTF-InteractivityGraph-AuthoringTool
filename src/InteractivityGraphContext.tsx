@@ -729,7 +729,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
 
             const behaveNode: any = {
                 id: node.uid,
-                declaration: executable.declarations.findIndex((declaration: IInteractivityDeclaration) => declaration.op === node.op),
+                declaration: getExecutableDeclarationIndex(node, executable.declarations),
                 values: strippedValues,
                 configuration: strippedConfiguration,
                 flows: node.flows?.output || {},
@@ -751,6 +751,18 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         }
 
         return executable;
+    };
+
+    const getExecutableDeclarationIndex = (node: AuthoredNode, declarations: IInteractivityDeclaration[]): number => {
+        if (
+            Number.isInteger(node.declaration)
+            && node.declaration >= 0
+            && declarations[node.declaration]?.op === node.op
+        ) {
+            return node.declaration;
+        }
+
+        return declarations.findIndex((declaration: IInteractivityDeclaration) => declaration.op === node.op);
     };
 
     const topologicalSort = (nodes: any[]) => {

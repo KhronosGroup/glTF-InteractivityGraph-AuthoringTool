@@ -1776,6 +1776,11 @@ export const glTFSchemaMetadata = {
       "readOnly": true
     },
     {
+      "template": "/animations/[]/",
+      "typeName": "ref",
+      "readOnly": true
+    },
+    {
       "template": "/animations/[]/extensions/KHR_interactivity/isPlaying",
       "typeName": "bool",
       "readOnly": true
@@ -1798,6 +1803,11 @@ export const glTFSchemaMetadata = {
     {
       "template": "/animations/[]/extensions/KHR_interactivity/virtualPlayhead",
       "typeName": "float",
+      "readOnly": true
+    },
+    {
+      "template": "/animations/{}/",
+      "typeName": "ref",
       "readOnly": true
     },
     {

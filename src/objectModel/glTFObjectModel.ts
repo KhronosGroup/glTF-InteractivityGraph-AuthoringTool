@@ -368,6 +368,7 @@ export class GlTFObjectModelDecorator extends ADecorator {
 
     private registerAnimationPointers(): void {
         this.objectModel.animations.forEach((animation, animationIndex) => {
+            this.pointer(`/animations/${animationIndex}/`, "ref", () => [`/animations/${animationIndex}/`], ignoreSet, true);
             this.scalarPointer(`/animations/${animationIndex}/extensions/KHR_interactivity/playhead`, "float", () => animation.playhead, ignoreSet, true);
             this.scalarPointer(`/animations/${animationIndex}/extensions/KHR_interactivity/virtualPlayhead`, "float", () => animation.virtualPlayhead, (value) => animation.virtualPlayhead = value);
             this.scalarPointer(`/animations/${animationIndex}/extensions/KHR_interactivity/minTime`, "float", () => animation.minTime, ignoreSet, true);

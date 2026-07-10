@@ -64,7 +64,7 @@ export class BabylonDecorator extends ADecorator {
             const result = this.scene.pickWithRay(ray, (m) => m.metadata == null || m.metadata.compositeHoverability != false);
             let hitNodeIndex : number | undefined = undefined;
             if (result && result.pickedMesh) {
-                hitNodeIndex = this.world.glTFNodes.findIndex((value: { uniqueId: number; }) => value.uniqueId === result.pickedMesh!.uniqueId);
+                hitNodeIndex = this.getGlTFNodeIndexForBabylonNode(result.pickedMesh);
             }
             this.hoverOn(hitNodeIndex, 0);
         });
@@ -86,7 +86,10 @@ export class BabylonDecorator extends ADecorator {
                     if (hit.pickedPoint != null) {
                         pos = BabylonDecorator.toRightHandedXYZ(hit.pickedPoint.x, hit.pickedPoint.y, hit.pickedPoint.z);
                     }
-                const hitNodeIndex = this.world.glTFNodes.findIndex((value: { uniqueId: number; }) => value.uniqueId === hit.pickedMesh!.uniqueId);
+                const hitNodeIndex = this.getGlTFNodeIndexForBabylonNode(hit.pickedMesh);
+                if (hitNodeIndex === undefined) {
+                    return;
+                }
                 this.select(hitNodeIndex, 0, pos, BabylonDecorator.toRightHandedXYZ(ray.origin.x, ray.origin.y, ray.origin.z));
             }
         });
@@ -162,6 +165,24 @@ export class BabylonDecorator extends ADecorator {
         }
         const parentNodeIndex = this.world.glTFNodes.findIndex((value: { uniqueId: number; }) => value.uniqueId === node.parent.uniqueId);
         return parentNodeIndex !== -1 ? parentNodeIndex : undefined;
+    }
+
+    private getGlTFNodeIndexForBabylonNode(node: Node | null | undefined): number | undefined {
+        let currentNode: Node | null | undefined = node;
+        while (currentNode != null) {
+            const metadataNodeIndex = currentNode.metadata?.nodeIndex;
+            if (Number.isInteger(metadataNodeIndex)) {
+                return metadataNodeIndex;
+            }
+
+            const nodeIndex = this.world.glTFNodes.findIndex((value: { uniqueId: number; }) => value.uniqueId === currentNode!.uniqueId);
+            if (nodeIndex !== -1) {
+                return nodeIndex;
+            }
+
+            currentNode = currentNode.parent;
+        }
+        return undefined;
     }
 
     public loadBehaveGraphFromRootNode(rootNode: TransformNode): void {
@@ -924,6 +945,14 @@ export class BabylonDecorator extends ADecorator {
             //no-op
         }, "int", true);
 
+        this.registerJsonPointer(`/animations/${maxAnimations}/`, (path) => {
+            const parts: string[] = path.split("/");
+            const animationIndex = Number(parts[2]);
+            return this.world.animations[animationIndex] === undefined ? [null] : [`/animations/${animationIndex}/`];
+        }, (path, value) => {
+            //no-op
+        }, "ref", true);
+
         this.registerJsonPointer(`/nodes/${maxGltfNode}/matrix`, (path) => {
             const parts: string[] = path.split("/");
             const node = this.world.glTFNodes[Number(parts[2])];
@@ -1089,6 +1118,9 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/animations/${maxAnimations}/extensions/KHR_interactivity/maxTime`, (path) => {
             const parts: string[] = path.split("/");
             const animation: AnimationGroup = this.world.animations[Number(parts[2])];
+            if (animation === undefined) {
+                throw new Error(`Animation pointer ${path} resolved outside ${this.world.animations.length} loaded animation(s)`);
+            }
             const fps = 60;
             return [animation.to / fps];
         }, (path, value) => {

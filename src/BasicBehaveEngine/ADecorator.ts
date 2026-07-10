@@ -30,7 +30,8 @@ export abstract class ADecorator implements IBehaveEngine {
         if (ref == null || ref === "") {
             return -1;
         }
-        return String(ref).split("/").pop();
+        const parts = String(ref).split("/").filter(Boolean);
+        return parts.length === 0 ? -1 : parts[parts.length - 1];
     }
 
     registerJsonPointer = (jsonPtr: string, getterCallback: (path: string) => any, setterCallback: (path: string, value: any) => void, typeName: string, readOnly: boolean) => {

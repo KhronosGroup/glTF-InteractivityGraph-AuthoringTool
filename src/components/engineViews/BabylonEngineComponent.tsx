@@ -130,10 +130,10 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
     }, [modelUrl]);
 
     useEffect(() => {
-        if (fileUploaded !== null) {
+        if (fileUploaded !== null && useUploadedFile) {
             play(true)
         }
-    }, [fileUploaded])
+    }, [fileUploaded, useUploadedFile])
 
     const play = (shouldOverrideGraph: boolean) => {
         resetScene()
@@ -228,10 +228,11 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
         const extractedBehaveGraph = babylonEngineRef.current.extractBehaveGraphFromScene()
         try {
             const selection = selectModelGraph(behaveGraph, extractedBehaveGraph, shouldOverride);
+            const runtimeGraph = JSON.parse(JSON.stringify(selection.graph));
             if (selection.replaceAuthoringGraph) {
                 loadGraphFromJson(JSON.parse(JSON.stringify(selection.graph)));
             }
-            babylonEngineRef.current.loadBehaveGraph(selection.graph);
+            babylonEngineRef.current.loadBehaveGraph(runtimeGraph);
         } catch (error) {
             console.warn("KHR_interactivity graph execution stopped", error);
         }
@@ -376,8 +377,9 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
 
             const extractedBehaveGraph = babylonEngineRef.current.extractBehaveGraphFromScene();
             const selection = selectModelGraph(getExecutableGraph(), extractedBehaveGraph, true);
-            loadGraphFromJson(JSON.parse(JSON.stringify(selection.graph)));
-            babylonEngineRef.current.loadBehaveGraph(selection.graph);
+            const runtimeGraph = JSON.parse(JSON.stringify(selection.graph));
+            await loadGraphFromJson(JSON.parse(JSON.stringify(selection.graph)));
+            babylonEngineRef.current.loadBehaveGraph(runtimeGraph);
             clearGraphDirty();
         } catch (error) {
             console.error("Error loading model from URL:", error);

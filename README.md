@@ -74,10 +74,10 @@ This project contains E2E cypress tests which operate on a visual spin up of the
 - npm run test
 
 ### Sample Asset Tests
-These tests use the Khronos glTF Interactivity Sample Assets test catalog. By default the harness looks for the asset repo next to this project at `../glTF-Test-Assets-Interactivity`; override it with `KHR_INTERACTIVITY_SAMPLE_ASSETS=/path/to/glTF-Test-Assets-Interactivity`.
+These tests use the Khronos glTF Interactivity test asset catalog. By default the harness looks for the official asset repo next to this project at `../glTF-Test-Assets-Interactivity`; override it with `KHR_INTERACTIVITY_SAMPLE_ASSETS=/path/to/glTF-Test-Assets-Interactivity`.
 
-- `npm run test:assets:core` runs the sample assets against the core behavior engine with a programmatic glTF object-model test decorator.
-- `npm run test:assets:e2e` runs the same single-file assets through a lightweight, browserless Babylon engine world.
+- `npm run test:assets:core` runs all Core-engine asset suites with a programmatic glTF object-model test decorator, including Overview and the Core side of the paired InterGlb assets.
+- `npm run test:assets:e2e` runs the same assets through a lightweight, browserless Babylon engine world, including the Babylon side of the paired InterGlb assets.
 - `npm run test:assets` runs all sample asset suites.
 
 The suites report one Jest test per sample metadata subtest. Each asset graph is loaded and executed once per suite; if an asset cannot load or execute, every declared subtest for that asset fails. The harness loads assets from `test-index.json` and `mathtests-index.json`, then also includes any unindexed `test-Json/*.json` files. InterGlb assets are tested in a dedicated paired suite because the Khronos assets require both files to be loaded into the same runtime session.
@@ -85,6 +85,8 @@ The suites report one Jest test per sample metadata subtest. Each asset graph is
 Asset test commands first report how many sample asset graphs validate before execution. They then print a compact category summary, such as `pointer: Core 55/151` for focused core runs or `flow: both 43/50` when the full run has matching Core and Babylon results.
 
 For focused runs, set `KHR_INTERACTIVITY_ASSET_NAME_FILTER=math/add` to run one asset by catalog name, or `KHR_INTERACTIVITY_ASSET_FILTER=math/add` to include assets whose name, label, or tags match.
+
+To keep a full log for inspection, pipe both stdout and stderr through `tee`, for example `npm run test:assets 2>&1 | tee test-assets.log`. Focused runs work the same way, for example `KHR_INTERACTIVITY_ASSET_FILTER=pointer npm run test:assets:core 2>&1 | tee pointer-core.log`.
 
 ### Cypress Tests
 1. start a local host of the app using `npm start`

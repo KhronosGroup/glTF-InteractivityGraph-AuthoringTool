@@ -129,6 +129,13 @@ export class PointerInterpolate extends BehaveEngineNode {
                 }
                 return;
             }
+
+            if (!isValidInterpolationInput(duration, p1, p2)) {
+                if (this.flows.err) {
+                    this.processFlow(this.flows.err);
+                }
+                return;
+            }
             
             const initialValue = this.graphEngine.getPathValue(populatedPath);
 
@@ -149,4 +156,23 @@ export class PointerInterpolate extends BehaveEngineNode {
 
 
     }
+}
+
+function isValidInterpolationInput(duration: any, p1: any[], p2: any[]): boolean {
+    const durationValue = Number(duration);
+    if (Number.isNaN(durationValue) || !Number.isFinite(durationValue) || durationValue < 0) {
+        return false;
+    }
+
+    return [p1, p2].every((point) => {
+        if (!Array.isArray(point) || point.length < 2) {
+            return false;
+        }
+        const x = Number(point[0]);
+        const y = Number(point[1]);
+        return Number.isFinite(x)
+            && Number.isFinite(y)
+            && x >= 0
+            && x <= 1;
+    });
 }

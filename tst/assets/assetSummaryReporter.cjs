@@ -78,6 +78,13 @@ class AssetSummaryReporter {
                     process.stdout.write(` - ${failure.reason}`);
                 }
                 process.stdout.write("\n");
+                for (const detail of failure.details) {
+                    process.stdout.write(`  - ${detail.name}`);
+                    if (detail.reason) {
+                        process.stdout.write(` - ${detail.reason}`);
+                    }
+                    process.stdout.write("\n");
+                }
             }
             process.stdout.write("\n");
         }
@@ -158,12 +165,17 @@ function collectFailures(results) {
             const engine = getEngine(testResult.testFilePath, assertion.ancestorTitles);
             const asset = getAssetName(testResult.testFilePath, assertion);
             const key = `${engine}\0${asset}`;
-            const stats = getOrCreate(byAsset, key, () => ({ engine, asset, failed: 0, total: 0, reason: undefined }));
+            const stats = getOrCreate(byAsset, key, () => ({ engine, asset, failed: 0, total: 0, reason: undefined, details: [] }));
 
             stats.total += 1;
             if (assertion.status === "failed") {
                 stats.failed += 1;
-                stats.reason = stats.reason ?? cleanFailureMessage(assertion.failureMessages?.[0]);
+                const reason = cleanFailureMessage(assertion.failureMessages?.[0]);
+                stats.reason = stats.reason ?? reason;
+                stats.details.push({
+                    name: getAssertionName(assertion),
+                    reason,
+                });
             }
         }
     }
@@ -228,6 +240,12 @@ function getAssetName(testFilePath, assertion) {
 
     const assetTitle = [...assertion.ancestorTitles].reverse().find((title) => title.includes("/"));
     return assetTitle ?? assertion.ancestorTitles[assertion.ancestorTitles.length - 1] ?? assertion.title.split(" / ")[0];
+}
+
+function getAssertionName(assertion) {
+    const title = assertion.title ?? "";
+    const slashIndex = title.indexOf(" / ");
+    return slashIndex === -1 ? title : title.slice(slashIndex + 3);
 }
 
 function formatCell(engine, stats) {

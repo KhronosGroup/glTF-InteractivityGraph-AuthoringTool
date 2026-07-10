@@ -5,12 +5,17 @@ export const glTFSchemaMetadata = {
   "source": {
     "submodulePath": "third_party/glTF",
     "branch": "interactivity",
-    "commit": "5e87b48cecf6a3776dc3dfce65e76bb074fe7ae1"
+    "commit": "5e87b48cecf6a3776dc3dfce65e76bb074fe7ae1",
+    "ratifiedRef": "origin/main",
+    "ratifiedCommit": "5ec16c42e5ed044f26ce2a5b741ed5c57cf622f3"
   },
   "ratifiedKhronosExtensions": [
+    "KHR_animation_pointer",
     "KHR_draco_mesh_compression",
     "KHR_lights_punctual",
+    "KHR_materials_anisotropy",
     "KHR_materials_clearcoat",
+    "KHR_materials_dispersion",
     "KHR_materials_emissive_strength",
     "KHR_materials_ior",
     "KHR_materials_iridescence",
@@ -21,6 +26,7 @@ export const glTFSchemaMetadata = {
     "KHR_materials_variants",
     "KHR_materials_volume",
     "KHR_mesh_quantization",
+    "KHR_node_visibility",
     "KHR_texture_basisu",
     "KHR_texture_transform",
     "KHR_xmp_json_ld"
@@ -29,6 +35,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/accessor.schema.json",
+      "ref": "origin/main",
       "schemaName": "accessor.schema.json",
       "id": "accessor.schema.json",
       "title": "Accessor",
@@ -48,6 +55,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/accessor.sparse.indices.schema.json",
+      "ref": "origin/main",
       "schemaName": "accessor.sparse.indices.schema.json",
       "id": "accessor.sparse.indices.schema.json",
       "title": "Accessor Sparse Indices",
@@ -62,6 +70,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/accessor.sparse.schema.json",
+      "ref": "origin/main",
       "schemaName": "accessor.sparse.schema.json",
       "id": "accessor.sparse.schema.json",
       "title": "Accessor Sparse",
@@ -70,6 +79,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/accessor.sparse.values.schema.json",
+      "ref": "origin/main",
       "schemaName": "accessor.sparse.values.schema.json",
       "id": "accessor.sparse.values.schema.json",
       "title": "Accessor Sparse Values",
@@ -84,6 +94,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/animation.channel.schema.json",
+      "ref": "origin/main",
       "schemaName": "animation.channel.schema.json",
       "id": "animation.channel.schema.json",
       "title": "Animation Channel",
@@ -92,6 +103,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/animation.channel.target.schema.json",
+      "ref": "origin/main",
       "schemaName": "animation.channel.target.schema.json",
       "id": "animation.channel.target.schema.json",
       "title": "Animation Channel Target",
@@ -100,6 +112,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/animation.sampler.schema.json",
+      "ref": "origin/main",
       "schemaName": "animation.sampler.schema.json",
       "id": "animation.sampler.schema.json",
       "title": "Animation Sampler",
@@ -114,6 +127,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/animation.schema.json",
+      "ref": "origin/main",
       "schemaName": "animation.schema.json",
       "id": "animation.schema.json",
       "title": "Animation",
@@ -122,6 +136,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/asset.schema.json",
+      "ref": "origin/main",
       "schemaName": "asset.schema.json",
       "id": "asset.schema.json",
       "title": "Asset",
@@ -130,6 +145,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/buffer.schema.json",
+      "ref": "origin/main",
       "schemaName": "buffer.schema.json",
       "id": "buffer.schema.json",
       "title": "Buffer",
@@ -138,6 +154,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/bufferView.schema.json",
+      "ref": "origin/main",
       "schemaName": "bufferView.schema.json",
       "id": "bufferView.schema.json",
       "title": "Buffer View",
@@ -152,6 +169,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/camera.orthographic.schema.json",
+      "ref": "origin/main",
       "schemaName": "camera.orthographic.schema.json",
       "id": "camera.orthographic.schema.json",
       "title": "Camera Orthographic",
@@ -160,6 +178,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/camera.perspective.schema.json",
+      "ref": "origin/main",
       "schemaName": "camera.perspective.schema.json",
       "id": "camera.perspective.schema.json",
       "title": "Camera Perspective",
@@ -168,6 +187,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/camera.schema.json",
+      "ref": "origin/main",
       "schemaName": "camera.schema.json",
       "id": "camera.schema.json",
       "title": "Camera",
@@ -176,6 +196,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/extension.schema.json",
+      "ref": "origin/main",
       "schemaName": "extension.schema.json",
       "id": "extension.schema.json",
       "title": "Extension",
@@ -184,6 +205,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/extras.schema.json",
+      "ref": "origin/main",
       "schemaName": "extras.schema.json",
       "id": "extras.schema.json",
       "title": "Extras",
@@ -192,6 +214,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/glTF.schema.json",
+      "ref": "origin/main",
       "schemaName": "glTF.schema.json",
       "id": "glTF.schema.json",
       "title": "glTF",
@@ -200,6 +223,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/glTFChildOfRootProperty.schema.json",
+      "ref": "origin/main",
       "schemaName": "glTFChildOfRootProperty.schema.json",
       "id": "glTFChildOfRootProperty.schema.json",
       "title": "glTF Child of Root Property",
@@ -208,6 +232,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/glTFid.schema.json",
+      "ref": "origin/main",
       "schemaName": "glTFid.schema.json",
       "id": "glTFid.schema.json",
       "title": "glTF Id",
@@ -216,6 +241,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/glTFProperty.schema.json",
+      "ref": "origin/main",
       "schemaName": "glTFProperty.schema.json",
       "id": "glTFProperty.schema.json",
       "title": "glTF Property",
@@ -224,6 +250,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/image.schema.json",
+      "ref": "origin/main",
       "schemaName": "image.schema.json",
       "id": "image.schema.json",
       "title": "Image",
@@ -232,6 +259,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/material.normalTextureInfo.schema.json",
+      "ref": "origin/main",
       "schemaName": "material.normalTextureInfo.schema.json",
       "id": "material.normalTextureInfo.schema.json",
       "title": "Material Normal Texture Info",
@@ -246,6 +274,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/material.occlusionTextureInfo.schema.json",
+      "ref": "origin/main",
       "schemaName": "material.occlusionTextureInfo.schema.json",
       "id": "material.occlusionTextureInfo.schema.json",
       "title": "Material Occlusion Texture Info",
@@ -260,6 +289,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/material.pbrMetallicRoughness.schema.json",
+      "ref": "origin/main",
       "schemaName": "material.pbrMetallicRoughness.schema.json",
       "id": "material.pbrMetallicRoughness.schema.json",
       "title": "Material PBR Metallic Roughness",
@@ -289,6 +319,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/material.schema.json",
+      "ref": "origin/main",
       "schemaName": "material.schema.json",
       "id": "material.schema.json",
       "title": "Material",
@@ -322,6 +353,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/mesh.primitive.schema.json",
+      "ref": "origin/main",
       "schemaName": "mesh.primitive.schema.json",
       "id": "mesh.primitive.schema.json",
       "title": "Mesh Primitive",
@@ -336,6 +368,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/mesh.schema.json",
+      "ref": "origin/main",
       "schemaName": "mesh.schema.json",
       "id": "mesh.schema.json",
       "title": "Mesh",
@@ -344,6 +377,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/node.schema.json",
+      "ref": "origin/main",
       "schemaName": "node.schema.json",
       "id": "node.schema.json",
       "title": "Node",
@@ -403,6 +437,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/sampler.schema.json",
+      "ref": "origin/main",
       "schemaName": "sampler.schema.json",
       "id": "sampler.schema.json",
       "title": "Sampler",
@@ -422,6 +457,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/scene.schema.json",
+      "ref": "origin/main",
       "schemaName": "scene.schema.json",
       "id": "scene.schema.json",
       "title": "Scene",
@@ -430,6 +466,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/skin.schema.json",
+      "ref": "origin/main",
       "schemaName": "skin.schema.json",
       "id": "skin.schema.json",
       "title": "Skin",
@@ -438,6 +475,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/texture.schema.json",
+      "ref": "origin/main",
       "schemaName": "texture.schema.json",
       "id": "texture.schema.json",
       "title": "Texture",
@@ -446,6 +484,7 @@ export const glTFSchemaMetadata = {
     {
       "kind": "core",
       "path": "specification/2.0/schema/textureInfo.schema.json",
+      "ref": "origin/main",
       "schemaName": "textureInfo.schema.json",
       "id": "textureInfo.schema.json",
       "title": "Texture Info",
@@ -459,26 +498,38 @@ export const glTFSchemaMetadata = {
     },
     {
       "kind": "ratified-extension",
+      "extension": "KHR_animation_pointer",
+      "path": "extensions/2.0/Khronos/KHR_animation_pointer/schema/animation.channel.target.KHR_animation_pointer.schema.json",
+      "ref": "origin/main",
+      "schemaName": "animation.channel.target.KHR_animation_pointer.schema.json",
+      "title": "KHR_animation_pointer glTF Animation Channel Target Extension",
+      "defaults": []
+    },
+    {
+      "kind": "ratified-extension",
       "extension": "KHR_draco_mesh_compression",
       "path": "extensions/2.0/Khronos/KHR_draco_mesh_compression/schema/mesh.primitive.KHR_draco_mesh_compression.schema.json",
+      "ref": "origin/main",
       "schemaName": "mesh.primitive.KHR_draco_mesh_compression.schema.json",
-      "title": "KHR_draco_mesh_compression extension",
+      "title": "KHR_draco_mesh_compression glTF Mesh Primitive Extension",
       "defaults": []
     },
     {
       "kind": "ratified-extension",
       "extension": "KHR_lights_punctual",
       "path": "extensions/2.0/Khronos/KHR_lights_punctual/schema/glTF.KHR_lights_punctual.schema.json",
+      "ref": "origin/main",
       "schemaName": "glTF.KHR_lights_punctual.schema.json",
-      "title": "KHR_lights_punctual glTF extension",
+      "title": "KHR_lights_punctual glTF Document Extension",
       "defaults": []
     },
     {
       "kind": "ratified-extension",
       "extension": "KHR_lights_punctual",
       "path": "extensions/2.0/Khronos/KHR_lights_punctual/schema/light.schema.json",
+      "ref": "origin/main",
       "schemaName": "light.schema.json",
-      "title": "light",
+      "title": "KHR_lights_punctual Light Properties",
       "defaults": [
         {
           "sourceId": "extensions/2.0/Khronos/KHR_lights_punctual/schema/light.schema.json",
@@ -500,8 +551,9 @@ export const glTFSchemaMetadata = {
       "kind": "ratified-extension",
       "extension": "KHR_lights_punctual",
       "path": "extensions/2.0/Khronos/KHR_lights_punctual/schema/light.spot.schema.json",
+      "ref": "origin/main",
       "schemaName": "light.spot.schema.json",
-      "title": "light/spot",
+      "title": "KHR_lights_punctual Light Spot Properties",
       "defaults": [
         {
           "sourceId": "extensions/2.0/Khronos/KHR_lights_punctual/schema/light.spot.schema.json",
@@ -519,24 +571,46 @@ export const glTFSchemaMetadata = {
       "kind": "ratified-extension",
       "extension": "KHR_lights_punctual",
       "path": "extensions/2.0/Khronos/KHR_lights_punctual/schema/node.KHR_lights_punctual.schema.json",
+      "ref": "origin/main",
       "schemaName": "node.KHR_lights_punctual.schema.json",
-      "title": "KHR_lights_punctual node extension",
+      "title": "KHR_lights_punctual glTF Node Extension",
       "defaults": []
     },
     {
       "kind": "ratified-extension",
-      "extension": "KHR_materials_clearcoat",
-      "path": "extensions/2.0/Khronos/KHR_materials_clearcoat/schema/glTF.KHR_materials_clearcoat.schema.json",
-      "schemaName": "glTF.KHR_materials_clearcoat.schema.json",
-      "title": "KHR_materials_clearcoat glTF extension",
+      "extension": "KHR_materials_anisotropy",
+      "path": "extensions/2.0/Khronos/KHR_materials_anisotropy/schema/material.KHR_materials_anisotropy.schema.json",
+      "ref": "origin/main",
+      "schemaName": "material.KHR_materials_anisotropy.schema.json",
+      "title": "KHR_materials_anisotropy glTF Material Extension",
       "defaults": [
         {
-          "sourceId": "extensions/2.0/Khronos/KHR_materials_clearcoat/schema/glTF.KHR_materials_clearcoat.schema.json",
+          "sourceId": "extensions/2.0/Khronos/KHR_materials_anisotropy/schema/material.KHR_materials_anisotropy.schema.json",
+          "pointer": "#/properties/anisotropyStrength",
+          "value": 0
+        },
+        {
+          "sourceId": "extensions/2.0/Khronos/KHR_materials_anisotropy/schema/material.KHR_materials_anisotropy.schema.json",
+          "pointer": "#/properties/anisotropyRotation",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "kind": "ratified-extension",
+      "extension": "KHR_materials_clearcoat",
+      "path": "extensions/2.0/Khronos/KHR_materials_clearcoat/schema/material.KHR_materials_clearcoat.schema.json",
+      "ref": "origin/main",
+      "schemaName": "material.KHR_materials_clearcoat.schema.json",
+      "title": "KHR_materials_clearcoat glTF Material Extension",
+      "defaults": [
+        {
+          "sourceId": "extensions/2.0/Khronos/KHR_materials_clearcoat/schema/material.KHR_materials_clearcoat.schema.json",
           "pointer": "#/properties/clearcoatFactor",
           "value": 0
         },
         {
-          "sourceId": "extensions/2.0/Khronos/KHR_materials_clearcoat/schema/glTF.KHR_materials_clearcoat.schema.json",
+          "sourceId": "extensions/2.0/Khronos/KHR_materials_clearcoat/schema/material.KHR_materials_clearcoat.schema.json",
           "pointer": "#/properties/clearcoatRoughnessFactor",
           "value": 0
         }
@@ -544,13 +618,29 @@ export const glTFSchemaMetadata = {
     },
     {
       "kind": "ratified-extension",
-      "extension": "KHR_materials_emissive_strength",
-      "path": "extensions/2.0/Khronos/KHR_materials_emissive_strength/schema/glTF.KHR_materials_emissive_strength.schema.json",
-      "schemaName": "glTF.KHR_materials_emissive_strength.schema.json",
-      "title": "KHR_materials_emissive_strength glTF extension",
+      "extension": "KHR_materials_dispersion",
+      "path": "extensions/2.0/Khronos/KHR_materials_dispersion/schema/material.KHR_materials_dispersion.schema.json",
+      "ref": "origin/main",
+      "schemaName": "material.KHR_materials_dispersion.schema.json",
+      "title": "KHR_materials_dispersion glTF Material Extension",
       "defaults": [
         {
-          "sourceId": "extensions/2.0/Khronos/KHR_materials_emissive_strength/schema/glTF.KHR_materials_emissive_strength.schema.json",
+          "sourceId": "extensions/2.0/Khronos/KHR_materials_dispersion/schema/material.KHR_materials_dispersion.schema.json",
+          "pointer": "#/properties/dispersion",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "kind": "ratified-extension",
+      "extension": "KHR_materials_emissive_strength",
+      "path": "extensions/2.0/Khronos/KHR_materials_emissive_strength/schema/material.KHR_materials_emissive_strength.schema.json",
+      "ref": "origin/main",
+      "schemaName": "material.KHR_materials_emissive_strength.schema.json",
+      "title": "KHR_materials_emissive_strength glTF Material Extension",
+      "defaults": [
+        {
+          "sourceId": "extensions/2.0/Khronos/KHR_materials_emissive_strength/schema/material.KHR_materials_emissive_strength.schema.json",
           "pointer": "#/properties/emissiveStrength",
           "value": 1
         }
@@ -559,12 +649,13 @@ export const glTFSchemaMetadata = {
     {
       "kind": "ratified-extension",
       "extension": "KHR_materials_ior",
-      "path": "extensions/2.0/Khronos/KHR_materials_ior/schema/glTF.KHR_materials_ior.schema.json",
-      "schemaName": "glTF.KHR_materials_ior.schema.json",
-      "title": "KHR_materials_ior glTF extension",
+      "path": "extensions/2.0/Khronos/KHR_materials_ior/schema/material.KHR_materials_ior.schema.json",
+      "ref": "origin/main",
+      "schemaName": "material.KHR_materials_ior.schema.json",
+      "title": "KHR_materials_ior glTF Material Extension",
       "defaults": [
         {
-          "sourceId": "extensions/2.0/Khronos/KHR_materials_ior/schema/glTF.KHR_materials_ior.schema.json",
+          "sourceId": "extensions/2.0/Khronos/KHR_materials_ior/schema/material.KHR_materials_ior.schema.json",
           "pointer": "#/properties/ior",
           "value": 1.5
         }
@@ -573,27 +664,28 @@ export const glTFSchemaMetadata = {
     {
       "kind": "ratified-extension",
       "extension": "KHR_materials_iridescence",
-      "path": "extensions/2.0/Khronos/KHR_materials_iridescence/schema/glTF.KHR_materials_iridescence.schema.json",
-      "schemaName": "glTF.KHR_materials_iridescence.schema.json",
-      "title": "KHR_materials_iridescence glTF extension",
+      "path": "extensions/2.0/Khronos/KHR_materials_iridescence/schema/material.KHR_materials_iridescence.schema.json",
+      "ref": "origin/main",
+      "schemaName": "material.KHR_materials_iridescence.schema.json",
+      "title": "KHR_materials_iridescence glTF Material Extension",
       "defaults": [
         {
-          "sourceId": "extensions/2.0/Khronos/KHR_materials_iridescence/schema/glTF.KHR_materials_iridescence.schema.json",
+          "sourceId": "extensions/2.0/Khronos/KHR_materials_iridescence/schema/material.KHR_materials_iridescence.schema.json",
           "pointer": "#/properties/iridescenceFactor",
           "value": 0
         },
         {
-          "sourceId": "extensions/2.0/Khronos/KHR_materials_iridescence/schema/glTF.KHR_materials_iridescence.schema.json",
+          "sourceId": "extensions/2.0/Khronos/KHR_materials_iridescence/schema/material.KHR_materials_iridescence.schema.json",
           "pointer": "#/properties/iridescenceIor",
           "value": 1.3
         },
         {
-          "sourceId": "extensions/2.0/Khronos/KHR_materials_iridescence/schema/glTF.KHR_materials_iridescence.schema.json",
+          "sourceId": "extensions/2.0/Khronos/KHR_materials_iridescence/schema/material.KHR_materials_iridescence.schema.json",
           "pointer": "#/properties/iridescenceThicknessMinimum",
           "value": 100
         },
         {
-          "sourceId": "extensions/2.0/Khronos/KHR_materials_iridescence/schema/glTF.KHR_materials_iridescence.schema.json",
+          "sourceId": "extensions/2.0/Khronos/KHR_materials_iridescence/schema/material.KHR_materials_iridescence.schema.json",
           "pointer": "#/properties/iridescenceThicknessMaximum",
           "value": 400
         }
@@ -602,12 +694,13 @@ export const glTFSchemaMetadata = {
     {
       "kind": "ratified-extension",
       "extension": "KHR_materials_sheen",
-      "path": "extensions/2.0/Khronos/KHR_materials_sheen/schema/glTF.KHR_materials_sheen.schema.json",
-      "schemaName": "glTF.KHR_materials_sheen.schema.json",
-      "title": "KHR_materials_sheen glTF extension",
+      "path": "extensions/2.0/Khronos/KHR_materials_sheen/schema/material.KHR_materials_sheen.schema.json",
+      "ref": "origin/main",
+      "schemaName": "material.KHR_materials_sheen.schema.json",
+      "title": "KHR_materials_sheen glTF Material Extension",
       "defaults": [
         {
-          "sourceId": "extensions/2.0/Khronos/KHR_materials_sheen/schema/glTF.KHR_materials_sheen.schema.json",
+          "sourceId": "extensions/2.0/Khronos/KHR_materials_sheen/schema/material.KHR_materials_sheen.schema.json",
           "pointer": "#/properties/sheenColorFactor",
           "value": [
             0,
@@ -616,7 +709,7 @@ export const glTFSchemaMetadata = {
           ]
         },
         {
-          "sourceId": "extensions/2.0/Khronos/KHR_materials_sheen/schema/glTF.KHR_materials_sheen.schema.json",
+          "sourceId": "extensions/2.0/Khronos/KHR_materials_sheen/schema/material.KHR_materials_sheen.schema.json",
           "pointer": "#/properties/sheenRoughnessFactor",
           "value": 0
         }
@@ -625,17 +718,18 @@ export const glTFSchemaMetadata = {
     {
       "kind": "ratified-extension",
       "extension": "KHR_materials_specular",
-      "path": "extensions/2.0/Khronos/KHR_materials_specular/schema/glTF.KHR_materials_specular.schema.json",
-      "schemaName": "glTF.KHR_materials_specular.schema.json",
-      "title": "KHR_materials_specular glTF extension",
+      "path": "extensions/2.0/Khronos/KHR_materials_specular/schema/material.KHR_materials_specular.schema.json",
+      "ref": "origin/main",
+      "schemaName": "material.KHR_materials_specular.schema.json",
+      "title": "KHR_materials_specular glTF Material Extension",
       "defaults": [
         {
-          "sourceId": "extensions/2.0/Khronos/KHR_materials_specular/schema/glTF.KHR_materials_specular.schema.json",
+          "sourceId": "extensions/2.0/Khronos/KHR_materials_specular/schema/material.KHR_materials_specular.schema.json",
           "pointer": "#/properties/specularFactor",
           "value": 1
         },
         {
-          "sourceId": "extensions/2.0/Khronos/KHR_materials_specular/schema/glTF.KHR_materials_specular.schema.json",
+          "sourceId": "extensions/2.0/Khronos/KHR_materials_specular/schema/material.KHR_materials_specular.schema.json",
           "pointer": "#/properties/specularColorFactor",
           "value": [
             1,
@@ -648,12 +742,13 @@ export const glTFSchemaMetadata = {
     {
       "kind": "ratified-extension",
       "extension": "KHR_materials_transmission",
-      "path": "extensions/2.0/Khronos/KHR_materials_transmission/schema/glTF.KHR_materials_transmission.schema.json",
-      "schemaName": "glTF.KHR_materials_transmission.schema.json",
-      "title": "KHR_materials_transmission glTF extension",
+      "path": "extensions/2.0/Khronos/KHR_materials_transmission/schema/material.KHR_materials_transmission.schema.json",
+      "ref": "origin/main",
+      "schemaName": "material.KHR_materials_transmission.schema.json",
+      "title": "KHR_materials_transmission glTF Material Extension",
       "defaults": [
         {
-          "sourceId": "extensions/2.0/Khronos/KHR_materials_transmission/schema/glTF.KHR_materials_transmission.schema.json",
+          "sourceId": "extensions/2.0/Khronos/KHR_materials_transmission/schema/material.KHR_materials_transmission.schema.json",
           "pointer": "#/properties/transmissionFactor",
           "value": 0
         }
@@ -662,41 +757,45 @@ export const glTFSchemaMetadata = {
     {
       "kind": "ratified-extension",
       "extension": "KHR_materials_unlit",
-      "path": "extensions/2.0/Khronos/KHR_materials_unlit/schema/glTF.KHR_materials_unlit.schema.json",
-      "schemaName": "glTF.KHR_materials_unlit.schema.json",
-      "title": "KHR_materials_unlit glTF extension",
+      "path": "extensions/2.0/Khronos/KHR_materials_unlit/schema/material.KHR_materials_unlit.schema.json",
+      "ref": "origin/main",
+      "schemaName": "material.KHR_materials_unlit.schema.json",
+      "title": "KHR_materials_unlit glTF Material Extension",
       "defaults": []
     },
     {
       "kind": "ratified-extension",
       "extension": "KHR_materials_variants",
       "path": "extensions/2.0/Khronos/KHR_materials_variants/schema/glTF.KHR_materials_variants.schema.json",
+      "ref": "origin/main",
       "schemaName": "glTF.KHR_materials_variants.schema.json",
-      "title": "KHR_materials_variants glTF extension",
+      "title": "KHR_materials_variants glTF Document Extension",
       "defaults": []
     },
     {
       "kind": "ratified-extension",
       "extension": "KHR_materials_variants",
       "path": "extensions/2.0/Khronos/KHR_materials_variants/schema/mesh.primitive.KHR_materials_variants.schema.json",
+      "ref": "origin/main",
       "schemaName": "mesh.primitive.KHR_materials_variants.schema.json",
-      "title": "KHR_materials_variants mesh primitive extension",
+      "title": "KHR_materials_variants glTF Mesh Primitive Extension",
       "defaults": []
     },
     {
       "kind": "ratified-extension",
       "extension": "KHR_materials_volume",
-      "path": "extensions/2.0/Khronos/KHR_materials_volume/schema/glTF.KHR_materials_volume.schema.json",
-      "schemaName": "glTF.KHR_materials_volume.schema.json",
-      "title": "KHR_materials_volume glTF extension",
+      "path": "extensions/2.0/Khronos/KHR_materials_volume/schema/material.KHR_materials_volume.schema.json",
+      "ref": "origin/main",
+      "schemaName": "material.KHR_materials_volume.schema.json",
+      "title": "KHR_materials_volume glTF Material Extension",
       "defaults": [
         {
-          "sourceId": "extensions/2.0/Khronos/KHR_materials_volume/schema/glTF.KHR_materials_volume.schema.json",
+          "sourceId": "extensions/2.0/Khronos/KHR_materials_volume/schema/material.KHR_materials_volume.schema.json",
           "pointer": "#/properties/thicknessFactor",
           "value": 0
         },
         {
-          "sourceId": "extensions/2.0/Khronos/KHR_materials_volume/schema/glTF.KHR_materials_volume.schema.json",
+          "sourceId": "extensions/2.0/Khronos/KHR_materials_volume/schema/material.KHR_materials_volume.schema.json",
           "pointer": "#/properties/attenuationColor",
           "value": [
             1,
@@ -708,21 +807,38 @@ export const glTFSchemaMetadata = {
     },
     {
       "kind": "ratified-extension",
+      "extension": "KHR_node_visibility",
+      "path": "extensions/2.0/Khronos/KHR_node_visibility/schema/node.KHR_node_visibility.schema.json",
+      "ref": "origin/main",
+      "schemaName": "node.KHR_node_visibility.schema.json",
+      "title": "KHR_node_visibility glTF Node Extension",
+      "defaults": [
+        {
+          "sourceId": "extensions/2.0/Khronos/KHR_node_visibility/schema/node.KHR_node_visibility.schema.json",
+          "pointer": "#/properties/visible",
+          "value": true
+        }
+      ]
+    },
+    {
+      "kind": "ratified-extension",
       "extension": "KHR_texture_basisu",
       "path": "extensions/2.0/Khronos/KHR_texture_basisu/schema/texture.KHR_texture_basisu.schema.json",
+      "ref": "origin/main",
       "schemaName": "texture.KHR_texture_basisu.schema.json",
-      "title": "KHR_texture_basisu glTF extension",
+      "title": "KHR_texture_basisu glTF Texture Extension",
       "defaults": []
     },
     {
       "kind": "ratified-extension",
       "extension": "KHR_texture_transform",
-      "path": "extensions/2.0/Khronos/KHR_texture_transform/schema/KHR_texture_transform.textureInfo.schema.json",
-      "schemaName": "KHR_texture_transform.textureInfo.schema.json",
-      "title": "KHR_texture_transform textureInfo extension",
+      "path": "extensions/2.0/Khronos/KHR_texture_transform/schema/textureInfo.KHR_texture_transform.schema.json",
+      "ref": "origin/main",
+      "schemaName": "textureInfo.KHR_texture_transform.schema.json",
+      "title": "KHR_texture_transform glTF TextureInfo Extension",
       "defaults": [
         {
-          "sourceId": "extensions/2.0/Khronos/KHR_texture_transform/schema/KHR_texture_transform.textureInfo.schema.json",
+          "sourceId": "extensions/2.0/Khronos/KHR_texture_transform/schema/textureInfo.KHR_texture_transform.schema.json",
           "pointer": "#/properties/offset",
           "value": [
             0,
@@ -730,12 +846,12 @@ export const glTFSchemaMetadata = {
           ]
         },
         {
-          "sourceId": "extensions/2.0/Khronos/KHR_texture_transform/schema/KHR_texture_transform.textureInfo.schema.json",
+          "sourceId": "extensions/2.0/Khronos/KHR_texture_transform/schema/textureInfo.KHR_texture_transform.schema.json",
           "pointer": "#/properties/rotation",
           "value": 0
         },
         {
-          "sourceId": "extensions/2.0/Khronos/KHR_texture_transform/schema/KHR_texture_transform.textureInfo.schema.json",
+          "sourceId": "extensions/2.0/Khronos/KHR_texture_transform/schema/textureInfo.KHR_texture_transform.schema.json",
           "pointer": "#/properties/scale",
           "value": [
             1,
@@ -748,16 +864,18 @@ export const glTFSchemaMetadata = {
       "kind": "ratified-extension",
       "extension": "KHR_xmp_json_ld",
       "path": "extensions/2.0/Khronos/KHR_xmp_json_ld/schema/glTF.KHR_xmp_json_ld.schema.json",
+      "ref": "origin/main",
       "schemaName": "glTF.KHR_xmp_json_ld.schema.json",
-      "title": "KHR_xmp_json_ld glTF extension",
+      "title": "KHR_xmp_json_ld glTF Document Extension",
       "defaults": []
     },
     {
       "kind": "ratified-extension",
       "extension": "KHR_xmp_json_ld",
       "path": "extensions/2.0/Khronos/KHR_xmp_json_ld/schema/KHR_xmp_json_ld.schema.json",
+      "ref": "origin/main",
       "schemaName": "KHR_xmp_json_ld.schema.json",
-      "title": "KHR_xmp_json_ld extension",
+      "title": "KHR_xmp_json_ld glTF Extension",
       "defaults": []
     },
     {
@@ -828,6 +946,36 @@ export const glTFSchemaMetadata = {
       "id": "variable.KHR_interactivity.schema.json",
       "title": "Behavior graph variable",
       "defaults": []
+    },
+    {
+      "kind": "draft-extension-pr",
+      "extension": "KHR_node_selectability",
+      "path": "extensions/2.0/Khronos/KHR_node_selectability/schema/node.KHR_node_selectability.schema.json",
+      "ref": "refs/remotes/origin/pr/2422-selectability",
+      "schemaName": "node.KHR_node_selectability.schema.json",
+      "title": "KHR_node_selectability glTF Node Extension",
+      "defaults": [
+        {
+          "sourceId": "extensions/2.0/Khronos/KHR_node_selectability/schema/node.KHR_node_selectability.schema.json",
+          "pointer": "#/properties/selectable",
+          "value": true
+        }
+      ]
+    },
+    {
+      "kind": "draft-extension-pr",
+      "extension": "KHR_node_hoverability",
+      "path": "extensions/2.0/Khronos/KHR_node_hoverability/schema/node.KHR_node_hoverability.schema.json",
+      "ref": "refs/remotes/origin/pr/2426-hoverability",
+      "schemaName": "node.KHR_node_hoverability.schema.json",
+      "title": "KHR_node_hoverability glTF Node Extension",
+      "defaults": [
+        {
+          "sourceId": "extensions/2.0/Khronos/KHR_node_hoverability/schema/node.KHR_node_hoverability.schema.json",
+          "pointer": "#/properties/hoverable",
+          "value": true
+        }
+      ]
     }
   ],
   "defaultBySchemaPointer": {
@@ -901,42 +1049,723 @@ export const glTFSchemaMetadata = {
     "extensions/2.0/Khronos/KHR_lights_punctual/schema/light.schema.json#/properties/intensity": 1,
     "extensions/2.0/Khronos/KHR_lights_punctual/schema/light.spot.schema.json#/properties/innerConeAngle": 0,
     "extensions/2.0/Khronos/KHR_lights_punctual/schema/light.spot.schema.json#/properties/outerConeAngle": 0.7853981633974483,
-    "extensions/2.0/Khronos/KHR_materials_clearcoat/schema/glTF.KHR_materials_clearcoat.schema.json#/properties/clearcoatFactor": 0,
-    "extensions/2.0/Khronos/KHR_materials_clearcoat/schema/glTF.KHR_materials_clearcoat.schema.json#/properties/clearcoatRoughnessFactor": 0,
-    "extensions/2.0/Khronos/KHR_materials_emissive_strength/schema/glTF.KHR_materials_emissive_strength.schema.json#/properties/emissiveStrength": 1,
-    "extensions/2.0/Khronos/KHR_materials_ior/schema/glTF.KHR_materials_ior.schema.json#/properties/ior": 1.5,
-    "extensions/2.0/Khronos/KHR_materials_iridescence/schema/glTF.KHR_materials_iridescence.schema.json#/properties/iridescenceFactor": 0,
-    "extensions/2.0/Khronos/KHR_materials_iridescence/schema/glTF.KHR_materials_iridescence.schema.json#/properties/iridescenceIor": 1.3,
-    "extensions/2.0/Khronos/KHR_materials_iridescence/schema/glTF.KHR_materials_iridescence.schema.json#/properties/iridescenceThicknessMinimum": 100,
-    "extensions/2.0/Khronos/KHR_materials_iridescence/schema/glTF.KHR_materials_iridescence.schema.json#/properties/iridescenceThicknessMaximum": 400,
-    "extensions/2.0/Khronos/KHR_materials_sheen/schema/glTF.KHR_materials_sheen.schema.json#/properties/sheenColorFactor": [
+    "extensions/2.0/Khronos/KHR_materials_anisotropy/schema/material.KHR_materials_anisotropy.schema.json#/properties/anisotropyStrength": 0,
+    "extensions/2.0/Khronos/KHR_materials_anisotropy/schema/material.KHR_materials_anisotropy.schema.json#/properties/anisotropyRotation": 0,
+    "extensions/2.0/Khronos/KHR_materials_clearcoat/schema/material.KHR_materials_clearcoat.schema.json#/properties/clearcoatFactor": 0,
+    "extensions/2.0/Khronos/KHR_materials_clearcoat/schema/material.KHR_materials_clearcoat.schema.json#/properties/clearcoatRoughnessFactor": 0,
+    "extensions/2.0/Khronos/KHR_materials_dispersion/schema/material.KHR_materials_dispersion.schema.json#/properties/dispersion": 0,
+    "extensions/2.0/Khronos/KHR_materials_emissive_strength/schema/material.KHR_materials_emissive_strength.schema.json#/properties/emissiveStrength": 1,
+    "extensions/2.0/Khronos/KHR_materials_ior/schema/material.KHR_materials_ior.schema.json#/properties/ior": 1.5,
+    "extensions/2.0/Khronos/KHR_materials_iridescence/schema/material.KHR_materials_iridescence.schema.json#/properties/iridescenceFactor": 0,
+    "extensions/2.0/Khronos/KHR_materials_iridescence/schema/material.KHR_materials_iridescence.schema.json#/properties/iridescenceIor": 1.3,
+    "extensions/2.0/Khronos/KHR_materials_iridescence/schema/material.KHR_materials_iridescence.schema.json#/properties/iridescenceThicknessMinimum": 100,
+    "extensions/2.0/Khronos/KHR_materials_iridescence/schema/material.KHR_materials_iridescence.schema.json#/properties/iridescenceThicknessMaximum": 400,
+    "extensions/2.0/Khronos/KHR_materials_sheen/schema/material.KHR_materials_sheen.schema.json#/properties/sheenColorFactor": [
       0,
       0,
       0
     ],
-    "extensions/2.0/Khronos/KHR_materials_sheen/schema/glTF.KHR_materials_sheen.schema.json#/properties/sheenRoughnessFactor": 0,
-    "extensions/2.0/Khronos/KHR_materials_specular/schema/glTF.KHR_materials_specular.schema.json#/properties/specularFactor": 1,
-    "extensions/2.0/Khronos/KHR_materials_specular/schema/glTF.KHR_materials_specular.schema.json#/properties/specularColorFactor": [
+    "extensions/2.0/Khronos/KHR_materials_sheen/schema/material.KHR_materials_sheen.schema.json#/properties/sheenRoughnessFactor": 0,
+    "extensions/2.0/Khronos/KHR_materials_specular/schema/material.KHR_materials_specular.schema.json#/properties/specularFactor": 1,
+    "extensions/2.0/Khronos/KHR_materials_specular/schema/material.KHR_materials_specular.schema.json#/properties/specularColorFactor": [
       1,
       1,
       1
     ],
-    "extensions/2.0/Khronos/KHR_materials_transmission/schema/glTF.KHR_materials_transmission.schema.json#/properties/transmissionFactor": 0,
-    "extensions/2.0/Khronos/KHR_materials_volume/schema/glTF.KHR_materials_volume.schema.json#/properties/thicknessFactor": 0,
-    "extensions/2.0/Khronos/KHR_materials_volume/schema/glTF.KHR_materials_volume.schema.json#/properties/attenuationColor": [
+    "extensions/2.0/Khronos/KHR_materials_transmission/schema/material.KHR_materials_transmission.schema.json#/properties/transmissionFactor": 0,
+    "extensions/2.0/Khronos/KHR_materials_volume/schema/material.KHR_materials_volume.schema.json#/properties/thicknessFactor": 0,
+    "extensions/2.0/Khronos/KHR_materials_volume/schema/material.KHR_materials_volume.schema.json#/properties/attenuationColor": [
       1,
       1,
       1
     ],
-    "extensions/2.0/Khronos/KHR_texture_transform/schema/KHR_texture_transform.textureInfo.schema.json#/properties/offset": [
+    "extensions/2.0/Khronos/KHR_node_visibility/schema/node.KHR_node_visibility.schema.json#/properties/visible": true,
+    "extensions/2.0/Khronos/KHR_texture_transform/schema/textureInfo.KHR_texture_transform.schema.json#/properties/offset": [
       0,
       0
     ],
-    "extensions/2.0/Khronos/KHR_texture_transform/schema/KHR_texture_transform.textureInfo.schema.json#/properties/rotation": 0,
-    "extensions/2.0/Khronos/KHR_texture_transform/schema/KHR_texture_transform.textureInfo.schema.json#/properties/scale": [
+    "extensions/2.0/Khronos/KHR_texture_transform/schema/textureInfo.KHR_texture_transform.schema.json#/properties/rotation": 0,
+    "extensions/2.0/Khronos/KHR_texture_transform/schema/textureInfo.KHR_texture_transform.schema.json#/properties/scale": [
       1,
       1
     ],
-    "extensions/2.0/Khronos/KHR_interactivity/schema/glTF.KHR_interactivity.schema.json#/properties/graph": 0
-  }
+    "extensions/2.0/Khronos/KHR_interactivity/schema/glTF.KHR_interactivity.schema.json#/properties/graph": 0,
+    "extensions/2.0/Khronos/KHR_node_selectability/schema/node.KHR_node_selectability.schema.json#/properties/selectable": true,
+    "extensions/2.0/Khronos/KHR_node_hoverability/schema/node.KHR_node_hoverability.schema.json#/properties/hoverable": true
+  },
+  "materialPointers": [
+    {
+      "template": "/materials/{}/alphaCutoff",
+      "segments": [
+        "alphaCutoff"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/alphaCutoff",
+      "defaultValue": 0.5
+    },
+    {
+      "template": "/materials/{}/doubleSided",
+      "segments": [
+        "doubleSided"
+      ],
+      "typeName": "bool",
+      "readOnly": true,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/doubleSided",
+      "defaultValue": false
+    },
+    {
+      "template": "/materials/{}/emissiveFactor",
+      "segments": [
+        "emissiveFactor"
+      ],
+      "typeName": "float3",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/emissiveFactor",
+      "defaultValue": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "template": "/materials/{}/emissiveTexture/texCoord",
+      "segments": [
+        "emissiveTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/emissiveTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "emissiveTexture"
+      ],
+      "defaultValue": 0
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_anisotropy/anisotropyRotation",
+      "segments": [
+        "extensions",
+        "KHR_materials_anisotropy",
+        "anisotropyRotation"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_anisotropy/schema/material.KHR_materials_anisotropy.schema.json#/properties/anisotropyRotation",
+      "defaultValue": 0,
+      "extension": "KHR_materials_anisotropy"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_anisotropy/anisotropyStrength",
+      "segments": [
+        "extensions",
+        "KHR_materials_anisotropy",
+        "anisotropyStrength"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_anisotropy/schema/material.KHR_materials_anisotropy.schema.json#/properties/anisotropyStrength",
+      "defaultValue": 0,
+      "extension": "KHR_materials_anisotropy"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_anisotropy/anisotropyTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_anisotropy",
+        "anisotropyTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_anisotropy/schema/material.KHR_materials_anisotropy.schema.json#/properties/anisotropyTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_anisotropy",
+        "anisotropyTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_anisotropy"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_clearcoat/clearcoatFactor",
+      "segments": [
+        "extensions",
+        "KHR_materials_clearcoat",
+        "clearcoatFactor"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_clearcoat/schema/material.KHR_materials_clearcoat.schema.json#/properties/clearcoatFactor",
+      "defaultValue": 0,
+      "extension": "KHR_materials_clearcoat"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_clearcoat/clearcoatNormalTexture/scale",
+      "segments": [
+        "extensions",
+        "KHR_materials_clearcoat",
+        "clearcoatNormalTexture",
+        "scale"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_clearcoat/schema/material.KHR_materials_clearcoat.schema.json#/properties/clearcoatNormalTexture/properties/scale",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_clearcoat",
+        "clearcoatNormalTexture"
+      ],
+      "defaultValue": 1,
+      "extension": "KHR_materials_clearcoat"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_clearcoat/clearcoatRoughnessFactor",
+      "segments": [
+        "extensions",
+        "KHR_materials_clearcoat",
+        "clearcoatRoughnessFactor"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_clearcoat/schema/material.KHR_materials_clearcoat.schema.json#/properties/clearcoatRoughnessFactor",
+      "defaultValue": 0,
+      "extension": "KHR_materials_clearcoat"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_clearcoat/clearcoatRoughnessTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_clearcoat",
+        "clearcoatRoughnessTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_clearcoat/schema/material.KHR_materials_clearcoat.schema.json#/properties/clearcoatRoughnessTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_clearcoat",
+        "clearcoatRoughnessTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_clearcoat"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_clearcoat/clearcoatTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_clearcoat",
+        "clearcoatTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_clearcoat/schema/material.KHR_materials_clearcoat.schema.json#/properties/clearcoatTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_clearcoat",
+        "clearcoatTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_clearcoat"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_dispersion/dispersion",
+      "segments": [
+        "extensions",
+        "KHR_materials_dispersion",
+        "dispersion"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_dispersion/schema/material.KHR_materials_dispersion.schema.json#/properties/dispersion",
+      "defaultValue": 0,
+      "extension": "KHR_materials_dispersion"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_emissive_strength/emissiveStrength",
+      "segments": [
+        "extensions",
+        "KHR_materials_emissive_strength",
+        "emissiveStrength"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_emissive_strength/schema/material.KHR_materials_emissive_strength.schema.json#/properties/emissiveStrength",
+      "defaultValue": 1,
+      "extension": "KHR_materials_emissive_strength"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_ior/ior",
+      "segments": [
+        "extensions",
+        "KHR_materials_ior",
+        "ior"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_ior/schema/material.KHR_materials_ior.schema.json#/properties/ior",
+      "defaultValue": 1.5,
+      "extension": "KHR_materials_ior"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_iridescence/iridescenceFactor",
+      "segments": [
+        "extensions",
+        "KHR_materials_iridescence",
+        "iridescenceFactor"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_iridescence/schema/material.KHR_materials_iridescence.schema.json#/properties/iridescenceFactor",
+      "defaultValue": 0,
+      "extension": "KHR_materials_iridescence"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_iridescence/iridescenceIor",
+      "segments": [
+        "extensions",
+        "KHR_materials_iridescence",
+        "iridescenceIor"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_iridescence/schema/material.KHR_materials_iridescence.schema.json#/properties/iridescenceIor",
+      "defaultValue": 1.3,
+      "extension": "KHR_materials_iridescence"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_iridescence/iridescenceTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_iridescence",
+        "iridescenceTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_iridescence/schema/material.KHR_materials_iridescence.schema.json#/properties/iridescenceTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_iridescence",
+        "iridescenceTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_iridescence"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_iridescence/iridescenceThicknessMaximum",
+      "segments": [
+        "extensions",
+        "KHR_materials_iridescence",
+        "iridescenceThicknessMaximum"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_iridescence/schema/material.KHR_materials_iridescence.schema.json#/properties/iridescenceThicknessMaximum",
+      "defaultValue": 400,
+      "extension": "KHR_materials_iridescence"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_iridescence/iridescenceThicknessMinimum",
+      "segments": [
+        "extensions",
+        "KHR_materials_iridescence",
+        "iridescenceThicknessMinimum"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_iridescence/schema/material.KHR_materials_iridescence.schema.json#/properties/iridescenceThicknessMinimum",
+      "defaultValue": 100,
+      "extension": "KHR_materials_iridescence"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_iridescence/iridescenceThicknessTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_iridescence",
+        "iridescenceThicknessTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_iridescence/schema/material.KHR_materials_iridescence.schema.json#/properties/iridescenceThicknessTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_iridescence",
+        "iridescenceThicknessTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_iridescence"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_sheen/sheenColorFactor",
+      "segments": [
+        "extensions",
+        "KHR_materials_sheen",
+        "sheenColorFactor"
+      ],
+      "typeName": "float3",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_sheen/schema/material.KHR_materials_sheen.schema.json#/properties/sheenColorFactor",
+      "defaultValue": [
+        0,
+        0,
+        0
+      ],
+      "extension": "KHR_materials_sheen"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_sheen/sheenColorTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_sheen",
+        "sheenColorTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_sheen/schema/material.KHR_materials_sheen.schema.json#/properties/sheenColorTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_sheen",
+        "sheenColorTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_sheen"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_sheen/sheenRoughnessFactor",
+      "segments": [
+        "extensions",
+        "KHR_materials_sheen",
+        "sheenRoughnessFactor"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_sheen/schema/material.KHR_materials_sheen.schema.json#/properties/sheenRoughnessFactor",
+      "defaultValue": 0,
+      "extension": "KHR_materials_sheen"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_sheen/sheenRoughnessTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_sheen",
+        "sheenRoughnessTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_sheen/schema/material.KHR_materials_sheen.schema.json#/properties/sheenRoughnessTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_sheen",
+        "sheenRoughnessTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_sheen"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_specular/specularColorFactor",
+      "segments": [
+        "extensions",
+        "KHR_materials_specular",
+        "specularColorFactor"
+      ],
+      "typeName": "float3",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_specular/schema/material.KHR_materials_specular.schema.json#/properties/specularColorFactor",
+      "defaultValue": [
+        1,
+        1,
+        1
+      ],
+      "extension": "KHR_materials_specular"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_specular/specularColorTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_specular",
+        "specularColorTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_specular/schema/material.KHR_materials_specular.schema.json#/properties/specularColorTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_specular",
+        "specularColorTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_specular"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_specular/specularFactor",
+      "segments": [
+        "extensions",
+        "KHR_materials_specular",
+        "specularFactor"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_specular/schema/material.KHR_materials_specular.schema.json#/properties/specularFactor",
+      "defaultValue": 1,
+      "extension": "KHR_materials_specular"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_specular/specularTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_specular",
+        "specularTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_specular/schema/material.KHR_materials_specular.schema.json#/properties/specularTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_specular",
+        "specularTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_specular"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_transmission/transmissionFactor",
+      "segments": [
+        "extensions",
+        "KHR_materials_transmission",
+        "transmissionFactor"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_transmission/schema/material.KHR_materials_transmission.schema.json#/properties/transmissionFactor",
+      "defaultValue": 0,
+      "extension": "KHR_materials_transmission"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_transmission/transmissionTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_transmission",
+        "transmissionTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_transmission/schema/material.KHR_materials_transmission.schema.json#/properties/transmissionTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_transmission",
+        "transmissionTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_transmission"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_volume/attenuationColor",
+      "segments": [
+        "extensions",
+        "KHR_materials_volume",
+        "attenuationColor"
+      ],
+      "typeName": "float3",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_volume/schema/material.KHR_materials_volume.schema.json#/properties/attenuationColor",
+      "defaultValue": [
+        1,
+        1,
+        1
+      ],
+      "extension": "KHR_materials_volume"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_volume/attenuationDistance",
+      "segments": [
+        "extensions",
+        "KHR_materials_volume",
+        "attenuationDistance"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_volume/schema/material.KHR_materials_volume.schema.json#/properties/attenuationDistance",
+      "extension": "KHR_materials_volume"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_volume/thicknessFactor",
+      "segments": [
+        "extensions",
+        "KHR_materials_volume",
+        "thicknessFactor"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_volume/schema/material.KHR_materials_volume.schema.json#/properties/thicknessFactor",
+      "defaultValue": 0,
+      "extension": "KHR_materials_volume"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_volume/thicknessTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_volume",
+        "thicknessTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_volume/schema/material.KHR_materials_volume.schema.json#/properties/thicknessTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_volume",
+        "thicknessTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_volume"
+    },
+    {
+      "template": "/materials/{}/normalTexture/scale",
+      "segments": [
+        "normalTexture",
+        "scale"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/normalTexture/properties/scale",
+      "requiredParentSegments": [
+        "normalTexture"
+      ],
+      "defaultValue": 1
+    },
+    {
+      "template": "/materials/{}/occlusionTexture/strength",
+      "segments": [
+        "occlusionTexture",
+        "strength"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/occlusionTexture/properties/strength",
+      "requiredParentSegments": [
+        "occlusionTexture"
+      ],
+      "defaultValue": 1
+    },
+    {
+      "template": "/materials/{}/pbrMetallicRoughness/baseColorFactor",
+      "segments": [
+        "pbrMetallicRoughness",
+        "baseColorFactor"
+      ],
+      "typeName": "float4",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/pbrMetallicRoughness/properties/baseColorFactor",
+      "defaultValue": [
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "template": "/materials/{}/pbrMetallicRoughness/baseColorTexture/texCoord",
+      "segments": [
+        "pbrMetallicRoughness",
+        "baseColorTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/pbrMetallicRoughness/properties/baseColorTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "pbrMetallicRoughness",
+        "baseColorTexture"
+      ],
+      "defaultValue": 0
+    },
+    {
+      "template": "/materials/{}/pbrMetallicRoughness/metallicFactor",
+      "segments": [
+        "pbrMetallicRoughness",
+        "metallicFactor"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/pbrMetallicRoughness/properties/metallicFactor",
+      "defaultValue": 1
+    },
+    {
+      "template": "/materials/{}/pbrMetallicRoughness/metallicRoughnessTexture/texCoord",
+      "segments": [
+        "pbrMetallicRoughness",
+        "metallicRoughnessTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/pbrMetallicRoughness/properties/metallicRoughnessTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "pbrMetallicRoughness",
+        "metallicRoughnessTexture"
+      ],
+      "defaultValue": 0
+    },
+    {
+      "template": "/materials/{}/pbrMetallicRoughness/roughnessFactor",
+      "segments": [
+        "pbrMetallicRoughness",
+        "roughnessFactor"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/pbrMetallicRoughness/properties/roughnessFactor",
+      "defaultValue": 1
+    }
+  ],
+  "nodeExtensionPointers": [
+    {
+      "template": "/nodes/{}/extensions/KHR_node_hoverability/hoverable",
+      "segments": [
+        "extensions",
+        "KHR_node_hoverability",
+        "hoverable"
+      ],
+      "typeName": "bool",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_node_hoverability/schema/node.KHR_node_hoverability.schema.json#/properties/hoverable",
+      "defaultValue": true,
+      "extension": "KHR_node_hoverability"
+    },
+    {
+      "template": "/nodes/{}/extensions/KHR_node_selectability/selectable",
+      "segments": [
+        "extensions",
+        "KHR_node_selectability",
+        "selectable"
+      ],
+      "typeName": "bool",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_node_selectability/schema/node.KHR_node_selectability.schema.json#/properties/selectable",
+      "defaultValue": true,
+      "extension": "KHR_node_selectability"
+    },
+    {
+      "template": "/nodes/{}/extensions/KHR_node_visibility/visible",
+      "segments": [
+        "extensions",
+        "KHR_node_visibility",
+        "visible"
+      ],
+      "typeName": "bool",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_node_visibility/schema/node.KHR_node_visibility.schema.json#/properties/visible",
+      "defaultValue": true,
+      "extension": "KHR_node_visibility"
+    }
+  ]
 } as const;

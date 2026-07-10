@@ -36,6 +36,43 @@ describe("GlTFObjectModelDecorator", () => {
         decorator.setPathValue("/materials/0/alphaCutoff", [0.25]);
         expect(decorator.getPathValue("/materials/0/alphaCutoff")).toEqual([0.25]);
     });
+
+    it("registers draft node extension pointers from generated schema metadata", () => {
+        const decorator = createDecorator({
+            nodes: [{
+                extensions: {
+                    KHR_node_selectability: {},
+                    KHR_node_hoverability: { hoverable: false },
+                },
+            }],
+        });
+
+        expect(decorator.getPathValue("/nodes/0/extensions/KHR_node_selectability/selectable")).toEqual([true]);
+        expect(decorator.getPathValue("/nodes/0/extensions/KHR_node_hoverability/hoverable")).toEqual([false]);
+
+        decorator.setPathValue("/nodes/0/extensions/KHR_node_selectability/selectable", [false]);
+        expect(decorator.getPathValue("/nodes/0/extensions/KHR_node_selectability/selectable")).toEqual([false]);
+    });
+
+    it("registers material pointers from ratified material schemas", () => {
+        const decorator = createDecorator({
+            materials: [{
+                extensions: {
+                    KHR_materials_dispersion: {},
+                    KHR_materials_clearcoat: {
+                        clearcoatNormalTexture: { index: 0 },
+                    },
+                },
+            }],
+        });
+
+        expect(decorator.getPathValue("/materials/0/extensions/KHR_materials_dispersion/dispersion")).toEqual([0]);
+        expect(decorator.getPathValue("/materials/0/extensions/KHR_materials_clearcoat/clearcoatNormalTexture/scale")).toEqual([1]);
+        expect(decorator.isValidJsonPtr("/materials/0/extensions/KHR_materials_clearcoat/clearcoatTexture/texCoord")).toBe(false);
+
+        decorator.setPathValue("/materials/0/extensions/KHR_materials_dispersion/dispersion", [0.25]);
+        expect(decorator.getPathValue("/materials/0/extensions/KHR_materials_dispersion/dispersion")).toEqual([0.25]);
+    });
 });
 
 function createDecorator(gltf: any): GlTFObjectModelDecorator {

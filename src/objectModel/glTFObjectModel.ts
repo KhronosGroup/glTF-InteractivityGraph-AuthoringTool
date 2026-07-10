@@ -15,6 +15,16 @@ interface PointerBinding {
     readOnly: boolean;
 }
 
+interface GeneratedPointerDefinition {
+    template: string;
+    segments: readonly string[];
+    typeName: string;
+    readOnly: boolean;
+    defaultValue?: any;
+    extension?: string;
+    requiredParentSegments?: readonly string[];
+}
+
 export interface GlTFObjectModel {
     nodes: any[];
     parents: Record<number, number>;
@@ -30,6 +40,8 @@ export interface GlTFObjectModel {
 }
 
 const SCHEMA_DEFAULTS = glTFSchemaMetadata.defaultBySchemaPointer as Record<string, any>;
+const MATERIAL_POINTERS = glTFSchemaMetadata.materialPointers as readonly GeneratedPointerDefinition[];
+const NODE_EXTENSION_POINTERS = glTFSchemaMetadata.nodeExtensionPointers as readonly GeneratedPointerDefinition[];
 const schemaDefault = <T,>(schemaPath: string, propertyPath: string, fallback: T): T => (
     cloneValue(SCHEMA_DEFAULTS[`${schemaPath}#/properties/${propertyPath}`] ?? fallback)
 );
@@ -116,6 +128,21 @@ export class GlTFObjectModelDecorator extends ADecorator {
         this.pointer(path, typeName, () => [get()], (value) => set(scalar(value)), readOnly);
     }
 
+    private generatedPointer(target: any, concretePath: string, definition: GeneratedPointerDefinition): void {
+        const segments = [...definition.segments];
+        const defaultValue = Object.prototype.hasOwnProperty.call(definition, "defaultValue")
+            ? definition.defaultValue
+            : undefined;
+        const get = () => getDefaulted(target, segments, defaultValue);
+        const set = (value: any) => setPath(target, segments, isScalarType(definition.typeName) ? scalar(value) : vector(value));
+
+        if (isScalarType(definition.typeName)) {
+            this.scalarPointer(concretePath, definition.typeName, get, set, definition.readOnly);
+            return;
+        }
+        this.pointer(concretePath, definition.typeName, get, set, definition.readOnly);
+    }
+
     private registerScenePointers(): void {
         this.scalarPointer("/animations.length", "int", () => this.objectModel.animations.length, ignoreSet, true);
         this.scalarPointer("/cameras.length", "int", () => this.objectModel.cameras.length, ignoreSet, true);
@@ -171,25 +198,16 @@ export class GlTFObjectModelDecorator extends ADecorator {
             }
             this.scalarPointer(`/nodes/${nodeIndex}/weights.length`, "int", () => node.weights.length, ignoreSet, true);
 
-            this.registerOptionalNodeExtension(node, nodeIndex, "KHR_node_visibility", "visible", "bool", true);
-            this.registerOptionalNodeExtension(node, nodeIndex, "KHR_node_selectability", "selectable", "bool", true);
-            this.registerOptionalNodeExtension(node, nodeIndex, "KHR_node_hoverability", "hoverable", "bool", true);
+            for (const pointerDefinition of NODE_EXTENSION_POINTERS) {
+                if (node.extensions?.[pointerDefinition.extension ?? ""] === undefined) {
+                    continue;
+                }
+                this.generatedPointer(node, pointerDefinition.template.replace("{}", String(nodeIndex)), pointerDefinition);
+            }
             if (node.extensions?.KHR_lights_punctual?.light !== undefined) {
                 this.pointer(`/nodes/${nodeIndex}/extensions/KHR_lights_punctual/light`, "ref", () => [ref("extensions/KHR_lights_punctual/lights", node.extensions.KHR_lights_punctual.light)], ignoreSet, true);
             }
         });
-    }
-
-    private registerOptionalNodeExtension(node: any, nodeIndex: number, extensionName: string, propertyName: string, typeName: string, fallback: any): void {
-        if (node.extensions?.[extensionName] === undefined) {
-            return;
-        }
-        this.scalarPointer(
-            `/nodes/${nodeIndex}/extensions/${extensionName}/${propertyName}`,
-            typeName,
-            () => node.extensions[extensionName][propertyName] ?? fallback,
-            (value) => node.extensions[extensionName][propertyName] = value
-        );
     }
 
     private registerMeshPointers(): void {
@@ -212,70 +230,17 @@ export class GlTFObjectModelDecorator extends ADecorator {
 
     private registerMaterialPointers(): void {
         this.objectModel.materials.forEach((material, materialIndex) => {
-            this.scalarPointer(`/materials/${materialIndex}/alphaCutoff`, "float", () => getDefaulted(material, ["alphaCutoff"], defaultFor("material.schema.json", "alphaCutoff", 0.5)), (value) => setPath(material, ["alphaCutoff"], value));
-            this.pointer(`/materials/${materialIndex}/emissiveFactor`, "float3", () => getDefaulted(material, ["emissiveFactor"], defaultFor("material.schema.json", "emissiveFactor", [0, 0, 0])), (value) => setPath(material, ["emissiveFactor"], vector(value)));
-            this.scalarPointer(`/materials/${materialIndex}/doubleSided`, "bool", () => getDefaulted(material, ["doubleSided"], defaultFor("material.schema.json", "doubleSided", false)), ignoreSet, true);
-
-            this.pointer(`/materials/${materialIndex}/pbrMetallicRoughness/baseColorFactor`, "float4", () => getDefaulted(material, ["pbrMetallicRoughness", "baseColorFactor"], defaultFor("material.pbrMetallicRoughness.schema.json", "baseColorFactor", [1, 1, 1, 1])), (value) => setPath(material, ["pbrMetallicRoughness", "baseColorFactor"], vector(value)));
-            this.scalarPointer(`/materials/${materialIndex}/pbrMetallicRoughness/metallicFactor`, "float", () => getDefaulted(material, ["pbrMetallicRoughness", "metallicFactor"], defaultFor("material.pbrMetallicRoughness.schema.json", "metallicFactor", 1)), (value) => setPath(material, ["pbrMetallicRoughness", "metallicFactor"], value));
-            this.scalarPointer(`/materials/${materialIndex}/pbrMetallicRoughness/roughnessFactor`, "float", () => getDefaulted(material, ["pbrMetallicRoughness", "roughnessFactor"], defaultFor("material.pbrMetallicRoughness.schema.json", "roughnessFactor", 1)), (value) => setPath(material, ["pbrMetallicRoughness", "roughnessFactor"], value));
-
-            if (material.normalTexture !== undefined) {
-                this.scalarPointer(`/materials/${materialIndex}/normalTexture/scale`, "float", () => getDefaulted(material, ["normalTexture", "scale"], defaultFor("material.normalTextureInfo.schema.json", "scale", 1)), (value) => setPath(material, ["normalTexture", "scale"], value));
+            for (const pointerDefinition of MATERIAL_POINTERS) {
+                if (pointerDefinition.extension && material.extensions?.[pointerDefinition.extension] === undefined) {
+                    continue;
+                }
+                if (pointerDefinition.requiredParentSegments && getPath(material, [...pointerDefinition.requiredParentSegments]) === undefined) {
+                    continue;
+                }
+                this.generatedPointer(material, pointerDefinition.template.replace("{}", String(materialIndex)), pointerDefinition);
             }
-            if (material.occlusionTexture !== undefined) {
-                this.scalarPointer(`/materials/${materialIndex}/occlusionTexture/strength`, "float", () => getDefaulted(material, ["occlusionTexture", "strength"], defaultFor("material.occlusionTextureInfo.schema.json", "strength", 1)), (value) => setPath(material, ["occlusionTexture", "strength"], value));
-            }
-
-            this.registerMaterialExtensionPointers(material, materialIndex);
             this.registerTextureTransformPointers(material, materialIndex);
         });
-    }
-
-    private registerMaterialExtensionPointers(material: any, materialIndex: number): void {
-        const scalarExtensions: [string, string, string, any][] = [
-            ["KHR_materials_anisotropy", "anisotropyStrength", "float", 0],
-            ["KHR_materials_anisotropy", "anisotropyRotation", "float", 0],
-            ["KHR_materials_clearcoat", "clearcoatFactor", "float", 0],
-            ["KHR_materials_clearcoat", "clearcoatRoughnessFactor", "float", 0],
-            ["KHR_materials_clearcoat", "clearcoatNormalTexture/scale", "float", 1],
-            ["KHR_materials_dispersion", "dispersion", "float", 0],
-            ["KHR_materials_emissive_strength", "emissiveStrength", "float", 1],
-            ["KHR_materials_ior", "ior", "float", 1.5],
-            ["KHR_materials_iridescence", "iridescenceFactor", "float", 0],
-            ["KHR_materials_iridescence", "iridescenceIor", "float", 1.3],
-            ["KHR_materials_iridescence", "iridescenceThicknessMinimum", "float", 100],
-            ["KHR_materials_iridescence", "iridescenceThicknessMaximum", "float", 400],
-            ["KHR_materials_sheen", "sheenRoughnessFactor", "float", 0],
-            ["KHR_materials_specular", "specularFactor", "float", 1],
-            ["KHR_materials_transmission", "transmissionFactor", "float", 0],
-            ["KHR_materials_volume", "thicknessFactor", "float", 0],
-            ["KHR_materials_volume", "attenuationDistance", "float", Infinity],
-        ];
-        const vectorExtensions: [string, string, string, any[]][] = [
-            ["KHR_materials_sheen", "sheenColorFactor", "float3", [0, 0, 0]],
-            ["KHR_materials_specular", "specularColorFactor", "float3", [1, 1, 1]],
-            ["KHR_materials_volume", "attenuationColor", "float3", [1, 1, 1]],
-        ];
-
-        for (const [extensionName, propertyPath, typeName, fallback] of scalarExtensions) {
-            if (material.extensions?.[extensionName] === undefined) {
-                continue;
-            }
-            const segments = ["extensions", extensionName, ...propertyPath.split("/")];
-            const schemaName = schemaFileForMaterialExtension(extensionName);
-            const propertyParts = propertyPath.split("/");
-            const propertyName = propertyParts[propertyParts.length - 1];
-            this.scalarPointer(`/materials/${materialIndex}/extensions/${extensionName}/${propertyPath}`, typeName, () => getDefaulted(material, segments, defaultFor(schemaName, propertyName, fallback)), (value) => setPath(material, segments, value));
-        }
-        for (const [extensionName, propertyPath, typeName, fallback] of vectorExtensions) {
-            if (material.extensions?.[extensionName] === undefined) {
-                continue;
-            }
-            const segments = ["extensions", extensionName, propertyPath];
-            const schemaName = schemaFileForMaterialExtension(extensionName);
-            this.pointer(`/materials/${materialIndex}/extensions/${extensionName}/${propertyPath}`, typeName, () => getDefaulted(material, segments, defaultFor(schemaName, propertyPath, fallback)), (value) => setPath(material, segments, vector(value)));
-        }
     }
 
     private registerTextureTransformPointers(material: any, materialIndex: number): void {
@@ -480,10 +445,6 @@ function textureTransformDefault(propertyName: string, fallback: any): any {
     return schemaDefault(`${KHR}/KHR_texture_transform/schema/KHR_texture_transform.textureInfo.schema.json`, propertyName, fallback);
 }
 
-function schemaFileForMaterialExtension(extensionName: string): string {
-    return `glTF.${extensionName}.schema.json`;
-}
-
 function textureInfoPaths(material: any): string[] {
     const paths = ["normalTexture", "occlusionTexture", "emissiveTexture"];
     if (material.pbrMetallicRoughness !== undefined) {
@@ -536,6 +497,10 @@ function scalar(value: any): any {
 
 function vector(value: any): any[] {
     return Array.isArray(value) ? cloneValue(value) : [value];
+}
+
+function isScalarType(typeName: string): boolean {
+    return typeName === "bool" || typeName === "float" || typeName === "int";
 }
 
 function cloneValue<T>(value: T): T {

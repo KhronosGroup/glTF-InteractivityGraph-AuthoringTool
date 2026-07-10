@@ -301,8 +301,8 @@ export class GenericTestDecorator extends ADecorator {
         this.pointer(`/nodes/${nodeCount}/translation`, (p) => this.node(p).translation, (p, v) => this.node(p).translation = v, "float3");
         this.pointer(`/nodes/${nodeCount}/scale`, (p) => this.node(p).scale, (p, v) => this.node(p).scale = v, "float3");
         this.pointer(`/nodes/${nodeCount}/rotation`, (p) => this.node(p).rotation, (p, v) => this.node(p).rotation = v, "float4");
-        this.pointer(`/nodes/${nodeCount}/matrix`, (p) => this.node(p).matrix, () => {}, "float4x4", true);
-        this.pointer(`/nodes/${nodeCount}/globalMatrix`, (p) => this.node(p).globalMatrix, () => {}, "float4x4", true);
+        this.pointer(`/nodes/${nodeCount}/matrix`, (p) => this.localMatrix(this.part(p, 2)), () => {}, "float4x4", true);
+        this.pointer(`/nodes/${nodeCount}/globalMatrix`, (p) => this.globalMatrix(this.part(p, 2)), () => {}, "float4x4", true);
         this.pointer(`/nodes/${nodeCount}/mesh`, (p) => this.node(p).mesh == null ? [null] : [`/meshes/${this.node(p).mesh}`], () => {}, "ref", true);
         this.pointer(`/nodes/${nodeCount}/children/${maxChildren}`, (p) => {
             const childIndex = this.node(p).children?.[this.part(p, 4)];
@@ -355,6 +355,24 @@ export class GenericTestDecorator extends ADecorator {
         return this.world.nodes[this.part(pathValue, 2)];
     }
 
+    private localMatrix(nodeIndex: number): number[] {
+        const node = this.world.nodes[nodeIndex];
+        if (node.matrix) {
+            return matrixWithTranslation(node.matrix, node.translation);
+        }
+        return composeTrsMatrix(node.translation, node.rotation, node.scale);
+    }
+
+    private globalMatrix(nodeIndex: number): number[] {
+        const parentIndex = this.world.parents[nodeIndex];
+        const local = this.localMatrix(nodeIndex);
+        if (parentIndex === undefined) {
+            return local;
+        }
+
+        return multiplyMatrices(this.globalMatrix(parentIndex), local);
+    }
+
     private material(pathValue: string): any {
         return this.world.materials[this.part(pathValue, 2)];
     }
@@ -381,11 +399,10 @@ export class GenericTestDecorator extends ADecorator {
 export function createGenericWorldFromGltf(gltf: any): any {
     return {
         nodes: (gltf.nodes ?? []).map((node: any) => ({
-            translation: node.translation ?? [0, 0, 0],
+            translation: node.translation ?? matrixTranslation(node.matrix) ?? [0, 0, 0],
             scale: node.scale ?? [1, 1, 1],
             rotation: node.rotation ?? [0, 0, 0, 1],
-            matrix: node.matrix ?? identityMatrix(),
-            globalMatrix: node.matrix ?? identityMatrix(),
+            matrix: node.matrix,
             mesh: node.mesh,
             children: node.children ?? [],
             weights: node.weights ?? [],
@@ -539,6 +556,18 @@ function isNegativeInfinityLike(value: unknown): boolean {
     return value === "-Infinity" || Number(value) === -Infinity;
 }
 
+function matrixTranslation(matrix: number[] | undefined): number[] | undefined {
+    return matrix === undefined ? undefined : [matrix[12], matrix[13], matrix[14]];
+}
+
+function matrixWithTranslation(matrix: number[], translation: number[]): number[] {
+    const result = [...matrix];
+    result[12] = translation[0];
+    result[13] = translation[1];
+    result[14] = translation[2];
+    return result;
+}
+
 function formatTestValue(value: unknown): string {
     return JSON.stringify(value, (_key, innerValue) => {
         if (typeof innerValue === "number" && !Number.isFinite(innerValue)) {
@@ -548,8 +577,56 @@ function formatTestValue(value: unknown): string {
     }) ?? "undefined";
 }
 
-function identityMatrix(): number[] {
-    return [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+function composeTrsMatrix(translation: number[], rotation: number[], scale: number[]): number[] {
+    const [x, y, z, w] = rotation;
+    const x2 = x + x;
+    const y2 = y + y;
+    const z2 = z + z;
+    const xx = x * x2;
+    const xy = x * y2;
+    const xz = x * z2;
+    const yy = y * y2;
+    const yz = y * z2;
+    const zz = z * z2;
+    const wx = w * x2;
+    const wy = w * y2;
+    const wz = w * z2;
+    const sx = scale[0];
+    const sy = scale[1];
+    const sz = scale[2];
+
+    return [
+        (1 - (yy + zz)) * sx,
+        (xy + wz) * sx,
+        (xz - wy) * sx,
+        0,
+        (xy - wz) * sy,
+        (1 - (xx + zz)) * sy,
+        (yz + wx) * sy,
+        0,
+        (xz + wy) * sz,
+        (yz - wx) * sz,
+        (1 - (xx + yy)) * sz,
+        0,
+        translation[0],
+        translation[1],
+        translation[2],
+        1,
+    ];
+}
+
+function multiplyMatrices(a: number[], b: number[]): number[] {
+    const out = new Array(16).fill(0);
+    for (let row = 0; row < 4; row++) {
+        for (let column = 0; column < 4; column++) {
+            out[column * 4 + row] =
+                a[0 * 4 + row] * b[column * 4 + 0]
+                + a[1 * 4 + row] * b[column * 4 + 1]
+                + a[2 * 4 + row] * b[column * 4 + 2]
+                + a[3 * 4 + row] * b[column * 4 + 3];
+        }
+    }
+    return out;
 }
 
 function buildParentMap(nodes: any[]): Record<number, number> {

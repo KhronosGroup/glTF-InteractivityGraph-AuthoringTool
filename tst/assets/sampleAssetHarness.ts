@@ -498,11 +498,11 @@ function valuesEqual(actual: unknown[] | undefined, expected: unknown[], typeNam
             if (isNaNLike(expectedValue)) {
                 return isNaNLike(actualValue);
             }
-            if (expectedValue === "Infinity") {
-                return actualValue === Infinity;
+            if (isPositiveInfinityLike(expectedValue)) {
+                return Number(actualValue) === Infinity;
             }
-            if (expectedValue === "-Infinity") {
-                return actualValue === -Infinity;
+            if (isNegativeInfinityLike(expectedValue)) {
+                return Number(actualValue) === -Infinity;
             }
             return Math.abs(Number(actualValue) - Number(expectedValue)) <= 0.1;
         }
@@ -516,7 +516,7 @@ function getSubTestFailure(variables: IInteractivityVariable[], subTest: AssetSu
     if (valuesEqual(result, subTest.expectedResultValue, subTest.resultVarType) && success === true) {
         return undefined;
     }
-    return `expected ${JSON.stringify(subTest.expectedResultValue)} and success=true, got result=${JSON.stringify(result)} success=${JSON.stringify(success)}`;
+    return `expected ${formatTestValue(subTest.expectedResultValue)} and success=true, got result=${formatTestValue(result)} success=${formatTestValue(success)}`;
 }
 
 function toError(error: unknown): Error {
@@ -529,6 +529,23 @@ function scalar(value: any): any {
 
 function isNaNLike(value: unknown): boolean {
     return value === "NaN" || Number.isNaN(Number(value));
+}
+
+function isPositiveInfinityLike(value: unknown): boolean {
+    return value === "Infinity" || Number(value) === Infinity;
+}
+
+function isNegativeInfinityLike(value: unknown): boolean {
+    return value === "-Infinity" || Number(value) === -Infinity;
+}
+
+function formatTestValue(value: unknown): string {
+    return JSON.stringify(value, (_key, innerValue) => {
+        if (typeof innerValue === "number" && !Number.isFinite(innerValue)) {
+            return String(innerValue);
+        }
+        return innerValue;
+    }) ?? "undefined";
 }
 
 function identityMatrix(): number[] {

@@ -10,6 +10,7 @@ import { FLOW_COLOR, UNKNOWN_COLOR, getColorForTypeIndex } from './authoring/soc
 import { GltfObjectModel } from './authoring/gltfObjectModel';
 import { runChunked, isAbortError } from './utils/frameBudget';
 import { ensureInteractivityDeclaration } from './authoring/declarations';
+import { toExecutableConfigurationValue, toExecutableValue } from './authoring/executableGraph';
 
 const edgeStyle = (color: string) => ({ stroke: color, strokeWidth: 2 });
 
@@ -705,7 +706,8 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         executable.declarations = [...graph.declarations || []];
         for (const node of graph.nodes) {
 
-            // Create stripped values object without typeOptions. A static "unset" float value is
+            // Create runtime-only values without editor help/type-resolution fields. A static
+            // "unset" float value is
             // authored in-model as NaN (see socketReconciler.ts / AuthoringGraphNode.tsx); JSON has
             // no NaN/Infinity literal, and JSON.stringify silently turns them into `null` instead of
             // erroring, which would round-trip back in as a bogus 0 rather than the spec's actual
@@ -715,14 +717,21 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
                 if (Array.isArray(value.value) && value.value.some((v) => typeof v === "number" && !Number.isFinite(v))) {
                     return;
                 }
-                strippedValues[key] = {...value, typeOptions: undefined};
+                strippedValues[key] = toExecutableValue(value);
             });
+
+            const strippedConfiguration = Object.fromEntries(
+                Object.entries(node.configuration || {}).map(([key, value]) => [
+                    key,
+                    toExecutableConfigurationValue(value),
+                ])
+            );
 
             const behaveNode: any = {
                 id: node.uid,
                 declaration: executable.declarations.findIndex((declaration: IInteractivityDeclaration) => declaration.op === node.op),
                 values: strippedValues,
-                configuration: node.configuration || {},
+                configuration: strippedConfiguration,
                 flows: node.flows?.output || {},
                 metadata: node.metadata
             };

@@ -57,7 +57,7 @@ export interface LoadAssetCasesOptions {
     applyEnvFilters?: boolean;
 }
 
-export const DEFAULT_SAMPLE_ASSETS_ROOT = path.resolve(process.cwd(), "../glTF-Interactivity-Sample-Assets");
+export const DEFAULT_SAMPLE_ASSETS_ROOT = path.resolve(process.cwd(), "../glTF-Test-Assets-Interactivity");
 
 export function getSampleAssetsRoot(): string {
     return process.env.KHR_INTERACTIVITY_SAMPLE_ASSETS ?? DEFAULT_SAMPLE_ASSETS_ROOT;

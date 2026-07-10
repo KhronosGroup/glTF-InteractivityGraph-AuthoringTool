@@ -74,7 +74,7 @@ This project contains E2E cypress tests which operate on a visual spin up of the
 - npm run test
 
 ### Sample Asset Tests
-These tests use the Khronos glTF Interactivity Sample Assets test catalog. By default the harness looks for the asset repo next to this project at `../glTF-Interactivity-Sample-Assets`; override it with `KHR_INTERACTIVITY_SAMPLE_ASSETS=/path/to/glTF-Interactivity-Sample-Assets`.
+These tests use the Khronos glTF Interactivity Sample Assets test catalog. By default the harness looks for the asset repo next to this project at `../glTF-Test-Assets-Interactivity`; override it with `KHR_INTERACTIVITY_SAMPLE_ASSETS=/path/to/glTF-Test-Assets-Interactivity`.
 
 - `npm run test:assets:core` runs the sample assets against the core behavior engine with a programmatic glTF object-model test decorator.
 - `npm run test:assets:e2e` runs the same single-file assets through a lightweight, browserless Babylon engine world.

@@ -1573,6 +1573,7 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
     {
         op: "flow/setDelay",
         description: "Set the delay for the control flow",
+        aliases: ["delay", "timer", "timeout", "wait"],
         flows: {
             input: {
                 in: {
@@ -3323,6 +3324,7 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
     {
         op: "pointer/get",
         description: "Get a pointer's value",
+        aliases: ["read", "query", "property", "get property"],
         flags: [NodeSpecFlag.DynamicSockets],
         configuration: {
             pointer: {
@@ -3418,6 +3420,7 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
     {
         op: "animation/start",
         description: "Start an animation",
+        aliases: ["play", "play animation", "start playback", "run animation"],
         flows: {
             input: {
                 in: {
@@ -3468,6 +3471,7 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
     {
         op: "animation/stop",
         description: "Stop an animation",
+        aliases: ["pause", "stop playback", "stop animation"],
         flows: {
             input: {
                 in: {
@@ -3541,6 +3545,7 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
         op: "event/onSelect",
         extension: "KHR_node_selectability",
         description: "Event that is triggered when a node is selected",
+        aliases: ["click", "tap", "pick", "select"],
         configuration: {
             nodeIndex: {
                 type: InteractivityConfigurationValueType.INT,
@@ -3596,6 +3601,7 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
         op: "event/onHoverIn",
         extension: "KHR_node_hoverability",
         description: "Event that is triggered when a node is hovered over",
+        aliases: ["hover", "hover in", "mouseover", "pointer enter"],
         configuration: {
             nodeIndex: {
                 type: InteractivityConfigurationValueType.INT,
@@ -3640,6 +3646,7 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
         op: "event/onHoverOut",
         extension: "KHR_node_hoverability",
         description: "Event that is triggered when a node is hovered out",
+        aliases: ["hover out", "mouseout", "pointer leave"],
         configuration: {
             nodeIndex: {
                 type: InteractivityConfigurationValueType.INT,

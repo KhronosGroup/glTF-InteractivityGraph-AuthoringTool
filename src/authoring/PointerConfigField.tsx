@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { InteractivityValueType } from "../BasicBehaveEngine/types/InteractivityGraph";
-import { pointerCatalogue, PointerCategory, isPointerTemplateSupported } from "./pointerCatalogue";
+import { pointerCatalogue, PointerCategory, isPointerTemplateSupported, getPointerCatalogueSearchText } from "./pointerCatalogue";
 import { getPathTemplateSockets, setPathTemplateSlotKind, PathTemplateSocketKind } from "./pathTemplate";
 import { InteractivityGraphContext } from "../InteractivityGraphContext";
 
@@ -46,8 +46,7 @@ export const PointerConfigField: React.FC<PointerConfigFieldProps> = ({ value, a
         const query = search.trim().toLowerCase();
         const matches = pointerCatalogue.filter((entry) =>
             query === "" ||
-            entry.label.toLowerCase().includes(query) ||
-            entry.template.toLowerCase().includes(query)
+            getPointerCatalogueSearchText(entry).includes(query)
         );
         const byCategory = new Map<PointerCategory, typeof pointerCatalogue>();
         for (const entry of matches) {

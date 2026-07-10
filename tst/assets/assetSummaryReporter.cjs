@@ -71,7 +71,7 @@ class AssetSummaryReporter {
             process.stdout.write("\n");
         }
 
-        const specCoverage = collectSpecPointerCoverage(results);
+        const specCoverage = shouldLogSpecCoverage() ? collectSpecPointerCoverage(results) : undefined;
         if (specCoverage) {
             process.stdout.write("Spec pointer coverage\n");
             process.stdout.write(`Read: ${formatCoverage(specCoverage.read.covered, specCoverage.read.total)}\n`);
@@ -104,6 +104,10 @@ class AssetSummaryReporter {
             process.stdout.write("\n");
         }
     }
+}
+
+function shouldLogSpecCoverage() {
+    return process.env.KHR_INTERACTIVITY_SPEC_COVERAGE === "1";
 }
 
 function collectRows(results) {

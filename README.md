@@ -88,7 +88,9 @@ Asset test commands first report how many sample asset graphs validate before ex
 
 For focused runs, set `KHR_INTERACTIVITY_ASSET_NAME_FILTER=math/add` to run one asset by catalog name, or `KHR_INTERACTIVITY_ASSET_FILTER=math/add` to include assets whose name, label, or tags match.
 
-To keep a full log for inspection, pipe both stdout and stderr through `tee`, for example `npm run test:assets 2>&1 | tee test-assets.log`. Focused runs work the same way, for example `KHR_INTERACTIVITY_ASSET_FILTER=pointer npm run test:assets:core 2>&1 | tee pointer-core.log`.
+Detailed spec pointer coverage is optional; set `KHR_INTERACTIVITY_SPEC_COVERAGE=1`, for example `KHR_INTERACTIVITY_SPEC_COVERAGE=1 npm run test:assets:core`.
+
+To keep a full log for inspection, pipe both stdout and stderr through `tee`, for example `KHR_INTERACTIVITY_SPEC_COVERAGE=1 npm run test:assets 2>&1 | tee test-assets.log`. Focused runs work the same way, for example `KHR_INTERACTIVITY_ASSET_FILTER=pointer KHR_INTERACTIVITY_SPEC_COVERAGE=1 npm run test:assets:core 2>&1 | tee pointer-core.log`.
 
 ### Cypress Tests
 1. start a local host of the app using `npm start`

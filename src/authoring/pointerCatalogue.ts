@@ -1,5 +1,6 @@
 import { InteractivityValueType } from "../BasicBehaveEngine/types/InteractivityGraph";
 import { glTFSchemaMetadata } from "../objectModel/generated/glTFSchemaMetadata";
+import { joinSearchTerms } from "./searchText";
 import { standardTypes } from "./spec/nodes";
 
 /**
@@ -40,6 +41,8 @@ export interface PointerCatalogueEntry {
     readOnly: boolean;
     /** the glTF extension this pointer belongs to, if any */
     extension?: string;
+    /** authoring-only search terms; never serialized into runtime graphs */
+    aliases?: string[];
 }
 
 interface GeneratedCataloguePointer {
@@ -140,11 +143,11 @@ const rawCatalogue: PointerCatalogueEntry[] = [
     { template: "/extensions/KHR_lights_punctual/lights/[light]/spot/outerConeAngle", label: "Light · spot outer cone angle", category: "Lights", type: t.FLOAT, readOnly: false, extension: "KHR_lights_punctual" },
 
     // ---- Animations (KHR_interactivity) ----
-    { template: "/animations/[animation]/extensions/KHR_interactivity/isPlaying", label: "Animation · is playing", category: "Animations", type: t.BOOLEAN, readOnly: true, extension: "KHR_interactivity" },
-    { template: "/animations/[animation]/extensions/KHR_interactivity/minTime", label: "Animation · min time", category: "Animations", type: t.FLOAT, readOnly: true, extension: "KHR_interactivity" },
-    { template: "/animations/[animation]/extensions/KHR_interactivity/maxTime", label: "Animation · max time", category: "Animations", type: t.FLOAT, readOnly: true, extension: "KHR_interactivity" },
-    { template: "/animations/[animation]/extensions/KHR_interactivity/playhead", label: "Animation · playhead", category: "Animations", type: t.FLOAT, readOnly: true, extension: "KHR_interactivity" },
-    { template: "/animations/[animation]/extensions/KHR_interactivity/virtualPlayhead", label: "Animation · virtual playhead", category: "Animations", type: t.FLOAT, readOnly: false, extension: "KHR_interactivity" },
+    { template: "/animations/[animation]/extensions/KHR_interactivity/isPlaying", label: "Animation · is playing", category: "Animations", type: t.BOOLEAN, readOnly: true, extension: "KHR_interactivity", aliases: ["playing", "state", "active"] },
+    { template: "/animations/[animation]/extensions/KHR_interactivity/minTime", label: "Animation · min time", category: "Animations", type: t.FLOAT, readOnly: true, extension: "KHR_interactivity", aliases: ["start", "start time", "begin"] },
+    { template: "/animations/[animation]/extensions/KHR_interactivity/maxTime", label: "Animation · max time", category: "Animations", type: t.FLOAT, readOnly: true, extension: "KHR_interactivity", aliases: ["duration", "length", "end", "end time", "animation duration", "animation length"] },
+    { template: "/animations/[animation]/extensions/KHR_interactivity/playhead", label: "Animation · playhead", category: "Animations", type: t.FLOAT, readOnly: true, extension: "KHR_interactivity", aliases: ["time", "current time", "position"] },
+    { template: "/animations/[animation]/extensions/KHR_interactivity/virtualPlayhead", label: "Animation · virtual playhead", category: "Animations", type: t.FLOAT, readOnly: false, extension: "KHR_interactivity", aliases: ["time", "current time", "seek", "position"] },
 
     // ---- Scene / counts (read-only) ----
     { template: "/nodes.length", label: "Count · nodes", category: "Scene", type: t.INT, readOnly: true },
@@ -235,6 +238,9 @@ export const pointerCatalogue: PointerCatalogueEntry[] = [
     ...rawCatalogue.filter((entry) => !generatedTemplates.has(entry.template)),
     ...generatedCatalogue,
 ];
+
+export const getPointerCatalogueSearchText = (entry: PointerCatalogueEntry): string =>
+    joinSearchTerms(entry.label, entry.template, entry.aliases);
 
 /** Resolve an Object Model type signature to its standard type index, or -1 if unknown. */
 export const getStandardTypeIndexForSignature = (signature: InteractivityValueType): number =>

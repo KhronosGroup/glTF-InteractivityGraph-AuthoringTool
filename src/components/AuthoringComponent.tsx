@@ -23,6 +23,8 @@ import { categoryLabel } from './DiagnosticsPanel';
 import { FLOW_COLOR, getColorForTypeIndex, getNodeCategoryColor } from '../authoring/socketColors';
 import { TypedValueInput } from '../authoring/TypedValueInput';
 import { NodeInfoTooltip, buildNodeTypeTooltipSections } from '../authoring/NodeInfoTooltip';
+import { applyNodePreset, getNodePresetSearchText, NodePreset, nodePresets } from '../authoring/nodePresets';
+import { joinSearchTerms } from '../authoring/searchText';
 import '../css/flowNodes.css';
 
 const nodeTypes = interactivityNodeSpecs.reduce((nodes, node) => {
@@ -237,6 +239,21 @@ export const AuthoringComponent = () => {
     const reactFlowRef = useRef<HTMLDivElement | null>(null);
     const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
     const [authoringComponentModal, setAuthoringComponentModal] = useState<AuthoringComponentModelType>(AuthoringComponentModelType.NONE)
+
+    useEffect(() => {
+        if (authoringComponentModal === AuthoringComponentModelType.NONE) {
+            return;
+        }
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key !== "Escape") {
+                return;
+            }
+            event.preventDefault();
+            setAuthoringComponentModal(AuthoringComponentModelType.NONE);
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [authoringComponentModal]);
 
     // to handle nodes and edges in graph
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -521,7 +538,8 @@ export const AuthoringComponent = () => {
     }, []);
 
     // handle adding nodes and edges to the graph
-    const onAddNode = useCallback((nodeType: string, position: XYPosition) => {
+    const onAddNode = useCallback((nodeRequest: string | NodePreset, position: XYPosition) => {
+        const nodeType = typeof nodeRequest === "string" ? nodeRequest : nodeRequest.op;
         const uid = uuidv4();
         const nodeToAdd = {
             id: uid,
@@ -531,9 +549,16 @@ export const AuthoringComponent = () => {
         };
 
         const spec = interactivityNodeSpecs.find(node => node.op === nodeType)!;
-        const interactivityNode: AuthoredNode = JSON.parse(JSON.stringify(spec));
+        let interactivityNode: AuthoredNode = JSON.parse(JSON.stringify(spec));
         interactivityNode.declaration = addDeclaration(toInteractivityDeclaration(spec));
         interactivityNode.uid = uid;
+        if (typeof nodeRequest !== "string") {
+            interactivityNode = applyNodePreset(interactivityNode, nodeRequest, {
+                nodeType,
+                events: graph.events ?? {},
+                variables: graph.variables ?? [],
+            });
+        }
         
         addNode(interactivityNode);
 
@@ -990,14 +1015,6 @@ const getNodeCategory = (nodeType: string): string => {
     return category.charAt(0).toUpperCase() + category.slice(1);
 }
 
-const nodeTypesByCategory = Object.keys(nodeTypes).reduce((categories, nodeType) => {
-    const category = getNodeCategory(nodeType);
-    (categories[category] = categories[category] ?? []).push(nodeType);
-    return categories;
-}, {} as {[category: string]: string[]});
-
-const sortedNodeCategories = Object.keys(nodeTypesByCategory).sort((a, b) => a.localeCompare(b));
-
 // spec-driven tooltip/search text for a node type's picker entry: op description plus every
 // flow/value socket (value sockets include their description, flow sockets are name-only since
 // IInteractivityFlow carries no description field)
@@ -1005,6 +1022,30 @@ const nodePickerSpecByType = interactivityNodeSpecs.reduce((specs, node) => {
     specs[node.op!] = node;
     return specs;
 }, {} as {[nodeType: string]: AuthoredNode});
+
+type NodePickerItem =
+    | { kind: "node"; key: string; nodeType: string }
+    | { kind: "preset"; key: string; nodeType: string; preset: NodePreset };
+
+const nodePickerItemsByCategory = [
+    ...Object.keys(nodeTypes).map((nodeType): NodePickerItem => ({
+        kind: "node",
+        key: `node:${nodeType}`,
+        nodeType,
+    })),
+    ...nodePresets.map((preset): NodePickerItem => ({
+        kind: "preset",
+        key: `preset:${preset.id}`,
+        nodeType: preset.op,
+        preset,
+    })),
+].reduce((categories, item) => {
+    const category = getNodeCategory(item.nodeType);
+    (categories[category] = categories[category] ?? []).push(item);
+    return categories;
+}, {} as {[category: string]: NodePickerItem[]});
+
+const sortedNodeCategories = Object.keys(nodePickerItemsByCategory).sort((a, b) => a.localeCompare(b));
 
 const NodePickerTooltipContent = (props: {nodeType: string}) => {
     const spec = nodePickerSpecByType[props.nodeType];
@@ -1014,8 +1055,14 @@ const NodePickerTooltipContent = (props: {nodeType: string}) => {
 
 const getNodePickerSearchText = (nodeType: string): string => {
     const spec = nodePickerSpecByType[nodeType];
-    return `${nodeType} ${spec?.description ?? ""}`.toLowerCase();
+    return joinSearchTerms(nodeType, spec?.description, spec?.aliases);
 };
+
+const getNodePickerItemSearchText = (item: NodePickerItem): string =>
+    item.kind === "preset" ? getNodePresetSearchText(item.preset) : getNodePickerSearchText(item.nodeType);
+
+const getNodePickerItemLabel = (item: NodePickerItem): string =>
+    item.kind === "preset" ? item.preset.label : item.nodeType;
 
 const NodePickerComponent = (props: {onAddNode: any, closeModal: any, mousePos: any}) => {
     const [filter, setFilter] = useState("");
@@ -1030,8 +1077,8 @@ const NodePickerComponent = (props: {onAddNode: any, closeModal: any, mousePos: 
         e.preventDefault();
     };
 
-    const selectNode = (nodeType: string) => {
-        props.onAddNode(nodeType, {x: props.mousePos.x, y: props.mousePos.y});
+    const selectNode = (item: NodePickerItem) => {
+        props.onAddNode(item.kind === "preset" ? item.preset : item.nodeType, {x: props.mousePos.x, y: props.mousePos.y});
         props.closeModal()
     }
 
@@ -1088,10 +1135,10 @@ const NodePickerComponent = (props: {onAddNode: any, closeModal: any, mousePos: 
                 <div ref={nodeListRef} className="nowheel" onWheel={onNodeListWheel} style={{ columnWidth: 200, columnGap: 24, maxHeight: "min(40vh, calc(100vh - 260px))", overflowX: "auto", overflowY: "auto", overscrollBehavior: "contain", marginTop: 16, padding: "0 16px 8px" }}>
                     {
                         sortedNodeCategories.map(category => {
-                            const nodesInCategory = nodeTypesByCategory[category].filter(nodeType =>
-                                normalizedFilter === "" || getNodePickerSearchText(nodeType).includes(normalizedFilter)
+                            const itemsInCategory = nodePickerItemsByCategory[category].filter(item =>
+                                normalizedFilter === "" || getNodePickerItemSearchText(item).includes(normalizedFilter)
                             );
-                            const shouldShowCategory = nodesInCategory.length > 0 && (activeCategory === null || activeCategory === category);
+                            const shouldShowCategory = itemsInCategory.length > 0 && (activeCategory === null || activeCategory === category);
                             return (
                                 <RenderIf key={category} shouldShow={shouldShowCategory}>
                                     <div style={{ breakInside: "avoid", marginBottom: 16 }}>
@@ -1100,18 +1147,31 @@ const NodePickerComponent = (props: {onAddNode: any, closeModal: any, mousePos: 
                                             {category}
                                         </div>
                                         {
-                                            nodesInCategory.map(nodeType => (
+                                            itemsInCategory.map(item => (
                                                 <OverlayTrigger
-                                                    key={nodeType}
+                                                    key={item.key}
                                                     placement={"right"}
                                                     delay={{show: 300, hide: 0}}
                                                     overlay={
-                                                        <Tooltip id={`node-picker-tooltip-${nodeType}`} className="node-info-tooltip">
-                                                            <NodePickerTooltipContent nodeType={nodeType} />
+                                                        <Tooltip id={`node-picker-tooltip-${item.key}`} className="node-info-tooltip">
+                                                            {item.kind === "preset" && item.preset.description ? (
+                                                                <>
+                                                                    <strong>{item.preset.label}</strong>
+                                                                    <div>{item.preset.description}</div>
+                                                                    <div style={{ marginTop: 4, fontFamily: "monospace" }}>{item.preset.op}</div>
+                                                                </>
+                                                            ) : (
+                                                                <NodePickerTooltipContent nodeType={item.nodeType} />
+                                                            )}
                                                         </Tooltip>
                                                     }
                                                 >
-                                                    <p className="node-picker-item" style={{overflowWrap: "anywhere"}} onClick={() => selectNode(nodeType)} data-testid={`node-picker-${nodeType}`}>{nodeType}</p>
+                                                    <p className="node-picker-item" style={{overflowWrap: "anywhere"}} onClick={() => selectNode(item)} data-testid={item.kind === "preset" ? `node-picker-preset-${item.preset.id}` : `node-picker-${item.nodeType}`}>
+                                                        {getNodePickerItemLabel(item)}
+                                                        {item.kind === "preset" && (
+                                                            <span style={{ display: "block", fontSize: 11, color: "#666", fontFamily: "monospace" }}>{item.preset.op}</span>
+                                                        )}
+                                                    </p>
                                                 </OverlayTrigger>
                                             ))
                                         }

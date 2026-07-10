@@ -40,6 +40,8 @@ export interface AuthoredNode extends IInteractivityNode {
     // KHR_interactivity ops. Mirrors IInteractivityDeclaration.extension - see toInteractivityDeclaration.
     extension?: string,
     description?: string,
+    // authoring-only terms used by the node picker; never serialized into runtime graphs
+    aliases?: string[],
     // see NodeSpecFlag
     flags?: NodeSpecFlag[],
     values?: {

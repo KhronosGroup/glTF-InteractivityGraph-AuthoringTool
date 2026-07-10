@@ -137,6 +137,9 @@ import { Slerp } from "./nodes/math/vector/Slerp";
 import { RgbToOkLCh } from "./nodes/math/color/RgbToOkLCh";
 import { RgbFromOkLCh } from "./nodes/math/color/RgbFromOkLCh";
 import { OnSelect } from "./nodes/experimental/OnSelect";
+import { AnimationStart } from "./nodes/animation/AnimationStart";
+import { AnimationStop } from "./nodes/animation/AnimationStop";
+import { AnimationStopAt } from "./nodes/animation/AnimationStopAt";
 
 
 // Single source of truth for op -> runtime BehaveEngineNode class. registerKnownBehaviorNodes
@@ -274,6 +277,9 @@ export const behaveEngineNodeRegistry: ReadonlyArray<[string, any]> = [
     ["ref/eq", RefEquality],
     ["math/rgbToOkLCh", RgbToOkLCh],
     ["math/rgbFromOkLCh", RgbFromOkLCh],
+    ["animation/start", AnimationStart],
+    ["animation/stop", AnimationStop],
+    ["animation/stopAt", AnimationStopAt],
 ];
 
 
@@ -285,7 +291,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
     private _lastTickTime: number;
     private _pauseTickTime: number;
     private _pauseDuration : number;
-    private _scheduledDelays: NodeJS.Timeout[];
+    private _scheduledDelays: Array<NodeJS.Timeout | undefined>;
     protected nodes: IInteractivityNode[];
     protected _variables: IInteractivityVariable[];
     protected events: IInteractivityEvent[];
@@ -480,6 +486,20 @@ export class BasicBehaveEngine implements IBehaveEngine {
         }
 
         return this._scheduledDelays[index];
+    }
+
+    public cancelScheduledDelay = (index: number): void => {
+        const delay = this.getScheduledDelay(index);
+        if (delay !== undefined) {
+            clearTimeout(delay);
+            this._scheduledDelays[index] = undefined;
+        }
+    }
+
+    public removeScheduledDelay = (index: number): void => {
+        if (index >= 0 && index < this._scheduledDelays.length) {
+            this._scheduledDelays[index] = undefined;
+        }
     }
 
     public getEventList = (): IEventQueueItem[] => {

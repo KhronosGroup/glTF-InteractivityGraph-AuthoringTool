@@ -52,6 +52,7 @@ const KHR = "extensions/2.0/Khronos";
 export class GlTFObjectModelDecorator extends ADecorator {
     protected objectModel: GlTFObjectModel;
     private pointerBindings = new Map<string, PointerBinding>();
+    private activeAnimations = new Map<number, { timeout: ReturnType<typeof setTimeout>; startTime: number; endTime: number; speed: number; startedAt: number }>();
 
     constructor(behaveEngine: IBehaveEngine, objectModel: Partial<GlTFObjectModel> = {}) {
         super(behaveEngine);
@@ -73,9 +74,53 @@ export class GlTFObjectModelDecorator extends ADecorator {
     processNodeStarted = (_node: BehaveEngineNode): void => undefined;
     processAddingNodeToQueue = (_flow: IInteractivityFlow): void => undefined;
     processExecutingNextNode = (_flow: IInteractivityFlow): void => undefined;
-    startAnimation = (_animationIndex: number, _startTime: number, _endTime: number, _speed: number, callback: () => void): void => callback();
-    stopAnimation = (_animationIndex: number): void => undefined;
-    stopAnimationAt = (_animationIndex: number, _stopTime: number, callback: () => void): void => callback();
+    startAnimation = (animationIndex: number, startTime: number, endTime: number, speed: number, callback: () => void): void => {
+        this.clearActiveAnimation(animationIndex);
+        const animation = this.objectModel.animations[animationIndex];
+        animation.isPlaying = true;
+        animation.virtualPlayhead = startTime;
+        animation.playhead = effectiveAnimationTime(animation, startTime);
+
+        const duration = Math.abs(endTime - startTime) / speed;
+        const timeout = setTimeout(() => {
+            animation.isPlaying = false;
+            animation.virtualPlayhead = endTime;
+            animation.playhead = effectiveAnimationTime(animation, endTime);
+            this.activeAnimations.delete(animationIndex);
+            callback();
+        }, Math.max(0, duration * 1000));
+
+        this.activeAnimations.set(animationIndex, { timeout, startTime, endTime, speed, startedAt: performance.now() });
+    };
+    stopAnimation = (animationIndex: number): void => {
+        const animation = this.objectModel.animations[animationIndex];
+        const currentTime = this.currentAnimationTime(animationIndex);
+        this.clearActiveAnimation(animationIndex);
+        if (animation !== undefined) {
+            animation.isPlaying = false;
+            animation.virtualPlayhead = currentTime;
+            animation.playhead = effectiveAnimationTime(animation, currentTime);
+        }
+    };
+    stopAnimationAt = (animationIndex: number, stopTime: number, callback: () => void): void => {
+        const activeAnimation = this.activeAnimations.get(animationIndex);
+        const animation = this.objectModel.animations[animationIndex];
+        if (activeAnimation === undefined || animation === undefined) {
+            return;
+        }
+
+        clearTimeout(activeAnimation.timeout);
+        const currentTime = this.currentAnimationTime(animationIndex);
+        const remainingSeconds = Math.max(0, Math.abs(stopTime - currentTime) / activeAnimation.speed);
+        const timeout = setTimeout(() => {
+            animation.isPlaying = false;
+            animation.virtualPlayhead = stopTime;
+            animation.playhead = effectiveAnimationTime(animation, stopTime);
+            this.activeAnimations.delete(animationIndex);
+            callback();
+        }, remainingSeconds * 1000);
+        this.activeAnimations.set(animationIndex, { ...activeAnimation, endTime: activeAnimation.endTime, timeout });
+    };
     getWorld = (): GlTFObjectModel => this.objectModel;
     getParentNodeIndex = (nodeIndex: number): number | undefined => this.objectModel.parents[nodeIndex];
 
@@ -88,6 +133,7 @@ export class GlTFObjectModelDecorator extends ADecorator {
         this.registerSkinPointers();
         this.registerLightPointers();
         this.registerAnimationPointers();
+        this.registerInteractivityEventPointers();
     };
 
     private bridgeObjectModelHooks(): void {
@@ -99,12 +145,12 @@ export class GlTFObjectModelDecorator extends ADecorator {
         this.behaveEngine.getRegisteredJsonPointers = this.getRegisteredJsonPointers;
     }
 
-    isValidJsonPtr = (path: string): boolean => this.pointerBindings.has(path);
-    isReadOnly = (path: string): boolean => this.pointerBindings.get(path)?.readOnly ?? false;
-    getPathValue = (path: string): any => this.pointerBindings.get(path)?.get();
-    getPathtypeName = (path: string): string | undefined => this.pointerBindings.get(path)?.typeName;
+    isValidJsonPtr = (path: string): boolean => this.pointerBinding(path) !== undefined || this.isActiveDelayRef(path);
+    isReadOnly = (path: string): boolean => this.pointerBinding(path)?.readOnly ?? this.isActiveDelayRef(path);
+    getPathValue = (path: string): any => this.pointerBinding(path)?.get() ?? (this.isActiveDelayRef(path) ? [withoutTrailingSlash(path)] : undefined);
+    getPathtypeName = (path: string): string | undefined => this.pointerBinding(path)?.typeName ?? (this.isActiveDelayRef(path) ? "ref" : undefined);
     setPathValue = (path: string, value: any): void => {
-        const binding = this.pointerBindings.get(path);
+        const binding = this.pointerBinding(path);
         if (binding && !binding.readOnly) {
             binding.set(value);
         }
@@ -122,6 +168,10 @@ export class GlTFObjectModelDecorator extends ADecorator {
     private pointer(path: string, typeName: string, get: PointerGetter, set: PointerSetter = ignoreSet, readOnly = false): void {
         this.pointerBindings.set(path, { get, set, typeName, readOnly });
         this.registerJsonPointer(path, () => this.getPathValue(path), (_path, value) => this.setPathValue(path, value), typeName, readOnly);
+    }
+
+    private pointerBinding(path: string): PointerBinding | undefined {
+        return this.pointerBindings.get(path) ?? this.pointerBindings.get(withoutTrailingSlash(path));
     }
 
     private scalarPointer(path: string, typeName: string, get: PointerGetter, set: PointerSetter = ignoreSet, readOnly = false): void {
@@ -312,6 +362,42 @@ export class GlTFObjectModelDecorator extends ADecorator {
         });
     }
 
+    private registerInteractivityEventPointers(): void {
+        const interactivity = this.objectModel.extensions?.KHR_interactivity;
+        const graph = interactivity?.graphs?.[interactivity.graph ?? 0];
+        const eventCountWithLifecycleEvents = (graph?.events?.length ?? 0) + 2;
+        for (let eventIndex = 0; eventIndex < eventCountWithLifecycleEvents; eventIndex++) {
+            const path = `/extensions/KHR_interactivity/events/${eventIndex}`;
+            this.pointer(path, "ref", () => [path], ignoreSet, true);
+        }
+    }
+
+    private isActiveDelayRef(path: string): boolean {
+        const match = withoutTrailingSlash(path).match(/^\/extensions\/KHR_interactivity\/delays\/(\d+)$/);
+        if (!match) {
+            return false;
+        }
+        return (this.behaveEngine as any).getScheduledDelay?.(Number(match[1])) !== undefined;
+    }
+
+    private clearActiveAnimation(animationIndex: number): void {
+        const activeAnimation = this.activeAnimations.get(animationIndex);
+        if (activeAnimation !== undefined) {
+            clearTimeout(activeAnimation.timeout);
+            this.activeAnimations.delete(animationIndex);
+        }
+    }
+
+    private currentAnimationTime(animationIndex: number): number {
+        const activeAnimation = this.activeAnimations.get(animationIndex);
+        if (activeAnimation === undefined) {
+            return this.objectModel.animations[animationIndex]?.virtualPlayhead ?? 0;
+        }
+        const elapsedSeconds = Math.max(0, (performance.now() - activeAnimation.startedAt) / 1000);
+        const direction = activeAnimation.startTime <= activeAnimation.endTime ? 1 : -1;
+        return activeAnimation.startTime + direction * elapsedSeconds * activeAnimation.speed;
+    }
+
     private localMatrix(nodeIndex: number): number[] {
         const node = this.objectModel.nodes[nodeIndex];
         if (node.matrix) {
@@ -418,6 +504,15 @@ function createObjectModelAnimation(animation: any): any {
     };
 }
 
+function effectiveAnimationTime(animation: any, requestedTime: number): number {
+    const maxTime = Number(animation.maxTime);
+    if (!Number.isFinite(maxTime) || maxTime === 0) {
+        return 0;
+    }
+    const iteration = requestedTime > 0 ? Math.ceil((requestedTime - maxTime) / maxTime) : Math.floor(requestedTime / maxTime);
+    return requestedTime - iteration * maxTime;
+}
+
 function createNodeWeights(node: any, mesh: any | undefined): number[] {
     if (mesh === undefined || mesh.weights.length === 0) {
         return [];
@@ -489,6 +584,10 @@ function setPath(target: any, pathParts: string[], value: any): void {
 
 function ref(collectionPath: string, index: number): string {
     return `/${collectionPath}/${index}/`;
+}
+
+function withoutTrailingSlash(path: string): string {
+    return path.endsWith("/") ? path.slice(0, -1) : path;
 }
 
 function scalar(value: any): any {

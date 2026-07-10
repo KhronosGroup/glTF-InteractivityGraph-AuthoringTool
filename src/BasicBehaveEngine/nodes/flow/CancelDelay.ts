@@ -13,15 +13,8 @@ export class CancelDelay extends BehaveEngineNode {
         this.graphEngine.clearValueEvaluationCache();
         const {delay} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
         this.graphEngine.processNodeStarted(this);
-        if (delay < 0 || delay >= this.graphEngine.scheduledDelays.length) {
-            if (this.flows.err) {
-                this.processFlow(this.flows.err);
-            }
-        } else {
-            const delayId = this.graphEngine.getScheduledDelay(delay);
-            clearTimeout(delayId);
-
-            this.processFlow(this.flows.out);
-        }
+        const delayIndex = this.refToIndex(delay);
+        this.graphEngine.cancelScheduledDelay(delayIndex);
+        this.processFlow(this.flows.out);
     }
 }

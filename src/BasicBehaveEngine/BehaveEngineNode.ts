@@ -254,13 +254,14 @@ export class BehaveEngineNode {
     }
 
     protected parseType(type: string, val: any) {
+        const scalarValue = Array.isArray(val) ? val[0] : val;
         switch (type) {
             case "bool":
-                return val[0] === "true" || val[0] === true;
+                return scalarValue === "true" || scalarValue === true;
             case "int":
-                return Number(val[0]);
+                return Number(scalarValue);
             case "float":
-                return Number(val[0]);
+                return Number(scalarValue);
             case "float2":
                 return val;
             case "float3":
@@ -270,7 +271,7 @@ export class BehaveEngineNode {
             case "float4x4":
                 return val;
             case "ref":
-                return val[0];
+                return scalarValue;
             default:
                 return val
         }
@@ -281,7 +282,10 @@ export class BehaveEngineNode {
     }
 
     protected refToIndex(ref: string): number {
-        const refParts = ref.split("/");
+        if (typeof ref !== "string") {
+            return Number(ref);
+        }
+        const refParts = ref.split("/").filter(Boolean);
         const lastPart = refParts[refParts.length - 1];
         return Number(lastPart);
     }

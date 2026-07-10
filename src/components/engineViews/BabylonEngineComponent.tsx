@@ -346,11 +346,11 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
 
     const loadModelFromUrl = async (url: string) => {
         try {
-            // Create a scene if it doesn't exist
-            if (!sceneRef.current) {
-                createScene();
-            }
-            
+            // Dispose the previous scene before loading so models don't stack up additively when
+            // switching samples (a fresh scene also drops the prior model's meshes/observers).
+            sceneRef.current?.dispose();
+            createScene();
+
             SceneLoader.OnPluginActivatedObservable.add((loader) => {
                 if (loader.name === "gltf") {
                     (loader as GLTFFileLoader).animationStartMode = GLTFLoaderAnimationStartMode.NONE;
@@ -368,9 +368,8 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
             // Update the file uploaded state to enable play button
             setFileUploaded(url.split('/').pop() || "model.glb");
             
-            // Setup the engine with the loaded model. This reuses the existing scene (unlike
-            // resetScene/Play, which disposes it), so the previous decorator's observers must be
-            // torn down explicitly or they'd stack up on every model load.
+            // Setup the engine with the loaded model. The scene was reset above, but the decorator
+            // is not scene-owned, so tear down the previous one explicitly to avoid stacking.
             babylonEngineRef.current?.dispose();
             const eventBus = new DOMEventBus();
             babylonEngineRef.current = new BabylonDecorator(new BasicBehaveEngine(60, eventBus), worldInfo, sceneRef.current!);

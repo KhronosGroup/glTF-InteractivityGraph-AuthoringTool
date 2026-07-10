@@ -1,0 +1,139 @@
+import fs from "fs";
+import path from "path";
+import { execFileSync } from "child_process";
+
+const repoRoot = path.resolve(new URL("..", import.meta.url).pathname);
+const gltfRoot = path.join(repoRoot, "third_party", "glTF");
+const outputPath = path.join(repoRoot, "src", "objectModel", "generated", "glTFSchemaMetadata.ts");
+
+if (!fs.existsSync(gltfRoot)) {
+    throw new Error("Missing third_party/glTF submodule. Run `git submodule update --init --recursive`.");
+}
+
+const readJson = (filePath) => JSON.parse(fs.readFileSync(filePath, "utf8"));
+const posixPath = (filePath) => filePath.split(path.sep).join("/");
+
+const git = (...args) => execFileSync("git", ["-C", gltfRoot, ...args], { encoding: "utf8" }).trim();
+const commit = git("rev-parse", "HEAD");
+const branch = git("branch", "--show-current") || "detached";
+
+const registryText = fs.readFileSync(path.join(gltfRoot, "extensions", "README.md"), "utf8");
+const ratifiedKhronosExtensions = [];
+let inRatifiedSection = false;
+for (const line of registryText.split(/\r?\n/)) {
+    if (/^#{2,3} Ratified Khronos Extensions/.test(line)) {
+        inRatifiedSection = true;
+        continue;
+    }
+    if (inRatifiedSection && /^#{2,3} /.test(line)) {
+        break;
+    }
+    const match = line.match(/\* \[(KHR_[^\]]+)\]/);
+    if (inRatifiedSection && match) {
+        ratifiedKhronosExtensions.push(match[1]);
+    }
+}
+
+const collectSchemaFiles = (dir, base = dir) => {
+    if (!fs.existsSync(dir)) {
+        return [];
+    }
+
+    const files = [];
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+            files.push(...collectSchemaFiles(fullPath, base));
+        } else if (entry.isFile() && entry.name.endsWith(".schema.json")) {
+            files.push({
+                absolutePath: fullPath,
+                relativePath: posixPath(path.relative(gltfRoot, fullPath)),
+                schemaName: path.basename(fullPath),
+            });
+        }
+    }
+    return files.sort((a, b) => a.relativePath.localeCompare(b.relativePath));
+};
+
+const coreSchemaFiles = collectSchemaFiles(path.join(gltfRoot, "specification", "2.0", "schema"));
+const ratifiedExtensionSchemaFiles = ratifiedKhronosExtensions.flatMap((extension) => (
+    collectSchemaFiles(path.join(gltfRoot, "extensions", "2.0", "Khronos", extension, "schema"))
+        .map((schemaFile) => ({ ...schemaFile, extension }))
+));
+const interactivitySchemaFiles = collectSchemaFiles(path.join(gltfRoot, "extensions", "2.0", "Khronos", "KHR_interactivity", "schema"))
+    .map((schemaFile) => ({ ...schemaFile, extension: "KHR_interactivity" }));
+
+const collectDefaults = (schema, sourceId, currentPointer = "#") => {
+    const defaults = [];
+    if (Object.prototype.hasOwnProperty.call(schema, "default")) {
+        defaults.push({ sourceId, pointer: currentPointer, value: schema.default });
+    }
+
+    if (schema.properties && typeof schema.properties === "object") {
+        for (const [propertyName, propertySchema] of Object.entries(schema.properties)) {
+            defaults.push(...collectDefaults(propertySchema, sourceId, `${currentPointer}/properties/${propertyName}`));
+        }
+    }
+
+    if (Array.isArray(schema.allOf)) {
+        schema.allOf.forEach((subSchema, index) => {
+            defaults.push(...collectDefaults(subSchema, sourceId, `${currentPointer}/allOf/${index}`));
+        });
+    }
+
+    if (schema.items && typeof schema.items === "object") {
+        defaults.push(...collectDefaults(schema.items, sourceId, `${currentPointer}/items`));
+    }
+
+    return defaults;
+};
+
+const summarizeSchemaFile = (schemaFile, kind) => {
+    const schema = readJson(schemaFile.absolutePath);
+    const sourceId = schemaFile.relativePath;
+    return {
+        kind,
+        extension: schemaFile.extension,
+        path: schemaFile.relativePath,
+        schemaName: schemaFile.schemaName,
+        id: schema.$id,
+        title: schema.title,
+        defaults: collectDefaults(schema, sourceId),
+    };
+};
+
+const schemaFiles = [
+    ...coreSchemaFiles.map((schemaFile) => summarizeSchemaFile(schemaFile, "core")),
+    ...ratifiedExtensionSchemaFiles.map((schemaFile) => summarizeSchemaFile(schemaFile, "ratified-extension")),
+    ...interactivitySchemaFiles.map((schemaFile) => summarizeSchemaFile(schemaFile, "interactivity-pr")),
+];
+
+const defaultBySchemaPointer = {};
+for (const schemaFile of schemaFiles) {
+    for (const entry of schemaFile.defaults) {
+        defaultBySchemaPointer[`${entry.sourceId}${entry.pointer}`] = entry.value;
+    }
+}
+
+const metadata = {
+    generatedAt: new Date(0).toISOString(),
+    source: {
+        submodulePath: "third_party/glTF",
+        branch,
+        commit,
+    },
+    ratifiedKhronosExtensions,
+    schemaFiles,
+    defaultBySchemaPointer,
+};
+
+fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+fs.writeFileSync(
+    outputPath,
+    `/* eslint-disable */\n`
+        + `// Generated by scripts/generate-object-model-schema.mjs. Do not edit by hand.\n`
+        + `export const glTFSchemaMetadata = ${JSON.stringify(metadata, null, 2)} as const;\n`,
+    "utf8"
+);
+
+console.log(`Generated ${path.relative(repoRoot, outputPath)} from ${schemaFiles.length} schema file(s).`);

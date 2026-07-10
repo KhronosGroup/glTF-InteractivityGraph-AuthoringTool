@@ -124,6 +124,14 @@ export abstract class ADecorator implements IBehaveEngine {
         return this.behaveEngine.getRegisteredJsonPointers();
     }
 
+    isValidJsonPtr(path: string): boolean {
+        return this.behaveEngine.isValidJsonPtr(path);
+    }
+
+    isReadOnly(path: string): boolean {
+        return this.behaveEngine.isReadOnly(path);
+    }
+
     isSlerpPath(path: string): boolean {
         return this.behaveEngine.isSlerpPath(path);
     }

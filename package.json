@@ -41,11 +41,18 @@
     }
   },
   "scripts": {
+    "schema:generate": "node scripts/generate-object-model-schema.mjs",
+    "prestart": "npm run schema:generate",
     "start": "react-scripts start",
+    "prebuild": "npm run schema:generate",
     "build": "react-scripts build",
+    "pretest": "npm run schema:generate",
     "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
+    "pretest:assets": "npm run schema:generate",
     "test:assets": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config jest.assets.config.json --runInBand",
+    "pretest:assets:core": "npm run schema:generate",
     "test:assets:core": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config jest.assets.config.json --runInBand tst/assets/validation.asset.ts tst/assets/core.asset.ts tst/assets/overview.asset.ts tst/assets/interglb.asset.ts",
+    "pretest:assets:e2e": "npm run schema:generate",
     "test:assets:e2e": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config jest.assets.config.json --runInBand tst/assets/validation.asset.ts tst/assets/engines.asset.ts tst/assets/interglb.babylon.asset.ts",
     "cy:open": "cypress open",
     "cy:run": "cypress run",

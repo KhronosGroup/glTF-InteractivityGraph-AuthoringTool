@@ -3,11 +3,14 @@ import path from "path";
 import { execFileSync } from "child_process";
 
 const repoRoot = path.resolve(new URL("..", import.meta.url).pathname);
-const gltfRoot = path.join(repoRoot, "third_party", "glTF");
+const gltfRootInput = process.env.KHR_INTERACTIVITY_GLTF_REPO ?? "../glTF";
+const gltfRoot = path.resolve(repoRoot, gltfRootInput);
 const outputPath = path.join(repoRoot, "src", "objectModel", "generated", "glTFSchemaMetadata.ts");
 
 if (!fs.existsSync(gltfRoot)) {
-    throw new Error("Missing third_party/glTF submodule. Run `git submodule update --init --recursive`.");
+    console.log(`Skipping schema metadata generation: glTF spec repo not found at ${gltfRoot}.`);
+    console.log(`Set KHR_INTERACTIVITY_GLTF_REPO=/path/to/glTF to regenerate ${path.relative(repoRoot, outputPath)}.`);
+    process.exit(0);
 }
 
 const readJson = (filePath) => JSON.parse(fs.readFileSync(filePath, "utf8"));
@@ -464,7 +467,8 @@ for (const schemaFile of schemaFiles) {
 const metadata = {
     generatedAt: new Date(0).toISOString(),
     source: {
-        submodulePath: "third_party/glTF",
+        defaultRepoPath: "../glTF",
+        env: "KHR_INTERACTIVITY_GLTF_REPO",
         branch,
         commit,
         ratifiedRef: mainRef,

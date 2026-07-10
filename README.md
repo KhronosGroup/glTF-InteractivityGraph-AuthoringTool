@@ -48,6 +48,8 @@ Follow these instructions to set up and use the DCC React app for authoring glTF
    npm install
    ```
 
+Schema metadata is committed to the repo. `npm start`, `npm run build`, and the asset test commands attempt to refresh it from a local Khronos glTF spec checkout, but will keep the committed file if that checkout is not present. By default the generator looks for `../glTF`; override it with `KHR_INTERACTIVITY_GLTF_REPO=/path/to/glTF`.
+
 ## Usage
 
 1. Start the DCC React app:

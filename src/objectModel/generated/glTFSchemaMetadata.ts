@@ -3,7 +3,8 @@
 export const glTFSchemaMetadata = {
   "generatedAt": "1970-01-01T00:00:00.000Z",
   "source": {
-    "submodulePath": "third_party/glTF",
+    "defaultRepoPath": "../glTF",
+    "env": "KHR_INTERACTIVITY_GLTF_REPO",
     "branch": "interactivity",
     "commit": "5e87b48cecf6a3776dc3dfce65e76bb074fe7ae1",
     "ratifiedRef": "origin/main",

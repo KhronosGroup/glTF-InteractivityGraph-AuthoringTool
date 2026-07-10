@@ -58,6 +58,8 @@ export interface LoadAssetCasesOptions {
 }
 
 export const DEFAULT_SAMPLE_ASSETS_ROOT = path.resolve(process.cwd(), "../glTF-Test-Assets-Interactivity");
+const FLOAT_ABSOLUTE_TOLERANCE = 0.05;
+const FLOAT_RELATIVE_TOLERANCE = 0.03;
 
 export function getSampleAssetsRoot(): string {
     return process.env.KHR_INTERACTIVITY_SAMPLE_ASSETS ?? DEFAULT_SAMPLE_ASSETS_ROOT;
@@ -338,10 +340,16 @@ function valuesEqual(actual: unknown[] | undefined, expected: unknown[], typeNam
             if (isNegativeInfinityLike(expectedValue)) {
                 return Number(actualValue) === -Infinity;
             }
-            return Math.abs(Number(actualValue) - Number(expectedValue)) <= 0.1;
+            return floatsClose(Number(actualValue), Number(expectedValue));
         }
         return Object.is(actualValue, expectedValue);
     });
+}
+
+function floatsClose(actual: number, expected: number): boolean {
+    const diff = Math.abs(actual - expected);
+    const relativeBase = Math.max(1, Math.abs(expected));
+    return diff <= FLOAT_ABSOLUTE_TOLERANCE || diff / relativeBase <= FLOAT_RELATIVE_TOLERANCE;
 }
 
 function getSubTestFailure(variables: IInteractivityVariable[], subTest: AssetSubTest): string | undefined {

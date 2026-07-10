@@ -1767,5 +1767,1964 @@ export const glTFSchemaMetadata = {
       "defaultValue": true,
       "extension": "KHR_node_visibility"
     }
+  ],
+  "objectModelPointers": [
+    {
+      "template": "/animations.length",
+      "typeName": "int",
+      "readOnly": true
+    },
+    {
+      "template": "/animations/[]/extensions/KHR_interactivity/isPlaying",
+      "typeName": "bool",
+      "readOnly": true
+    },
+    {
+      "template": "/animations/[]/extensions/KHR_interactivity/maxTime",
+      "typeName": "float",
+      "readOnly": true
+    },
+    {
+      "template": "/animations/[]/extensions/KHR_interactivity/minTime",
+      "typeName": "float",
+      "readOnly": true
+    },
+    {
+      "template": "/animations/[]/extensions/KHR_interactivity/playhead",
+      "typeName": "float",
+      "readOnly": true
+    },
+    {
+      "template": "/animations/[]/extensions/KHR_interactivity/virtualPlayhead",
+      "typeName": "float",
+      "readOnly": true
+    },
+    {
+      "template": "/animations/{}/extensions/KHR_interactivity/isPlaying",
+      "typeName": "bool",
+      "readOnly": true
+    },
+    {
+      "template": "/animations/{}/extensions/KHR_interactivity/maxTime",
+      "typeName": "float",
+      "readOnly": true
+    },
+    {
+      "template": "/animations/{}/extensions/KHR_interactivity/minTime",
+      "typeName": "float",
+      "readOnly": true
+    },
+    {
+      "template": "/animations/{}/extensions/KHR_interactivity/playhead",
+      "typeName": "float",
+      "readOnly": true
+    },
+    {
+      "template": "/animations/{}/extensions/KHR_interactivity/virtualPlayhead",
+      "typeName": "float",
+      "readOnly": true
+    },
+    {
+      "template": "/cameras.length",
+      "typeName": "int",
+      "readOnly": true
+    },
+    {
+      "template": "/cameras/[]/orthographic/xmag",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/cameras/[]/orthographic/ymag",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/cameras/[]/orthographic/zfar",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/cameras/[]/orthographic/znear",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/cameras/[]/perspective/aspectRatio",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/cameras/[]/perspective/yfov",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/cameras/[]/perspective/zfar",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/cameras/[]/perspective/znear",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/cameras/{}/orthographic/xmag",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/cameras/{}/orthographic/ymag",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/cameras/{}/orthographic/zfar",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/cameras/{}/orthographic/znear",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/cameras/{}/perspective/aspectRatio",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/cameras/{}/perspective/yfov",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/cameras/{}/perspective/zfar",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/cameras/{}/perspective/znear",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/extensions/KHR_interactivity/delays/{}",
+      "typeName": "ref",
+      "readOnly": true
+    },
+    {
+      "template": "/extensions/KHR_interactivity/events/{}",
+      "typeName": "ref",
+      "readOnly": true
+    },
+    {
+      "template": "/extensions/KHR_lights_punctual/lights.length",
+      "typeName": "int",
+      "readOnly": true
+    },
+    {
+      "template": "/extensions/KHR_lights_punctual/lights/[]/color",
+      "typeName": "float3",
+      "readOnly": false
+    },
+    {
+      "template": "/extensions/KHR_lights_punctual/lights/[]/intensity",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/extensions/KHR_lights_punctual/lights/[]/range",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/extensions/KHR_lights_punctual/lights/[]/spot/innerConeAngle",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/extensions/KHR_lights_punctual/lights/[]/spot/outerConeAngle",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/extensions/KHR_lights_punctual/lights/{}/color",
+      "typeName": "float3",
+      "readOnly": false
+    },
+    {
+      "template": "/extensions/KHR_lights_punctual/lights/{}/intensity",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/extensions/KHR_lights_punctual/lights/{}/range",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/extensions/KHR_lights_punctual/lights/{}/spot/innerConeAngle",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/extensions/KHR_lights_punctual/lights/{}/spot/outerConeAngle",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials.length",
+      "typeName": "int",
+      "readOnly": true
+    },
+    {
+      "template": "/materials/[]/alphaCutoff",
+      "segments": [
+        "alphaCutoff"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/alphaCutoff",
+      "defaultValue": 0.5
+    },
+    {
+      "template": "/materials/[]/doubleSided",
+      "segments": [
+        "doubleSided"
+      ],
+      "typeName": "bool",
+      "readOnly": true,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/doubleSided",
+      "defaultValue": false
+    },
+    {
+      "template": "/materials/[]/emissiveFactor",
+      "segments": [
+        "emissiveFactor"
+      ],
+      "typeName": "float3",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/emissiveFactor",
+      "defaultValue": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "template": "/materials/[]/emissiveTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/emissiveTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/emissiveTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/emissiveTexture/texCoord",
+      "segments": [
+        "emissiveTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/emissiveTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "emissiveTexture"
+      ],
+      "defaultValue": 0
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_anisotropy/anisotropyRotation",
+      "segments": [
+        "extensions",
+        "KHR_materials_anisotropy",
+        "anisotropyRotation"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_anisotropy/schema/material.KHR_materials_anisotropy.schema.json#/properties/anisotropyRotation",
+      "defaultValue": 0,
+      "extension": "KHR_materials_anisotropy"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_anisotropy/anisotropyStrength",
+      "segments": [
+        "extensions",
+        "KHR_materials_anisotropy",
+        "anisotropyStrength"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_anisotropy/schema/material.KHR_materials_anisotropy.schema.json#/properties/anisotropyStrength",
+      "defaultValue": 0,
+      "extension": "KHR_materials_anisotropy"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_anisotropy/anisotropyTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_anisotropy",
+        "anisotropyTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_anisotropy/schema/material.KHR_materials_anisotropy.schema.json#/properties/anisotropyTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_anisotropy",
+        "anisotropyTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_anisotropy"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_clearcoat/clearcoatFactor",
+      "segments": [
+        "extensions",
+        "KHR_materials_clearcoat",
+        "clearcoatFactor"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_clearcoat/schema/material.KHR_materials_clearcoat.schema.json#/properties/clearcoatFactor",
+      "defaultValue": 0,
+      "extension": "KHR_materials_clearcoat"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_clearcoat/clearcoatNormalTexture/scale",
+      "segments": [
+        "extensions",
+        "KHR_materials_clearcoat",
+        "clearcoatNormalTexture",
+        "scale"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_clearcoat/schema/material.KHR_materials_clearcoat.schema.json#/properties/clearcoatNormalTexture/properties/scale",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_clearcoat",
+        "clearcoatNormalTexture"
+      ],
+      "defaultValue": 1,
+      "extension": "KHR_materials_clearcoat"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_clearcoat/clearcoatRoughnessFactor",
+      "segments": [
+        "extensions",
+        "KHR_materials_clearcoat",
+        "clearcoatRoughnessFactor"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_clearcoat/schema/material.KHR_materials_clearcoat.schema.json#/properties/clearcoatRoughnessFactor",
+      "defaultValue": 0,
+      "extension": "KHR_materials_clearcoat"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_clearcoat/clearcoatRoughnessTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_clearcoat",
+        "clearcoatRoughnessTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_clearcoat/schema/material.KHR_materials_clearcoat.schema.json#/properties/clearcoatRoughnessTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_clearcoat",
+        "clearcoatRoughnessTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_clearcoat"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_clearcoat/clearcoatTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_clearcoat",
+        "clearcoatTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_clearcoat/schema/material.KHR_materials_clearcoat.schema.json#/properties/clearcoatTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_clearcoat",
+        "clearcoatTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_clearcoat"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_dispersion/dispersion",
+      "segments": [
+        "extensions",
+        "KHR_materials_dispersion",
+        "dispersion"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_dispersion/schema/material.KHR_materials_dispersion.schema.json#/properties/dispersion",
+      "defaultValue": 0,
+      "extension": "KHR_materials_dispersion"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_emissive_strength/emissiveStrength",
+      "segments": [
+        "extensions",
+        "KHR_materials_emissive_strength",
+        "emissiveStrength"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_emissive_strength/schema/material.KHR_materials_emissive_strength.schema.json#/properties/emissiveStrength",
+      "defaultValue": 1,
+      "extension": "KHR_materials_emissive_strength"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_ior/ior",
+      "segments": [
+        "extensions",
+        "KHR_materials_ior",
+        "ior"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_ior/schema/material.KHR_materials_ior.schema.json#/properties/ior",
+      "defaultValue": 1.5,
+      "extension": "KHR_materials_ior"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_iridescence/iridescenceFactor",
+      "segments": [
+        "extensions",
+        "KHR_materials_iridescence",
+        "iridescenceFactor"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_iridescence/schema/material.KHR_materials_iridescence.schema.json#/properties/iridescenceFactor",
+      "defaultValue": 0,
+      "extension": "KHR_materials_iridescence"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_iridescence/iridescenceIor",
+      "segments": [
+        "extensions",
+        "KHR_materials_iridescence",
+        "iridescenceIor"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_iridescence/schema/material.KHR_materials_iridescence.schema.json#/properties/iridescenceIor",
+      "defaultValue": 1.3,
+      "extension": "KHR_materials_iridescence"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_iridescence/iridescenceTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_iridescence",
+        "iridescenceTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_iridescence/schema/material.KHR_materials_iridescence.schema.json#/properties/iridescenceTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_iridescence",
+        "iridescenceTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_iridescence"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_iridescence/iridescenceThicknessMaximum",
+      "segments": [
+        "extensions",
+        "KHR_materials_iridescence",
+        "iridescenceThicknessMaximum"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_iridescence/schema/material.KHR_materials_iridescence.schema.json#/properties/iridescenceThicknessMaximum",
+      "defaultValue": 400,
+      "extension": "KHR_materials_iridescence"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_iridescence/iridescenceThicknessMinimum",
+      "segments": [
+        "extensions",
+        "KHR_materials_iridescence",
+        "iridescenceThicknessMinimum"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_iridescence/schema/material.KHR_materials_iridescence.schema.json#/properties/iridescenceThicknessMinimum",
+      "defaultValue": 100,
+      "extension": "KHR_materials_iridescence"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_iridescence/iridescenceThicknessTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_iridescence",
+        "iridescenceThicknessTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_iridescence/schema/material.KHR_materials_iridescence.schema.json#/properties/iridescenceThicknessTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_iridescence",
+        "iridescenceThicknessTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_iridescence"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_sheen/sheenColorFactor",
+      "segments": [
+        "extensions",
+        "KHR_materials_sheen",
+        "sheenColorFactor"
+      ],
+      "typeName": "float3",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_sheen/schema/material.KHR_materials_sheen.schema.json#/properties/sheenColorFactor",
+      "defaultValue": [
+        0,
+        0,
+        0
+      ],
+      "extension": "KHR_materials_sheen"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_sheen/sheenColorTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_sheen",
+        "sheenColorTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_sheen/schema/material.KHR_materials_sheen.schema.json#/properties/sheenColorTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_sheen",
+        "sheenColorTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_sheen"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_sheen/sheenRoughnessFactor",
+      "segments": [
+        "extensions",
+        "KHR_materials_sheen",
+        "sheenRoughnessFactor"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_sheen/schema/material.KHR_materials_sheen.schema.json#/properties/sheenRoughnessFactor",
+      "defaultValue": 0,
+      "extension": "KHR_materials_sheen"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_sheen/sheenRoughnessTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_sheen",
+        "sheenRoughnessTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_sheen/schema/material.KHR_materials_sheen.schema.json#/properties/sheenRoughnessTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_sheen",
+        "sheenRoughnessTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_sheen"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_specular/specularColorFactor",
+      "segments": [
+        "extensions",
+        "KHR_materials_specular",
+        "specularColorFactor"
+      ],
+      "typeName": "float3",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_specular/schema/material.KHR_materials_specular.schema.json#/properties/specularColorFactor",
+      "defaultValue": [
+        1,
+        1,
+        1
+      ],
+      "extension": "KHR_materials_specular"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_specular/specularColorTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_specular",
+        "specularColorTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_specular/schema/material.KHR_materials_specular.schema.json#/properties/specularColorTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_specular",
+        "specularColorTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_specular"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_specular/specularFactor",
+      "segments": [
+        "extensions",
+        "KHR_materials_specular",
+        "specularFactor"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_specular/schema/material.KHR_materials_specular.schema.json#/properties/specularFactor",
+      "defaultValue": 1,
+      "extension": "KHR_materials_specular"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_specular/specularTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_specular",
+        "specularTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_specular/schema/material.KHR_materials_specular.schema.json#/properties/specularTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_specular",
+        "specularTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_specular"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_transmission/transmissionFactor",
+      "segments": [
+        "extensions",
+        "KHR_materials_transmission",
+        "transmissionFactor"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_transmission/schema/material.KHR_materials_transmission.schema.json#/properties/transmissionFactor",
+      "defaultValue": 0,
+      "extension": "KHR_materials_transmission"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_transmission/transmissionTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_transmission",
+        "transmissionTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_transmission/schema/material.KHR_materials_transmission.schema.json#/properties/transmissionTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_transmission",
+        "transmissionTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_transmission"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_volume/attenuationColor",
+      "segments": [
+        "extensions",
+        "KHR_materials_volume",
+        "attenuationColor"
+      ],
+      "typeName": "float3",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_volume/schema/material.KHR_materials_volume.schema.json#/properties/attenuationColor",
+      "defaultValue": [
+        1,
+        1,
+        1
+      ],
+      "extension": "KHR_materials_volume"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_volume/attenuationDistance",
+      "segments": [
+        "extensions",
+        "KHR_materials_volume",
+        "attenuationDistance"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_volume/schema/material.KHR_materials_volume.schema.json#/properties/attenuationDistance",
+      "extension": "KHR_materials_volume"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_volume/thicknessFactor",
+      "segments": [
+        "extensions",
+        "KHR_materials_volume",
+        "thicknessFactor"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_volume/schema/material.KHR_materials_volume.schema.json#/properties/thicknessFactor",
+      "defaultValue": 0,
+      "extension": "KHR_materials_volume"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_volume/thicknessTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_volume",
+        "thicknessTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_volume/schema/material.KHR_materials_volume.schema.json#/properties/thicknessTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_volume",
+        "thicknessTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_volume"
+    },
+    {
+      "template": "/materials/[]/normalTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/normalTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/normalTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/normalTexture/scale",
+      "segments": [
+        "normalTexture",
+        "scale"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/normalTexture/properties/scale",
+      "requiredParentSegments": [
+        "normalTexture"
+      ],
+      "defaultValue": 1
+    },
+    {
+      "template": "/materials/[]/occlusionTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/occlusionTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/occlusionTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/occlusionTexture/strength",
+      "segments": [
+        "occlusionTexture",
+        "strength"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/occlusionTexture/properties/strength",
+      "requiredParentSegments": [
+        "occlusionTexture"
+      ],
+      "defaultValue": 1
+    },
+    {
+      "template": "/materials/[]/pbrMetallicRoughness/baseColorFactor",
+      "segments": [
+        "pbrMetallicRoughness",
+        "baseColorFactor"
+      ],
+      "typeName": "float4",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/pbrMetallicRoughness/properties/baseColorFactor",
+      "defaultValue": [
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "template": "/materials/[]/pbrMetallicRoughness/baseColorTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/pbrMetallicRoughness/baseColorTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/pbrMetallicRoughness/baseColorTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/pbrMetallicRoughness/baseColorTexture/texCoord",
+      "segments": [
+        "pbrMetallicRoughness",
+        "baseColorTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/pbrMetallicRoughness/properties/baseColorTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "pbrMetallicRoughness",
+        "baseColorTexture"
+      ],
+      "defaultValue": 0
+    },
+    {
+      "template": "/materials/[]/pbrMetallicRoughness/metallicFactor",
+      "segments": [
+        "pbrMetallicRoughness",
+        "metallicFactor"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/pbrMetallicRoughness/properties/metallicFactor",
+      "defaultValue": 1
+    },
+    {
+      "template": "/materials/[]/pbrMetallicRoughness/metallicRoughnessTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/pbrMetallicRoughness/metallicRoughnessTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/pbrMetallicRoughness/metallicRoughnessTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/pbrMetallicRoughness/metallicRoughnessTexture/texCoord",
+      "segments": [
+        "pbrMetallicRoughness",
+        "metallicRoughnessTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/pbrMetallicRoughness/properties/metallicRoughnessTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "pbrMetallicRoughness",
+        "metallicRoughnessTexture"
+      ],
+      "defaultValue": 0
+    },
+    {
+      "template": "/materials/[]/pbrMetallicRoughness/roughnessFactor",
+      "segments": [
+        "pbrMetallicRoughness",
+        "roughnessFactor"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/pbrMetallicRoughness/properties/roughnessFactor",
+      "defaultValue": 1
+    },
+    {
+      "template": "/materials/{}/alphaCutoff",
+      "segments": [
+        "alphaCutoff"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/alphaCutoff",
+      "defaultValue": 0.5
+    },
+    {
+      "template": "/materials/{}/doubleSided",
+      "segments": [
+        "doubleSided"
+      ],
+      "typeName": "bool",
+      "readOnly": true,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/doubleSided",
+      "defaultValue": false
+    },
+    {
+      "template": "/materials/{}/emissiveFactor",
+      "segments": [
+        "emissiveFactor"
+      ],
+      "typeName": "float3",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/emissiveFactor",
+      "defaultValue": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "template": "/materials/{}/emissiveTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/emissiveTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/emissiveTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/emissiveTexture/texCoord",
+      "segments": [
+        "emissiveTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/emissiveTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "emissiveTexture"
+      ],
+      "defaultValue": 0
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_anisotropy/anisotropyRotation",
+      "segments": [
+        "extensions",
+        "KHR_materials_anisotropy",
+        "anisotropyRotation"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_anisotropy/schema/material.KHR_materials_anisotropy.schema.json#/properties/anisotropyRotation",
+      "defaultValue": 0,
+      "extension": "KHR_materials_anisotropy"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_anisotropy/anisotropyStrength",
+      "segments": [
+        "extensions",
+        "KHR_materials_anisotropy",
+        "anisotropyStrength"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_anisotropy/schema/material.KHR_materials_anisotropy.schema.json#/properties/anisotropyStrength",
+      "defaultValue": 0,
+      "extension": "KHR_materials_anisotropy"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_anisotropy/anisotropyTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_anisotropy",
+        "anisotropyTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_anisotropy/schema/material.KHR_materials_anisotropy.schema.json#/properties/anisotropyTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_anisotropy",
+        "anisotropyTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_anisotropy"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_clearcoat/clearcoatFactor",
+      "segments": [
+        "extensions",
+        "KHR_materials_clearcoat",
+        "clearcoatFactor"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_clearcoat/schema/material.KHR_materials_clearcoat.schema.json#/properties/clearcoatFactor",
+      "defaultValue": 0,
+      "extension": "KHR_materials_clearcoat"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_clearcoat/clearcoatNormalTexture/scale",
+      "segments": [
+        "extensions",
+        "KHR_materials_clearcoat",
+        "clearcoatNormalTexture",
+        "scale"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_clearcoat/schema/material.KHR_materials_clearcoat.schema.json#/properties/clearcoatNormalTexture/properties/scale",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_clearcoat",
+        "clearcoatNormalTexture"
+      ],
+      "defaultValue": 1,
+      "extension": "KHR_materials_clearcoat"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_clearcoat/clearcoatRoughnessFactor",
+      "segments": [
+        "extensions",
+        "KHR_materials_clearcoat",
+        "clearcoatRoughnessFactor"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_clearcoat/schema/material.KHR_materials_clearcoat.schema.json#/properties/clearcoatRoughnessFactor",
+      "defaultValue": 0,
+      "extension": "KHR_materials_clearcoat"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_clearcoat/clearcoatRoughnessTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_clearcoat",
+        "clearcoatRoughnessTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_clearcoat/schema/material.KHR_materials_clearcoat.schema.json#/properties/clearcoatRoughnessTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_clearcoat",
+        "clearcoatRoughnessTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_clearcoat"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_clearcoat/clearcoatTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_clearcoat",
+        "clearcoatTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_clearcoat/schema/material.KHR_materials_clearcoat.schema.json#/properties/clearcoatTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_clearcoat",
+        "clearcoatTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_clearcoat"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_dispersion/dispersion",
+      "segments": [
+        "extensions",
+        "KHR_materials_dispersion",
+        "dispersion"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_dispersion/schema/material.KHR_materials_dispersion.schema.json#/properties/dispersion",
+      "defaultValue": 0,
+      "extension": "KHR_materials_dispersion"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_emissive_strength/emissiveStrength",
+      "segments": [
+        "extensions",
+        "KHR_materials_emissive_strength",
+        "emissiveStrength"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_emissive_strength/schema/material.KHR_materials_emissive_strength.schema.json#/properties/emissiveStrength",
+      "defaultValue": 1,
+      "extension": "KHR_materials_emissive_strength"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_ior/ior",
+      "segments": [
+        "extensions",
+        "KHR_materials_ior",
+        "ior"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_ior/schema/material.KHR_materials_ior.schema.json#/properties/ior",
+      "defaultValue": 1.5,
+      "extension": "KHR_materials_ior"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_iridescence/iridescenceFactor",
+      "segments": [
+        "extensions",
+        "KHR_materials_iridescence",
+        "iridescenceFactor"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_iridescence/schema/material.KHR_materials_iridescence.schema.json#/properties/iridescenceFactor",
+      "defaultValue": 0,
+      "extension": "KHR_materials_iridescence"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_iridescence/iridescenceIor",
+      "segments": [
+        "extensions",
+        "KHR_materials_iridescence",
+        "iridescenceIor"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_iridescence/schema/material.KHR_materials_iridescence.schema.json#/properties/iridescenceIor",
+      "defaultValue": 1.3,
+      "extension": "KHR_materials_iridescence"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_iridescence/iridescenceTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_iridescence",
+        "iridescenceTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_iridescence/schema/material.KHR_materials_iridescence.schema.json#/properties/iridescenceTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_iridescence",
+        "iridescenceTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_iridescence"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_iridescence/iridescenceThicknessMaximum",
+      "segments": [
+        "extensions",
+        "KHR_materials_iridescence",
+        "iridescenceThicknessMaximum"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_iridescence/schema/material.KHR_materials_iridescence.schema.json#/properties/iridescenceThicknessMaximum",
+      "defaultValue": 400,
+      "extension": "KHR_materials_iridescence"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_iridescence/iridescenceThicknessMinimum",
+      "segments": [
+        "extensions",
+        "KHR_materials_iridescence",
+        "iridescenceThicknessMinimum"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_iridescence/schema/material.KHR_materials_iridescence.schema.json#/properties/iridescenceThicknessMinimum",
+      "defaultValue": 100,
+      "extension": "KHR_materials_iridescence"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_iridescence/iridescenceThicknessTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_iridescence",
+        "iridescenceThicknessTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_iridescence/schema/material.KHR_materials_iridescence.schema.json#/properties/iridescenceThicknessTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_iridescence",
+        "iridescenceThicknessTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_iridescence"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_sheen/sheenColorFactor",
+      "segments": [
+        "extensions",
+        "KHR_materials_sheen",
+        "sheenColorFactor"
+      ],
+      "typeName": "float3",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_sheen/schema/material.KHR_materials_sheen.schema.json#/properties/sheenColorFactor",
+      "defaultValue": [
+        0,
+        0,
+        0
+      ],
+      "extension": "KHR_materials_sheen"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_sheen/sheenColorTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_sheen",
+        "sheenColorTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_sheen/schema/material.KHR_materials_sheen.schema.json#/properties/sheenColorTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_sheen",
+        "sheenColorTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_sheen"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_sheen/sheenRoughnessFactor",
+      "segments": [
+        "extensions",
+        "KHR_materials_sheen",
+        "sheenRoughnessFactor"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_sheen/schema/material.KHR_materials_sheen.schema.json#/properties/sheenRoughnessFactor",
+      "defaultValue": 0,
+      "extension": "KHR_materials_sheen"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_sheen/sheenRoughnessTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_sheen",
+        "sheenRoughnessTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_sheen/schema/material.KHR_materials_sheen.schema.json#/properties/sheenRoughnessTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_sheen",
+        "sheenRoughnessTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_sheen"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_specular/specularColorFactor",
+      "segments": [
+        "extensions",
+        "KHR_materials_specular",
+        "specularColorFactor"
+      ],
+      "typeName": "float3",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_specular/schema/material.KHR_materials_specular.schema.json#/properties/specularColorFactor",
+      "defaultValue": [
+        1,
+        1,
+        1
+      ],
+      "extension": "KHR_materials_specular"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_specular/specularColorTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_specular",
+        "specularColorTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_specular/schema/material.KHR_materials_specular.schema.json#/properties/specularColorTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_specular",
+        "specularColorTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_specular"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_specular/specularFactor",
+      "segments": [
+        "extensions",
+        "KHR_materials_specular",
+        "specularFactor"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_specular/schema/material.KHR_materials_specular.schema.json#/properties/specularFactor",
+      "defaultValue": 1,
+      "extension": "KHR_materials_specular"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_specular/specularTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_specular",
+        "specularTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_specular/schema/material.KHR_materials_specular.schema.json#/properties/specularTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_specular",
+        "specularTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_specular"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_transmission/transmissionFactor",
+      "segments": [
+        "extensions",
+        "KHR_materials_transmission",
+        "transmissionFactor"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_transmission/schema/material.KHR_materials_transmission.schema.json#/properties/transmissionFactor",
+      "defaultValue": 0,
+      "extension": "KHR_materials_transmission"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_transmission/transmissionTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_transmission",
+        "transmissionTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_transmission/schema/material.KHR_materials_transmission.schema.json#/properties/transmissionTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_transmission",
+        "transmissionTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_transmission"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_volume/attenuationColor",
+      "segments": [
+        "extensions",
+        "KHR_materials_volume",
+        "attenuationColor"
+      ],
+      "typeName": "float3",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_volume/schema/material.KHR_materials_volume.schema.json#/properties/attenuationColor",
+      "defaultValue": [
+        1,
+        1,
+        1
+      ],
+      "extension": "KHR_materials_volume"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_volume/attenuationDistance",
+      "segments": [
+        "extensions",
+        "KHR_materials_volume",
+        "attenuationDistance"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_volume/schema/material.KHR_materials_volume.schema.json#/properties/attenuationDistance",
+      "extension": "KHR_materials_volume"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_volume/thicknessFactor",
+      "segments": [
+        "extensions",
+        "KHR_materials_volume",
+        "thicknessFactor"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_volume/schema/material.KHR_materials_volume.schema.json#/properties/thicknessFactor",
+      "defaultValue": 0,
+      "extension": "KHR_materials_volume"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_volume/thicknessTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_volume",
+        "thicknessTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_volume/schema/material.KHR_materials_volume.schema.json#/properties/thicknessTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_volume",
+        "thicknessTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_volume"
+    },
+    {
+      "template": "/materials/{}/normalTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/normalTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/normalTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/normalTexture/scale",
+      "segments": [
+        "normalTexture",
+        "scale"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/normalTexture/properties/scale",
+      "requiredParentSegments": [
+        "normalTexture"
+      ],
+      "defaultValue": 1
+    },
+    {
+      "template": "/materials/{}/occlusionTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/occlusionTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/occlusionTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/occlusionTexture/strength",
+      "segments": [
+        "occlusionTexture",
+        "strength"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/occlusionTexture/properties/strength",
+      "requiredParentSegments": [
+        "occlusionTexture"
+      ],
+      "defaultValue": 1
+    },
+    {
+      "template": "/materials/{}/pbrMetallicRoughness/baseColorFactor",
+      "segments": [
+        "pbrMetallicRoughness",
+        "baseColorFactor"
+      ],
+      "typeName": "float4",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/pbrMetallicRoughness/properties/baseColorFactor",
+      "defaultValue": [
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "template": "/materials/{}/pbrMetallicRoughness/baseColorTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/pbrMetallicRoughness/baseColorTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/pbrMetallicRoughness/baseColorTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/pbrMetallicRoughness/baseColorTexture/texCoord",
+      "segments": [
+        "pbrMetallicRoughness",
+        "baseColorTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/pbrMetallicRoughness/properties/baseColorTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "pbrMetallicRoughness",
+        "baseColorTexture"
+      ],
+      "defaultValue": 0
+    },
+    {
+      "template": "/materials/{}/pbrMetallicRoughness/metallicFactor",
+      "segments": [
+        "pbrMetallicRoughness",
+        "metallicFactor"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/pbrMetallicRoughness/properties/metallicFactor",
+      "defaultValue": 1
+    },
+    {
+      "template": "/materials/{}/pbrMetallicRoughness/metallicRoughnessTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/pbrMetallicRoughness/metallicRoughnessTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/pbrMetallicRoughness/metallicRoughnessTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/pbrMetallicRoughness/metallicRoughnessTexture/texCoord",
+      "segments": [
+        "pbrMetallicRoughness",
+        "metallicRoughnessTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/pbrMetallicRoughness/properties/metallicRoughnessTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "pbrMetallicRoughness",
+        "metallicRoughnessTexture"
+      ],
+      "defaultValue": 0
+    },
+    {
+      "template": "/materials/{}/pbrMetallicRoughness/roughnessFactor",
+      "segments": [
+        "pbrMetallicRoughness",
+        "roughnessFactor"
+      ],
+      "typeName": "float",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/pbrMetallicRoughness/properties/roughnessFactor",
+      "defaultValue": 1
+    },
+    {
+      "template": "/meshes.length",
+      "typeName": "int",
+      "readOnly": true
+    },
+    {
+      "template": "/meshes/[]/primitives.length",
+      "typeName": "int",
+      "readOnly": true
+    },
+    {
+      "template": "/meshes/[]/primitives/[]/material",
+      "typeName": "ref",
+      "readOnly": true
+    },
+    {
+      "template": "/meshes/[]/weights.length",
+      "typeName": "int",
+      "readOnly": true
+    },
+    {
+      "template": "/meshes/[]/weights/[]",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/meshes/{}/primitives.length",
+      "typeName": "int",
+      "readOnly": true
+    },
+    {
+      "template": "/meshes/{}/primitives/[]/material",
+      "typeName": "ref",
+      "readOnly": true
+    },
+    {
+      "template": "/meshes/{}/weights.length",
+      "typeName": "int",
+      "readOnly": true
+    },
+    {
+      "template": "/meshes/{}/weights/[]",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/nodes.length",
+      "typeName": "int",
+      "readOnly": true
+    },
+    {
+      "template": "/nodes/[]/camera",
+      "typeName": "ref",
+      "readOnly": true
+    },
+    {
+      "template": "/nodes/[]/children.length",
+      "typeName": "int",
+      "readOnly": true
+    },
+    {
+      "template": "/nodes/[]/children/[]",
+      "typeName": "ref",
+      "readOnly": true
+    },
+    {
+      "template": "/nodes/[]/extensions/KHR_lights_punctual/light",
+      "typeName": "ref",
+      "readOnly": true
+    },
+    {
+      "template": "/nodes/[]/extensions/KHR_node_hoverability/hoverable",
+      "segments": [
+        "extensions",
+        "KHR_node_hoverability",
+        "hoverable"
+      ],
+      "typeName": "bool",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_node_hoverability/schema/node.KHR_node_hoverability.schema.json#/properties/hoverable",
+      "defaultValue": true,
+      "extension": "KHR_node_hoverability"
+    },
+    {
+      "template": "/nodes/[]/extensions/KHR_node_selectability/selectable",
+      "segments": [
+        "extensions",
+        "KHR_node_selectability",
+        "selectable"
+      ],
+      "typeName": "bool",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_node_selectability/schema/node.KHR_node_selectability.schema.json#/properties/selectable",
+      "defaultValue": true,
+      "extension": "KHR_node_selectability"
+    },
+    {
+      "template": "/nodes/[]/extensions/KHR_node_visibility/visible",
+      "segments": [
+        "extensions",
+        "KHR_node_visibility",
+        "visible"
+      ],
+      "typeName": "bool",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_node_visibility/schema/node.KHR_node_visibility.schema.json#/properties/visible",
+      "defaultValue": true,
+      "extension": "KHR_node_visibility"
+    },
+    {
+      "template": "/nodes/[]/globalMatrix",
+      "typeName": "float4x4",
+      "readOnly": true
+    },
+    {
+      "template": "/nodes/[]/matrix",
+      "typeName": "float4x4",
+      "readOnly": true
+    },
+    {
+      "template": "/nodes/[]/mesh",
+      "typeName": "ref",
+      "readOnly": true
+    },
+    {
+      "template": "/nodes/[]/parent",
+      "typeName": "ref",
+      "readOnly": true
+    },
+    {
+      "template": "/nodes/[]/rotation",
+      "typeName": "float4",
+      "readOnly": false
+    },
+    {
+      "template": "/nodes/[]/scale",
+      "typeName": "float3",
+      "readOnly": false
+    },
+    {
+      "template": "/nodes/[]/skin",
+      "typeName": "ref",
+      "readOnly": true
+    },
+    {
+      "template": "/nodes/[]/translation",
+      "typeName": "float3",
+      "readOnly": false
+    },
+    {
+      "template": "/nodes/[]/weights",
+      "typeName": "float[]",
+      "readOnly": false
+    },
+    {
+      "template": "/nodes/[]/weights.length",
+      "typeName": "int",
+      "readOnly": true
+    },
+    {
+      "template": "/nodes/[]/weights/[]",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/nodes/{}/camera",
+      "typeName": "ref",
+      "readOnly": true
+    },
+    {
+      "template": "/nodes/{}/children.length",
+      "typeName": "int",
+      "readOnly": true
+    },
+    {
+      "template": "/nodes/{}/children/[]",
+      "typeName": "ref",
+      "readOnly": true
+    },
+    {
+      "template": "/nodes/{}/extensions/KHR_lights_punctual/light",
+      "typeName": "ref",
+      "readOnly": true
+    },
+    {
+      "template": "/nodes/{}/extensions/KHR_node_hoverability/hoverable",
+      "segments": [
+        "extensions",
+        "KHR_node_hoverability",
+        "hoverable"
+      ],
+      "typeName": "bool",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_node_hoverability/schema/node.KHR_node_hoverability.schema.json#/properties/hoverable",
+      "defaultValue": true,
+      "extension": "KHR_node_hoverability"
+    },
+    {
+      "template": "/nodes/{}/extensions/KHR_node_selectability/selectable",
+      "segments": [
+        "extensions",
+        "KHR_node_selectability",
+        "selectable"
+      ],
+      "typeName": "bool",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_node_selectability/schema/node.KHR_node_selectability.schema.json#/properties/selectable",
+      "defaultValue": true,
+      "extension": "KHR_node_selectability"
+    },
+    {
+      "template": "/nodes/{}/extensions/KHR_node_visibility/visible",
+      "segments": [
+        "extensions",
+        "KHR_node_visibility",
+        "visible"
+      ],
+      "typeName": "bool",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_node_visibility/schema/node.KHR_node_visibility.schema.json#/properties/visible",
+      "defaultValue": true,
+      "extension": "KHR_node_visibility"
+    },
+    {
+      "template": "/nodes/{}/globalMatrix",
+      "typeName": "float4x4",
+      "readOnly": true
+    },
+    {
+      "template": "/nodes/{}/matrix",
+      "typeName": "float4x4",
+      "readOnly": true
+    },
+    {
+      "template": "/nodes/{}/mesh",
+      "typeName": "ref",
+      "readOnly": true
+    },
+    {
+      "template": "/nodes/{}/parent",
+      "typeName": "ref",
+      "readOnly": true
+    },
+    {
+      "template": "/nodes/{}/rotation",
+      "typeName": "float4",
+      "readOnly": false
+    },
+    {
+      "template": "/nodes/{}/scale",
+      "typeName": "float3",
+      "readOnly": false
+    },
+    {
+      "template": "/nodes/{}/skin",
+      "typeName": "ref",
+      "readOnly": true
+    },
+    {
+      "template": "/nodes/{}/translation",
+      "typeName": "float3",
+      "readOnly": false
+    },
+    {
+      "template": "/nodes/{}/weights",
+      "typeName": "float[]",
+      "readOnly": false
+    },
+    {
+      "template": "/nodes/{}/weights.length",
+      "typeName": "int",
+      "readOnly": true
+    },
+    {
+      "template": "/nodes/{}/weights/[]",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/scene",
+      "typeName": "int",
+      "readOnly": true
+    },
+    {
+      "template": "/scenes.length",
+      "typeName": "int",
+      "readOnly": true
+    },
+    {
+      "template": "/scenes/[]/nodes.length",
+      "typeName": "int",
+      "readOnly": true
+    },
+    {
+      "template": "/scenes/[]/nodes/[]",
+      "typeName": "ref",
+      "readOnly": true
+    },
+    {
+      "template": "/skins.length",
+      "typeName": "int",
+      "readOnly": true
+    },
+    {
+      "template": "/skins/[]/joints.length",
+      "typeName": "int",
+      "readOnly": true
+    },
+    {
+      "template": "/skins/[]/joints/[]",
+      "typeName": "ref",
+      "readOnly": true
+    },
+    {
+      "template": "/skins/[]/skeleton",
+      "typeName": "ref",
+      "readOnly": true
+    },
+    {
+      "template": "/skins/{}/joints.length",
+      "typeName": "int",
+      "readOnly": true
+    },
+    {
+      "template": "/skins/{}/joints/[]",
+      "typeName": "ref",
+      "readOnly": true
+    },
+    {
+      "template": "/skins/{}/skeleton",
+      "typeName": "ref",
+      "readOnly": true
+    }
   ]
 } as const;

@@ -358,6 +358,95 @@ const nodeExtensionPointers = [
     .filter((pointer) => pointer.typeName !== "float[]")
     .sort((a, b) => a.template.localeCompare(b.template));
 
+const pointer = (template, typeName, readOnly = false, schemaPointer = undefined) => ({ template, typeName, readOnly, schemaPointer });
+const textureTransformPointers = [
+    "normalTexture",
+    "occlusionTexture",
+    "emissiveTexture",
+    "pbrMetallicRoughness/baseColorTexture",
+    "pbrMetallicRoughness/metallicRoughnessTexture",
+].flatMap((texturePath) => [
+    pointer(`/materials/{}/${texturePath}/extensions/KHR_texture_transform/offset`, "float2"),
+    pointer(`/materials/{}/${texturePath}/extensions/KHR_texture_transform/scale`, "float2"),
+    pointer(`/materials/{}/${texturePath}/extensions/KHR_texture_transform/rotation`, "float"),
+]);
+
+const objectModelPointers = dedupePointers([
+    pointer("/animations.length", "int", true),
+    pointer("/cameras.length", "int", true),
+    pointer("/materials.length", "int", true),
+    pointer("/meshes.length", "int", true),
+    pointer("/nodes.length", "int", true),
+    pointer("/scene", "int", true),
+    pointer("/scenes.length", "int", true),
+    pointer("/skins.length", "int", true),
+    pointer("/scenes/[]/nodes.length", "int", true),
+    pointer("/scenes/[]/nodes/[]", "ref", true),
+    pointer("/nodes/{}/translation", "float3"),
+    pointer("/nodes/{}/rotation", "float4"),
+    pointer("/nodes/{}/scale", "float3"),
+    pointer("/nodes/{}/matrix", "float4x4", true),
+    pointer("/nodes/{}/globalMatrix", "float4x4", true),
+    pointer("/nodes/{}/children.length", "int", true),
+    pointer("/nodes/{}/children/[]", "ref", true),
+    pointer("/nodes/{}/mesh", "ref", true),
+    pointer("/nodes/{}/camera", "ref", true),
+    pointer("/nodes/{}/skin", "ref", true),
+    pointer("/nodes/{}/parent", "ref", true),
+    pointer("/nodes/{}/weights", "float[]"),
+    pointer("/nodes/{}/weights/[]", "float"),
+    pointer("/nodes/{}/weights.length", "int", true),
+    pointer("/nodes/{}/extensions/KHR_lights_punctual/light", "ref", true),
+    pointer("/meshes/{}/primitives.length", "int", true),
+    pointer("/meshes/{}/primitives/[]/material", "ref", true),
+    pointer("/meshes/{}/weights/[]", "float"),
+    pointer("/meshes/{}/weights.length", "int", true),
+    pointer("/cameras/{}/perspective/aspectRatio", "float"),
+    pointer("/cameras/{}/perspective/yfov", "float"),
+    pointer("/cameras/{}/perspective/zfar", "float"),
+    pointer("/cameras/{}/perspective/znear", "float"),
+    pointer("/cameras/{}/orthographic/xmag", "float"),
+    pointer("/cameras/{}/orthographic/ymag", "float"),
+    pointer("/cameras/{}/orthographic/zfar", "float"),
+    pointer("/cameras/{}/orthographic/znear", "float"),
+    pointer("/skins/{}/joints.length", "int", true),
+    pointer("/skins/{}/joints/[]", "ref", true),
+    pointer("/skins/{}/skeleton", "ref", true),
+    pointer("/extensions/KHR_lights_punctual/lights.length", "int", true),
+    pointer("/extensions/KHR_lights_punctual/lights/{}/color", "float3"),
+    pointer("/extensions/KHR_lights_punctual/lights/{}/intensity", "float"),
+    pointer("/extensions/KHR_lights_punctual/lights/{}/range", "float"),
+    pointer("/extensions/KHR_lights_punctual/lights/{}/spot/innerConeAngle", "float"),
+    pointer("/extensions/KHR_lights_punctual/lights/{}/spot/outerConeAngle", "float"),
+    pointer("/animations/{}/extensions/KHR_interactivity/isPlaying", "bool", true),
+    pointer("/animations/{}/extensions/KHR_interactivity/minTime", "float", true),
+    pointer("/animations/{}/extensions/KHR_interactivity/maxTime", "float", true),
+    pointer("/animations/{}/extensions/KHR_interactivity/playhead", "float", true),
+    pointer("/animations/{}/extensions/KHR_interactivity/virtualPlayhead", "float", true),
+    pointer("/extensions/KHR_interactivity/delays/{}", "ref", true),
+    pointer("/extensions/KHR_interactivity/events/{}", "ref", true),
+    ...materialPointers,
+    ...nodeExtensionPointers,
+    ...textureTransformPointers,
+].flatMap(expandPointerAddressModes)).sort((a, b) => a.template.localeCompare(b.template));
+
+function expandPointerAddressModes(pointerDefinition) {
+    const expanded = [pointerDefinition];
+    const indexTemplate = pointerDefinition.template.replace(/\/(animations|cameras|extensions\/KHR_lights_punctual\/lights|materials|meshes|nodes|skins)\/\{\}/g, "/$1/[]");
+    if (indexTemplate !== pointerDefinition.template) {
+        expanded.push({ ...pointerDefinition, template: indexTemplate });
+    }
+    return expanded;
+}
+
+function dedupePointers(pointers) {
+    const byTemplate = new Map();
+    for (const pointerDefinition of pointers) {
+        byTemplate.set(pointerDefinition.template, pointerDefinition);
+    }
+    return [...byTemplate.values()];
+}
+
 const schemaFiles = [
     ...coreSchemaFiles.map((schemaFile) => summarizeSchemaFile(schemaFile, "core")),
     ...ratifiedExtensionSchemaFiles.map((schemaFile) => summarizeSchemaFile(schemaFile, "ratified-extension")),
@@ -386,6 +475,7 @@ const metadata = {
     defaultBySchemaPointer,
     materialPointers,
     nodeExtensionPointers,
+    objectModelPointers,
 };
 
 fs.mkdirSync(path.dirname(outputPath), { recursive: true });

@@ -390,7 +390,7 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
     };
 
     return (
-        <div style={{width: "90vw", margin: "0 auto"}}>
+        <div style={{width: "100%", height: "100%", display: "flex", flexDirection: "column"}}>
             <div style={{background: "#3d5987", padding: 16, borderTopLeftRadius: 16, borderTopRightRadius: 16}}>
                 <Button variant="outline-light" onClick={() => {
                     play(false)
@@ -430,7 +430,7 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
                 </Button>
             </div>
 
-            <canvas ref={canvasRef} style={{ width: '100%', height: '700px' }} data-testid={"babylon-engine-canvas"} />
+            <canvas ref={canvasRef} style={{ width: '100%', flex: 1, minHeight: 0 }} data-testid={"babylon-engine-canvas"} />
 
             <Modal size="lg" show={openModal === BabylonEngineModal.CUSTOM_EVENT} onHide={() => setOpenModal(BabylonEngineModal.NONE)}>
                 <Container style={{padding: 16}}>

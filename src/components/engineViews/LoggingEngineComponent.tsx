@@ -103,7 +103,7 @@ export const LoggingEngineComponent: React.FC<LoggingEngineComponentProps> = ({ 
     }
 
     return (
-        <div style={{width: "90vw", margin: "0 auto"}}>
+        <div style={{width: "100%", height: "100%", margin: "0 auto", overflow: "auto"}}>
             <div style={{background: "#3d5987", padding: 16, borderTopLeftRadius: 16, borderTopRightRadius: 16}}>
                 <Button variant="outline-light" data-testid={"logging-engine-play-btn"} onClick={play}>
                     Play

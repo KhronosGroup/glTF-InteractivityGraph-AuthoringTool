@@ -1079,12 +1079,12 @@ export const AuthoringComponent = () => {
     }, [edges, ancestorEdgeIds]);
 
     return (
-        <div style={{width: "100vw", height: "75vh", textAlign: "center", padding: 16}}>
-            <h2 style={{padding: 16}}>Interactivity Graph Authoring</h2>
-            <p>You can inspect and adjust the Interactivity Graph here.</p>
+        <div style={{width: "100%", height: "100%", textAlign: "center", padding: 16, display: "flex", flexDirection: "column", boxSizing: "border-box"}}>
+            <h2 style={{padding: 8, margin: 0}}>Interactivity Graph Authoring</h2>
+            <p style={{margin: "0 0 8px"}}>You can inspect and adjust the Interactivity Graph here.</p>
             <div
                 ref={reactFlowRef}
-                style={{width: "90%", height: "90%", border: "1px solid black", margin: "0 auto"}}
+                style={{width: "100%", flex: 1, minHeight: 0, border: "1px solid black", margin: "0 auto"}}
                 data-testid={"authoring-view"}
                 onContextMenuCapture={suppressBrowserContextMenu}
                 onContextMenu={suppressBrowserContextMenu}

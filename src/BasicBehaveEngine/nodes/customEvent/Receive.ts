@@ -43,6 +43,10 @@ export class Receive extends BehaveEngineNode {
         this.outValues = JSON.parse(JSON.stringify(defaultValues));
 
         this.graphEngine.addCustomEventListener(`KHR_INTERACTIVITY:${customEventDesc.id}`, (e: any) => {
+            if (this.graphEngine.isEventPropagationCancelled(this._eventRefOutput.value[0])) {
+                return;
+            }
+
             this.graphEngine.processNodeStarted(this);
 
             // reset values to default before processing the event

@@ -45,10 +45,10 @@ export class OnHoverIn extends BehaveEngineNode {
             }
 
             this.graphEngine.queueFunctionCall(() => {
-                if (!this.graphEngine.propagationCancelled.has(this._nodeIndex)) {
+                // if (!this.graphEngine.propagationCancelled.has(this._nodeIndex)) {
                     const parentNodeIndex = this.graphEngine.getParentNodeIndex(this._nodeIndex);
                     this.graphEngine.alertOnHoverIn(selectedNodeRef, controllerIndex, parentNodeIndex, firstCommonHoverNodeIndex);
-                }
+                // }
             });
         }
         const hoverInformation = this.graphEngine.hoverableNodesIndices.get(this._nodeIndex);

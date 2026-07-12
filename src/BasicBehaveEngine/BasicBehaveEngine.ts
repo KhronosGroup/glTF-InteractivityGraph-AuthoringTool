@@ -298,7 +298,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
     public selectableNodesIndices: Map<number, (selectedNodeRef: any, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) => void>;
     public lastHoveredNodeIndices: Map<number, number | undefined>;
     public rigidBodyTriggerNodeIndices: Map<number, IRigidBodyTriggerInformation>;
-    public propagationCancelled: Set<number>;
+    public propagationCancelled: Set<string>;
 
     constructor(fps: number, eventBus: IEventBus) {
         this.registry = new Map<string, any>();
@@ -321,7 +321,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.lastHoveredNodeIndices = new Map<number, number>();
         this.selectableNodesIndices = new Map<number, (selectedNodeRef: any, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) => void>();
         this.rigidBodyTriggerNodeIndices = new Map<number, IRigidBodyTriggerInformation>();
-        this.propagationCancelled = new Set<number>();
+        this.propagationCancelled = new Set<string>();
 
         this.registerKnownBehaviorNodes();
     }
@@ -390,9 +390,9 @@ export class BasicBehaveEngine implements IBehaveEngine {
 
     public select(nodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) {
         for (;;) {
-            if (this.propagationCancelled.has(nodeIndex)) {
-                break;
-            }
+            // if (this.propagationCancelled.has("")) {
+            //     break;
+            // }
 
             const callback = this.selectableNodesIndices.get(nodeIndex);
             if (callback !== undefined) {
@@ -853,5 +853,9 @@ export class BasicBehaveEngine implements IBehaveEngine {
 
     clearVariableInterpolation(variable: number): void {
         this.eventBus.clearVariableInterpolation(variable);
+    }
+
+    isEventPropagationCancelled(event: string): boolean {
+        return this.propagationCancelled.has(event);
     }
 }

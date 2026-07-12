@@ -1165,12 +1165,14 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
                     typeOptions: anyType,
                     typeGroup: "T",
                     description: "Value returned when no case matches",
+                    objectPicker: true,
                     type: 0,
                     value: [undefined]
                 },
                 selection: {
                     typeOptions: [1],
                     description: "Integer selecting the matching case",
+                    objectPicker: true,
                     type: 1,
                     value: [undefined]
                 }
@@ -1376,6 +1378,7 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
             input: {
                 selection: {
                     typeOptions: [1],
+                    objectPicker: true,
                     type: 1,
                     value: [undefined]
                 }
@@ -3970,6 +3973,7 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
             input: {
                 nodeIndex: {
                     typeOptions: [1],
+                    objectPicker: true,
                     type: 1,
                     value: [undefined]
                 },
@@ -4002,6 +4006,7 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
             input: {
                 nodeIndex: {
                     typeOptions: [1],
+                    objectPicker: true,
                     type: 1,
                     value: [undefined]
                 },

@@ -15,6 +15,7 @@ import { PointerConfigField } from "./PointerConfigField";
 import { getStandardTypeIndexForSignature } from "./pointerCatalogue";
 import { FLOW_COLOR, getColorForTypeIndex, getNodeCategoryColor, getTypeLabel } from "./socketColors";
 import { RefValuePicker } from "./RefValuePicker";
+import { ObjectMenuDropdown } from "./ObjectMenuDropdown";
 import { BoolSwitch } from "./TypedValueInput";
 import { VariablesConfigField } from "./VariablesConfigField";
 import { IntArrayConfigField } from "./IntArrayConfigField";
@@ -286,6 +287,24 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         const curParam = inputValues[socket];
         if (!curParam) { return; }
         setInputValues({ ...inputValues, [socket]: { value: castParameter(pointer, standardTypes[curParam.type!]?.name ?? ""), typeOptions: curParam.typeOptions, type: curParam.type } });
+    }, [inputValues]);
+
+    // set an int socket's static value from its number input; empty clears it (undefined)
+    const onChangeIntValue = useCallback((socket: string, raw: string) => {
+        const curParam = inputValues[socket];
+        if (!curParam) { return; }
+        const value = raw === "" ? [undefined] : [parseInt(raw, 10)];
+        setInputValues({ ...inputValues, [socket]: { ...curParam, value } });
+    }, [inputValues]);
+
+    // set an int socket's value from the object picker: a picked pointer like "/nodes/3" stores its
+    // trailing index (3) so the int socket references that glTF object by index.
+    const setSocketIndexValue = useCallback((socket: string, pointer: string) => {
+        const curParam = inputValues[socket];
+        if (!curParam) { return; }
+        const index = Number(pointer.split("/").filter((p) => p !== "").pop());
+        if (Number.isNaN(index)) { return; }
+        setInputValues({ ...inputValues, [socket]: { ...curParam, value: [index] } });
     }, [inputValues]);
 
     const onChangeType = useCallback((evt: { target: { value: any; }; }) => {
@@ -989,6 +1008,10 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                 const signature = standardTypes[value.type ?? -1]?.signature;
                                 const isRefSocket = signature === InteractivityValueType.REF;
                                 const isBoolSocket = signature === InteractivityValueType.BOOLEAN;
+                                // int sockets flagged (in the spec or on a generated pointer-index
+                                // slot) as holding an object index get the "Open Object Menu" picker
+                                const showObjectPicker = signature === InteractivityValueType.INT &&
+                                    (value.objectPicker === true || nodeSpec?.values?.input?.[socket]?.objectPicker === true);
                                 // vector/matrix sockets render a grid of per-component fields
                                 const vecLayout = signature ? VECTOR_MATRIX_LAYOUTS[signature] : undefined;
                                 // the type badge doubles as the type selector when the socket accepts
@@ -1071,6 +1094,26 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                                     onChange={(checked) => onChangeBoolean(socket, checked)}
                                                 />
                                             </div>
+                                        ) : showObjectPicker ? (
+                                            <div style={{ display: isLinked ? "none" : "flex", gap: 4 }}>
+                                                <input
+                                                    id={`in-${socket}`}
+                                                    name={socket}
+                                                    type="number"
+                                                    step={1}
+                                                    className={"flow-node-control nodrag"}
+                                                    style={{ flex: 1, minWidth: 0 }}
+                                                    placeholder={"0"}
+                                                    value={inputValues[socket].value?.[0] ?? ""}
+                                                    readOnly={isUnknown}
+                                                    onChange={(e) => onChangeIntValue(socket, e.target.value)}
+                                                />
+                                                <ObjectMenuDropdown
+                                                    disabled={isUnknown}
+                                                    title={"Object menu"}
+                                                    items={[{ label: "Open Object Menu", onSelect: () => setRefPickerSocket(socket) }]}
+                                                />
+                                            </div>
                                         ) : (
                                             <input id={`in-${socket}`} name={socket} className={"nodrag"} onChange={onChangeParameter} defaultValue={inputValues[socket].value} readOnly={isUnknown} style={{ display: isLinked ? "none" : "block" }} />
                                         )}
@@ -1132,10 +1175,24 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
 
             <RefValuePicker
                 show={refPickerSocket !== null}
-                currentValue={refPickerSocket ? String(inputValues[refPickerSocket]?.value ?? "") : undefined}
+                // a ref socket already holds a "/nodes/3" pointer (highlightable); an int socket
+                // holds a bare index whose category is unknown, so don't feed a fake pointer
+                currentValue={
+                    refPickerSocket && standardTypes[inputValues[refPickerSocket]?.type ?? -1]?.signature === InteractivityValueType.REF
+                        ? String(inputValues[refPickerSocket]?.value ?? "")
+                        : undefined
+                }
                 hintSocket={refPickerSocket ?? undefined}
                 onClose={() => setRefPickerSocket(null)}
-                onSelect={(pointer) => { if (refPickerSocket) { setSocketRefValue(refPickerSocket, pointer); } }}
+                onSelect={(pointer) => {
+                    if (!refPickerSocket) { return; }
+                    // int sockets store the object's index; ref sockets store the pointer string
+                    if (standardTypes[inputValues[refPickerSocket]?.type ?? -1]?.signature === InteractivityValueType.INT) {
+                        setSocketIndexValue(refPickerSocket, pointer);
+                    } else {
+                        setSocketRefValue(refPickerSocket, pointer);
+                    }
+                }}
             />
 
             <RefValuePicker

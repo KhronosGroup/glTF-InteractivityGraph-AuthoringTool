@@ -86,7 +86,9 @@ export function computeConfigDrivenSockets(
             }
         } else if (nodeType === "math/switch") {
             for (let i = 0; i < cases.length; i++) {
-                inputValuesToSet[`${cases[i]}`] = { value: [undefined], typeOptions: anyType, typeGroup: "T", type: 0 };
+                // these case sockets share the "T" type group, so they offer the object-index
+                // picker too — the int-only render guard keeps it hidden until T resolves to int
+                inputValuesToSet[`${cases[i]}`] = { value: [undefined], typeOptions: anyType, typeGroup: "T", objectPicker: true, type: 0 };
             }
         }
     }
@@ -123,7 +125,9 @@ export function computeConfigDrivenSockets(
             // stored type differs from the delimiter-derived type is kept (see buildPointerSlotValue).
             const refPrefix = socket.kind === "ref" ? getRefSlotPointerPrefix(template, socket.id) : undefined;
             const { value, preserved } = buildPointerSlotValue(inputValues[socket.id], socket.kind, type, refPrefix);
-            inputValuesToSet[socket.id] = value;
+            // an `index` slot (e.g. `/nodes/[nodeIndex]/...`) holds a glTF object index, so it opts
+            // into the "Open Object Menu" picker; a `ref` slot already stores a pointer string.
+            inputValuesToSet[socket.id] = socket.kind === "index" ? { ...value, objectPicker: true } : value;
             if (preserved) {
                 preservedPointerSlotIds.add(socket.id);
             } else {

@@ -110,6 +110,21 @@
     pointer-events: none;
 }
 
+/* Enlarge the interactive hit area of every socket (both output/source, to start a wire, and
+   input/target, to drop onto) so wiring is much easier, without changing the visible 11px dot.
+   The transparent ::before extends the handle's clickable region outward in every direction. */
+.react-flow__handle::before {
+    content: "";
+    position: absolute;
+    inset: -14px;
+    border-radius: 50%;
+}
+
+/* the LOD (zoomed-out) handles stay non-interactive, so don't give them an expanded hit area */
+.flow-node-lod-handle::before {
+    content: none;
+}
+
 /* ---- top menu bar (replaces the old top-right stacked button panel) ---- */
 
 .graph-menu-bar {
@@ -275,6 +290,10 @@
 }
 
 .node-picker-item:hover {
+    background: #e9ecef;
+}
+
+.socket-picker-item:hover {
     background: #e9ecef;
 }
 

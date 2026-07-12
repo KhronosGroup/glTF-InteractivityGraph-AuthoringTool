@@ -11,6 +11,7 @@ export const toExecutableValue = (authoredValue: AuthoredValue): IInteractivityV
     delete value.description;
     delete value.typeGroup;
     delete value.typeOptions;
+    delete value.objectPicker;
     return value;
 };
 

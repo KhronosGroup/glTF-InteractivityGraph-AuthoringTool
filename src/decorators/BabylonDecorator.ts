@@ -22,9 +22,6 @@ import {cubicBezier, easeFloat, easeFloat3, easeFloat4, linearFloat, slerpFloat4
 import {Scene} from "@babylonjs/core/scene";
 import {OnSelect} from "../BasicBehaveEngine/nodes/experimental/OnSelect";
 import {KHR_materials_variants} from "@babylonjs/loaders/glTF/2.0";
-import {AnimationStart} from "../BasicBehaveEngine/nodes/animation/AnimationStart";
-import {AnimationStop} from "../BasicBehaveEngine/nodes/animation/AnimationStop";
-import {AnimationStopAt} from "../BasicBehaveEngine/nodes/animation/AnimationStopAt";
 import {Nullable} from "@babylonjs/core/types.js";
 import { OnHoverIn } from "../BasicBehaveEngine/nodes/experimental/OnHoverIn";
 import { OnHoverOut } from "../BasicBehaveEngine/nodes/experimental/OnHoverOut";
@@ -48,10 +45,6 @@ export class BabylonDecorator extends ADecorator {
         this.registerBehaveEngineNode("event/onSelect", OnSelect);
         this.registerBehaveEngineNode("event/onHoverIn", OnHoverIn);
         this.registerBehaveEngineNode("event/onHoverOut", OnHoverOut);
-        this.registerBehaveEngineNode("animation/stop", AnimationStop);
-        this.registerBehaveEngineNode("animation/start", AnimationStart);
-        this.registerBehaveEngineNode("animation/stopAt", AnimationStopAt);
-
         // dealing with hoverability refactor this once/if babylon has an api for hoverability
         this.hoveredNodeIndex = -1;
         this.beforeRenderObserver = this.scene.onBeforeRenderObservable.add(() => {

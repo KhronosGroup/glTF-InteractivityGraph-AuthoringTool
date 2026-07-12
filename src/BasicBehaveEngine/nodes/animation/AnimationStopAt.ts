@@ -16,11 +16,10 @@ export class AnimationStopAt extends BehaveEngineNode {
 
         const animationIndex = this.refToIndex(animation);
 
-        if (this.graphEngine.getWorld().animations.length <= animationIndex || animationIndex < 0) {
-            if (this.flows.err) {
-                this.processFlow(this.flows.err);
-            }
-        } else {
+        const validAnimation = this.graphEngine.getWorld().animations.length > animationIndex && animationIndex >= 0;
+        const validStopTime = !isNaN(stopTime) && isFinite(stopTime);
+
+        if (validAnimation && validStopTime) {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             this.graphEngine.stopAnimationAt(animationIndex, stopTime, () => {
@@ -29,9 +28,12 @@ export class AnimationStopAt extends BehaveEngineNode {
                 }
             });
 
-
             if (this.flows.out) {
                 this.processFlow(this.flows.out);
+            }
+        } else {
+            if (this.flows.err) {
+                this.processFlow(this.flows.err);
             }
         }
     }

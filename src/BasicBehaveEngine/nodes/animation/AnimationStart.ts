@@ -17,11 +17,12 @@ export class AnimationStart extends BehaveEngineNode {
         
         const animationIndex = this.refToIndex(animation);
 
-        if (speed <= 0 || this.graphEngine.getWorld().animations.length <= animationIndex || animationIndex < 0) {
-            if (this.flows.err) {
-                this.processFlow(this.flows.err);
-            }
-        } else {
+        const validAnimation = this.graphEngine.getWorld().animations.length > animationIndex && animationIndex >= 0;
+        const validStartTime = !isNaN(startTime) && isFinite(startTime);
+        const validEndTime = !isNaN(endTime) && isFinite(endTime);
+        const validSpeed = !isNaN(speed) && isFinite(speed) && speed > 0;
+
+        if (validAnimation && validStartTime && validEndTime && validSpeed) {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             this.graphEngine.startAnimation(animationIndex, startTime, endTime, speed, () => {
@@ -32,6 +33,10 @@ export class AnimationStart extends BehaveEngineNode {
 
             if (this.flows.out) {
                 this.processFlow(this.flows.out);
+            }
+        } else {
+            if (this.flows.err) {
+                this.processFlow(this.flows.err);
             }
         }
     }

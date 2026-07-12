@@ -16,17 +16,19 @@ export class AnimationStop extends BehaveEngineNode {
 
         const animationIndex = this.refToIndex(animation);
 
-        if (this.graphEngine.getWorld().animations.length <= animationIndex || animationIndex < 0) {
-            if (this.flows.err) {
-                this.processFlow(this.flows.err);
-            }
-        } else {
+        const validAnimation = this.graphEngine.getWorld().animations.length > animationIndex && animationIndex >= 0;
+
+        if (validAnimation) {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             this.graphEngine.stopAnimation(animationIndex);
 
             if (this.flows.out) {
                 this.processFlow(this.flows.out);
+            }
+        } else {
+            if (this.flows.err) {
+                this.processFlow(this.flows.err);
             }
         }
     }

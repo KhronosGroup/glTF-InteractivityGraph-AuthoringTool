@@ -149,6 +149,8 @@ export interface IBehaveEngine {
      */
     pauseEventQueue: () => void;
 
+    dispose: () => void;
+
     /**
      * Start/Resume the event queue processing.
      */

@@ -55,7 +55,10 @@ export abstract class ADecorator implements IBehaveEngine {
 
     /** Tears down listeners/observers registered by this decorator. Call before discarding it. */
     dispose(): void {
-        this.clearCustomEventListeners();
+        // stop the wrapped engine (kills its tick loop + scheduled delays), which also clears its
+        // event queue and custom-event listeners - otherwise the old graph keeps running after a
+        // new model/graph replaces this decorator
+        this.behaveEngine.dispose();
     }
 
     registerRigidBodyNodes() {

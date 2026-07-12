@@ -467,7 +467,24 @@ export class BasicBehaveEngine implements IBehaveEngine {
     }
 
     public clearScheduledDelays() {
+        // actually cancel the pending flow/setDelay timers - dropping the references alone leaves
+        // them queued, so their callbacks keep firing after the graph is torn down
+        for (const delay of this._scheduledDelays) {
+            if (delay !== undefined) {
+                clearTimeout(delay);
+            }
+        }
         this._scheduledDelays = [];
+    }
+
+    public dispose = () => {
+        if (this._timerID !== null) {
+            clearTimeout(this._timerID);
+            this._timerID = null;
+        }
+        this.clearScheduledDelays();
+        this.clearEventList();
+        this.clearCustomEventListeners();
     }
 
     public get scheduledDelays() {

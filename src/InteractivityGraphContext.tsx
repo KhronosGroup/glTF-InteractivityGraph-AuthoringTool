@@ -2,7 +2,8 @@ import { createContext, useCallback, useMemo, useRef, useState } from 'react';
 import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityGraph, IInteractivityVariable } from './BasicBehaveEngine/types/InteractivityGraph';
 import { AuthoredGraph, AuthoredNode, AuthoredValue, NodeSpecFlag } from './authoring/spec/AuthoredGraph';
 import { createNoOpNode, hasNodeSpecFlag, interactivityNodeSpecs, resolveOutputSocketType, standardTypes } from './authoring/spec/nodes';
-import { computeConfigDrivenSockets } from './authoring/socketReconciler';
+import { reconcileNodeSockets } from './authoring/socketReconciler';
+import { buildNodeByUidMap, computeNodeLiveWarnings } from './authoring/validation';
 import { v4 as uuidv4 } from 'uuid';
 import { Edge, Node } from 'reactflow';
 import { DiagnosticCategory, IGraphDiagnostic } from './diagnostics';
@@ -13,6 +14,29 @@ import { ensureInteractivityDeclaration } from './authoring/declarations';
 import { getExecutableDeclarationIndex, toExecutableConfigurationValue, toExecutableValue } from './authoring/executableGraph';
 
 const edgeStyle = (color: string) => ({ stroke: color, strokeWidth: 2 });
+
+// how long after the last model edit the whole-graph live validation re-runs (see
+// scheduleLiveValidation) — long enough to coalesce a burst of edits, short enough that the
+// ⚠/panel feedback still feels immediate
+const LIVE_VALIDATION_DEBOUNCE_MS = 200;
+
+// equality for the nodeWarnings state, so a validation pass that changes nothing keeps the
+// previous object identity and doesn't re-render every provider consumer
+const nodeWarningsEqual = (a: Record<string, IGraphDiagnostic[]>, b: Record<string, IGraphDiagnostic[]>): boolean => {
+    const aKeys = Object.keys(a);
+    if (aKeys.length !== Object.keys(b).length) { return false; }
+    for (const key of aKeys) {
+        const aDiags = a[key];
+        const bDiags = b[key];
+        if (bDiags === undefined || aDiags.length !== bDiags.length) { return false; }
+        for (let i = 0; i < aDiags.length; i++) {
+            if (aDiags[i].title !== bDiags[i].title
+                || aDiags[i].socket !== bDiags[i].socket
+                || aDiags[i].nodeIndex !== bDiags[i].nodeIndex) { return false; }
+        }
+    }
+    return true;
+};
 
 // human-readable label for a standard type index (0=bool, 1=int, 2=float, ...), used to phrase
 // load-time spec-validity diagnostics
@@ -44,19 +68,23 @@ interface InteractivityGraphContextType {
     diagnostics: IGraphDiagnostic[],
     setDiagnosticsForCategory: (category: DiagnosticCategory, diagnostics: IGraphDiagnostic[]) => void,
     clearDiagnostics: () => void,
-    // diagnostics + every currently-mounted node's live socket/type warnings (missing values,
-    // type mismatches, type-group conflicts - computed per-render in AuthoringGraphNode and
-    // reported here via reportNodeWarnings), so the DiagnosticsPanel/DiagnosticsCounter reflect
-    // problems introduced by editing the graph in the UI, not just ones found at load time
+    // diagnostics + every node's live socket/type warnings (missing values, type mismatches,
+    // type-group conflicts), so the DiagnosticsPanel/DiagnosticsCounter reflect problems
+    // introduced by editing the graph in the UI, not just ones found at load time
     allDiagnostics: IGraphDiagnostic[],
-    reportNodeWarnings: (nodeUid: string, nodeIndex: number, nodeOp: string | undefined, warnings: string[]) => void,
+    // Live per-node socket warnings keyed by node uid, computed whole-graph from the model by
+    // runLiveValidation (computeNodeLiveWarnings in validation.ts) — never from what happens to be
+    // mounted on the canvas, so viewport culling/LOD/mount order cannot change the counts. Nodes
+    // read their own entry for the ⚠/red-border display. Only warned nodes have an entry.
+    nodeWarnings: Record<string, IGraphDiagnostic[]>,
+    // Recompute nodeWarnings for the whole graph now (chunked across frames, superseding any
+    // in-flight run). Resolves true once committed, false when superseded by a newer run/load.
+    // The canvas rebuild awaits this in its final "Checking" phase; interactive edits instead go
+    // through the debounced trigger wired into markGraphDirty.
+    runLiveValidation: () => Promise<boolean>,
     // Progress of the current chunked load (null when idle). Drives the LoadingProgressBar.
     loadingState: LoadingState | null,
     setLoadingState: (state: LoadingState | null) => void,
-    // While true, live per-node warnings are buffered instead of committed so the hundreds of nodes
-    // mounting during a load don't each trigger a context setState. Flushed once on unpause.
-    diagnosticsPaused: boolean,
-    setDiagnosticsPaused: (paused: boolean) => void,
     gltfObjectModel: GltfObjectModel | null,
     setGltfObjectModel: (model: GltfObjectModel | null) => void,
     supportedPointerTemplates: ReadonlySet<string> | null,
@@ -104,11 +132,10 @@ const initialContext: InteractivityGraphContextType = {
     setDiagnosticsForCategory: () => {return null},
     clearDiagnostics: () => {return null},
     allDiagnostics: [],
-    reportNodeWarnings: () => {return null},
+    nodeWarnings: {},
+    runLiveValidation: async () => false,
     loadingState: null,
     setLoadingState: () => {return null},
-    diagnosticsPaused: false,
-    setDiagnosticsPaused: () => {return null},
     gltfObjectModel: null,
     setGltfObjectModel: () => {return null},
     supportedPointerTemplates: null,
@@ -142,9 +169,15 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
     const cycleReportedRef = useRef<boolean>(false);
 
     // See graphDirty on the context type: true once a structural edit has been made since the
-    // engine last (re)loaded the graph.
+    // engine last (re)loaded the graph. Every model mutation funnels through markGraphDirty
+    // (node setters via markDirtyIfChanged, onConnect/onEdgesDelete, add/remove node,
+    // event/variable edits), which makes it the single choke point to also re-run the whole-graph
+    // live validation after an edit (debounced; see scheduleLiveValidation below).
     const [graphDirty, setGraphDirty] = useState(false);
-    const markGraphDirty = useCallback(() => setGraphDirty(true), []);
+    const markGraphDirty = useCallback(() => {
+        setGraphDirty(true);
+        scheduleLiveValidation();
+    }, []);
     const clearGraphDirty = useCallback(() => setGraphDirty(false), []);
 
     const playHandlerRef = useRef<(() => void) | null>(null);
@@ -169,59 +202,77 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
     };
 
     // live per-node warnings (missing values, type mismatches, type-group conflicts), keyed by
-    // node uid and refreshed every render by that node's own AuthoringGraphNode instance - see
-    // reportNodeWarnings below and its call site in AuthoringGraphNode
+    // node uid — the whole-graph, model-driven output of runLiveValidation below. Only nodes with
+    // warnings have an entry. Never written from component renders: computing this from mounted
+    // nodes made the counts depend on the viewport (culling unmounted a node -> warnings vanished).
     const [nodeWarnings, setNodeWarnings] = useState<Record<string, IGraphDiagnostic[]>>({});
 
-    // Loading progress + diagnostics pause. The pause is mirrored into a ref so the stable
-    // reportNodeWarnings callback can read the current value without being recreated. While paused,
-    // node warnings accumulate in pendingNodeWarningsRef (null value = "clear this uid") and are
-    // committed in one setState when setDiagnosticsPaused(false) flushes them.
-    const [loadingState, setLoadingState] = useState<LoadingState | null>(null);
-    const [diagnosticsPaused, setDiagnosticsPausedState] = useState(false);
-    const diagnosticsPausedRef = useRef(false);
-    const pendingNodeWarningsRef = useRef<Map<string, IGraphDiagnostic[] | null>>(new Map());
-
-    const reportNodeWarnings = useCallback((nodeUid: string, nodeIndex: number, nodeOp: string | undefined, warnings: string[]) => {
-        const diags: IGraphDiagnostic[] | null = warnings.length === 0
-            ? null
-            : warnings.map((title) => ({ severity: 'warning', category: 'node', nodeUid, nodeIndex, nodeOp, title }));
-        if (diagnosticsPausedRef.current) {
-            pendingNodeWarningsRef.current.set(nodeUid, diags);
-            return;
-        }
-        setNodeWarnings(prev => {
-            const existing = prev[nodeUid];
-            if (diags === null) {
-                if (existing === undefined) { return prev; }
-                const next = { ...prev };
-                delete next[nodeUid];
-                return next;
-            }
-            // bail out if unchanged so this doesn't retrigger a render loop every frame
-            if (existing !== undefined && existing.length === diags.length && existing.every((d, i) => d.title === diags[i].title)) {
-                return prev;
-            }
-            return { ...prev, [nodeUid]: diags };
-        });
+    const [loadingState, setLoadingStateState] = useState<LoadingState | null>(null);
+    // mirrored into a ref so the stable scheduleLiveValidation callback can see "a load is in
+    // flight" without being recreated per loading tick
+    const loadingStateRef = useRef<LoadingState | null>(null);
+    const setLoadingState = useCallback((state: LoadingState | null) => {
+        loadingStateRef.current = state;
+        setLoadingStateState(state);
     }, []);
 
-    const setDiagnosticsPaused = useCallback((paused: boolean) => {
-        diagnosticsPausedRef.current = paused;
-        setDiagnosticsPausedState(paused);
-        if (!paused && pendingNodeWarningsRef.current.size > 0) {
-            const pending = pendingNodeWarningsRef.current;
-            pendingNodeWarningsRef.current = new Map();
-            setNodeWarnings(prev => {
-                const next = { ...prev };
-                pending.forEach((diags, uid) => {
-                    if (diags === null) { delete next[uid]; }
-                    else { next[uid] = diags; }
-                });
-                return next;
-            });
+    // identity mirror of `graph` so the stable validation callbacks always validate the current
+    // model (interactive edits mutate the object in place; only a load swaps identity)
+    const graphRef = useRef<AuthoredGraph>(graph);
+    graphRef.current = graph;
+
+    // Whole-graph live validation. Chunked with the same frame budget as the loader so a large
+    // graph never blocks the main thread; a newer run (or a new load) supersedes an in-flight one
+    // via the cancel token, in which case nothing is committed.
+    const validationCancelRef = useRef<{ current: boolean } | null>(null);
+    const validationTimerRef = useRef<number | null>(null);
+
+    // resolves true once the result is committed, false when superseded by a newer run/load (the
+    // newer owner then controls nodeWarnings and the loading bar)
+    const runLiveValidation = useCallback(async (): Promise<boolean> => {
+        if (validationCancelRef.current) { validationCancelRef.current.current = true; }
+        const cancelled = { current: false };
+        validationCancelRef.current = cancelled;
+
+        const graphNodes = graphRef.current.nodes;
+        const variables = graphRef.current.variables ?? [];
+        const byUid = buildNodeByUidMap(graphNodes);
+        const nodeIndexByUid = new Map<string, number>();
+        graphNodes.forEach((graphNode, index) => { if (graphNode.uid !== undefined) { nodeIndexByUid.set(graphNode.uid, index); } });
+
+        const next: Record<string, IGraphDiagnostic[]> = {};
+        try {
+            await runChunked(graphNodes, (graphNode) => {
+                if (graphNode.uid === undefined) { return; }
+                const warnings = computeNodeLiveWarnings(graphNode, graphNodes, variables, byUid);
+                if (warnings.length === 0) { return; }
+                next[graphNode.uid] = warnings.map((w) => ({
+                    severity: 'warning', category: 'node',
+                    nodeUid: graphNode.uid, nodeIndex: nodeIndexByUid.get(graphNode.uid!), nodeOp: graphNode.op,
+                    title: w.message, socket: w.socket,
+                }));
+            }, { cancelled });
+        } catch (e) {
+            if (isAbortError(e)) { return false; }
+            throw e;
         }
+        if (cancelled.current) { return false; }
+        // one replace-all commit: also implicitly drops entries of deleted nodes. Keep the previous
+        // identity when nothing changed so provider consumers don't re-render for a clean pass.
+        setNodeWarnings(prev => (nodeWarningsEqual(prev, next) ? prev : next));
+        return true;
     }, []);
+
+    // Debounced trigger for interactive edits (wired into markGraphDirty above). No-op while a
+    // load is in flight: the canvas rebuild runs one authoritative pass in its "Checking" phase.
+    const scheduleLiveValidation = useCallback(() => {
+        if (loadingStateRef.current?.active) { return; }
+        if (validationTimerRef.current !== null) { window.clearTimeout(validationTimerRef.current); }
+        validationTimerRef.current = window.setTimeout(() => {
+            validationTimerRef.current = null;
+            void runLiveValidation();
+        }, LIVE_VALIDATION_DEBOUNCE_MS);
+    }, [runLiveValidation]);
 
     const allDiagnostics = useMemo(
         () => [...diagnostics, ...Object.values(nodeWarnings).flat()],
@@ -464,7 +515,15 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         const cancelled = { current: false };
         loadCancelRef.current = cancelled;
 
-        setDiagnosticsPaused(true);
+        // supersede any scheduled/in-flight live validation — it would be validating the outgoing
+        // graph — and drop its stale warnings; the canvas rebuild's "Checking" phase runs a fresh
+        // authoritative pass once the new graph is fully typed
+        if (validationTimerRef.current !== null) {
+            window.clearTimeout(validationTimerRef.current);
+            validationTimerRef.current = null;
+        }
+        if (validationCancelRef.current) { validationCancelRef.current.current = true; }
+        setNodeWarnings({});
         setLoadingState({ active: true, step: "Reading graph", progress: 0 });
 
         const newGraph: AuthoredGraph = {
@@ -641,35 +700,48 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
 
         newGraph.nodes = loadedNodes;
 
-        // "Building nodes": Config-driven output sockets (pointer/get's `value`, variable/get's
-        // `value`, ...) are spec defaulted to `bool` (type 0) and only get their real type from
-        // `configuration` via the reconciler, which normally runs per-node when its AuthoringGraphNode
-        // mounts - too late for the group-type propagation below, which would otherwise resolve a
-        // downstream type-group (e.g. math/matMul's `a`/`b`/`value`) against that bool placeholder
-        // instead of the pointer/variable's actual type. Resolve these first so
-        // propagateGraphGroupTypes below sees the real types.
+        // "Building nodes": run the full per-node socket reconciliation (config-driven sockets +
+        // spec/existing merge — the same reconcileNodeSockets pass AuthoringGraphNode runs on
+        // mount/config change) so the model is FULLY materialised before anything renders or
+        // resolves types. This matters twice over:
+        // - config-driven sockets (pointer/get's `value` type, math/switch's case inputs,
+        //   variable/set's inputs, event/send's params, ...) must exist with their real types
+        //   before the deferred propagateGraphGroupTypes fixpoint runs in the canvas rebuild,
+        //   or a type-group would resolve against a placeholder / a missing member;
+        // - a node's mount reconcile becomes a true no-op, so with viewport culling
+        //   (onlyRenderVisibleElements) it no longer matters whether a node mounts before or
+        //   after that one propagation pass — type resolution is mount-order-independent.
         setLoadingState({ active: true, step: "Building nodes", progress: 0.45 });
         await runChunked(loadedNodes, (loadedNode) => {
-            if (loadedNode.configuration === undefined) { return; }
-            const generated = computeConfigDrivenSockets(loadedNode.configuration, loadedNode.values?.input ?? {}, {
-                nodeType: loadedNode.op,
+            const isNoOp = interactivityNodeSpecs.find((schema: AuthoredNode) => schema.op === loadedNode.op) === undefined;
+            const reconciled = reconcileNodeSockets({
+                op: loadedNode.op,
+                isNoOp,
+                configuration: loadedNode.configuration ?? {},
+                inputValues: loadedNode.values?.input ?? {},
+                outputValues: loadedNode.values?.output ?? {},
+                inputFlows: loadedNode.flows?.input ?? {},
+                outputFlows: loadedNode.flows?.output ?? {},
                 events: newGraph.events ?? {},
                 variables: newGraph.variables ?? [],
             });
-            for (const [key, value] of Object.entries(generated.outputValues)) {
-                loadedNode.values = loadedNode.values ?? {};
-                loadedNode.values.output = loadedNode.values.output ?? {};
-                loadedNode.values.output[key] = value;
-            }
+            // mirror the component's model setters exactly (they always materialise all four
+            // records), so load-time state is byte-equivalent to post-mount state
+            loadedNode.values = loadedNode.values ?? {};
+            loadedNode.values.input = reconciled.inputValues;
+            loadedNode.values.output = reconciled.outputValues;
+            loadedNode.flows = loadedNode.flows ?? {};
+            loadedNode.flows.input = reconciled.inputFlows;
+            loadedNode.flows.output = reconciled.outputFlows;
         }, { cancelled, onProgress: (p) => setLoadingState({ active: true, step: "Building nodes", progress: 0.45 + p * 0.25 }) });
 
         // "Checking": commit the load-time diagnostics that don't depend on type propagation
         // (unsupported data types / node ops, per-node spec validity). These are safe to show as
-        // soon as the model is built. The O(n²) type-group *propagation* — and the live per-node
-        // warnings that depend on it — are deferred to the canvas rebuild (AuthoringComponent), which
-        // runs the fixpoint after the graph is on-screen, recolors the (initially gray) value wires,
-        // then unpauses live diagnostics and clears the loading bar. So diagnosticsPaused stays true
-        // here; the graph-identity swap below hands those final phases to the component.
+        // soon as the model is built. The O(n²) type-group *propagation* — and the whole-graph live
+        // validation that depends on it — are deferred to the canvas rebuild (AuthoringComponent),
+        // which runs the fixpoint after the graph is on-screen, recolors the (initially gray) value
+        // wires, awaits runLiveValidation and clears the loading bar. The graph-identity swap below
+        // hands those final phases to the component.
         setLoadingState({ active: true, step: "Checking", progress: 0.72 });
         // surface any node operations this tool does not implement (loaded as inert NoOp nodes)
         const opDiagnostics: IGraphDiagnostic[] = [...unsupportedOps.entries()].map(([op, count]) => ({
@@ -685,7 +757,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         // hand off to the canvas: replace the graph's identity — the single load signal the authoring
         // canvas watches to rebuild itself (see the rebuild effect in AuthoringComponent), which owns
         // the remaining "Arranging → Rendering → Connecting → Resolving types → Checking" phases and
-        // clears the loading bar / unpauses diagnostics when done.
+        // runs the whole-graph live validation / clears the loading bar when done.
         setLoadingState({ active: true, step: "Arranging", progress: 0.75 });
         setGraph(newGraph);
         // a fresh load has nothing un-synced yet relative to itself
@@ -901,11 +973,10 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         setDiagnosticsForCategory: setDiagnosticsForCategory,
         clearDiagnostics: clearDiagnostics,
         allDiagnostics: allDiagnostics,
-        reportNodeWarnings: reportNodeWarnings,
+        nodeWarnings: nodeWarnings,
+        runLiveValidation: runLiveValidation,
         loadingState: loadingState,
         setLoadingState: setLoadingState,
-        diagnosticsPaused: diagnosticsPaused,
-        setDiagnosticsPaused: setDiagnosticsPaused,
         gltfObjectModel: gltfObjectModel,
         setGltfObjectModel: setGltfObjectModel,
         supportedPointerTemplates: supportedPointerTemplates,

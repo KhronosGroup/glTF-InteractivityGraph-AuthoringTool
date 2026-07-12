@@ -56,6 +56,17 @@ describe("mergeValueSockets", () => {
         expect(result.a).toEqual(specDefaults.a);
     });
 
+    it("never aliases the spec-default object into the result (in-place type propagation must not corrupt the shared registry)", () => {
+        const result = mergeValueSockets({ existing: {}, generated: {}, specDefaults, extraKeys: [], allowExistingToOverrideGenerated: true });
+        expect(result.a).not.toBe(specDefaults.a);
+        expect(result.a.value).not.toBe(specDefaults.a.value);
+        // the same graph loaded twice must not see a registry mutated by the first load
+        result.a.type = 2;
+        (result.a.value as any[])[0] = 123;
+        expect(specDefaults.a.type).toBe(1);
+        expect(specDefaults.a.value?.[0]).toBeUndefined();
+    });
+
     it("preserves a grouped socket's resolved type instead of snapping back to the spec default type", () => {
         const existing: Record<string, AuthoredValue> = { a: { value: [undefined], type: 2, typeOptions: [1, 2], typeGroup: "T" } };
         const result = mergeValueSockets({ existing, generated: {}, specDefaults, extraKeys: [], allowExistingToOverrideGenerated: true });
@@ -100,6 +111,31 @@ describe("mergeValueSockets", () => {
             allowExistingToOverrideGenerated: true,
         });
         expect(result.ref).toBe(generated.ref);
+    });
+
+    it("a generated grouped socket (math/switch case) keeps its resolved group type instead of the generator's placeholder", () => {
+        // existing case socket carries type 2 resolved by propagateGraphGroupTypes; the generator
+        // re-stamps type 0 on every reconcile — the resolved type must survive a (re)mount
+        const existing: Record<string, AuthoredValue> = { "1": { value: [undefined], type: 2, typeOptions: [1, 2], typeGroup: "T" } };
+        const generated: Record<string, AuthoredValue> = { "1": { value: [undefined], type: 0, typeOptions: [1, 2], typeGroup: "T" } };
+        const result = mergeValueSockets({ existing, generated, specDefaults: {}, extraKeys: [], allowExistingToOverrideGenerated: true });
+        expect(result["1"].type).toBe(2);
+        expect(result["1"].typeGroup).toBe("T");
+    });
+
+    it("a non-grouped generated socket keeps its authoritative generated type over a stale existing type", () => {
+        // e.g. an event param / type-config socket: the generated concrete type must win
+        const existing: Record<string, AuthoredValue> = { p: { value: [undefined], type: 2, typeOptions: [2] } };
+        const generated: Record<string, AuthoredValue> = { p: { value: [undefined], type: 9, typeOptions: [9] } };
+        const result = mergeValueSockets({ existing, generated, specDefaults: {}, extraKeys: [], allowExistingToOverrideGenerated: true });
+        expect(result.p).toBe(generated.p);
+    });
+
+    it("a generated grouped socket with real user data still wins outright (existing-data branch)", () => {
+        const existing: Record<string, AuthoredValue> = { "1": { value: [5], type: 2, typeOptions: [1, 2], typeGroup: "T" } };
+        const generated: Record<string, AuthoredValue> = { "1": { value: [undefined], type: 0, typeOptions: [1, 2], typeGroup: "T" } };
+        const result = mergeValueSockets({ existing, generated, specDefaults: {}, extraKeys: [], allowExistingToOverrideGenerated: true });
+        expect(result["1"]).toBe(existing["1"]);
     });
 
     it("a preserved pointer slot is left untouched by the generic merge", () => {

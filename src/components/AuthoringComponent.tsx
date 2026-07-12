@@ -25,6 +25,7 @@ import { TypedValueInput } from '../authoring/TypedValueInput';
 import { NodeInfoTooltip, buildNodeTypeTooltipSections } from '../authoring/NodeInfoTooltip';
 import { LoadingProgressBar } from './LoadingProgressBar';
 import { applyNodePreset, getNodePresetSearchText, NodePreset, nodePresets } from '../authoring/nodePresets';
+import { reconcileNodeSockets } from '../authoring/socketReconciler';
 import { joinSearchTerms } from '../authoring/searchText';
 import '../css/flowNodes.css';
 
@@ -265,7 +266,7 @@ export const AuthoringComponent = () => {
     // ids of the edges connecting that upstream hierarchy, highlighted alongside the nodes
     const [ancestorEdgeIds, setAncestorEdgeIds] = useState<Set<string>>(new Set());
 
-    const {graph, getAuthorGraph, addDeclaration, addNode, removeNode, allDiagnostics, graphDirty, markGraphDirty, requestPlay, setLoadingState, setDiagnosticsPaused} = useContext(InteractivityGraphContext);
+    const {graph, getAuthorGraph, addDeclaration, addNode, removeNode, allDiagnostics, graphDirty, markGraphDirty, requestPlay, setLoadingState, runLiveValidation} = useContext(InteractivityGraphContext);
     // the graph object identity we last rebuilt the canvas from; a load replaces graph identity
     // (setGraph), which is the signal to rebuild — interactive edits mutate the same object in
     // place and leave identity untouched, so they never retrigger a rebuild
@@ -554,13 +555,31 @@ export const AuthoringComponent = () => {
         interactivityNode.declaration = addDeclaration(toInteractivityDeclaration(spec));
         interactivityNode.uid = uid;
         if (typeof nodeRequest !== "string") {
+            // applyNodePreset runs the socket reconciliation itself
             interactivityNode = applyNodePreset(interactivityNode, nodeRequest, {
                 nodeType,
                 events: graph.events ?? {},
                 variables: graph.variables ?? [],
             });
+        } else {
+            // materialise config-driven sockets before the node enters the model, so the model is
+            // complete the moment it's added — not one mount-reconcile later (the debounced live
+            // validation may look at it in between)
+            const reconciled = reconcileNodeSockets({
+                op: nodeType,
+                isNoOp: false,
+                configuration: interactivityNode.configuration ?? {},
+                inputValues: interactivityNode.values?.input ?? {},
+                outputValues: interactivityNode.values?.output ?? {},
+                inputFlows: interactivityNode.flows?.input ?? {},
+                outputFlows: interactivityNode.flows?.output ?? {},
+                events: graph.events ?? {},
+                variables: graph.variables ?? [],
+            });
+            interactivityNode.values = { input: reconciled.inputValues, output: reconciled.outputValues };
+            interactivityNode.flows = { input: reconciled.inputFlows, output: reconciled.outputFlows };
         }
-        
+
         addNode(interactivityNode);
 
         onNodesChange([{type: "add", item: nodeToAdd}]);
@@ -599,6 +618,24 @@ export const AuthoringComponent = () => {
                     if (ref.node && copiedIds.has(String(ref.node))) ref.node = uidMap.get(String(ref.node))!;
                     else newGn.values.input[key] = {};
                 }
+            }
+            // reconcile now instead of leaving the severed `{}` link stubs above for the mount
+            // reconcile to repair — the pasted node must be model-complete the moment it's added
+            // (the debounced live validation may look at it before it mounts)
+            {
+                const reconciled = reconcileNodeSockets({
+                    op: newGn.op,
+                    isNoOp: interactivityNodeSpecs.find(s => s.op === newGn.op) === undefined,
+                    configuration: newGn.configuration ?? {},
+                    inputValues: newGn.values?.input ?? {},
+                    outputValues: newGn.values?.output ?? {},
+                    inputFlows: newGn.flows?.input ?? {},
+                    outputFlows: newGn.flows?.output ?? {},
+                    events: graph.events ?? {},
+                    variables: graph.variables ?? [],
+                });
+                newGn.values = { input: reconciled.inputValues, output: reconciled.outputValues };
+                newGn.flows = { input: reconciled.inputFlows, output: reconciled.outputFlows };
             }
             newGraphNodes.push(newGn);
             newFlowNodes.push({
@@ -756,9 +793,13 @@ export const AuthoringComponent = () => {
             // re-read its (now resolved) socket types
             setNodes(nds => nds.map(n => ({ ...n, data: { ...n.data } })));
 
-            // "Checking": the graph is fully built and typed — release the buffered live per-node
-            // warnings and clear the loading bar.
-            setDiagnosticsPaused(false);
+            // "Checking": the graph is fully built and typed — run the whole-graph live validation
+            // (model-driven and chunked; its result is independent of which nodes are mounted or
+            // visible), then clear the loading bar. A superseding load cancels the validation run
+            // (committed=false) and owns the loading bar itself, so only a committed pass clears it.
+            setLoadingState({ active: true, step: "Checking", progress: 0.97 });
+            const committed = await runLiveValidation();
+            if (cancelled || !committed) { return; }
             setLoadingState(null);
         };
 

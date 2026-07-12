@@ -1,7 +1,7 @@
 import { IInteractivityConfigurationValue, InteractivityValueType } from "../BasicBehaveEngine/types/InteractivityGraph";
-import { AuthoredNode, NodeSpecFlag } from "./spec/AuthoredGraph";
-import { hasNodeSpecFlag, interactivityNodeSpecs, standardTypes } from "./spec/nodes";
-import { computeConfigDrivenSockets, mergeFlowSockets, mergeValueSockets, SocketReconcilerContext } from "./socketReconciler";
+import { AuthoredNode } from "./spec/AuthoredGraph";
+import { standardTypes } from "./spec/nodes";
+import { reconcileNodeSockets, SocketReconcilerContext } from "./socketReconciler";
 import { joinSearchTerms } from "./searchText";
 
 export interface NodePreset {
@@ -54,67 +54,40 @@ export const applyNodePreset = (
     preset: NodePreset,
     ctx: SocketReconcilerContext,
 ): AuthoredNode => {
-    const spec = interactivityNodeSpecs.find((candidate) => candidate.op === node.op);
     const configuration = {
         ...(node.configuration ?? {}),
         ...(preset.configuration ?? {}),
     };
-    const inputValues = node.values?.input ?? {};
-    const outputValues = node.values?.output ?? {};
-    const inputFlows = node.flows?.input ?? {};
-    const outputFlows = node.flows?.output ?? {};
-    const generated = computeConfigDrivenSockets(configuration, inputValues, ctx);
-    const allowsDynamicSockets = hasNodeSpecFlag(spec, NodeSpecFlag.DynamicSockets);
-
-    const mergedInputValues = mergeValueSockets({
-        existing: inputValues,
-        generated: generated.inputValues,
-        specDefaults: spec?.values?.input ?? {},
-        extraKeys: allowsDynamicSockets ? [] : Object.keys(inputValues),
-        preservedKeys: generated.preservedPointerSlotIds,
-        pointerSlotTypeById: generated.pointerSlotTypeById,
-        allowExistingToOverrideGenerated: true,
+    const reconciled = reconcileNodeSockets({
+        op: node.op,
+        isNoOp: false,
+        configuration,
+        inputValues: node.values?.input ?? {},
+        outputValues: node.values?.output ?? {},
+        inputFlows: node.flows?.input ?? {},
+        outputFlows: node.flows?.output ?? {},
+        events: ctx.events,
+        variables: ctx.variables,
     });
-    const mergedOutputValues = mergeValueSockets({
-        existing: outputValues,
-        generated: generated.outputValues,
-        specDefaults: spec?.values?.output ?? {},
-        extraKeys: [],
-        allowExistingToOverrideGenerated: false,
-    });
-    const mergedInputFlows = mergeFlowSockets({
-        existing: inputFlows,
-        generated: generated.inputFlows,
-        specDefaults: spec?.flows?.input ?? {},
-    });
-    let mergedOutputFlows = mergeFlowSockets({
-        existing: outputFlows,
-        generated: generated.outputFlows,
-        specDefaults: spec?.flows?.output ?? {},
-        extraKeys: allowsDynamicSockets ? [] : Object.keys(outputFlows),
-    });
-    if (hasNodeSpecFlag(spec, NodeSpecFlag.DynamicFlowOutputs)) {
-        mergedOutputFlows = { ...mergedOutputFlows, ...outputFlows };
-    }
 
     const result: AuthoredNode = {
         ...node,
         configuration,
         values: {
             ...(node.values ?? {}),
-            input: mergedInputValues,
-            output: mergedOutputValues,
+            input: reconciled.inputValues,
+            output: reconciled.outputValues,
         },
     };
     if (
         node.flows !== undefined ||
-        Object.keys(mergedInputFlows).length > 0 ||
-        Object.keys(mergedOutputFlows).length > 0
+        Object.keys(reconciled.inputFlows).length > 0 ||
+        Object.keys(reconciled.outputFlows).length > 0
     ) {
         result.flows = {
             ...(node.flows ?? {}),
-            ...(Object.keys(mergedInputFlows).length > 0 ? { input: mergedInputFlows } : {}),
-            ...(Object.keys(mergedOutputFlows).length > 0 ? { output: mergedOutputFlows } : {}),
+            ...(Object.keys(reconciled.inputFlows).length > 0 ? { input: reconciled.inputFlows } : {}),
+            ...(Object.keys(reconciled.outputFlows).length > 0 ? { output: reconciled.outputFlows } : {}),
         };
     }
     return result;

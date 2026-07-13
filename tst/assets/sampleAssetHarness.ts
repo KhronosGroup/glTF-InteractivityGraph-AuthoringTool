@@ -498,6 +498,12 @@ function valuesEqual(actual: unknown[] | undefined, expected: unknown[], typeNam
             if (isNaNLike(expectedValue)) {
                 return isNaNLike(actualValue);
             }
+            if (expectedValue === "Infinity") {
+                return actualValue === Infinity;
+            }
+            if (expectedValue === "-Infinity") {
+                return actualValue === -Infinity;
+            }
             return Math.abs(Number(actualValue) - Number(expectedValue)) <= 0.0001;
         }
         return Object.is(actualValue, expectedValue);

@@ -506,6 +506,26 @@ describe('nodes', () => {
         expect(res['isValid']!.value).toStrictEqual([false]);
     });
 
+    it('pointer/get resolves reference properties through the object model', () => {
+        const refEngine = new BasicBehaveEngine(60, new DOMEventBus());
+        refEngine.registerJsonPointer(
+            '/nodes/6/children/3',
+            () => ['/nodes/10'],
+            () => undefined,
+            'ref',
+            true,
+        );
+        const pointerGet = new PointerGet({
+            ...defaultProps,
+            graphEngine: refEngine,
+            configuration: {pointer: { value: ['/nodes/6/children/3'] }, type: { value: [9] }},
+        });
+
+        const res = pointerGet.processNode();
+        expect(res['value']!.value).toStrictEqual(['/nodes/10']);
+        expect(res['isValid']!.value).toStrictEqual([true]);
+    });
+
     it('math/matCompose',  () => {
         const matCompose: MatCompose = new MatCompose({
             ...defaultProps,

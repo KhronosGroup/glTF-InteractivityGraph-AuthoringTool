@@ -3,6 +3,7 @@ import {Button, Container, Modal} from "react-bootstrap";
 import {
     AbstractMesh,
     ArcRotateCamera,
+    Color4,
     DirectionalLight,
     FramingBehavior,
     Engine,
@@ -14,8 +15,7 @@ import {
 import {Scene} from "@babylonjs/core/scene";
 import "@babylonjs/loaders/glTF";
 import {Spacer} from "../Spacer";
-import {KHR_interactivity, KHR_INTERACTIVITY_EXTENSION_NAME} from "../../loaderExtensions/KHR_interactivity";
-import {GLTFLoader} from "@babylonjs/loaders/glTF/2.0";
+import {registerKHRInteractivityExtension} from "../../loaderExtensions/KHR_interactivity";
 import {BabylonDecorator} from "../../decorators/BabylonDecorator";
 import {BasicBehaveEngine} from "../../BasicBehaveEngine/BasicBehaveEngine";
 import {GLTFFileLoader, GLTFLoaderAnimationStartMode} from "@babylonjs/loaders";
@@ -33,9 +33,7 @@ enum BabylonEngineModal {
     NONE = "NONE"
 }
 
-GLTFLoader.RegisterExtension(KHR_INTERACTIVITY_EXTENSION_NAME, (loader) => {
-    return new KHR_interactivity(loader);
-});
+registerKHRInteractivityExtension();
 
 interface BabylonEngineComponentProps {
     modelUrl?: string | null;
@@ -176,6 +174,7 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
     const createScene = () => {
         // Create a scene
         sceneRef.current = new Scene(engineRef.current!);
+        sceneRef.current.clearColor = new Color4(1, 1, 1, 1);
         sceneRef.current?.createDefaultCamera(true, true, true);
         setupCamera();
         // Create lights
@@ -209,6 +208,7 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
         reportGlbExtensionDiagnostics();
 
         sceneRef.current?.createDefaultCamera(true, true, true);
+        autoFrame();
         const loadedModel = buildBabylonLoadedModel(container);
         console.log(loadedModel.materials);
         return loadedModel;
@@ -276,7 +276,7 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
 
         const camera = sceneRef.current!.activeCamera as ArcRotateCamera;
         camera.target = center;
-        camera.setPosition(new Vector3(center.x, center.y + maxDimension * 0.5, center.z + distance));
+        camera.setPosition(new Vector3(center.x, center.y + maxDimension * 0.4, center.z + distance));
         camera.radius = distance;
     }
 
@@ -298,6 +298,7 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
             reportGlbExtensionDiagnostics();
 
             sceneRef.current?.createDefaultCamera(true, true, true);
+            autoFrame();
 
             const worldInfo = buildBabylonDecoratorWorld(buildBabylonLoadedModel(container));
             

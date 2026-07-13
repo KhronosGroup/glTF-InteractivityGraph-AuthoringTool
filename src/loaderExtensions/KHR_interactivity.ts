@@ -1,8 +1,16 @@
 import { GLTFLoader, IGLTFLoaderExtension } from '@babylonjs/loaders/glTF/2.0';
+import { registerGLTFExtension, unregisterGLTFExtension } from '@babylonjs/loaders/glTF/2.0/glTFLoaderExtensionRegistry';
 import { buildGltfObjectModel } from '../authoring/gltfObjectModel';
 
 export const KHR_INTERACTIVITY_EXTENSION_NAME = 'KHR_interactivity';
 export const KHR_NODE_VISIBILITY_EXTENSION_NAME = 'KHR_node_visibility';
+
+export function registerKHRInteractivityExtension(): void {
+    // Babylon ships its own KHR_interactivity executor. This application executes the graph
+    // through BasicBehaveEngine, so replace Babylon's extension with the metadata-only loader.
+    unregisterGLTFExtension(KHR_INTERACTIVITY_EXTENSION_NAME);
+    registerGLTFExtension(KHR_INTERACTIVITY_EXTENSION_NAME, false, (loader) => new KHR_interactivity(loader));
+}
 
 /** Babylon extension for KHR_interactivity */
 export class KHR_interactivity implements IGLTFLoaderExtension {

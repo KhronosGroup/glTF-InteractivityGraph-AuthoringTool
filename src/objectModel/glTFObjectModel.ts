@@ -591,7 +591,7 @@ function setPath(target: any, pathParts: string[], value: any): void {
 }
 
 function ref(collectionPath: string, index: number): string {
-    return `/${collectionPath}/${index}/`;
+    return `/${collectionPath}/${index}`;
 }
 
 function scalar(value: any): any {

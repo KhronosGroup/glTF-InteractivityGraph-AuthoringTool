@@ -1,4 +1,6 @@
 import { InteractivityValueType } from "../BasicBehaveEngine/types/InteractivityGraph";
+import { glTFSchemaMetadata } from "../objectModel/generated/glTFSchemaMetadata";
+import { joinSearchTerms } from "./searchText";
 import { standardTypes } from "./spec/nodes";
 
 /**
@@ -39,9 +41,27 @@ export interface PointerCatalogueEntry {
     readOnly: boolean;
     /** the glTF extension this pointer belongs to, if any */
     extension?: string;
+    /** authoring-only search terms; never serialized into runtime graphs */
+    aliases?: string[];
+}
+
+interface GeneratedCataloguePointer {
+    template: string;
+    typeName: string;
+    readOnly: boolean;
+    extension?: string;
 }
 
 const t = InteractivityValueType;
+const generatedTypeMap: Record<string, InteractivityValueType | undefined> = {
+    bool: t.BOOLEAN,
+    float: t.FLOAT,
+    float2: t.FLOAT2,
+    float3: t.FLOAT3,
+    float4: t.FLOAT4,
+    float4x4: t.FLOAT4X4,
+    int: t.INT,
+};
 
 // raw catalogue, templates written with named [index] / {ref} slots
 const rawCatalogue: PointerCatalogueEntry[] = [
@@ -123,11 +143,11 @@ const rawCatalogue: PointerCatalogueEntry[] = [
     { template: "/extensions/KHR_lights_punctual/lights/[light]/spot/outerConeAngle", label: "Light · spot outer cone angle", category: "Lights", type: t.FLOAT, readOnly: false, extension: "KHR_lights_punctual" },
 
     // ---- Animations (KHR_interactivity) ----
-    { template: "/animations/[animation]/extensions/KHR_interactivity/isPlaying", label: "Animation · is playing", category: "Animations", type: t.BOOLEAN, readOnly: true, extension: "KHR_interactivity" },
-    { template: "/animations/[animation]/extensions/KHR_interactivity/minTime", label: "Animation · min time", category: "Animations", type: t.FLOAT, readOnly: true, extension: "KHR_interactivity" },
-    { template: "/animations/[animation]/extensions/KHR_interactivity/maxTime", label: "Animation · max time", category: "Animations", type: t.FLOAT, readOnly: true, extension: "KHR_interactivity" },
-    { template: "/animations/[animation]/extensions/KHR_interactivity/playhead", label: "Animation · playhead", category: "Animations", type: t.FLOAT, readOnly: true, extension: "KHR_interactivity" },
-    { template: "/animations/[animation]/extensions/KHR_interactivity/virtualPlayhead", label: "Animation · virtual playhead", category: "Animations", type: t.FLOAT, readOnly: false, extension: "KHR_interactivity" },
+    { template: "/animations/[animation]/extensions/KHR_interactivity/isPlaying", label: "Animation · is playing", category: "Animations", type: t.BOOLEAN, readOnly: true, extension: "KHR_interactivity", aliases: ["playing", "state", "active"] },
+    { template: "/animations/[animation]/extensions/KHR_interactivity/minTime", label: "Animation · min time", category: "Animations", type: t.FLOAT, readOnly: true, extension: "KHR_interactivity", aliases: ["start", "start time", "begin"] },
+    { template: "/animations/[animation]/extensions/KHR_interactivity/maxTime", label: "Animation · max time", category: "Animations", type: t.FLOAT, readOnly: true, extension: "KHR_interactivity", aliases: ["duration", "length", "end", "end time", "animation duration", "animation length"] },
+    { template: "/animations/[animation]/extensions/KHR_interactivity/playhead", label: "Animation · playhead", category: "Animations", type: t.FLOAT, readOnly: true, extension: "KHR_interactivity", aliases: ["time", "current time", "position"] },
+    { template: "/animations/[animation]/extensions/KHR_interactivity/virtualPlayhead", label: "Animation · virtual playhead", category: "Animations", type: t.FLOAT, readOnly: false, extension: "KHR_interactivity", aliases: ["time", "current time", "seek", "position"] },
 
     // ---- Scene / counts (read-only) ----
     { template: "/nodes.length", label: "Count · nodes", category: "Scene", type: t.INT, readOnly: true },
@@ -179,8 +199,48 @@ export const isPointerTemplateSupported = (
     return supportedTemplates.has(normalizePointerTemplate(template));
 };
 
+const generatedMaterialPointers = glTFSchemaMetadata.materialPointers as readonly GeneratedCataloguePointer[];
+const generatedNodeExtensionPointers = glTFSchemaMetadata.nodeExtensionPointers as readonly GeneratedCataloguePointer[];
+
+const generatedCatalogue = [
+    ...generatedMaterialPointers.map((pointer): PointerCatalogueEntry | undefined => {
+        const type = generatedTypeMap[pointer.typeName];
+        if (!type) return undefined;
+        const template = pointer.template.replace("/materials/{}", "/materials/[material]");
+        return {
+            template,
+            label: labelForGeneratedPointer(template, pointer.extension, template.includes("Texture/") ? "Material texture" : "Material"),
+            category: template.includes("Texture/") ? "Material textures" : "Materials",
+            type,
+            readOnly: pointer.readOnly,
+            extension: pointer.extension,
+        };
+    }),
+    ...generatedNodeExtensionPointers.map((pointer): PointerCatalogueEntry | undefined => {
+        const type = generatedTypeMap[pointer.typeName];
+        if (!type) return undefined;
+        const template = pointer.template.replace("/nodes/{}", "/nodes/[node]");
+        return {
+            template,
+            label: labelForGeneratedPointer(template, pointer.extension, "Node"),
+            category: "Nodes",
+            type,
+            readOnly: pointer.readOnly,
+            extension: pointer.extension,
+        };
+    }),
+].filter((entry): entry is PointerCatalogueEntry => entry !== undefined);
+
+const generatedTemplates = new Set(generatedCatalogue.map((entry) => entry.template));
+
 /** Static catalogue metadata; support is resolved dynamically against runtime templates. */
-export const pointerCatalogue: PointerCatalogueEntry[] = rawCatalogue;
+export const pointerCatalogue: PointerCatalogueEntry[] = [
+    ...rawCatalogue.filter((entry) => !generatedTemplates.has(entry.template)),
+    ...generatedCatalogue,
+];
+
+export const getPointerCatalogueSearchText = (entry: PointerCatalogueEntry): string =>
+    joinSearchTerms(entry.label, entry.template, entry.aliases);
 
 /** Resolve an Object Model type signature to its standard type index, or -1 if unknown. */
 export const getStandardTypeIndexForSignature = (signature: InteractivityValueType): number =>
@@ -189,3 +249,25 @@ export const getStandardTypeIndexForSignature = (signature: InteractivityValueTy
 /** Look up a catalogue entry by exact template string. */
 export const findPointerCatalogueEntry = (template: string): PointerCatalogueEntry | undefined =>
     pointerCatalogue.find((entry) => entry.template === template);
+
+function labelForGeneratedPointer(template: string, extension: string | undefined, baseLabel: string): string {
+    const segments = template.split("/").filter(Boolean);
+    const extensionIndex = extension ? segments.indexOf(extension) : -1;
+    const firstPropertyIndex = extensionIndex === -1
+        ? segments.findIndex((segment) => segment.startsWith("[") || segment.startsWith("{")) + 1
+        : extensionIndex + 1;
+    const propertyLabel = segments
+        .slice(Math.max(firstPropertyIndex, 0))
+        .map(humanizePointerSegment)
+        .join(" · ");
+    return `${baseLabel} · ${propertyLabel}`;
+}
+
+function humanizePointerSegment(segment: string): string {
+    return segment
+        .replace(/\[[^\]]+\]/g, "")
+        .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+        .replace(/_/g, " ")
+        .trim()
+        .toLowerCase();
+}

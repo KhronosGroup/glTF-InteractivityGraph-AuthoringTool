@@ -92,6 +92,16 @@ export interface IBehaveEngine {
     getRegisteredJsonPointers: () => string[];
 
     /**
+     * Checks whether a JSON pointer can be resolved by the active object model.
+     */
+    isValidJsonPtr: (jsonPtr: string) => boolean;
+
+    /**
+     * Checks whether a JSON pointer is read-only in the active object model.
+     */
+    isReadOnly: (jsonPtr: string) => boolean;
+
+    /**
      * Register a Behave Engine node type along with its corresponding class.
      * @param type - The type of the Behave Engine node.
      * @param behaveEngineNode - The class representing the Behave Engine node.
@@ -138,6 +148,8 @@ export interface IBehaveEngine {
      * Pause the event queue processing.
      */
     pauseEventQueue: () => void;
+
+    dispose: () => void;
 
     /**
      * Start/Resume the event queue processing.

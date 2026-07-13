@@ -23,7 +23,6 @@ export class KHR_interactivity implements IGLTFLoaderExtension {
     }
 
     public onLoading(): void {
-        console.log(this._loader?.gltf);
         const gltf = this._loader?.gltf;
         const graphIndex = gltf?.extensions?.KHR_interactivity?.graph;
         const interactivityGraph = gltf?.extensions?.KHR_interactivity?.graphs?.[graphIndex];

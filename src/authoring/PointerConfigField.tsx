@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { InteractivityValueType } from "../BasicBehaveEngine/types/InteractivityGraph";
-import { pointerCatalogue, PointerCategory, isPointerTemplateSupported } from "./pointerCatalogue";
+import { pointerCatalogue, PointerCategory, isPointerTemplateSupported, getPointerCatalogueSearchText } from "./pointerCatalogue";
 import { getPathTemplateSockets, setPathTemplateSlotKind, PathTemplateSocketKind } from "./pathTemplate";
 import { InteractivityGraphContext } from "../InteractivityGraphContext";
 
@@ -42,12 +42,26 @@ export const PointerConfigField: React.FC<PointerConfigFieldProps> = ({ value, a
         return () => document.removeEventListener("mousedown", handleClick);
     }, [open]);
 
+    // .flow-node uses paint containment for off-screen rendering performance. Temporarily lift
+    // that containment while this overlay is open so the catalogue can extend beyond the node.
+    useEffect(() => {
+        if (!open) return;
+        const flowNode = containerRef.current?.closest(".flow-node");
+        if (!flowNode) return;
+        const reactFlowNode = flowNode.closest(".react-flow__node");
+        flowNode.classList.add("flow-node--overlay-open");
+        reactFlowNode?.classList.add("react-flow__node--overlay-open");
+        return () => {
+            flowNode.classList.remove("flow-node--overlay-open");
+            reactFlowNode?.classList.remove("react-flow__node--overlay-open");
+        };
+    }, [open]);
+
     const grouped = useMemo(() => {
         const query = search.trim().toLowerCase();
         const matches = pointerCatalogue.filter((entry) =>
             query === "" ||
-            entry.label.toLowerCase().includes(query) ||
-            entry.template.toLowerCase().includes(query)
+            getPointerCatalogueSearchText(entry).includes(query)
         );
         const byCategory = new Map<PointerCategory, typeof pointerCatalogue>();
         for (const entry of matches) {
@@ -150,13 +164,16 @@ export const PointerConfigField: React.FC<PointerConfigFieldProps> = ({ value, a
 
             {open && (
                 <div
+                    className="nowheel"
                     style={{
                         position: "absolute",
                         zIndex: 10,
                         top: "100%",
                         left: 0,
-                        right: 0,
-                        maxHeight: 320,
+                        width: 640,
+                        minWidth: "100%",
+                        maxWidth: "calc(100vw - 32px)",
+                        maxHeight: "min(560px, calc(100vh - 64px))",
                         overflowY: "auto",
                         overscrollBehavior: "contain",
                         background: "white",

@@ -10,23 +10,23 @@ export class SetDelay extends BehaveEngineNode {
         this.validateValues(this.values);
 
         this._runningDelayIndices = [];
-        this.outValues.lastDelay = { value: [-1], type: this.getTypeIndex('ref')}
+        this.outValues.lastDelay = { value: [null], type: this.getTypeIndex('ref')}
     }
 
     override processNode(flowSocket?: string) {
-        this.graphEngine.clearValueEvaluationCache();
-        const {duration} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
         this.graphEngine.processNodeStarted(this);
 
         if (flowSocket === "cancel") {
-            this.outValues.lastDelay = { value: [-1], type: this.getTypeIndex('ref')}
-            for (let i = 0; i < this._runningDelayIndices.length; i++) {
-                const delayId = this.graphEngine.getScheduledDelay(this._runningDelayIndices[i]);
-                clearTimeout(delayId);
-                this._runningDelayIndices = [];
+            this.outValues.lastDelay = { value: [null], type: this.getTypeIndex('ref')}
+            for (const delayIndex of this._runningDelayIndices) {
+                this.graphEngine.cancelScheduledDelay(delayIndex);
             }
+            this._runningDelayIndices = [];
             return;
         }
+
+        this.graphEngine.clearValueEvaluationCache();
+        const {duration} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
 
         if (isNaN(duration) || !isFinite(duration) || duration < 0) {
             if (this.flows.err) {
@@ -35,11 +35,12 @@ export class SetDelay extends BehaveEngineNode {
         } else {
             const delayIndex = this.graphEngine.scheduledDelays.length;
             const delayId = setTimeout(() => {
+                this.graphEngine.removeScheduledDelay(delayIndex);
                 this.addEventToWorkQueue(this.flows.done);
             }, duration * 1000);
             this.graphEngine.pushScheduledDelay(delayId);
             this._runningDelayIndices.push(delayIndex);
-            this.outValues.lastDelay = { value: [delayIndex], type: this.getTypeIndex('ref')}
+            this.outValues.lastDelay = { value: [`/extensions/KHR_interactivity/delays/${delayIndex}`], type: this.getTypeIndex('ref')}
 
             this.processFlow(this.flows.out);
         }

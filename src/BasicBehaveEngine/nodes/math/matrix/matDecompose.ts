@@ -31,13 +31,6 @@ export class MatDecompose extends BehaveEngineNode {
 
         const unflattenedA = unflattenMatrix(a, 4);
 
-        // check last row of matrix for valid transform matrix structure
-        if (unflattenedA[0][3] !== 0 || unflattenedA[1][3] !== 0 || unflattenedA[2][3] !== 0 || unflattenedA[3][3] !== 1) {
-            console.log("Invalid matrix structure", unflattenedA[0][3], unflattenedA[1][3], unflattenedA[2][3], unflattenedA[3][3])
-            result.isValid.value[0] = false;
-            return result;
-        }
-
         const s_x = Math.sqrt(unflattenedA[0][0] * unflattenedA[0][0] + unflattenedA[0][1] * unflattenedA[0][1] + unflattenedA[0][2] * unflattenedA[0][2]);
         const s_y = Math.sqrt(unflattenedA[1][0] * unflattenedA[1][0] + unflattenedA[1][1] * unflattenedA[1][1] + unflattenedA[1][2] * unflattenedA[1][2]);
         const s_z = Math.sqrt(unflattenedA[2][0] * unflattenedA[2][0] + unflattenedA[2][1] * unflattenedA[2][1] + unflattenedA[2][2] * unflattenedA[2][2]);
@@ -54,13 +47,7 @@ export class MatDecompose extends BehaveEngineNode {
             [unflattenedA[2][0]/ s_z, unflattenedA[2][1]/ s_z, unflattenedA[2][2]/ s_z]
         ]
 
-        // get B determinant and check that it is around 1
         const detB = B[0][0] * (B[1][1] * B[2][2] - B[1][2] * B[2][1]) - B[0][1] * (B[1][0] * B[2][2] - B[1][2] * B[2][0]) + B[0][2] * (B[1][0] * B[2][1] - B[1][1] * B[2][0]);
-        if (Math.abs( 1 - Math.abs(detB)) > 1e-6) {
-            console.log("Invalid determinant", detB)
-            result.isValid.value[0] = false;
-            return result;
-        }
 
         result.translation.value = [unflattenedA[3][0], unflattenedA[3][1], unflattenedA[3][2]];
 

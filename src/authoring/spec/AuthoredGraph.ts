@@ -31,6 +31,12 @@ export enum NodeSpecFlag {
 export interface AuthoredValue extends IInteractivityValue {
     description?: string,
     typeGroup?: string,
+    // opt-in per-socket flag: when true and the socket is an `int`, the editor offers an "Open
+    // Object Menu" dropdown that picks a glTF object (node/material/mesh/…) and stores its index.
+    // Set on int sockets whose value is an object index (pointer template `index` slots,
+    // math/flow switch `selection`, rigid_body `nodeIndex`) — never on pure-math int operands.
+    // Authoring-only; stripped at compile time (see toExecutableValue).
+    objectPicker?: boolean,
 }
 
 export interface AuthoredNode extends IInteractivityNode {
@@ -40,6 +46,8 @@ export interface AuthoredNode extends IInteractivityNode {
     // KHR_interactivity ops. Mirrors IInteractivityDeclaration.extension - see toInteractivityDeclaration.
     extension?: string,
     description?: string,
+    // authoring-only terms used by the node picker; never serialized into runtime graphs
+    aliases?: string[],
     // see NodeSpecFlag
     flags?: NodeSpecFlag[],
     values?: {

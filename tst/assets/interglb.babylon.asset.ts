@@ -1,7 +1,7 @@
 import { jest } from "@jest/globals";
 import { BasicBehaveEngine } from "../../src/BasicBehaveEngine/BasicBehaveEngine";
 import { BabylonDecorator } from "../../src/decorators/BabylonDecorator";
-import { BabylonScene, createBabylonWorld, NullEngine } from "./babylonAssetHarness";
+import { BabylonScene, loadBabylonWorldFromGlb, NullEngine } from "./babylonAssetHarness";
 import {
     assertInterGlbPairSubTests,
     createInterGlbRunState,
@@ -25,8 +25,9 @@ describeIfEnabled("KHR_interactivity InterGlb paired assets - Babylon engine", (
 
         try {
             const engines = interGlbPairCases.map(() => new BasicBehaveEngine(60, eventBus));
-            const decorators = interGlbPairCases.map((assetCase, index) => (
-                new BabylonDecorator(engines[index], createBabylonWorld(assetCase.gltf, scene), scene)
+            const worlds = await Promise.all(interGlbPairCases.map((assetCase) => loadBabylonWorldFromGlb(assetCase.glbPath, scene)));
+            const decorators = interGlbPairCases.map((_assetCase, index) => (
+                new BabylonDecorator(engines[index], worlds[index], scene)
             ));
 
             await runInterGlbPair(state, engines, decorators);

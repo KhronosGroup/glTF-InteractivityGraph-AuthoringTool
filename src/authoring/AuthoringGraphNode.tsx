@@ -6,13 +6,16 @@ import { RenderIf } from "../components/RenderIf";
 import { NodeInfoTooltip, NodeTooltipSections } from "./NodeInfoTooltip";
 import { IInteractivityFlow, IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityVariable, InteractivityValueType, InteractivityConfigurationValueType } from "../BasicBehaveEngine/types/InteractivityGraph";
 import { AuthoredValue, AuthoredNode, NodeSpecFlag } from "./spec/AuthoredGraph";
-import { getTypeGroupMembers, hasNodeSpecFlag, interactivityNodeSpecs, resolveOutputSocketType, resolveTypeGroupType, standardTypes } from "./spec/nodes";
+import { hasNodeSpecFlag, interactivityNodeSpecs, resolveTypeGroupType, standardTypes } from "./spec/nodes";
 import { InteractivityGraphContext } from "../InteractivityGraphContext";
-import { computeConfigDrivenSockets, mergeFlowSockets, mergeValueSockets } from "./socketReconciler";
+import { reconcileNodeSockets } from "./socketReconciler";
+import { resolveInputSocketType } from "./validation";
+import { IGraphDiagnostic } from "../diagnostics";
 import { PointerConfigField } from "./PointerConfigField";
 import { getStandardTypeIndexForSignature } from "./pointerCatalogue";
 import { FLOW_COLOR, getColorForTypeIndex, getNodeCategoryColor, getTypeLabel } from "./socketColors";
 import { RefValuePicker } from "./RefValuePicker";
+import { ObjectMenuDropdown } from "./ObjectMenuDropdown";
 import { BoolSwitch } from "./TypedValueInput";
 import { VariablesConfigField } from "./VariablesConfigField";
 import { IntArrayConfigField } from "./IntArrayConfigField";
@@ -60,6 +63,10 @@ const handleStyle = (color: string, side: "left" | "right", top: number | undefi
 // Below this canvas zoom, render a flat category-colored box instead of the full
 // socket/editor UI. Shared so every consumer reacts to the same threshold crossing.
 export const LOD_ZOOM_THRESHOLD = 0.35;
+
+// stable identity for "this node has no live warnings", so the common case doesn't allocate
+// (nodeWarnings only stores entries for nodes that have warnings)
+const EMPTY_WARNINGS: readonly IGraphDiagnostic[] = [];
 
 export interface IAuthoringGraphNodeProps {
     data: any
@@ -110,7 +117,7 @@ const getComponentTitle = (layout: { rows: number; cols: number }, row: number, 
  */
 
 export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
-    const { graph, gltfObjectModel, diagnostics, reportNodeWarnings, markGraphDirty } = useContext(InteractivityGraphContext);
+    const { graph, gltfObjectModel, diagnostics, nodeWarnings, markGraphDirty } = useContext(InteractivityGraphContext);
     const updateNodeInternals = useUpdateNodeInternals();
     const { deleteElements } = useReactFlow();
     // Select a boolean from zoom so this node re-renders only when it crosses the
@@ -282,6 +289,24 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         setInputValues({ ...inputValues, [socket]: { value: castParameter(pointer, standardTypes[curParam.type!]?.name ?? ""), typeOptions: curParam.typeOptions, type: curParam.type } });
     }, [inputValues]);
 
+    // set an int socket's static value from its number input; empty clears it (undefined)
+    const onChangeIntValue = useCallback((socket: string, raw: string) => {
+        const curParam = inputValues[socket];
+        if (!curParam) { return; }
+        const value = raw === "" ? [undefined] : [parseInt(raw, 10)];
+        setInputValues({ ...inputValues, [socket]: { ...curParam, value } });
+    }, [inputValues]);
+
+    // set an int socket's value from the object picker: a picked pointer like "/nodes/3" stores its
+    // trailing index (3) so the int socket references that glTF object by index.
+    const setSocketIndexValue = useCallback((socket: string, pointer: string) => {
+        const curParam = inputValues[socket];
+        if (!curParam) { return; }
+        const index = Number(pointer.split("/").filter((p) => p !== "").pop());
+        if (Number.isNaN(index)) { return; }
+        setInputValues({ ...inputValues, [socket]: { ...curParam, value: [index] } });
+    }, [inputValues]);
+
     const onChangeType = useCallback((evt: { target: { value: any; }; }) => {
         const socketId = (evt.target as HTMLInputElement).id.replace("typeDropDown-", "");
         const curParam = inputValues[socketId];
@@ -402,75 +427,31 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         evaluateConfigurationWhichChangeSockets(newConfiguration, inputValues, outputValues, inputFlows, outputFlows);
     }, [configuration, inputValues, outputValues, inputFlows, outputFlows]);
 
+    // Thin wrapper over the shared reconciler (reconcileNodeSockets in socketReconciler.ts — the
+    // same pass loadGraphFromJson runs per node at load time, which is what makes this
+    // mount/config-change reconcile idempotent): derive the config-driven socket set, merge with
+    // spec + existing state, write back through the model setters.
     const evaluateConfigurationWhichChangeSockets = useCallback((updatedConfiguration: Record<string, IInteractivityConfigurationValue>,
         inputValues: Record<string, AuthoredValue>,
         outputValues: Record<string, AuthoredValue>,
         inputFlows: Record<string, IInteractivityFlow>,
         outputFlows: Record<string, IInteractivityFlow>) => {
-        const nodeType = node?.op;
-        const nodeSpec: AuthoredNode | undefined = interactivityNodeSpecs.find(node => node.op === nodeType);
-
-        // ops with a fixed (non-configuration-driven) socket set fully rely on the spec/config-key
-        // lists below to decide what still exists; ops carrying this flag instead own their current
-        // socket set entirely via the configuration re-evaluation above (e.g. flow/switch's cases,
-        // variable/set's selected variables), so a key that configuration no longer generates is
-        // meant to disappear.
-        const allowsDynamicSockets = props.data.isNoOp === true || hasNodeSpecFlag(nodeSpec, NodeSpecFlag.DynamicSockets);
-
-        const generated = computeConfigDrivenSockets(updatedConfiguration, inputValues, {
-            nodeType,
-            events: props.data.events,
-            variables: graph.variables,
+        const reconciled = reconcileNodeSockets({
+            op: node?.op,
+            isNoOp: props.data.isNoOp === true,
+            configuration: updatedConfiguration,
+            inputValues,
+            outputValues,
+            inputFlows,
+            outputFlows,
+            events: props.data.events ?? {},
+            variables: graph.variables ?? [],
         });
 
-        // We only want to set socket values that are either in the node's spec or are created as a
-        // result of the configuration. If the current node has a value for a socket we should use
-        // it, otherwise we will use the node spec default (if it exists); remaining sockets would
-        // have been populated by computeConfigDrivenSockets above.
-        const inputValuesToSet = mergeValueSockets({
-            existing: inputValues,
-            generated: generated.inputValues,
-            specDefaults: nodeSpec?.values?.input || {},
-            // a socket name this fixed-spec op doesn't declare (a typo, or a hand-edited/broken
-            // glTF) would otherwise be silently dropped here on every re-evaluation; keep it around
-            // as long as it still carries real data so the node UI can flag it instead of hiding
-            // the invalid state
-            extraKeys: allowsDynamicSockets ? [] : Object.keys(inputValues),
-            preservedKeys: generated.preservedPointerSlotIds,
-            pointerSlotTypeById: generated.pointerSlotTypeById,
-            allowExistingToOverrideGenerated: true,
-        });
-
-        const outputValuesToSet = mergeValueSockets({
-            existing: outputValues,
-            generated: generated.outputValues,
-            specDefaults: nodeSpec?.values?.output || {},
-            extraKeys: [],
-            allowExistingToOverrideGenerated: false,
-        });
-
-        const inputFlowsToSet = mergeFlowSockets({
-            existing: inputFlows,
-            generated: generated.inputFlows,
-            specDefaults: nodeSpec?.flows?.input || {},
-        });
-
-        let outputFlowsToSet = mergeFlowSockets({
-            existing: outputFlows,
-            generated: generated.outputFlows,
-            specDefaults: nodeSpec?.flows?.output || {},
-            // same reasoning as inputValuesToSet's extraKeys above, for an unknown output flow socket name
-            extraKeys: allowsDynamicSockets ? [] : Object.keys(outputFlows),
-        });
-        if (hasNodeSpecFlag(nodeSpec, NodeSpecFlag.DynamicFlowOutputs)) {
-            // flow sequence is a very special node which has sockets that are not in the node spec nor generated based on configuration
-            outputFlowsToSet = { ...outputFlowsToSet, ...outputFlows };
-        }
-
-        setOutputFlows(outputFlowsToSet);
-        setInputFlows(inputFlowsToSet);
-        setInputValues(inputValuesToSet);
-        setOutputValues(outputValuesToSet);
+        setOutputFlows(reconciled.outputFlows);
+        setInputFlows(reconciled.inputFlows);
+        setInputValues(reconciled.inputValues);
+        setOutputValues(reconciled.outputValues);
     }, [inputValues, outputValues, inputFlows, outputFlows, node, configuration, graph.variables, props.data.events, props.data.isNoOp])
 
     const stringToListOfNumbers = (inputString: string) => {
@@ -517,25 +498,10 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
             graph.nodes,
         );
 
-    // Detect a wired input socket whose connected source outputs a type this socket doesn't
-    // declare as acceptable (its spec `typeOptions` — the same set `hasIntersection` checks
-    // against at connect time in AuthoringComponent). This can drift out of sync with the wire
-    // after the initial connection: connecting to a "configurable" socket (variable/set,
-    // event/send, pointer/get, ...) skips that check entirely, and a source's output type can
-    // change later (type dropdown, typeGroup resolution) without re-validating existing wires.
-    const getInputTypeMismatch = (socket: string, value: AuthoredValue, resolvedType: number | undefined): string | undefined => {
-        const link = node?.values?.input?.[socket] ?? value;
-        if (link?.node === undefined || resolvedType === undefined) { return undefined; }
-        const expectedTypeOptions = nodeSpec?.values?.input?.[socket]?.typeOptions ?? value.typeOptions;
-        if (expectedTypeOptions === undefined || expectedTypeOptions.includes(resolvedType)) { return undefined; }
-        const expectedLabel = expectedTypeOptions.map((t) => getTypeLabel(t)).join(" | ");
-        return `Type mismatch on socket "${getInputSocketFullLabel(socket)}": wired value is ${getTypeLabel(resolvedType)}, but this socket expects ${expectedLabel}`;
-    };
-
     // A wired socket's badge/handle should reflect the connected value's type only when that type
-    // is actually one the socket declares as acceptable — otherwise (a mismatch caught by
-    // getInputTypeMismatch) showing the foreign type as if it were adopted is misleading, so fall
-    // back to displaying the socket's own declared type instead.
+    // is actually one the socket declares as acceptable — otherwise (a mismatch reported by the
+    // validator) showing the foreign type as if it were adopted is misleading, so fall back to
+    // displaying the socket's own declared type instead.
     const getDisplaySocketType = (socket: string, value: AuthoredValue, resolvedType: number | undefined): number | undefined => {
         if (resolvedType === undefined) { return resolvedType; }
         const expectedTypeOptions = nodeSpec?.values?.input?.[socket]?.typeOptions ?? value.typeOptions;
@@ -543,95 +509,11 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         return value.type ?? expectedTypeOptions[0];
     };
 
-    // A socket's own effective type, ignoring the group's collapsed resolution: a wire's source
-    // type if wired, otherwise the socket's own stored `type` (whatever the type dropdown last set
-    // it to). Needed because resolveSocketType folds every unwired grouped socket into ONE shared
-    // answer (resolveTypeGroupType picks a single winner for the whole group), so comparing via
-    // resolveSocketType can never see two differing unwired members, and — since that winner
-    // requires an actual static *value* to be present, not just a type — it also ignores a type the
-    // user just picked from the dropdown until a value is entered, making the group-conflict check
-    // silently stale right after a manual type change.
-    const getOwnSocketType = (socket: string, value: AuthoredValue): number | undefined => {
-        const link = node?.values?.input?.[socket] ?? value;
-        if (link?.node !== undefined) {
-            const sourceNode = graph.nodes.find(n => n.uid === link.node);
-            // Resolve the source's output the same way its outgoing wire is colored
-            // (resolveOutputSocketType in getAuthorGraph) — group-aware — instead of reading the raw
-            // stored `.type`. A grouped source (e.g. a math node whose group resolved to float via a
-            // sibling) can have a stale spec-default `int` on its stored output socket while its wire
-            // is correctly float; reading the raw type here made this input's badge read int and
-            // triggered a false type-group conflict against a float sibling. Going through the same
-            // resolver keeps the badge and the wire in lockstep.
-            return resolveOutputSocketType(sourceNode, link.socket!, graph.nodes);
-        }
-        return value?.type;
-    };
-
-    // Detect an input socket whose own type disagrees with a sibling in the same typeGroup — e.g.
-    // math/add's `a` and `b` share a group (both must be the same concrete type), so wiring an int
-    // into `a` and a float into `b` is invalid even though each individually satisfies its own
-    // typeOptions, and so is picking `b`'s type dropdown to float while `a` is wired to int.
-    // Membership is read from the immutable spec since a wired socket's live object loses its
-    // `typeGroup` tag (see getTypeGroupMembers). Every member that disagrees with at least one
-    // sibling is flagged, since there's no way to tell which one is "correct".
-    const getGroupTypeConflict = (socket: string, value: AuthoredValue): string | undefined => {
-        const group = value.typeGroup ?? nodeSpec?.values?.input?.[socket]?.typeGroup;
-        if (group === undefined) { return undefined; }
-        const ownType = getOwnSocketType(socket, value);
-        if (ownType === undefined) { return undefined; }
-        const { inputs } = getTypeGroupMembers(nodeSpec, group);
-        const conflicting: string[] = [];
-        for (const name of inputs) {
-            if (name === socket) { continue; }
-            const siblingValue = inputValues[name];
-            if (siblingValue === undefined) { continue; }
-            const siblingType = getOwnSocketType(name, siblingValue);
-            if (siblingType !== undefined && siblingType !== ownType) {
-                conflicting.push(`${name}: ${getTypeLabel(siblingType)}`);
-            }
-        }
-        if (conflicting.length === 0) { return undefined; }
-        return `Type group mismatch on socket "${getInputSocketFullLabel(socket)}": this socket is ${getTypeLabel(ownType)}, but a sibling socket sharing the same type must match (${conflicting.join(", ")})`;
-    };
-
-    // KHR_interactivity requires every input socket to either be wired or carry a static value —
-    // an unconnected socket left at its "no value entered yet" placeholder (undefined/NaN/empty
-    // string, depending on the socket's shape) would export as invalid.
-    const getMissingValueWarning = (socket: string, value: AuthoredValue): string | undefined => {
-        if (isSocketLinked(socket)) { return undefined; }
-        // ref sockets store their pointer array-wrapped (see castParameter), but older graphs may
-        // still carry a bare string; normalize both shapes before checking.
-        const raw = value.value;
-        const values = raw === undefined ? [] : Array.isArray(raw) ? raw : [raw];
-        const isUnset = values.length === 0 ||
-            values.every((v) => v === undefined || v === "" || (typeof v === "number" && Number.isNaN(v)));
-        if (!isUnset) { return undefined; }
-        return `Missing value on socket "${getInputSocketFullLabel(socket)}": not connected and has no value set`;
-    };
-
-    // Determine the effective type of an input socket. A wired socket takes its type from the
-    // connected source output socket (auto-detected), so its own type/typeOptions are ignored.
-    // The connection lives on the shared graph model (mutated on connect), which may be ahead of
-    // this node's local `value` state. Otherwise, a grouped socket adopts its group's resolved
-    // type (so ungrouped-but-linked siblings stay visually consistent); finally fall back to the
-    // socket's own type.
-    const resolveSocketType = (socket: string, value: AuthoredValue): number | undefined => {
-        const link = node?.values?.input?.[socket] ?? value;
-        if (link?.node !== undefined) {
-            const sourceNode = graph.nodes.find(n => n.uid === link.node);
-            // group-aware resolution of the source output (matches the wire color) — see getOwnSocketType
-            const sourceType = resolveOutputSocketType(sourceNode, link.socket!, graph.nodes);
-            if (sourceType !== undefined) {
-                return sourceType;
-            }
-        }
-        const group = value.typeGroup ?? nodeSpec?.values?.input?.[socket]?.typeGroup;
-        if (group !== undefined) {
-            const groupType = getGroupType(group);
-            if (groupType !== undefined) { return groupType; }
-        }
-        return value?.type;
-    }
+    // Effective type of an input socket for display (badge/handle color). Delegates to the shared
+    // model resolver in validation.ts — the exact same resolution the whole-graph live validation
+    // uses — so the badge and the reported warnings can never disagree.
+    const resolveSocketType = (socket: string, value: AuthoredValue): number | undefined =>
+        node !== null ? resolveInputSocketType(node, nodeSpec, socket, value, graph.nodes) : value?.type;
 
     // parse the currently-selected variable ids for the multi-variable config (variable/set).
     // The stored value may be a plain number array (["0", "1"] / [0, 1]) or, from legacy text
@@ -768,35 +650,17 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         .map((d) => d.title);
 
     // this node instance's own live socket warnings (missing values, type mismatches, type-group
-    // conflicts) - recomputed every render as the user edits, unlike specDiagnosticLines which are
-    // fixed at load time
-    const liveWarningLines = Object.entries(inputValues)
-        .map(([socket, value]) => {
-            const resolvedType = resolveSocketType(socket, value);
-            return getInputTypeMismatch(socket, value, resolvedType) ?? getGroupTypeConflict(socket, value) ?? getMissingValueWarning(socket, value);
-        })
-        .filter((msg): msg is string => msg !== undefined);
+    // conflicts) — computed whole-graph from the model by the context's chunked live validation
+    // (see runLiveValidation / computeNodeLiveWarnings) and read back here. The node never
+    // computes or reports warnings itself anymore: that made the DiagnosticsPanel counts depend
+    // on which nodes were mounted (viewport culling unmounted a node -> its warnings vanished)
+    // and burned per-render type resolution on every node.
+    const ownWarnings = nodeWarnings[uid] ?? EMPTY_WARNINGS;
+    const liveWarningLines = ownWarnings.map((d) => d.title);
 
     // aggregate socket-level mismatches into a single node-header warning, so a type conflict on
     // any input is visible without having to scan every socket
     const typeMismatchLines = [...specDiagnosticLines, ...liveWarningLines];
-
-    // report this node's live warnings up to the shared context so the top-level DiagnosticsPanel
-    // and DiagnosticsCounter reflect problems introduced by editing the graph, not just ones found
-    // when a file is loaded. specDiagnosticLines are already load-time context diagnostics and
-    // must not be re-reported here, or they'd be duplicated in the combined list.
-    const liveWarningLinesKey = liveWarningLines.join("\n");
-    useEffect(() => {
-        reportNodeWarnings(uid, nodeIndex, node?.op, liveWarningLinesKey === "" ? [] : liveWarningLinesKey.split("\n"));
-    }, [uid, nodeIndex, node?.op, liveWarningLinesKey, reportNodeWarnings]);
-
-    // clear this node's reported warnings only on true unmount (node deleted/type changed) - not
-    // on every warning-content change above, which would otherwise clear-then-reinstate on every
-    // edit and undo the "bail out if unchanged" dedup in reportNodeWarnings (see its definition),
-    // doubling re-renders on every warning change instead of skipping them when nothing moved.
-    useEffect(() => {
-        return () => reportNodeWarnings(uid, nodeIndex, node?.op, []);
-    }, [uid]);
 
     // LOD early-return: when zoomed out, render a flat box and skip heavy per-node UI.
     // Keep invisible handles for all socket ids so existing edges remain valid.
@@ -1135,13 +999,19 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                 const isLinked = (props.data.linked && props.data.linked[socket]) || node?.values?.input?.[socket]?.node !== undefined;
                                 const isUnknown = isUnknownInputValueSocket(socket);
                                 const resolvedInputType = resolveSocketType(socket, value);
+                                // per-socket ⚠: the model-driven validator already attributed each
+                                // live warning to its socket (mismatch > conflict > missing, one max)
                                 const typeMismatch = isUnknown
                                     ? `Unknown input value socket "${getInputSocketFullLabel(socket)}": "${node?.op}" does not declare this socket`
-                                    : getInputTypeMismatch(socket, value, resolvedInputType) ?? getGroupTypeConflict(socket, value) ?? getMissingValueWarning(socket, value);
+                                    : ownWarnings.find((d) => d.socket === socket)?.title;
                                 const inputType = getDisplaySocketType(socket, value, resolvedInputType);
                                 const signature = standardTypes[value.type ?? -1]?.signature;
                                 const isRefSocket = signature === InteractivityValueType.REF;
                                 const isBoolSocket = signature === InteractivityValueType.BOOLEAN;
+                                // int sockets flagged (in the spec or on a generated pointer-index
+                                // slot) as holding an object index get the "Open Object Menu" picker
+                                const showObjectPicker = signature === InteractivityValueType.INT &&
+                                    (value.objectPicker === true || nodeSpec?.values?.input?.[socket]?.objectPicker === true);
                                 // vector/matrix sockets render a grid of per-component fields
                                 const vecLayout = signature ? VECTOR_MATRIX_LAYOUTS[signature] : undefined;
                                 // the type badge doubles as the type selector when the socket accepts
@@ -1224,6 +1094,26 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                                     onChange={(checked) => onChangeBoolean(socket, checked)}
                                                 />
                                             </div>
+                                        ) : showObjectPicker ? (
+                                            <div style={{ display: isLinked ? "none" : "flex", gap: 4 }}>
+                                                <input
+                                                    id={`in-${socket}`}
+                                                    name={socket}
+                                                    type="number"
+                                                    step={1}
+                                                    className={"flow-node-control nodrag"}
+                                                    style={{ flex: 1, minWidth: 0 }}
+                                                    placeholder={"0"}
+                                                    value={inputValues[socket].value?.[0] ?? ""}
+                                                    readOnly={isUnknown}
+                                                    onChange={(e) => onChangeIntValue(socket, e.target.value)}
+                                                />
+                                                <ObjectMenuDropdown
+                                                    disabled={isUnknown}
+                                                    title={"Object menu"}
+                                                    items={[{ label: "Open Object Menu", onSelect: () => setRefPickerSocket(socket) }]}
+                                                />
+                                            </div>
                                         ) : (
                                             <input id={`in-${socket}`} name={socket} className={"nodrag"} onChange={onChangeParameter} defaultValue={inputValues[socket].value} readOnly={isUnknown} style={{ display: isLinked ? "none" : "block" }} />
                                         )}
@@ -1285,10 +1175,24 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
 
             <RefValuePicker
                 show={refPickerSocket !== null}
-                currentValue={refPickerSocket ? String(inputValues[refPickerSocket]?.value ?? "") : undefined}
+                // a ref socket already holds a "/nodes/3" pointer (highlightable); an int socket
+                // holds a bare index whose category is unknown, so don't feed a fake pointer
+                currentValue={
+                    refPickerSocket && standardTypes[inputValues[refPickerSocket]?.type ?? -1]?.signature === InteractivityValueType.REF
+                        ? String(inputValues[refPickerSocket]?.value ?? "")
+                        : undefined
+                }
                 hintSocket={refPickerSocket ?? undefined}
                 onClose={() => setRefPickerSocket(null)}
-                onSelect={(pointer) => { if (refPickerSocket) { setSocketRefValue(refPickerSocket, pointer); } }}
+                onSelect={(pointer) => {
+                    if (!refPickerSocket) { return; }
+                    // int sockets store the object's index; ref sockets store the pointer string
+                    if (standardTypes[inputValues[refPickerSocket]?.type ?? -1]?.signature === InteractivityValueType.INT) {
+                        setSocketIndexValue(refPickerSocket, pointer);
+                    } else {
+                        setSocketRefValue(refPickerSocket, pointer);
+                    }
+                }}
             />
 
             <RefValuePicker

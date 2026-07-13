@@ -1,6 +1,6 @@
 import { IInteractivityFlow, IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityVariable, InteractivityValueType } from "../BasicBehaveEngine/types/InteractivityGraph";
-import { AuthoredValue } from "./spec/AuthoredGraph";
-import { anyType, standardTypes } from "./spec/nodes";
+import { AuthoredNode, AuthoredValue, NodeSpecFlag } from "./spec/AuthoredGraph";
+import { anyType, hasNodeSpecFlag, interactivityNodeSpecs, standardTypes } from "./spec/nodes";
 import { buildPointerSlotValue, getMessageTemplateSocketIds, getPathTemplateSockets, getRefSlotPointerPrefix } from "./pathTemplate";
 
 const getStandardTypeIndex = (signature: InteractivityValueType): number => {
@@ -86,7 +86,9 @@ export function computeConfigDrivenSockets(
             }
         } else if (nodeType === "math/switch") {
             for (let i = 0; i < cases.length; i++) {
-                inputValuesToSet[`${cases[i]}`] = { value: [undefined], typeOptions: anyType, typeGroup: "T", type: 0 };
+                // these case sockets share the "T" type group, so they offer the object-index
+                // picker too — the int-only render guard keeps it hidden until T resolves to int
+                inputValuesToSet[`${cases[i]}`] = { value: [undefined], typeOptions: anyType, typeGroup: "T", objectPicker: true, type: 0 };
             }
         }
     }
@@ -123,7 +125,9 @@ export function computeConfigDrivenSockets(
             // stored type differs from the delimiter-derived type is kept (see buildPointerSlotValue).
             const refPrefix = socket.kind === "ref" ? getRefSlotPointerPrefix(template, socket.id) : undefined;
             const { value, preserved } = buildPointerSlotValue(inputValues[socket.id], socket.kind, type, refPrefix);
-            inputValuesToSet[socket.id] = value;
+            // an `index` slot (e.g. `/nodes/[nodeIndex]/...`) holds a glTF object index, so it opts
+            // into the "Open Object Menu" picker; a `ref` slot already stores a pointer string.
+            inputValuesToSet[socket.id] = socket.kind === "index" ? { ...value, objectPicker: true } : value;
             if (preserved) {
                 preservedPointerSlotIds.add(socket.id);
             } else {
@@ -268,9 +272,30 @@ export function mergeValueSockets(params: {
             // placeholder type, disagreeing with its group + the wired sibling that resolved it.
             const specDefault = specDefaults[key];
             const grouped = (specDefault.typeGroup ?? existingSocket?.typeGroup) !== undefined;
+            // never emit the spec-default object itself: for registry-backed ops these are the
+            // SHARED interactivityNodeSpecs objects, and type-group propagation writes
+            // socket.type/.value in place — an aliased socket would let one node's resolution
+            // corrupt the registry template (and thus every other node of this op)
+            const specCopy: AuthoredValue = {
+                ...specDefault,
+                ...(Array.isArray(specDefault.value) ? { value: [...specDefault.value] } : {}),
+            };
             result[key] = grouped && existingSocket?.type !== undefined && existingSocket.type !== specDefault.type
-                ? { ...specDefault, type: existingSocket.type }
-                : specDefault;
+                ? { ...specCopy, type: existingSocket.type }
+                : specCopy;
+        } else if (!existingHasData && generatedKeys.has(key) && existingSocket !== undefined && pointerSlotType === undefined) {
+            // Same rule for *generated* grouped sockets (e.g. math/switch case inputs): the
+            // generator stamps its placeholder type on every run, but the existing socket may
+            // carry a group type resolved by propagateGraphGroupTypes (or a user type pick).
+            // Re-stamping would clobber it on every mount reconcile — and since propagation runs
+            // only once per load, a node reconciling after that pass would keep the wrong type.
+            // Non-grouped generated sockets (pointer slots, event params, type-config sockets)
+            // keep their authoritative generated type.
+            const gen = generated[key];
+            const grouped = (gen.typeGroup ?? existingSocket.typeGroup) !== undefined;
+            if (grouped && existingSocket.type !== undefined && existingSocket.type !== gen.type) {
+                result[key] = { ...gen, type: existingSocket.type };
+            }
         }
     }
 
@@ -296,9 +321,115 @@ export function mergeFlowSockets(params: {
         if (existing[key] !== undefined && existing[key].node != null) {
             result[key] = existing[key];
         } else if (specDefaults[key] !== undefined) {
-            result[key] = specDefaults[key];
+            // clone — same no-aliasing rule as mergeValueSockets: spec defaults are the shared
+            // registry objects and must never end up mutable inside a node's model
+            result[key] = { ...specDefaults[key] };
         }
     }
 
     return result;
+}
+
+export interface ReconciledNodeSockets {
+    inputValues: Record<string, AuthoredValue>;
+    outputValues: Record<string, AuthoredValue>;
+    inputFlows: Record<string, IInteractivityFlow>;
+    outputFlows: Record<string, IInteractivityFlow>;
+}
+
+/**
+ * Full per-node socket reconciliation: derive the config-driven socket set and merge it with the
+ * spec declaration and the node's existing editor state. The single shared implementation behind
+ * both the mount/config-change reconcile in AuthoringGraphNode and the load-time socket
+ * materialisation in loadGraphFromJson — keeping the two byte-identical is what makes the
+ * reconcile idempotent, so a node (re)mounting after the deferred type propagation pass can't
+ * change the model anymore.
+ */
+export function reconcileNodeSockets(params: {
+    op: string | undefined;
+    // true when the op has no registry spec (rendered as an inert NoOp); createNoOpNode seeded its
+    // socket set from the file's declaration instead
+    isNoOp: boolean;
+    configuration: Record<string, IInteractivityConfigurationValue>;
+    inputValues: Record<string, AuthoredValue>;
+    outputValues: Record<string, AuthoredValue>;
+    inputFlows: Record<string, IInteractivityFlow>;
+    outputFlows: Record<string, IInteractivityFlow>;
+    events: Record<number, IInteractivityEvent>;
+    variables: IInteractivityVariable[];
+}): ReconciledNodeSockets {
+    const { op, isNoOp, configuration, inputValues, outputValues, inputFlows, outputFlows, events, variables } = params;
+    const nodeSpec: AuthoredNode | undefined = interactivityNodeSpecs.find((n) => n.op === op);
+
+    // ops with a fixed (non-configuration-driven) socket set fully rely on the spec/config-key
+    // lists below to decide what still exists; ops carrying this flag instead own their current
+    // socket set entirely via the configuration re-evaluation (e.g. flow/switch's cases,
+    // variable/set's selected variables), so a key that configuration no longer generates is
+    // meant to disappear.
+    const allowsDynamicSockets = isNoOp || hasNodeSpecFlag(nodeSpec, NodeSpecFlag.DynamicSockets);
+
+    // A NoOp has no registry spec — its declaration-seeded socket set IS its spec. Feeding empty
+    // spec defaults would make every merge below start from nothing and wipe the NoOp's sockets
+    // from the model, which also breaks downstream type resolution reading its output types.
+    const inputValueSpecDefaults = isNoOp ? inputValues : nodeSpec?.values?.input || {};
+    const outputValueSpecDefaults = isNoOp ? outputValues : nodeSpec?.values?.output || {};
+    const inputFlowSpecDefaults = isNoOp ? inputFlows : nodeSpec?.flows?.input || {};
+    const outputFlowSpecDefaults = isNoOp ? outputFlows : nodeSpec?.flows?.output || {};
+
+    const generated = computeConfigDrivenSockets(configuration, inputValues, {
+        nodeType: op,
+        events,
+        variables,
+    });
+
+    // We only want to set socket values that are either in the node's spec or are created as a
+    // result of the configuration. If the current node has a value for a socket we should use
+    // it, otherwise we will use the node spec default (if it exists); remaining sockets would
+    // have been populated by computeConfigDrivenSockets above.
+    const inputValuesToSet = mergeValueSockets({
+        existing: inputValues,
+        generated: generated.inputValues,
+        specDefaults: inputValueSpecDefaults,
+        // a socket name this fixed-spec op doesn't declare (a typo, or a hand-edited/broken
+        // glTF) would otherwise be silently dropped here on every re-evaluation; keep it around
+        // as long as it still carries real data so the node UI can flag it instead of hiding
+        // the invalid state
+        extraKeys: allowsDynamicSockets ? [] : Object.keys(inputValues),
+        preservedKeys: generated.preservedPointerSlotIds,
+        pointerSlotTypeById: generated.pointerSlotTypeById,
+        allowExistingToOverrideGenerated: true,
+    });
+
+    const outputValuesToSet = mergeValueSockets({
+        existing: outputValues,
+        generated: generated.outputValues,
+        specDefaults: outputValueSpecDefaults,
+        extraKeys: [],
+        allowExistingToOverrideGenerated: false,
+    });
+
+    const inputFlowsToSet = mergeFlowSockets({
+        existing: inputFlows,
+        generated: generated.inputFlows,
+        specDefaults: inputFlowSpecDefaults,
+    });
+
+    let outputFlowsToSet = mergeFlowSockets({
+        existing: outputFlows,
+        generated: generated.outputFlows,
+        specDefaults: outputFlowSpecDefaults,
+        // same reasoning as inputValuesToSet's extraKeys above, for an unknown output flow socket name
+        extraKeys: allowsDynamicSockets ? [] : Object.keys(outputFlows),
+    });
+    if (hasNodeSpecFlag(nodeSpec, NodeSpecFlag.DynamicFlowOutputs)) {
+        // flow sequence is a very special node which has sockets that are not in the node spec nor generated based on configuration
+        outputFlowsToSet = { ...outputFlowsToSet, ...outputFlows };
+    }
+
+    return {
+        inputValues: inputValuesToSet,
+        outputValues: outputValuesToSet,
+        inputFlows: inputFlowsToSet,
+        outputFlows: outputFlowsToSet,
+    };
 }

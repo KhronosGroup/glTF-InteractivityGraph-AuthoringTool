@@ -1,11 +1,17 @@
 import {BasicBehaveEngine} from "../src/BasicBehaveEngine/BasicBehaveEngine";
 import {LoggingDecorator} from "../src/decorators/LoggingDecorator";
 import { DOMEventBus } from "../src/BasicBehaveEngine/eventBuses/DOMEventBus";
-import {IBehaveEngine} from "../src/BasicBehaveEngine/IBehaveEngine";
 import fs from "fs";
+import { jest } from "@jest/globals";
 
 describe('BehaveEngine', () => {
-    let loggingBehaveEngine: IBehaveEngine;
+    let loggingBehaveEngine: LoggingDecorator;
+
+    afterEach(() => {
+        loggingBehaveEngine?.pauseEventQueue();
+        loggingBehaveEngine?.clearCustomEventListeners();
+        loggingBehaveEngine?.dispose();
+    });
 
     it('should correctly evaluate random node', async () => {
         /**
@@ -40,31 +46,37 @@ describe('BehaveEngine', () => {
         const eventBus = new DOMEventBus();
         const engine = new BasicBehaveEngine(1, eventBus);
         let executionLog = "";
-        const world = {nodes:[{translation:[1,1,1]}]}
-        loggingBehaveEngine = new LoggingDecorator(engine, (line:string) => executionLog += line, world);
+        const objectModel = {nodes:[{translation:[1,1,1]}]}
+        loggingBehaveEngine = new LoggingDecorator(engine, (line:string) => executionLog += line, objectModel);
         loggingBehaveEngine.loadBehaveGraph(behaviorGraph);
 
         expect(engine.variables![0].value![0]).toEqual(true);
     });
 
     it('should correctly evaluate pointer/interpolate', async () => {
-        /**
-         * This test ensures that the pointer/interpolate node evaluates correctly
-         * 
-         * The graph sets a variable to the expect the pointer/interpolate can correctly interpolate a pointer value and is cancelled if a pointer/set is called
-         * 1) pointer/interpolate interpolates the pointer value from [0,0,0] to [1,0,0] over 2 seconds
-         * 2) a delay of 1 second is activated and when it is done, a pointer/set is called to set the pointer value to whatever is currently in the pointer (cancelling the interpolation)
-         * 3) a delay of another second is activated (to ensure the interpolation is cancelled) and when it is done, we compare the length of the pointer to 0.5 and set the test variable to true if it is within 0.01
-         */
-        const behaviorGraph = JSON.parse(fs.readFileSync("./tst/testGraphs/pointerInterpolateSet.json", "utf8"));
-        const eventBus = new DOMEventBus();
-        const engine = new BasicBehaveEngine(60, eventBus);
-        let executionLog = "";
-        const world = {nodes:[{translation:[0,0,0]}]}
-        loggingBehaveEngine = new LoggingDecorator(engine, (line:string) => executionLog += line, world);
-        loggingBehaveEngine.loadBehaveGraph(behaviorGraph);
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-        expect(engine.variables![0].value![0]).toEqual(true);
+        jest.useFakeTimers();
+        try {
+            /**
+             * This test ensures that the pointer/interpolate node evaluates correctly
+             *
+             * The graph sets a variable to the expect the pointer/interpolate can correctly interpolate a pointer value and is cancelled if a pointer/set is called
+             * 1) pointer/interpolate interpolates the pointer value from [0,0,0] to [1,0,0] over 2 seconds
+             * 2) a delay of 1 second is activated and when it is done, a pointer/set is called to set the pointer value to whatever is currently in the pointer (cancelling the interpolation)
+             * 3) a delay of another second is activated (to ensure the interpolation is cancelled) and when it is done, we compare the length of the pointer to 0.5 and set the test variable to true if it is within 0.01
+             */
+            const behaviorGraph = JSON.parse(fs.readFileSync("./tst/testGraphs/pointerInterpolateSet.json", "utf8"));
+            const eventBus = new DOMEventBus();
+            const engine = new BasicBehaveEngine(60, eventBus);
+            let executionLog = "";
+            const objectModel = {nodes:[{translation:[0,0,0]}]}
+            loggingBehaveEngine = new LoggingDecorator(engine, (line:string) => executionLog += line, objectModel);
+            loggingBehaveEngine.loadBehaveGraph(behaviorGraph);
+            await jest.advanceTimersByTimeAsync(3500);
+            loggingBehaveEngine.executeEventQueueTick();
+            expect(engine.variables![0].value![0]).toEqual(true);
+        } finally {
+            jest.useRealTimers();
+        }
     });
 
     it('should correctly set and cancel delays', async () => {
@@ -162,5 +174,32 @@ describe('BehaveEngine', () => {
     loggingBehaveEngine = new LoggingDecorator(engine, (line:string) => executionLog += line, {});
     loggingBehaveEngine.loadBehaveGraph(behaviorGraph);
     expect(engine.variables![0].value![0]).toEqual(true);
+   });
+
+   it("rejects old node.op-only graphs without declaration indices", () => {
+    const behaviorGraph = {
+        declarations: [],
+        types: [{ signature: "bool" }],
+        variables: [{ type: 0, value: [false] }],
+        events: [],
+        nodes: [{
+            op: "event/onStart",
+            flows: {
+                start: { node: 1, socket: "in" },
+            },
+        }, {
+            op: "variable/set",
+            values: {
+                variable: { type: 0, value: [0] },
+                value: { type: 0, value: [true] },
+            },
+        }],
+    };
+
+    const eventBus = new DOMEventBus();
+    const engine = new BasicBehaveEngine(1, eventBus);
+    loggingBehaveEngine = new LoggingDecorator(engine, () => undefined, {});
+
+    expect(() => loggingBehaveEngine.loadBehaveGraph(behaviorGraph as any)).toThrow(/Unrecognized node declaration/);
    });
 });

@@ -30,7 +30,8 @@ export abstract class ADecorator implements IBehaveEngine {
         if (ref == null || ref === "") {
             return -1;
         }
-        return String(ref).split("/").pop();
+        const parts = String(ref).split("/").filter(Boolean);
+        return parts.length === 0 ? -1 : parts[parts.length - 1];
     }
 
     registerJsonPointer = (jsonPtr: string, getterCallback: (path: string) => any, setterCallback: (path: string, value: any) => void, typeName: string, readOnly: boolean) => {
@@ -54,7 +55,10 @@ export abstract class ADecorator implements IBehaveEngine {
 
     /** Tears down listeners/observers registered by this decorator. Call before discarding it. */
     dispose(): void {
-        this.clearCustomEventListeners();
+        // stop the wrapped engine (kills its tick loop + scheduled delays), which also clears its
+        // event queue and custom-event listeners - otherwise the old graph keeps running after a
+        // new model/graph replaces this decorator
+        this.behaveEngine.dispose();
     }
 
     registerRigidBodyNodes() {
@@ -122,6 +126,14 @@ export abstract class ADecorator implements IBehaveEngine {
 
     getRegisteredJsonPointers(): string[] {
         return this.behaveEngine.getRegisteredJsonPointers();
+    }
+
+    isValidJsonPtr(path: string): boolean {
+        return this.behaveEngine.isValidJsonPtr(path);
+    }
+
+    isReadOnly(path: string): boolean {
+        return this.behaveEngine.isReadOnly(path);
     }
 
     isSlerpPath(path: string): boolean {

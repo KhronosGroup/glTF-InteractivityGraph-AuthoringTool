@@ -9,7 +9,6 @@ import {Spacer} from "./components/Spacer";
 import { InteractivityGraphProvider } from './InteractivityGraphContext';
 import { SampleSidebar } from './components/SampleSidebar';
 import { DiagnosticsPanel } from './components/DiagnosticsPanel';
-import { LoadingProgressBar } from './components/LoadingProgressBar';
 
 // Storage key for persisting the engine type
 const ENGINE_TYPE_STORAGE_KEY = 'interactivity-graph-engine-type';
@@ -17,6 +16,36 @@ const ENGINE_TYPE_STORAGE_KEY = 'interactivity-graph-engine-type';
 export const App = () => {
   const [engineType, setEngineType] = useState<EngineType>(EngineType.BABYLON);
   const [modelUrl, setModelUrl] = useState<string | null>(null);
+  // fraction of the split row's width given to the left (engine) panel; the divider drags this
+  const [splitRatio, setSplitRatio] = useState(0.5);
+  const [dividerHovered, setDividerHovered] = useState(false);
+  const [dividerDragging, setDividerDragging] = useState(false);
+  const splitRowRef = useRef<HTMLDivElement | null>(null);
+
+  // drag the divider: track the pointer against the row's bounds and clamp so neither panel collapses
+  const startSplitDrag = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setDividerDragging(true);
+    const onMove = (ev: MouseEvent) => {
+      const bounds = splitRowRef.current?.getBoundingClientRect();
+      if (!bounds || bounds.width === 0) { return; }
+      const ratio = (ev.clientX - bounds.left) / bounds.width;
+      setSplitRatio(Math.min(0.85, Math.max(0.15, ratio)));
+    };
+    const onUp = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      document.body.style.userSelect = "";
+      setDividerDragging(false);
+    };
+    // suppress text selection while dragging
+    document.body.style.userSelect = "none";
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  };
+
+  // divider highlights on hover, and stays highlighted (wider grip + accent color) while dragging
+  const dividerActive = dividerHovered || dividerDragging;
 
   // Load stored engine type on initial render and check URL parameters
   useEffect(() => {
@@ -133,8 +162,6 @@ export const App = () => {
     <InteractivityGraphProvider>
         <div style={{width: "100vw", height: "100vh"}}>
 
-        <LoadingProgressBar />
-
         <EngineSelector setEngineType={handleEngineTypeChange} currentEngineType={engineType} />
 
         <SampleSidebar onSelectModel={handleModelUrlChange} />
@@ -143,14 +170,41 @@ export const App = () => {
 
         <Spacer width={0} height={32}/>
 
-        <RenderIf shouldShow={engineType === EngineType.LOGGING}>
-             <LoggingEngineComponent modelUrl={modelUrl} />
-        </RenderIf>
-        <RenderIf shouldShow={engineType === EngineType.BABYLON}>
-            <BabylonEngineComponent modelUrl={modelUrl} />
-        </RenderIf>
-
-        <AuthoringComponent/>
+        {/* side-by-side, resizable: 3D/logging engine view on the left, graph authoring on the
+            right, with a draggable divider controlling the split (see startSplitDrag) */}
+        <div ref={splitRowRef} style={{display: "flex", flexDirection: "row", width: "100vw", height: "85vh", boxSizing: "border-box", padding: "0 16px"}}>
+            <div style={{flexGrow: splitRatio, flexShrink: 1, flexBasis: 0, minWidth: 0, height: "100%"}}>
+                <RenderIf shouldShow={engineType === EngineType.LOGGING}>
+                     <LoggingEngineComponent modelUrl={modelUrl} />
+                </RenderIf>
+                <RenderIf shouldShow={engineType === EngineType.BABYLON}>
+                    <BabylonEngineComponent modelUrl={modelUrl} />
+                </RenderIf>
+            </div>
+            <div
+                onMouseDown={startSplitDrag}
+                onMouseEnter={() => setDividerHovered(true)}
+                onMouseLeave={() => setDividerHovered(false)}
+                title={"Drag to resize"}
+                style={{
+                    flex: "0 0 12px", height: "100%", cursor: "col-resize",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    background: dividerActive ? "rgba(61, 89, 135, 0.08)" : "transparent",
+                    transition: "background 120ms ease",
+                }}
+            >
+                <div style={{
+                    width: dividerActive ? 4 : 2,
+                    height: dividerActive ? 64 : 40,
+                    borderRadius: 3,
+                    background: dividerActive ? "#3d5987" : "#adb5bd",
+                    transition: "all 120ms ease",
+                }}/>
+            </div>
+            <div style={{flexGrow: 1 - splitRatio, flexShrink: 1, flexBasis: 0, minWidth: 0, height: "100%"}}>
+                <AuthoringComponent/>
+            </div>
+        </div>
       </div>
     </InteractivityGraphProvider>
       

@@ -1,8 +1,9 @@
 import {
     IInteractivityConfigurationValue,
+    IInteractivityDeclaration,
     IInteractivityValue,
 } from "../BasicBehaveEngine/types/InteractivityGraph";
-import { AuthoredValue } from "./spec/AuthoredGraph";
+import { AuthoredNode, AuthoredValue } from "./spec/AuthoredGraph";
 
 /** Project an editor value socket down to the fields allowed in an executable graph. */
 export const toExecutableValue = (authoredValue: AuthoredValue): IInteractivityValue => {
@@ -10,6 +11,7 @@ export const toExecutableValue = (authoredValue: AuthoredValue): IInteractivityV
     delete value.description;
     delete value.typeGroup;
     delete value.typeOptions;
+    delete value.objectPicker;
     return value;
 };
 
@@ -20,4 +22,19 @@ export const toExecutableConfigurationValue = (
     const value = { ...authoredValue };
     delete value.description;
     return value;
+};
+
+export const getExecutableDeclarationIndex = (
+    node: AuthoredNode,
+    declarations: IInteractivityDeclaration[]
+): number => {
+    if (
+        Number.isInteger(node.declaration)
+        && node.declaration >= 0
+        && declarations[node.declaration]?.op === node.op
+    ) {
+        return node.declaration;
+    }
+
+    return declarations.findIndex((declaration: IInteractivityDeclaration) => declaration.op === node.op);
 };

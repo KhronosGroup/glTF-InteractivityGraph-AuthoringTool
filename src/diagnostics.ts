@@ -11,6 +11,9 @@ export interface IGraphDiagnostic {
     nodeUid?: string;
     nodeIndex?: number;
     nodeOp?: string;
+    // present when this diagnostic is attributable to a single input socket on that node (live
+    // socket warnings from computeNodeLiveWarnings) - lets the node UI show it inline per socket
+    socket?: string;
 }
 
 /**

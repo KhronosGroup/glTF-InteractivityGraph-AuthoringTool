@@ -9,8 +9,8 @@ export const hasNodeSpecFlag = (spec: AuthoredNode | undefined, flag: NodeSpecFl
 // Projects an authoring node spec down to the runtime glTF declaration shape (op/extension plus,
 // for extension-defined ops only, the raw socket types the core spec can't infer). Core
 // KHR_interactivity ops get their socket types from the op's fixed spec, not a per-file
-// declaration, so only extension ops (rigid_body/*, event/onSelect, event/onHoverIn/Out,
-// ADBE/output_console_node) carry inputValueSockets/outputValueSockets here.
+// declaration, so only extension ops (rigid_body/*, event/onSelect, event/onHoverIn/Out)
+// carry inputValueSockets/outputValueSockets here.
 export const toInteractivityDeclaration = (spec: AuthoredNode): IInteractivityDeclaration => {
     if (!spec.extension) {
         return { op: spec.op! };
@@ -1165,12 +1165,14 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
                     typeOptions: anyType,
                     typeGroup: "T",
                     description: "Value returned when no case matches",
+                    objectPicker: true,
                     type: 0,
                     value: [undefined]
                 },
                 selection: {
                     typeOptions: [1],
                     description: "Integer selecting the matching case",
+                    objectPicker: true,
                     type: 1,
                     value: [undefined]
                 }
@@ -1376,6 +1378,7 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
             input: {
                 selection: {
                     typeOptions: [1],
+                    objectPicker: true,
                     type: 1,
                     value: [undefined]
                 }
@@ -1573,6 +1576,7 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
     {
         op: "flow/setDelay",
         description: "Set the delay for the control flow",
+        aliases: ["delay", "timer", "timeout", "wait"],
         flows: {
             input: {
                 in: {
@@ -3323,6 +3327,7 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
     {
         op: "pointer/get",
         description: "Get a pointer's value",
+        aliases: ["read", "query", "property", "get property"],
         flags: [NodeSpecFlag.DynamicSockets],
         configuration: {
             pointer: {
@@ -3418,6 +3423,7 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
     {
         op: "animation/start",
         description: "Start an animation",
+        aliases: ["play", "play animation", "start playback", "run animation"],
         flows: {
             input: {
                 in: {
@@ -3468,6 +3474,7 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
     {
         op: "animation/stop",
         description: "Stop an animation",
+        aliases: ["pause", "stop playback", "stop animation"],
         flows: {
             input: {
                 in: {
@@ -3541,6 +3548,7 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
         op: "event/onSelect",
         extension: "KHR_node_selectability",
         description: "Event that is triggered when a node is selected",
+        aliases: ["click", "tap", "pick", "select"],
         configuration: {
             nodeIndex: {
                 type: InteractivityConfigurationValueType.INT,
@@ -3591,40 +3599,12 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
             }
         }
     },
-    // Custom (ADBE)
-    {
-        op: "ADBE/output_console_node",
-        extension: "ADBE_output_console_node",
-        description: "Output a message to the console",
-        flows: {
-            input: {
-                in: {
-                    node: undefined,
-                    socket: undefined
-                }
-            },
-            output: {
-                out: {
-                    node: undefined,
-                    socket: undefined
-                }
-            }
-        },
-        values: {
-            input: {
-                message: {
-                    typeOptions: anyType,
-                    type: 0,
-                    value: [undefined]
-                }
-            }
-        }
-    },
     // Hoverability (KHR_node_hoverability)
     {
         op: "event/onHoverIn",
         extension: "KHR_node_hoverability",
         description: "Event that is triggered when a node is hovered over",
+        aliases: ["hover", "hover in", "mouseover", "pointer enter"],
         configuration: {
             nodeIndex: {
                 type: InteractivityConfigurationValueType.INT,
@@ -3669,6 +3649,7 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
         op: "event/onHoverOut",
         extension: "KHR_node_hoverability",
         description: "Event that is triggered when a node is hovered out",
+        aliases: ["hover out", "mouseout", "pointer leave"],
         configuration: {
             nodeIndex: {
                 type: InteractivityConfigurationValueType.INT,
@@ -3992,6 +3973,7 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
             input: {
                 nodeIndex: {
                     typeOptions: [1],
+                    objectPicker: true,
                     type: 1,
                     value: [undefined]
                 },
@@ -4024,6 +4006,7 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
             input: {
                 nodeIndex: {
                     typeOptions: [1],
+                    objectPicker: true,
                     type: 1,
                     value: [undefined]
                 },

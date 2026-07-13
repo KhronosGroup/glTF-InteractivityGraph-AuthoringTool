@@ -1,11 +1,10 @@
 import { jest } from "@jest/globals";
 import { BasicBehaveEngine } from "../../src/BasicBehaveEngine/BasicBehaveEngine";
+import { createGlTFObjectModelFromGltf, GlTFObjectModelDecorator } from "../../src/objectModel/glTFObjectModel";
 import {
     assertAssetSubTest,
-    createGenericWorldFromGltf,
     formatError,
     getAssetSubTests,
-    GenericTestDecorator,
     loadAssetCases,
     runGraphAndWait,
     TestEventBus,
@@ -35,7 +34,7 @@ describe("KHR_interactivity sample assets - core engine", () => {
             try {
                 const eventBus = new TestEventBus();
                 const engine = new BasicBehaveEngine(60, eventBus);
-                const decorator = new GenericTestDecorator(engine, createGenericWorldFromGltf(assetCase.gltf));
+                const decorator = new GlTFObjectModelDecorator(engine, createGlTFObjectModelFromGltf(assetCase.gltf));
 
                 await runGraphAndWait(decorator, assetCase.graph);
                 variables = engine.variables;

@@ -23,6 +23,10 @@ import { categoryLabel } from './DiagnosticsPanel';
 import { FLOW_COLOR, getColorForTypeIndex, getNodeCategoryColor } from '../authoring/socketColors';
 import { TypedValueInput } from '../authoring/TypedValueInput';
 import { NodeInfoTooltip, buildNodeTypeTooltipSections } from '../authoring/NodeInfoTooltip';
+import { LoadingProgressBar } from './LoadingProgressBar';
+import { applyNodePreset, getNodePresetSearchText, NodePreset, nodePresets } from '../authoring/nodePresets';
+import { reconcileNodeSockets } from '../authoring/socketReconciler';
+import { joinSearchTerms } from '../authoring/searchText';
 import '../css/flowNodes.css';
 
 const nodeTypes = interactivityNodeSpecs.reduce((nodes, node) => {
@@ -43,6 +47,21 @@ const edgeTypes: EdgeTypes = {
     default: DeletableEdge,
 };
 
+
+// one end of a drag-connection: the node + handle it started from, and whether that handle is a
+// source (output) or target (input). Used to decide which sockets to offer on the dropped-onto node.
+interface WireEndpoint {
+    nodeId: string;
+    handleId: string;
+    handleType: "source" | "target";
+}
+
+// a socket offered by the wire-drop socket picker
+interface WireSocketCandidate {
+    socket: string;
+    label: string;
+    color: string;
+}
 
 enum AuthoringComponentModelType {
     NODE_PICKER,
@@ -233,21 +252,25 @@ const DiagnosticsCounter = (props: { diagnostics: IGraphDiagnostic[], onJumpToNo
     );
 };
 
-const isOverScrollableElement = (target: Element | null, boundary: Element | null): boolean => {
-    let el = target;
-    while (el && el !== boundary) {
-        const { overflowY, overflowX } = window.getComputedStyle(el);
-        if ((overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight) return true;
-        if ((overflowX === 'auto' || overflowX === 'scroll') && el.scrollWidth > el.clientWidth) return true;
-        el = el.parentElement;
-    }
-    return false;
-};
-
 export const AuthoringComponent = () => {
     const reactFlowRef = useRef<HTMLDivElement | null>(null);
     const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
     const [authoringComponentModal, setAuthoringComponentModal] = useState<AuthoringComponentModelType>(AuthoringComponentModelType.NONE)
+
+    useEffect(() => {
+        if (authoringComponentModal === AuthoringComponentModelType.NONE) {
+            return;
+        }
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key !== "Escape") {
+                return;
+            }
+            event.preventDefault();
+            setAuthoringComponentModal(AuthoringComponentModelType.NONE);
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [authoringComponentModal]);
 
     // to handle nodes and edges in graph
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -258,7 +281,7 @@ export const AuthoringComponent = () => {
     // ids of the edges connecting that upstream hierarchy, highlighted alongside the nodes
     const [ancestorEdgeIds, setAncestorEdgeIds] = useState<Set<string>>(new Set());
 
-    const {graph, getAuthorGraph, addDeclaration, addNode, removeNode, allDiagnostics, graphDirty, markGraphDirty, requestPlay, setLoadingState, setDiagnosticsPaused} = useContext(InteractivityGraphContext);
+    const {graph, getAuthorGraph, addDeclaration, addNode, removeNode, allDiagnostics, graphDirty, markGraphDirty, requestPlay, setLoadingState, runLiveValidation} = useContext(InteractivityGraphContext);
     // the graph object identity we last rebuilt the canvas from; a load replaces graph identity
     // (setGraph), which is the signal to rebuild — interactive edits mutate the same object in
     // place and leave identity untouched, so they never retrigger a rebuild
@@ -284,6 +307,19 @@ export const AuthoringComponent = () => {
     const mousePosRef = useRef({x:0, y:0});
     const clipboardRef = useRef<Node[]>([]);
 
+    // --- drop-a-wire-on-empty-canvas wiring ---
+    // the socket a drag-connection started from (set in onConnectStart); drives opening the Add Node
+    // menu and then a socket picker when the wire is released over empty canvas
+    const connectStartRef = useRef<WireEndpoint | null>(null);
+    // set true when the right mouse button is pressed mid-wire — cancels the gesture (no node, no wire)
+    const connectCancelledRef = useRef(false);
+    // removes the mid-wire right-button listener registered for the current gesture
+    const connectCleanupRef = useRef<(() => void) | null>(null);
+    // a wire whose far end is pending: the drop opened the Add Node menu; once a node is chosen we
+    // reopen as a socket picker to choose which socket on that new node to attach to
+    const pendingWireRef = useRef<{ from: WireEndpoint; clientX: number; clientY: number } | null>(null);
+    const [socketPicker, setSocketPicker] = useState<{ newNodeUid: string; from: WireEndpoint; clientX: number; clientY: number } | null>(null);
+
     // Persist a node's canvas position into the graph model as soon as a drag ends (reactflow
     // passes every node moved in the gesture), rather than polling all nodes on a 5s timer. Only
     // dragged nodes changed position, so only they need writing back.
@@ -295,30 +331,6 @@ export const AuthoringComponent = () => {
             }
         }
     }, [graph])
-
-    useEffect(() => {
-        const container = reactFlowRef.current;
-        if (!container || !reactFlowInstance) return;
-        const handleWheel = (e: WheelEvent) => {
-            if (isOverScrollableElement(e.target as Element, container)) return;
-            e.preventDefault();
-            const { x, y, zoom } = reactFlowInstance.getViewport();
-            const factor = e.deltaY < 0 ? 1.2 : 1 / 1.2;
-            const newZoom = Math.min(2, Math.max(0.1, zoom * factor));
-            const rect = container.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
-            const flowX = (mouseX - x) / zoom;
-            const flowY = (mouseY - y) / zoom;
-            reactFlowInstance.setViewport({
-                x: mouseX - flowX * newZoom,
-                y: mouseY - flowY * newZoom,
-                zoom: newZoom,
-            }, { duration: 0 });
-        };
-        container.addEventListener('wheel', handleWheel, { passive: false });
-        return () => container.removeEventListener('wheel', handleWheel);
-    }, [reactFlowInstance]);
 
     const hasIntersection = (arr1: any[], arr2: any[]): boolean => {
         const set1 = new Set(arr1);
@@ -555,8 +567,10 @@ export const AuthoringComponent = () => {
         }
     }, []);
 
-    // handle adding nodes and edges to the graph
-    const onAddNode = useCallback((nodeType: string, position: XYPosition) => {
+    // handle adding nodes and edges to the graph. Returns the new node's uid so callers (e.g. the
+    // drop-a-wire-on-empty-canvas flow) can then wire a socket on it.
+    const onAddNode = useCallback((nodeRequest: string | NodePreset, position: XYPosition): string => {
+        const nodeType = typeof nodeRequest === "string" ? nodeRequest : nodeRequest.op;
         const uid = uuidv4();
         const nodeToAdd = {
             id: uid,
@@ -566,14 +580,181 @@ export const AuthoringComponent = () => {
         };
 
         const spec = interactivityNodeSpecs.find(node => node.op === nodeType)!;
-        const interactivityNode: AuthoredNode = JSON.parse(JSON.stringify(spec));
+        let interactivityNode: AuthoredNode = JSON.parse(JSON.stringify(spec));
         interactivityNode.declaration = addDeclaration(toInteractivityDeclaration(spec));
         interactivityNode.uid = uid;
-        
+        if (typeof nodeRequest !== "string") {
+            // applyNodePreset runs the socket reconciliation itself
+            interactivityNode = applyNodePreset(interactivityNode, nodeRequest, {
+                nodeType,
+                events: graph.events ?? {},
+                variables: graph.variables ?? [],
+            });
+        } else {
+            // materialise config-driven sockets before the node enters the model, so the model is
+            // complete the moment it's added — not one mount-reconcile later (the debounced live
+            // validation may look at it in between)
+            const reconciled = reconcileNodeSockets({
+                op: nodeType,
+                isNoOp: false,
+                configuration: interactivityNode.configuration ?? {},
+                inputValues: interactivityNode.values?.input ?? {},
+                outputValues: interactivityNode.values?.output ?? {},
+                inputFlows: interactivityNode.flows?.input ?? {},
+                outputFlows: interactivityNode.flows?.output ?? {},
+                events: graph.events ?? {},
+                variables: graph.variables ?? [],
+            });
+            interactivityNode.values = { input: reconciled.inputValues, output: reconciled.outputValues };
+            interactivityNode.flows = { input: reconciled.inputFlows, output: reconciled.outputFlows };
+        }
+
         addNode(interactivityNode);
 
         onNodesChange([{type: "add", item: nodeToAdd}]);
+        return uid;
     }, [graph]);
+
+    // a drag-connection started from a handle: remember where, and start watching for a right-click
+    // (which cancels the whole gesture — see onConnectEnd)
+    const onConnectStart = useCallback((_e: any, params: { nodeId: string | null; handleId: string | null; handleType: "source" | "target" | null }) => {
+        connectCancelledRef.current = false;
+        connectStartRef.current = (params.nodeId && params.handleId && params.handleType)
+            ? { nodeId: params.nodeId, handleId: params.handleId, handleType: params.handleType }
+            : null;
+        connectCleanupRef.current?.();
+        const onMouseDown = (ev: MouseEvent) => { if (ev.button === 2) { connectCancelledRef.current = true; } };
+        window.addEventListener("mousedown", onMouseDown, true);
+        connectCleanupRef.current = () => window.removeEventListener("mousedown", onMouseDown, true);
+    }, []);
+
+    // a drag-connection ended. If it was cancelled by a right-click, or landed on a handle (which
+    // reactflow's onConnect already handled), do nothing. If it was dropped on empty canvas, open the
+    // Add Node menu at that spot — the pending wire is finished once a node + socket are picked.
+    const onConnectEnd = useCallback((e: any) => {
+        connectCleanupRef.current?.();
+        connectCleanupRef.current = null;
+        const from = connectStartRef.current;
+        connectStartRef.current = null;
+        if (!from) { return; }
+        if (connectCancelledRef.current) { connectCancelledRef.current = false; return; }
+        const target = e?.target as Element | null;
+        if (!target?.classList?.contains("react-flow__pane") || !reactFlowInstance) { return; }
+        const clientX = e.clientX ?? e.changedTouches?.[0]?.clientX;
+        const clientY = e.clientY ?? e.changedTouches?.[0]?.clientY;
+        const bounds = reactFlowRef.current!.getBoundingClientRect();
+        mousePosRef.current = reactFlowInstance.project({ x: clientX - bounds.left, y: clientY - bounds.top });
+        pendingWireRef.current = { from, clientX, clientY };
+        setAuthoringComponentModal(AuthoringComponentModelType.NODE_PICKER);
+    }, [reactFlowInstance]);
+
+    // picking a node from the Add Node menu: add it, and if this menu was opened by dropping a wire,
+    // finish the wire — auto-connecting when the new node offers exactly one compatible socket, or
+    // otherwise opening a socket picker to choose among them
+    const handlePickNode = (nodeRequest: string | NodePreset, position: XYPosition): string => {
+        const uid = onAddNode(nodeRequest, position);
+        const pending = pendingWireRef.current;
+        pendingWireRef.current = null;
+        if (pending && uid) {
+            const candidates = getWireSocketCandidates(pending.from, uid);
+            if (candidates.length === 1) {
+                // only one place the wire can go — skip the picker and connect straight to it. Defer a
+                // couple frames so the just-added node has mounted and registered its reactflow handles
+                // (otherwise the edge can't attach), mirroring the load path's handle-settle wait.
+                requestAnimationFrame(() => requestAnimationFrame(() =>
+                    connectWireToSocket(pending.from, uid, candidates[0].socket)
+                ));
+            } else if (candidates.length > 1) {
+                setSocketPicker({ newNodeUid: uid, from: pending.from, clientX: pending.clientX, clientY: pending.clientY });
+            }
+        }
+        return uid;
+    };
+
+    // close the Add Node menu; also drop any pending wire (the user dismissed the menu without
+    // choosing a node, so there is no far end to wire)
+    const closeNodePicker = useCallback(() => {
+        pendingWireRef.current = null;
+        setAuthoringComponentModal(AuthoringComponentModelType.NONE);
+    }, []);
+
+    // the sockets on the freshly-added node that a dropped wire can attach to: a wire from an OUTPUT
+    // offers the new node's INPUTs, a wire from an INPUT offers its OUTPUTs — always matching flow vs
+    // value, and (for value wires) filtered to type-compatible sockets, mirroring onConnect's guards
+    const getWireSocketCandidates = (from: WireEndpoint, newNodeUid: string): WireSocketCandidate[] => {
+        const fromNode = graph.nodes.find(n => n.uid === from.nodeId);
+        const newNode = graph.nodes.find(n => n.uid === newNodeUid);
+        if (!fromNode || !newNode) { return []; }
+        const candidates: WireSocketCandidate[] = [];
+        if (from.handleType === "source") {
+            const isDynFlow = hasNodeSpecFlag(interactivityNodeSpecs.find(n => n.op === fromNode.op), NodeSpecFlag.DynamicFlowOutputs);
+            const fromIsFlow = fromNode.flows?.output?.[from.handleId] !== undefined || isDynFlow;
+            if (fromIsFlow) {
+                for (const socket of Object.keys(newNode.flows?.input ?? {})) {
+                    candidates.push({ socket, label: socket, color: FLOW_COLOR });
+                }
+            } else {
+                const fromType = resolveOutputSocketType(fromNode, from.handleId, graph.nodes);
+                for (const [socket, value] of Object.entries(newNode.values?.input ?? {})) {
+                    const opts = value.typeOptions;
+                    if (opts === undefined || fromType === undefined || opts.includes(fromType)) {
+                        candidates.push({ socket, label: socket, color: getColorForTypeIndex(fromType) });
+                    }
+                }
+            }
+        } else {
+            const fromIsFlow = fromNode.flows?.input?.[from.handleId] !== undefined || from.handleId === "in";
+            if (fromIsFlow) {
+                for (const socket of Object.keys(newNode.flows?.output ?? {})) {
+                    candidates.push({ socket, label: socket, color: FLOW_COLOR });
+                }
+            } else {
+                const fromOpts = fromNode.values?.input?.[from.handleId]?.typeOptions;
+                for (const socket of Object.keys(newNode.values?.output ?? {})) {
+                    const outType = resolveOutputSocketType(newNode, socket, graph.nodes);
+                    if (fromOpts === undefined || outType === undefined || fromOpts.includes(outType)) {
+                        candidates.push({ socket, label: socket, color: getColorForTypeIndex(outType) });
+                    }
+                }
+            }
+        }
+        return candidates;
+    };
+
+    // derive what the Add Node menu should offer to finish the pending dropped wire (see PickerConstraint):
+    // flow wires require a matching flow socket; value wires require a type-compatible value socket,
+    // mirroring the type checks in getWireSocketCandidates. null when there is no pending wire.
+    const getPendingPickerConstraint = (): PickerConstraint => {
+        const from = pendingWireRef.current?.from;
+        if (!from) { return null; }
+        const fromNode = graph.nodes.find(n => n.uid === from.nodeId);
+        if (!fromNode) { return null; }
+        if (from.handleType === "source") {
+            const isDynFlow = hasNodeSpecFlag(interactivityNodeSpecs.find(n => n.op === fromNode.op), NodeSpecFlag.DynamicFlowOutputs);
+            const fromIsFlow = fromNode.flows?.output?.[from.handleId] !== undefined || isDynFlow;
+            if (fromIsFlow) { return { kind: "flow", direction: "input" }; }
+            return { kind: "valueInput", fromType: resolveOutputSocketType(fromNode, from.handleId, graph.nodes) };
+        }
+        const fromIsFlow = fromNode.flows?.input?.[from.handleId] !== undefined || from.handleId === "in";
+        if (fromIsFlow) { return { kind: "flow", direction: "output" }; }
+        return { kind: "valueOutput", fromOpts: fromNode.values?.input?.[from.handleId]?.typeOptions };
+    };
+
+    // build the connection (orienting source/target by which end the wire started from) and hand it
+    // to the normal onConnect path
+    const connectWireToSocket = (from: WireEndpoint, newNodeUid: string, socket: string) => {
+        const connection: Connection = from.handleType === "source"
+            ? { source: from.nodeId, sourceHandle: from.handleId, target: newNodeUid, targetHandle: socket }
+            : { source: newNodeUid, sourceHandle: socket, target: from.nodeId, targetHandle: from.handleId };
+        onConnect(connection);
+    };
+
+    // the user chose a socket from the picker
+    const completeWireToSocket = (socket: string) => {
+        if (!socketPicker) { return; }
+        connectWireToSocket(socketPicker.from, socketPicker.newNodeUid, socket);
+        setSocketPicker(null);
+    };
 
     const copySelectedNodes = useCallback(() => {
         clipboardRef.current = nodes.filter(n => n.selected);
@@ -608,6 +789,24 @@ export const AuthoringComponent = () => {
                     if (ref.node && copiedIds.has(String(ref.node))) ref.node = uidMap.get(String(ref.node))!;
                     else newGn.values.input[key] = {};
                 }
+            }
+            // reconcile now instead of leaving the severed `{}` link stubs above for the mount
+            // reconcile to repair — the pasted node must be model-complete the moment it's added
+            // (the debounced live validation may look at it before it mounts)
+            {
+                const reconciled = reconcileNodeSockets({
+                    op: newGn.op,
+                    isNoOp: interactivityNodeSpecs.find(s => s.op === newGn.op) === undefined,
+                    configuration: newGn.configuration ?? {},
+                    inputValues: newGn.values?.input ?? {},
+                    outputValues: newGn.values?.output ?? {},
+                    inputFlows: newGn.flows?.input ?? {},
+                    outputFlows: newGn.flows?.output ?? {},
+                    events: graph.events ?? {},
+                    variables: graph.variables ?? [],
+                });
+                newGn.values = { input: reconciled.inputValues, output: reconciled.outputValues };
+                newGn.flows = { input: reconciled.inputFlows, output: reconciled.outputFlows };
             }
             newGraphNodes.push(newGn);
             newFlowNodes.push({
@@ -765,9 +964,13 @@ export const AuthoringComponent = () => {
             // re-read its (now resolved) socket types
             setNodes(nds => nds.map(n => ({ ...n, data: { ...n.data } })));
 
-            // "Checking": the graph is fully built and typed — release the buffered live per-node
-            // warnings and clear the loading bar.
-            setDiagnosticsPaused(false);
+            // "Checking": the graph is fully built and typed — run the whole-graph live validation
+            // (model-driven and chunked; its result is independent of which nodes are mounted or
+            // visible), then clear the loading bar. A superseding load cancels the validation run
+            // (committed=false) and owns the loading bar itself, so only a committed pass clears it.
+            setLoadingState({ active: true, step: "Checking", progress: 0.97 });
+            const committed = await runLiveValidation();
+            if (cancelled || !committed) { return; }
             setLoadingState(null);
         };
 
@@ -795,6 +998,9 @@ export const AuthoringComponent = () => {
     // we use to distinguish a right-click from a right-drag)
     const handleRightClick = (e: React.MouseEvent) => {
         if (!reactFlowInstance) return;
+        // a right-click while a wire is being dragged is the "cancel wiring" gesture (handled in
+        // onConnectEnd) — don't also open the Add Node menu
+        if (connectStartRef.current !== null) { e.preventDefault(); return; }
         e.preventDefault();
         const bounds = reactFlowRef.current!.getBoundingClientRect();
         const position = reactFlowInstance.project({
@@ -873,12 +1079,12 @@ export const AuthoringComponent = () => {
     }, [edges, ancestorEdgeIds]);
 
     return (
-        <div style={{width: "100vw", height: "75vh", textAlign: "center", padding: 16}}>
-            <h2 style={{padding: 16}}>Interactivity Graph Authoring</h2>
-            <p>You can inspect and adjust the Interactivity Graph here.</p>
+        <div style={{width: "100%", height: "100%", textAlign: "center", padding: 16, display: "flex", flexDirection: "column", boxSizing: "border-box"}}>
+            <h2 style={{padding: 8, margin: 0}}>Interactivity Graph Authoring</h2>
+            <p style={{margin: "0 0 8px"}}>You can inspect and adjust the Interactivity Graph here.</p>
             <div
                 ref={reactFlowRef}
-                style={{width: "90%", height: "90%", border: "1px solid black", margin: "0 auto"}}
+                style={{width: "100%", flex: 1, minHeight: 0, border: "1px solid black", margin: "0 auto"}}
                 data-testid={"authoring-view"}
                 onContextMenuCapture={suppressBrowserContextMenu}
                 onContextMenu={suppressBrowserContextMenu}
@@ -892,6 +1098,8 @@ export const AuthoringComponent = () => {
                     onNodesDelete={onNodesDelete}
                     onInit={setReactFlowInstance}
                     onConnect={onConnect}
+                    onConnectStart={onConnectStart}
+                    onConnectEnd={onConnectEnd}
                     onEdgesDelete={onEdgesDelete}
                     onNodeDragStop={onNodeDragStop}
                     onSelectionChange={onSelectionChange}
@@ -906,9 +1114,9 @@ export const AuthoringComponent = () => {
                     onPaneContextMenu={handleRightClick}
                     panOnDrag={[2]}
                     selectionOnDrag={true}
-                    zoomOnScroll={false}
+                    zoomOnScroll={true}
                     zoomOnDoubleClick={false}
-                    preventScrolling={false}
+                    preventScrolling={true}
                     deleteKeyCode="Delete"
                     fitView
                 >
@@ -916,8 +1124,18 @@ export const AuthoringComponent = () => {
                     <Background />
 
                     <RenderIf shouldShow={authoringComponentModal === AuthoringComponentModelType.NODE_PICKER}>
-                        <NodePickerComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)} onAddNode={onAddNode} mousePos={mousePosRef.current}/>
+                        <NodePickerComponent closeModal={closeNodePicker} onAddNode={handlePickNode} mousePos={mousePosRef.current} constraint={getPendingPickerConstraint()}/>
                     </RenderIf>
+                    {socketPicker && (
+                        <SocketPickerComponent
+                            candidates={getWireSocketCandidates(socketPicker.from, socketPicker.newNodeUid)}
+                            pickingInput={socketPicker.from.handleType === "source"}
+                            clientX={socketPicker.clientX}
+                            clientY={socketPicker.clientY}
+                            onSelect={completeWireToSocket}
+                            onClose={() => setSocketPicker(null)}
+                        />
+                    )}
                     <RenderIf shouldShow={authoringComponentModal === AuthoringComponentModelType.GRAPH_SEARCH}>
                         <GraphSearchComponent
                             closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)}
@@ -990,12 +1208,14 @@ export const AuthoringComponent = () => {
                             <ReloadIndicator dirty={graphDirty} onReload={requestPlay}/>
                             <DiagnosticsCounter diagnostics={allDiagnostics} onJumpToNode={jumpToNode}/>
                         </div>
+                        <LoadingProgressBar />
                     </Panel>
 
                     <Panel position={"bottom-center"}>
                         <div style={{ display: 'flex', flexWrap: 'nowrap', gap: '0 14px', background: 'rgba(255,255,255,0.88)', border: '1px solid #ccc', borderRadius: 8, padding: '5px 14px', marginBottom: 6, fontSize: 11, color: '#000', userSelect: 'none', backdropFilter: 'blur(4px)' }}>
                             {([
                                 ['Right-click', 'Add node'],
+                                ['Drop wire on canvas', 'Add & connect node'],
                                 ['Right-drag', 'Pan'],
                                 ['Left-drag', 'Multi-select'],
                                 ['Scroll', 'Zoom'],
@@ -1025,14 +1245,6 @@ const getNodeCategory = (nodeType: string): string => {
     return category.charAt(0).toUpperCase() + category.slice(1);
 }
 
-const nodeTypesByCategory = Object.keys(nodeTypes).reduce((categories, nodeType) => {
-    const category = getNodeCategory(nodeType);
-    (categories[category] = categories[category] ?? []).push(nodeType);
-    return categories;
-}, {} as {[category: string]: string[]});
-
-const sortedNodeCategories = Object.keys(nodeTypesByCategory).sort((a, b) => a.localeCompare(b));
-
 // spec-driven tooltip/search text for a node type's picker entry: op description plus every
 // flow/value socket (value sockets include their description, flow sockets are name-only since
 // IInteractivityFlow carries no description field)
@@ -1040,6 +1252,30 @@ const nodePickerSpecByType = interactivityNodeSpecs.reduce((specs, node) => {
     specs[node.op!] = node;
     return specs;
 }, {} as {[nodeType: string]: AuthoredNode});
+
+type NodePickerItem =
+    | { kind: "node"; key: string; nodeType: string }
+    | { kind: "preset"; key: string; nodeType: string; preset: NodePreset };
+
+const nodePickerItemsByCategory = [
+    ...Object.keys(nodeTypes).map((nodeType): NodePickerItem => ({
+        kind: "node",
+        key: `node:${nodeType}`,
+        nodeType,
+    })),
+    ...nodePresets.map((preset): NodePickerItem => ({
+        kind: "preset",
+        key: `preset:${preset.id}`,
+        nodeType: preset.op,
+        preset,
+    })),
+].reduce((categories, item) => {
+    const category = getNodeCategory(item.nodeType);
+    (categories[category] = categories[category] ?? []).push(item);
+    return categories;
+}, {} as {[category: string]: NodePickerItem[]});
+
+const sortedNodeCategories = Object.keys(nodePickerItemsByCategory).sort((a, b) => a.localeCompare(b));
 
 const NodePickerTooltipContent = (props: {nodeType: string}) => {
     const spec = nodePickerSpecByType[props.nodeType];
@@ -1049,10 +1285,104 @@ const NodePickerTooltipContent = (props: {nodeType: string}) => {
 
 const getNodePickerSearchText = (nodeType: string): string => {
     const spec = nodePickerSpecByType[nodeType];
-    return `${nodeType} ${spec?.description ?? ""}`.toLowerCase();
+    return joinSearchTerms(nodeType, spec?.description, spec?.aliases);
 };
 
-const NodePickerComponent = (props: {onAddNode: any, closeModal: any, mousePos: any}) => {
+const getNodePickerItemSearchText = (item: NodePickerItem): string =>
+    item.kind === "preset" ? getNodePresetSearchText(item.preset) : getNodePickerSearchText(item.nodeType);
+
+const getNodePickerItemLabel = (item: NodePickerItem): string =>
+    item.kind === "preset" ? item.preset.label : item.nodeType;
+
+// what the Add Node menu must offer to finish a dropped wire, computed from the wire's origin socket:
+// a flow wire needs a node with a flow socket in `direction`; a value wire needs a node with a
+// type-compatible value socket (from an OUTPUT we need a compatible value INPUT and carry the source's
+// resolved `fromType`; from an INPUT we need a compatible value OUTPUT and carry the input's `fromOpts`).
+// null means "no pending wire" — no filtering.
+type PickerConstraint =
+    | { kind: "flow"; direction: "input" | "output" }
+    | { kind: "valueInput"; fromType: number | undefined }
+    | { kind: "valueOutput"; fromOpts: number[] | undefined }
+    | null;
+
+// whether an op can satisfy the pending-wire constraint, so the Add Node menu only lists nodes that can
+// actually receive the wire. Dynamic-socket ops generate their sockets at authoring time, so their value
+// sockets can't be pre-checked — always offer them. `DynamicFlowOutputs` ops (flow/sequence, flow/multiGate)
+// can always gain an output flow even though the spec lists none.
+const nodeTypeMatchesConstraint = (nodeType: string, constraint: PickerConstraint): boolean => {
+    if (!constraint) { return true; }
+    const spec = interactivityNodeSpecs.find(n => n.op === nodeType);
+    if (!spec) { return false; }
+    if (constraint.kind === "flow") {
+        if (constraint.direction === "output" && hasNodeSpecFlag(spec, NodeSpecFlag.DynamicFlowOutputs)) { return true; }
+        return Object.keys(spec.flows?.[constraint.direction] ?? {}).length > 0;
+    }
+    if (hasNodeSpecFlag(spec, NodeSpecFlag.DynamicSockets)) { return true; }
+    if (constraint.kind === "valueInput") {
+        return Object.values(spec.values?.input ?? {}).some(v =>
+            v.typeOptions === undefined || constraint.fromType === undefined || v.typeOptions.includes(constraint.fromType)
+        );
+    }
+    return Object.values(spec.values?.output ?? {}).some(v =>
+        constraint.fromOpts === undefined || v.typeOptions === undefined || v.typeOptions.some(t => constraint.fromOpts!.includes(t))
+    );
+};
+
+// small floating menu shown after a wire is dropped on empty canvas and a node is picked: lets the
+// user choose which socket on that new node the wire attaches to. Positioned at the drop point.
+const SocketPickerComponent = (props: {
+    candidates: WireSocketCandidate[];
+    pickingInput: boolean;
+    clientX: number;
+    clientY: number;
+    onSelect: (socket: string) => void;
+    onClose: () => void;
+}) => {
+    useEffect(() => {
+        const onKeyDown = (e: KeyboardEvent) => { if (e.key === "Escape") { props.onClose(); } };
+        window.addEventListener("keydown", onKeyDown);
+        return () => window.removeEventListener("keydown", onKeyDown);
+    }, []);
+
+    return (
+        <div
+            className={"nowheel nodrag socket-picker"}
+            data-testid={"socket-picker"}
+            style={{
+                position: "fixed",
+                // keep the menu on-screen when dropped near the right/bottom edge
+                left: Math.min(props.clientX, window.innerWidth - 380),
+                top: Math.min(props.clientY, window.innerHeight - 540),
+                zIndex: 1000, background: "white", border: "1px solid gray", borderRadius: 8,
+                boxShadow: "0 6px 24px rgba(0,0,0,0.28)", minWidth: 340, maxHeight: 520,
+                overflowY: "auto", textAlign: "left",
+            }}
+        >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 18px", fontWeight: "bold", fontSize: 17, borderBottom: "1px solid #ddd", color: "#333" }}>
+                <span>{props.pickingInput ? "Connect to input" : "Connect to output"}</span>
+                <span role="button" onClick={props.onClose} style={{ cursor: "pointer", color: "#999", paddingLeft: 12, fontSize: 22, lineHeight: 1 }} title={"Cancel"}>×</span>
+            </div>
+            {props.candidates.length === 0 ? (
+                <div style={{ padding: "16px 18px", fontSize: 15, color: "#888" }}>No compatible sockets</div>
+            ) : (
+                props.candidates.map(c => (
+                    <div
+                        key={c.socket}
+                        className={"socket-picker-item"}
+                        data-testid={`socket-picker-item-${c.socket}`}
+                        onClick={() => props.onSelect(c.socket)}
+                        style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 18px", cursor: "pointer", fontSize: 16 }}
+                    >
+                        <span style={{ width: 14, height: 14, borderRadius: "50%", background: c.color, flexShrink: 0, boxShadow: "0 0 0 1px rgba(0,0,0,0.25)" }} />
+                        <span style={{ overflowWrap: "anywhere" }}>{c.label}</span>
+                    </div>
+                ))
+            )}
+        </div>
+    );
+};
+
+const NodePickerComponent = (props: {onAddNode: any, closeModal: any, mousePos: any, constraint?: PickerConstraint}) => {
     const [filter, setFilter] = useState("");
     const [activeCategory, setActiveCategory] = useState<string | null>(null);
     const nodeListRef = useRef<HTMLDivElement | null>(null);
@@ -1065,8 +1395,8 @@ const NodePickerComponent = (props: {onAddNode: any, closeModal: any, mousePos: 
         e.preventDefault();
     };
 
-    const selectNode = (nodeType: string) => {
-        props.onAddNode(nodeType, {x: props.mousePos.x, y: props.mousePos.y});
+    const selectNode = (item: NodePickerItem) => {
+        props.onAddNode(item.kind === "preset" ? item.preset : item.nodeType, {x: props.mousePos.x, y: props.mousePos.y});
         props.closeModal()
     }
 
@@ -1120,13 +1450,14 @@ const NodePickerComponent = (props: {onAddNode: any, closeModal: any, mousePos: 
                         })
                     }
                 </div>
-                <div ref={nodeListRef} onWheel={onNodeListWheel} style={{ columnWidth: 200, columnGap: 24, maxHeight: "min(40vh, calc(100vh - 260px))", overflowX: "auto", overflowY: "auto", overscrollBehavior: "contain", marginTop: 16, padding: "0 16px 8px" }}>
+                <div ref={nodeListRef} className="nowheel" onWheel={onNodeListWheel} style={{ columnWidth: 200, columnGap: 24, maxHeight: "min(40vh, calc(100vh - 260px))", overflowX: "auto", overflowY: "auto", overscrollBehavior: "contain", marginTop: 16, padding: "0 16px 8px" }}>
                     {
                         sortedNodeCategories.map(category => {
-                            const nodesInCategory = nodeTypesByCategory[category].filter(nodeType =>
-                                normalizedFilter === "" || getNodePickerSearchText(nodeType).includes(normalizedFilter)
+                            const itemsInCategory = nodePickerItemsByCategory[category].filter(item =>
+                                (normalizedFilter === "" || getNodePickerItemSearchText(item).includes(normalizedFilter)) &&
+                                nodeTypeMatchesConstraint(item.nodeType, props.constraint ?? null)
                             );
-                            const shouldShowCategory = nodesInCategory.length > 0 && (activeCategory === null || activeCategory === category);
+                            const shouldShowCategory = itemsInCategory.length > 0 && (activeCategory === null || activeCategory === category);
                             return (
                                 <RenderIf key={category} shouldShow={shouldShowCategory}>
                                     <div style={{ breakInside: "avoid", marginBottom: 16 }}>
@@ -1135,18 +1466,31 @@ const NodePickerComponent = (props: {onAddNode: any, closeModal: any, mousePos: 
                                             {category}
                                         </div>
                                         {
-                                            nodesInCategory.map(nodeType => (
+                                            itemsInCategory.map(item => (
                                                 <OverlayTrigger
-                                                    key={nodeType}
+                                                    key={item.key}
                                                     placement={"right"}
                                                     delay={{show: 300, hide: 0}}
                                                     overlay={
-                                                        <Tooltip id={`node-picker-tooltip-${nodeType}`} className="node-info-tooltip">
-                                                            <NodePickerTooltipContent nodeType={nodeType} />
+                                                        <Tooltip id={`node-picker-tooltip-${item.key}`} className="node-info-tooltip">
+                                                            {item.kind === "preset" && item.preset.description ? (
+                                                                <>
+                                                                    <strong>{item.preset.label}</strong>
+                                                                    <div>{item.preset.description}</div>
+                                                                    <div style={{ marginTop: 4, fontFamily: "monospace" }}>{item.preset.op}</div>
+                                                                </>
+                                                            ) : (
+                                                                <NodePickerTooltipContent nodeType={item.nodeType} />
+                                                            )}
                                                         </Tooltip>
                                                     }
                                                 >
-                                                    <p className="node-picker-item" style={{overflowWrap: "anywhere"}} onClick={() => selectNode(nodeType)} data-testid={`node-picker-${nodeType}`}>{nodeType}</p>
+                                                    <p className="node-picker-item" style={{overflowWrap: "anywhere"}} onClick={() => selectNode(item)} data-testid={item.kind === "preset" ? `node-picker-preset-${item.preset.id}` : `node-picker-${item.nodeType}`}>
+                                                        {getNodePickerItemLabel(item)}
+                                                        {item.kind === "preset" && (
+                                                            <span style={{ display: "block", fontSize: 11, color: "#666", fontFamily: "monospace" }}>{item.preset.op}</span>
+                                                        )}
+                                                    </p>
                                                 </OverlayTrigger>
                                             ))
                                         }
@@ -1845,4 +2189,3 @@ const UploadGraphComponent = (props: { closeModal: any}) => {
         </Panel>
     );
 }
-

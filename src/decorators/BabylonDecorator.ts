@@ -22,9 +22,6 @@ import {cubicBezier, easeFloat, easeFloat3, easeFloat4, linearFloat, slerpFloat4
 import {Scene} from "@babylonjs/core/scene";
 import {OnSelect} from "../BasicBehaveEngine/nodes/experimental/OnSelect";
 import {KHR_materials_variants} from "@babylonjs/loaders/glTF/2.0";
-import {AnimationStart} from "../BasicBehaveEngine/nodes/animation/AnimationStart";
-import {AnimationStop} from "../BasicBehaveEngine/nodes/animation/AnimationStop";
-import {AnimationStopAt} from "../BasicBehaveEngine/nodes/animation/AnimationStopAt";
 import {Nullable} from "@babylonjs/core/types.js";
 import { OnHoverIn } from "../BasicBehaveEngine/nodes/experimental/OnHoverIn";
 import { OnHoverOut } from "../BasicBehaveEngine/nodes/experimental/OnHoverOut";
@@ -48,10 +45,6 @@ export class BabylonDecorator extends ADecorator {
         this.registerBehaveEngineNode("event/onSelect", OnSelect);
         this.registerBehaveEngineNode("event/onHoverIn", OnHoverIn);
         this.registerBehaveEngineNode("event/onHoverOut", OnHoverOut);
-        this.registerBehaveEngineNode("animation/stop", AnimationStop);
-        this.registerBehaveEngineNode("animation/start", AnimationStart);
-        this.registerBehaveEngineNode("animation/stopAt", AnimationStopAt);
-
         // dealing with hoverability refactor this once/if babylon has an api for hoverability
         this.hoveredNodeIndex = -1;
         this.beforeRenderObserver = this.scene.onBeforeRenderObservable.add(() => {
@@ -64,7 +57,7 @@ export class BabylonDecorator extends ADecorator {
             const result = this.scene.pickWithRay(ray, (m) => m.metadata == null || m.metadata.compositeHoverability != false);
             let hitNodeIndex : number | undefined = undefined;
             if (result && result.pickedMesh) {
-                hitNodeIndex = this.world.glTFNodes.findIndex((value: { uniqueId: number; }) => value.uniqueId === result.pickedMesh!.uniqueId);
+                hitNodeIndex = this.getGlTFNodeIndexForBabylonNode(result.pickedMesh);
             }
             this.hoverOn(hitNodeIndex, 0);
         });
@@ -86,7 +79,10 @@ export class BabylonDecorator extends ADecorator {
                     if (hit.pickedPoint != null) {
                         pos = BabylonDecorator.toRightHandedXYZ(hit.pickedPoint.x, hit.pickedPoint.y, hit.pickedPoint.z);
                     }
-                const hitNodeIndex = this.world.glTFNodes.findIndex((value: { uniqueId: number; }) => value.uniqueId === hit.pickedMesh!.uniqueId);
+                const hitNodeIndex = this.getGlTFNodeIndexForBabylonNode(hit.pickedMesh);
+                if (hitNodeIndex === undefined) {
+                    return;
+                }
                 this.select(hitNodeIndex, 0, pos, BabylonDecorator.toRightHandedXYZ(ray.origin.x, ray.origin.y, ray.origin.z));
             }
         });
@@ -162,6 +158,24 @@ export class BabylonDecorator extends ADecorator {
         }
         const parentNodeIndex = this.world.glTFNodes.findIndex((value: { uniqueId: number; }) => value.uniqueId === node.parent.uniqueId);
         return parentNodeIndex !== -1 ? parentNodeIndex : undefined;
+    }
+
+    private getGlTFNodeIndexForBabylonNode(node: Node | null | undefined): number | undefined {
+        let currentNode: Node | null | undefined = node;
+        while (currentNode != null) {
+            const metadataNodeIndex = currentNode.metadata?.nodeIndex;
+            if (Number.isInteger(metadataNodeIndex)) {
+                return metadataNodeIndex;
+            }
+
+            const nodeIndex = this.world.glTFNodes.findIndex((value: { uniqueId: number; }) => value.uniqueId === currentNode!.uniqueId);
+            if (nodeIndex !== -1) {
+                return nodeIndex;
+            }
+
+            currentNode = currentNode.parent;
+        }
+        return undefined;
     }
 
     public loadBehaveGraphFromRootNode(rootNode: TransformNode): void {
@@ -924,6 +938,14 @@ export class BabylonDecorator extends ADecorator {
             //no-op
         }, "int", true);
 
+        this.registerJsonPointer(`/animations/${maxAnimations}/`, (path) => {
+            const parts: string[] = path.split("/");
+            const animationIndex = Number(parts[2]);
+            return this.world.animations[animationIndex] === undefined ? [null] : [`/animations/${animationIndex}/`];
+        }, (path, value) => {
+            //no-op
+        }, "ref", true);
+
         this.registerJsonPointer(`/nodes/${maxGltfNode}/matrix`, (path) => {
             const parts: string[] = path.split("/");
             const node = this.world.glTFNodes[Number(parts[2])];
@@ -1081,7 +1103,7 @@ export class BabylonDecorator extends ADecorator {
             const parts: string[] = path.split("/");
             const animation: AnimationGroup = this.world.animations[Number(parts[2])];
             const fps = 60;
-            return [animation.from / fps];
+            return [animation === undefined ? NaN : animation.from / fps];
         }, (path, value) => {
             //no-op
         }, "float", true);
@@ -1090,7 +1112,7 @@ export class BabylonDecorator extends ADecorator {
             const parts: string[] = path.split("/");
             const animation: AnimationGroup = this.world.animations[Number(parts[2])];
             const fps = 60;
-            return [animation.to / fps];
+            return [animation === undefined ? NaN : animation.to / fps];
         }, (path, value) => {
             //no-op
         }, "float", true);

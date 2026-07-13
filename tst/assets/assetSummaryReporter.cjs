@@ -1,4 +1,5 @@
 const path = require("path");
+const fs = require("fs");
 
 const ENGINE_ORDER = ["Core", "Babylon", "Three"];
 const CATEGORY_ORDER = [
@@ -70,6 +71,20 @@ class AssetSummaryReporter {
             process.stdout.write("\n");
         }
 
+        const specCoverage = shouldLogSpecCoverage() ? collectSpecPointerCoverage(results) : undefined;
+        if (specCoverage) {
+            process.stdout.write("Spec pointer coverage\n");
+            process.stdout.write(`Read: ${formatCoverage(specCoverage.read.covered, specCoverage.read.total)}\n`);
+            process.stdout.write(`Write: ${formatCoverage(specCoverage.write.covered, specCoverage.write.total)}\n`);
+            if (specCoverage.read.missing.length > 0) {
+                process.stdout.write(`Missing read pointers:\n${formatMissingPointers(specCoverage.read.missing)}`);
+            }
+            if (specCoverage.write.missing.length > 0) {
+                process.stdout.write(`Missing write pointers:\n${formatMissingPointers(specCoverage.write.missing)}`);
+            }
+            process.stdout.write("\n");
+        }
+
         if (failures.length > 0) {
             process.stdout.write("Failing assets:\n");
             for (const failure of failures) {
@@ -78,10 +93,21 @@ class AssetSummaryReporter {
                     process.stdout.write(` - ${failure.reason}`);
                 }
                 process.stdout.write("\n");
+                for (const detail of failure.details) {
+                    process.stdout.write(`  - ${detail.name}`);
+                    if (detail.reason) {
+                        process.stdout.write(` - ${detail.reason}`);
+                    }
+                    process.stdout.write("\n");
+                }
             }
             process.stdout.write("\n");
         }
     }
+}
+
+function shouldLogSpecCoverage() {
+    return process.env.KHR_INTERACTIVITY_SPEC_COVERAGE === "1";
 }
 
 function collectRows(results) {
@@ -158,12 +184,17 @@ function collectFailures(results) {
             const engine = getEngine(testResult.testFilePath, assertion.ancestorTitles);
             const asset = getAssetName(testResult.testFilePath, assertion);
             const key = `${engine}\0${asset}`;
-            const stats = getOrCreate(byAsset, key, () => ({ engine, asset, failed: 0, total: 0, reason: undefined }));
+            const stats = getOrCreate(byAsset, key, () => ({ engine, asset, failed: 0, total: 0, reason: undefined, details: [] }));
 
             stats.total += 1;
             if (assertion.status === "failed") {
                 stats.failed += 1;
-                stats.reason = stats.reason ?? cleanFailureMessage(assertion.failureMessages?.[0]);
+                const reason = cleanFailureMessage(assertion.failureMessages?.[0]);
+                stats.reason = stats.reason ?? reason;
+                stats.details.push({
+                    name: getAssertionName(assertion),
+                    reason,
+                });
             }
         }
     }
@@ -228,6 +259,12 @@ function getAssetName(testFilePath, assertion) {
 
     const assetTitle = [...assertion.ancestorTitles].reverse().find((title) => title.includes("/"));
     return assetTitle ?? assertion.ancestorTitles[assertion.ancestorTitles.length - 1] ?? assertion.title.split(" / ")[0];
+}
+
+function getAssertionName(assertion) {
+    const title = assertion.title ?? "";
+    const slashIndex = title.indexOf(" / ");
+    return slashIndex === -1 ? title : title.slice(slashIndex + 3);
 }
 
 function formatCell(engine, stats) {
@@ -317,6 +354,255 @@ function engineRank(engine) {
 function categoryRank(category) {
     const rank = CATEGORY_ORDER.indexOf(category);
     return rank === -1 ? CATEGORY_ORDER.length : rank;
+}
+
+function collectSpecPointerCoverage(results) {
+    try {
+        const metadata = readSchemaMetadata();
+        const pointers = (metadata.objectModelPointers ?? [])
+            .filter((pointer) => pointer.typeName !== "float[]")
+            .map((pointer) => ({ ...pointer, template: canonicalPointer(pointer.template) }));
+        const readable = uniquePointers(pointers);
+        const writable = uniquePointers(pointers.filter((pointer) => pointer.readOnly !== true));
+        const exercised = scanExercisedPointers(results);
+        return {
+            read: summarizePointerCoverage(readable, exercised.read),
+            write: summarizePointerCoverage(writable, exercised.write),
+        };
+    } catch (error) {
+        process.stdout.write(`Spec pointer coverage unavailable: ${error instanceof Error ? error.message : String(error)}\n\n`);
+        return undefined;
+    }
+}
+
+function summarizePointerCoverage(expectedPointers, exercisedPointers) {
+    const expected = expectedPointers.map((pointer) => pointer.template).sort();
+    const expectedSet = new Set(expected);
+    const covered = [...exercisedPointers].filter((pointer) => expectedSet.has(pointer)).length;
+    const missing = expected.filter((pointer) => !exercisedPointers.has(pointer));
+    return {
+        covered,
+        total: expected.length,
+        missing,
+    };
+}
+
+function uniquePointers(pointers) {
+    const byTemplate = new Map();
+    for (const pointer of pointers) {
+        byTemplate.set(pointer.template, pointer);
+    }
+    return [...byTemplate.values()].sort((a, b) => a.template.localeCompare(b.template));
+}
+
+function scanExercisedPointers(results) {
+    const read = new Set();
+    const write = new Set();
+    for (const assetCase of loadCoverageAssetCases(collectCoverageScope(results))) {
+        const gltf = readGlbJson(assetCase.glbPath);
+        const interactivity = gltf.extensions?.KHR_interactivity;
+        const graph = interactivity?.graphs?.[interactivity.graph ?? 0];
+        if (!graph) {
+            continue;
+        }
+        for (const node of graph.nodes ?? []) {
+            const op = graph.declarations?.[node.declaration]?.op;
+            const pointer = node.configuration?.pointer?.value?.[0];
+            if (typeof pointer !== "string") {
+                continue;
+            }
+            const canonical = canonicalPointer(pointer);
+            if (op === "pointer/get") {
+                read.add(canonical);
+            } else if (op === "pointer/set" || op === "pointer/interpolate") {
+                write.add(canonical);
+            }
+        }
+    }
+    return { read, write };
+}
+
+function collectCoverageScope(results) {
+    const scope = {
+        singleFileAssets: false,
+        overview: false,
+        interGlb: false,
+    };
+
+    for (const testResult of results.testResults) {
+        const file = path.basename(testResult.testFilePath);
+        if (!hasExecutedAssertions(testResult)) {
+            continue;
+        }
+        if (file === "core.asset.ts" || file === "engines.asset.ts") {
+            scope.singleFileAssets = true;
+        } else if (file === "overview.asset.ts") {
+            scope.overview = true;
+        } else if (file === "interglb.asset.ts" || file === "interglb.babylon.asset.ts") {
+            scope.interGlb = true;
+        }
+    }
+
+    return scope;
+}
+
+function hasExecutedAssertions(testResult) {
+    return (testResult.testResults ?? []).some((assertion) => assertion.status === "passed" || assertion.status === "failed");
+}
+
+function loadCoverageAssetCases(scope) {
+    const root = path.join(getSampleAssetsRoot(), "Tests", "Interactivity");
+    if (!fs.existsSync(root)) {
+        return [];
+    }
+
+    const nameFilter = process.env.KHR_INTERACTIVITY_ASSET_NAME_FILTER;
+    const filter = process.env.KHR_INTERACTIVITY_ASSET_FILTER;
+    const limit = Number(process.env.KHR_INTERACTIVITY_ASSET_LIMIT ?? "0");
+    const allCases = findTestJsonFiles(root)
+        .map((metadataPath) => {
+            const metadata = JSON.parse(fs.readFileSync(metadataPath, "utf8"));
+            const assetDir = path.dirname(path.dirname(metadataPath));
+            const name = path.relative(root, assetDir) || metadata.name;
+            return {
+                name,
+                label: metadata.name || name,
+                tags: metadata.usedSchemas ?? [],
+                glbPath: path.join(assetDir, "glTF-Binary", metadata.glbFileName),
+            };
+        })
+        .filter(Boolean)
+        .filter((assetCase) => !nameFilter || assetCase.name === nameFilter)
+        .filter((assetCase) => !filter || assetCase.name.includes(filter) || assetCase.label.includes(filter) || assetCase.tags.includes(filter));
+
+    const cases = [];
+    if (scope.singleFileAssets) {
+        cases.push(...allCases.filter((assetCase) => !assetCase.name.startsWith("InterGlb/")));
+    }
+    if (scope.interGlb) {
+        cases.push(...allCases.filter((assetCase) => assetCase.name.startsWith("InterGlb/")));
+    }
+    if (scope.overview) {
+        const overviewCase = loadOverviewCoverageCase(root);
+        if (overviewCase && matchesCoverageFilters(overviewCase, nameFilter, filter)) {
+            cases.push(overviewCase);
+        }
+    }
+
+    return dedupeAssetCases(cases).slice(0, limit > 0 ? limit : undefined);
+}
+
+function loadOverviewCoverageCase(root) {
+    const metadataPath = path.join(root, "Overview.json");
+    if (!fs.existsSync(metadataPath)) {
+        return undefined;
+    }
+    const metadata = JSON.parse(fs.readFileSync(metadataPath, "utf8"));
+    return {
+        name: metadata.name,
+        label: metadata.name,
+        tags: metadata.usedSchemas ?? [],
+        glbPath: path.join(root, metadata.glbFileName),
+    };
+}
+
+function findTestJsonFiles(root) {
+    const files = [];
+    const walk = (dir) => {
+        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+            const fullPath = path.join(dir, entry.name);
+            if (entry.isDirectory()) {
+                walk(fullPath);
+            } else if (entry.isFile() && fullPath.includes(`${path.sep}test-Json${path.sep}`) && fullPath.endsWith(".json")) {
+                files.push(fullPath);
+            }
+        }
+    };
+    walk(root);
+    return files.sort();
+}
+
+function matchesCoverageFilters(assetCase, nameFilter, filter) {
+    return (!nameFilter || assetCase.name === nameFilter)
+        && (!filter || assetCase.name.includes(filter) || assetCase.label.includes(filter) || assetCase.tags.includes(filter));
+}
+
+function dedupeAssetCases(cases) {
+    const byPath = new Map();
+    for (const assetCase of cases) {
+        byPath.set(assetCase.glbPath, assetCase);
+    }
+    return [...byPath.values()];
+}
+
+function readGlbJson(glbPath) {
+    const buffer = fs.readFileSync(glbPath);
+    const view = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+    let offset = 12;
+    while (offset < view.byteLength) {
+        const chunkLength = view.getUint32(offset, true);
+        const chunkType = view.getUint32(offset + 4, true);
+        if (chunkType === 0x4e4f534a) {
+            const jsonBytes = new Uint8Array(buffer.buffer, buffer.byteOffset + offset + 8, chunkLength);
+            return JSON.parse(new TextDecoder().decode(jsonBytes).trim());
+        }
+        offset += 8 + chunkLength;
+    }
+    throw new Error(`GLB JSON chunk missing in ${glbPath}`);
+}
+
+function readSchemaMetadata() {
+    const metadataPath = path.resolve(process.cwd(), "src", "objectModel", "generated", "glTFSchemaMetadata.ts");
+    const source = fs.readFileSync(metadataPath, "utf8");
+    const match = source.match(/export const glTFSchemaMetadata = ([\s\S]*) as const;\s*$/);
+    if (!match) {
+        throw new Error(`Could not parse ${metadataPath}`);
+    }
+    return JSON.parse(match[1]);
+}
+
+function getSampleAssetsRoot() {
+    return process.env.KHR_INTERACTIVITY_SAMPLE_ASSETS ?? path.resolve(process.cwd(), "../glTF-Test-Assets-Interactivity");
+}
+
+function canonicalPointer(pointer) {
+    const arraySegments = new Set([
+        "animations",
+        "cameras",
+        "children",
+        "joints",
+        "lights",
+        "materials",
+        "meshes",
+        "nodes",
+        "primitives",
+        "scenes",
+        "skins",
+        "weights",
+    ]);
+
+    const segments = pointer.split("/");
+    return segments.map((segment, index) => {
+        if (/^\[[^\]]+\]$/.test(segment)) {
+            return "[]";
+        }
+        if (/^\{[^}]+\}$/.test(segment)) {
+            return "{}";
+        }
+        if (/^\d+$/.test(segment) && arraySegments.has(segments[index - 1])) {
+            return "[]";
+        }
+        return segment;
+    }).join("/");
+}
+
+function formatCoverage(covered, total) {
+    const percent = total === 0 ? 100 : (covered / total) * 100;
+    return `${covered}/${total} (${percent.toFixed(1)}%)`;
+}
+
+function formatMissingPointers(pointers) {
+    return pointers.map((pointer) => `- ${pointer}\n`).join("");
 }
 
 module.exports = AssetSummaryReporter;

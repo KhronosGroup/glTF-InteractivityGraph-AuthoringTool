@@ -97,6 +97,15 @@ export class PointerGet extends BehaveEngineNode {
         const populatedPath = this.populatePath(this._pointer, configValues, configIndices);
         this.graphEngine.processNodeStarted(this);
 
+        const typeName = this.getType(this._typeIndex);
+
+        if (typeName === "ref") {
+            return {
+                'value':{value: [populatedPath], type: this._typeIndex},
+                'isValid':{value: [true], type: this.getTypeIndex('bool')}
+            };
+        }
+
         if (this.graphEngine.isValidJsonPtr(populatedPath)) {
             const typeName = this.graphEngine.getPathtypeName(populatedPath);
             const configuredTypeName = this.getType(this._typeIndex);

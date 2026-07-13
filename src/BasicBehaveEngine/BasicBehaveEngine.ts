@@ -136,6 +136,7 @@ import { SmoothStep } from "./nodes/math/arithmetic/SmoothStep";
 import { Slerp } from "./nodes/math/vector/Slerp";
 import { RgbToOkLCh } from "./nodes/math/color/RgbToOkLCh";
 import { RgbFromOkLCh } from "./nodes/math/color/RgbFromOkLCh";
+import { OnSelect } from "./nodes/experimental/OnSelect";
 
 
 // Single source of truth for op -> runtime BehaveEngineNode class. registerKnownBehaviorNodes
@@ -296,6 +297,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
     private _timerID: NodeJS.Timeout | null;
     public hoverableNodesIndices: Map<number, IHoverInformation>;
     public selectableNodesIndices: Map<number, (selectedNodeRef: any, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) => void>;
+    public selectNodes: Array<OnSelect>;
     public lastHoveredNodeIndices: Map<number, number | undefined>;
     public rigidBodyTriggerNodeIndices: Map<number, IRigidBodyTriggerInformation>;
     public propagationCancelled: Set<string>;
@@ -320,6 +322,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.hoverableNodesIndices = new Map<number, IHoverInformation>();
         this.lastHoveredNodeIndices = new Map<number, number>();
         this.selectableNodesIndices = new Map<number, (selectedNodeRef: any, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) => void>();
+        this.selectNodes = [];
         this.rigidBodyTriggerNodeIndices = new Map<number, IRigidBodyTriggerInformation>();
         this.propagationCancelled = new Set<string>();
 
@@ -388,15 +391,15 @@ export class BasicBehaveEngine implements IBehaveEngine {
         }
     }
 
-    public select(nodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) {
-        for (;;) {
+    public select(selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) {
+        for (let nodeIndex = selectedNodeIndex;;) {
             // if (this.propagationCancelled.has("")) {
             //     break;
             // }
 
             const callback = this.selectableNodesIndices.get(nodeIndex);
             if (callback !== undefined) {
-                callback(`/nodes/${nodeIndex}`, controllerIndex, selectionPoint, selectionRayOrigin);
+                callback(`/nodes/${selectedNodeIndex}`, controllerIndex, selectionPoint, selectionRayOrigin);
                 return;
             }
 

@@ -35,6 +35,8 @@ export class OnSelect extends BehaveEngineNode {
         };
 
         this.setUpOnSelect();
+
+        this.graphEngine.selectNodes.push(this);
     }
 
     setUpOnSelect() {

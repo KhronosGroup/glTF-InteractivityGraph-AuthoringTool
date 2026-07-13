@@ -1,8 +1,8 @@
-import { loadSelectedModelGraph } from "../src/components/engineViews/babylonGraphExecution";
+import { loadSelectedModelGraph } from "../src/components/engineViews/modelGraphExecution";
 import type { IInteractivityGraph } from "../src/BasicBehaveEngine/types/InteractivityGraph";
 import { jest } from "@jest/globals";
 
-describe("Babylon graph execution selection", () => {
+describe("Model graph execution selection", () => {
     it("imports an embedded URL-loaded graph before executing the runtime clone", async () => {
         const embeddedGraph = createGraph("embedded");
         const authoredGraph = createGraph("stale-authoring");

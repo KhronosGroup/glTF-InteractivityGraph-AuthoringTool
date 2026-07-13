@@ -24,8 +24,9 @@ import { DOMEventBus } from "../../BasicBehaveEngine/eventBuses/DOMEventBus";
 import { attachPointerEventLogging, SendCustomEventPanel } from "../../authoring/CustomEventControls";
 import { computeExtensionDiagnostics } from "../../diagnostics";
 import { buildNormalizedTemplateSet } from "../../authoring/pointerCatalogue";
-import { loadSelectedModelGraph } from "./babylonGraphExecution";
+import { loadSelectedModelGraph } from "./modelGraphExecution";
 import { BabylonLoadedModel, buildBabylonDecoratorWorld, buildBabylonLoadedModel } from "./babylonLoadedModel";
+import { downloadInteractivityGlb } from "./glbExport";
 
 enum BabylonEngineModal {
     CUSTOM_EVENT = "CUSTOM_EVENT",
@@ -240,75 +241,10 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
     }
 
     const exportKHRInteractivityGLB = async () => {
-        const file = fileInputRef.current!.files![0];
-        const reader = new FileReader();
-
-        reader.onload = function (e) {
-            const arrayBuffer = e.target!.result;
-            const dataView = new DataView(arrayBuffer as ArrayBuffer);
-
-            // Read bytes 12 to 16 as a little-endian number
-            const glTFLengthOriginal = dataView.getUint32(12, true); // true for little-endian
-
-            // Read bytes 20 to (20 + littleEndianNumber) as a JSON string
-            const glTFBytes = new Uint8Array(arrayBuffer as ArrayBuffer, 20, glTFLengthOriginal);
-            const glTFString = new TextDecoder().decode(glTFBytes);
-
-            // Parse the JSON string
-            const glTF = JSON.parse(glTFString);
-
-            glTF['extensions'] = glTF['extensions'] || {};
-            glTF['extensions']['KHR_interactivity'] = {
-                graphs: [getExecutableGraph()],
-                graph: 0
-
-            }
-            glTF['extensionsUsed'] = glTF['extensionsUsed'] || []
-            if (!glTF['extensionsUsed'].includes('KHR_interactivity')) {
-                glTF['extensionsUsed'].push('KHR_interactivity');
-            }
-
-            let glTFOutStr = JSON.stringify(glTF);
-            while (new TextEncoder().encode(glTFOutStr).length % 4 !== 0) {
-                glTFOutStr += " ";
-            }
-            const glTFLengthNew = new TextEncoder().encode(glTFOutStr).length;
-            const glbSizeOriginal = dataView.getUint32(8, true); // true for little-endian
-            const byteIncreaseAmount = glTFLengthNew - glTFLengthOriginal;
-
-            const binaryData = new Uint32Array((glbSizeOriginal + byteIncreaseAmount)/4);
-            const glbView = new DataView(binaryData.buffer);
-
-            glbView.setUint32(0, 0x46546C67, true);
-            glbView.setUint32(4, 0x00000002, true);
-            glbView.setUint32(8, glbSizeOriginal + byteIncreaseAmount, true);
-
-            glbView.setUint32(12, glTFLengthNew, true);
-            glbView.setUint32(16, 0x4E4F534A, true);
-            const glTFOutStringBytes = new TextEncoder().encode(glTFOutStr);
-            for (let i = 0; i < glTFOutStringBytes.length; i++) {
-                glbView.setUint8(20 + i, glTFOutStringBytes[i]);
-            }
-
-            for (let i = glTFLengthOriginal + 20; i < dataView.byteLength; i += 4) {
-                glbView.setUint32(i + byteIncreaseAmount, dataView.getUint32(i, true), true);
-            }
-
-            const blob = new Blob([binaryData], { type: 'application/octet-stream' });
-
-            const blobUrl = URL.createObjectURL(blob);
-
-            const downloadLink = document.createElement('a');
-            downloadLink.href = blobUrl;
-            downloadLink.download = 'interactive.glb';
-
-            downloadLink.click();
-
-            URL.revokeObjectURL(blobUrl); // Clean up after download
-        };
-
-        // Start reading the file
-        reader.readAsArrayBuffer(file);
+        const file = fileInputRef.current?.files?.[0];
+        if (file) {
+            await downloadInteractivityGlb(file, getExecutableGraph());
+        }
     }
 
     const autoFrame = () => {

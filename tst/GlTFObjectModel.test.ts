@@ -45,7 +45,7 @@ describe("GlTFObjectModelDecorator", () => {
 
         expect(decorator.isValidJsonPtr("/animations/0")).toBe(true);
         expect(decorator.getPathtypeName("/animations/0")).toBe("ref");
-        expect(decorator.getPathValue("/animations/0")).toEqual(["/animations/0/"]);
+        expect(decorator.getPathValue("/animations/0")).toEqual(["/animations/0"]);
         expect(decorator.isValidJsonPtr("/animations/0/")).toBe(false);
     });
 

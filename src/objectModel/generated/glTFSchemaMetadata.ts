@@ -1776,7 +1776,7 @@ export const glTFSchemaMetadata = {
       "readOnly": true
     },
     {
-      "template": "/animations/[]/",
+      "template": "/animations/[]",
       "typeName": "ref",
       "readOnly": true
     },
@@ -1806,7 +1806,7 @@ export const glTFSchemaMetadata = {
       "readOnly": true
     },
     {
-      "template": "/animations/{}/",
+      "template": "/animations/{}",
       "typeName": "ref",
       "readOnly": true
     },

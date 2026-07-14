@@ -376,7 +376,7 @@ const textureTransformPointers = [
 
 const objectModelPointers = dedupePointers([
     pointer("/animations.length", "int", true),
-    pointer("/animations/{}/", "ref", true),
+    pointer("/animations/{}", "ref", true),
     pointer("/cameras.length", "int", true),
     pointer("/materials.length", "int", true),
     pointer("/meshes.length", "int", true),

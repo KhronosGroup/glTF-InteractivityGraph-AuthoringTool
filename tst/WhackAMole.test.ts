@@ -41,7 +41,7 @@ describeIfAvailable("KHR_interactivity WhackAMole sample - Babylon engine", () =
             for (const animationIndex of animationIndices) {
                 expect(decorator.isValidJsonPtr(`/animations/${animationIndex}`)).toBe(true);
                 expect(decorator.getPathtypeName(`/animations/${animationIndex}`)).toBe("ref");
-                expect(decorator.getPathValue(`/animations/${animationIndex}`)).toEqual([`/animations/${animationIndex}/`]);
+                expect(decorator.getPathValue(`/animations/${animationIndex}`)).toEqual([`/animations/${animationIndex}`]);
                 expect(decorator.isValidJsonPtr(`/animations/${animationIndex}/extensions/KHR_interactivity/maxTime`)).toBe(true);
                 expect(Number.isFinite(decorator.getPathValue(`/animations/${animationIndex}/extensions/KHR_interactivity/maxTime`)?.[0])).toBe(true);
             }

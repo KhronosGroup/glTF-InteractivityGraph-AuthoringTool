@@ -27,6 +27,7 @@ import { OnHoverIn } from "../BasicBehaveEngine/nodes/experimental/OnHoverIn";
 import { OnHoverOut } from "../BasicBehaveEngine/nodes/experimental/OnHoverOut";
 import { IInteractivityFlow } from "../BasicBehaveEngine/types/InteractivityGraph";
 import * as glMatrix from "gl-matrix";
+import {glTFObjectReference} from "../objectModel/glTFReference";
 
 export class BabylonDecorator extends ADecorator {
     scene: Scene;
@@ -887,7 +888,7 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/scenes/0/nodes/${maxSceneNode}`, (path) => {
             const parts: string[] = path.split("/");
             const nodeIndex = rootLevelNodeIndices[Number(parts[4])];
-            return [nodeIndex === undefined ? null : `/nodes/${nodeIndex}/`];
+            return [nodeIndex === undefined ? null : glTFObjectReference("nodes", nodeIndex)];
         }, (path, value) => {
             //no-op
         }, "ref", true);
@@ -912,7 +913,7 @@ export class BabylonDecorator extends ADecorator {
             const parts: string[] = path.split("/");
             const skeleton = glTFSkeletons[Number(parts[2])];
             const jointNodeIndex = skeleton === undefined ? undefined : getSkeletonJointNodeIndices(skeleton)[Number(parts[4])];
-            return [jointNodeIndex === undefined ? null : `/nodes/${jointNodeIndex}/`];
+            return [jointNodeIndex === undefined ? null : glTFObjectReference("nodes", jointNodeIndex)];
         }, (path, value) => {
             //no-op
         }, "ref", true);
@@ -921,7 +922,7 @@ export class BabylonDecorator extends ADecorator {
             const parts: string[] = path.split("/");
             const skeleton = glTFSkeletons[Number(parts[2])];
             const rootNodeIndex = skeleton === undefined ? undefined : getSkeletonRootNodeIndex(skeleton);
-            return [rootNodeIndex === undefined ? null : `/nodes/${rootNodeIndex}/`];
+            return [rootNodeIndex === undefined ? null : glTFObjectReference("nodes", rootNodeIndex)];
         }, (path, value) => {
             //no-op
         }, "ref", true);
@@ -941,7 +942,7 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/animations/${maxAnimations}`, (path) => {
             const parts: string[] = path.split("/");
             const animationIndex = Number(parts[2]);
-            return this.world.animations[animationIndex] === undefined ? [null] : [`/animations/${animationIndex}`];
+            return this.world.animations[animationIndex] === undefined ? [null] : [glTFObjectReference("animations", animationIndex)];
         }, (path, value) => {
             //no-op
         }, "ref", true);
@@ -989,7 +990,7 @@ export class BabylonDecorator extends ADecorator {
                     break;
                 }
             }
-            return [meshIndex === undefined ? null : `/meshes/${meshIndex}/`];
+            return [meshIndex === undefined ? null : glTFObjectReference("meshes", meshIndex)];
         }, (path, value) => {
             //no-op
         }, "ref", true);
@@ -999,7 +1000,7 @@ export class BabylonDecorator extends ADecorator {
             const node = this.world.glTFNodes[Number(parts[2])];
             const child = node.getChildren()[Number(parts[4])];
             const childIndex = this.world.glTFNodes.indexOf(child);
-            return [childIndex === -1 ? null : `/nodes/${childIndex}/`];
+            return [childIndex === -1 ? null : glTFObjectReference("nodes", childIndex)];
         }, (path, value) => {
             //no-op
         }, "ref", true);
@@ -1019,7 +1020,7 @@ export class BabylonDecorator extends ADecorator {
                 return [null];
             }
             const materialIndex = this.world.materials.indexOf(primitive.babylonMesh.material);
-            return [materialIndex === -1 ? null : `/materials/${materialIndex}/`];
+            return [materialIndex === -1 ? null : glTFObjectReference("materials", materialIndex)];
         }, (path, value) => {
             const parts: string[] = path.split("/");
             const primitive = getMeshPrimitives(Number(parts[2]))[Number(parts[4])];
@@ -1035,7 +1036,7 @@ export class BabylonDecorator extends ADecorator {
             const node = this.world.glTFNodes[Number(parts[2])] as Node;
             const cameraChild = node.getChildren().find((child: Node) => child instanceof Camera) as any;
             const pointer = cameraChild?._internalMetadata?.gltf?.pointers?.find((p: string) => cameraPointerRegex.test(p));
-            return [pointer === undefined ? null : `${pointer}/`];
+            return [pointer ?? null];
         }, (path, value) => {
             //no-op
         }, "ref", true);
@@ -1043,7 +1044,7 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/nodes/${maxGltfNode}/parent`, (path) => {
             const parts: string[] = path.split("/");
             const parentIndex = this.getParentNodeIndex(Number(parts[2]));
-            return [parentIndex === undefined ? null : `/nodes/${parentIndex}/`];
+            return [parentIndex === undefined ? null : glTFObjectReference("nodes", parentIndex)];
         }, (path, value) => {
             //no-op
         }, "ref", true);

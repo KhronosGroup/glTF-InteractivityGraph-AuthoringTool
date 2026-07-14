@@ -4,6 +4,7 @@ import { BehaveEngineNode } from "../BasicBehaveEngine/BehaveEngineNode";
 import { IBehaveEngine, IInterpolateAction } from "../BasicBehaveEngine/IBehaveEngine";
 import { IInteractivityFlow } from "../BasicBehaveEngine/types/InteractivityGraph";
 import { glTFSchemaMetadata } from "./generated/glTFSchemaMetadata";
+import { glTFObjectReference } from "./glTFReference";
 import { createObjectModelAnimation, effectiveAnimationTime, sampleAnimationChannel } from "./glTFAnimation";
 export { readGlbJsonFromArrayBuffer } from "./glTFBinary";
 
@@ -225,7 +226,7 @@ export class GlTFObjectModelDecorator extends ADecorator {
             const nodes = scene.nodes ?? [];
             this.scalarPointer(`/scenes/${sceneIndex}/nodes.length`, "int", () => nodes.length, ignoreSet, true);
             nodes.forEach((nodeIndex: number, childIndex: number) => {
-                this.pointer(`/scenes/${sceneIndex}/nodes/${childIndex}`, "ref", () => [ref("nodes", nodeIndex)], ignoreSet, true);
+                this.pointer(`/scenes/${sceneIndex}/nodes/${childIndex}`, "ref", () => [glTFObjectReference("nodes", nodeIndex)], ignoreSet, true);
             });
         });
     }
@@ -242,20 +243,20 @@ export class GlTFObjectModelDecorator extends ADecorator {
             this.pointer(`/nodes/${nodeIndex}/globalMatrix`, "float4x4", () => this.globalMatrix(nodeIndex), ignoreSet, true);
             this.scalarPointer(`/nodes/${nodeIndex}/children.length`, "int", () => node.children.length, ignoreSet, true);
             node.children.forEach((childNodeIndex: number, childIndex: number) => {
-                this.pointer(`/nodes/${nodeIndex}/children/${childIndex}`, "ref", () => [ref("nodes", childNodeIndex)], ignoreSet, true);
+                this.pointer(`/nodes/${nodeIndex}/children/${childIndex}`, "ref", () => [glTFObjectReference("nodes", childNodeIndex)], ignoreSet, true);
             });
 
             if (node.mesh !== undefined) {
-                this.pointer(`/nodes/${nodeIndex}/mesh`, "ref", () => [ref("meshes", node.mesh)], ignoreSet, true);
+                this.pointer(`/nodes/${nodeIndex}/mesh`, "ref", () => [glTFObjectReference("meshes", node.mesh)], ignoreSet, true);
             }
             if (node.camera !== undefined) {
-                this.pointer(`/nodes/${nodeIndex}/camera`, "ref", () => [ref("cameras", node.camera)], ignoreSet, true);
+                this.pointer(`/nodes/${nodeIndex}/camera`, "ref", () => [glTFObjectReference("cameras", node.camera)], ignoreSet, true);
             }
             if (node.skin !== undefined) {
-                this.pointer(`/nodes/${nodeIndex}/skin`, "ref", () => [ref("skins", node.skin)], ignoreSet, true);
+                this.pointer(`/nodes/${nodeIndex}/skin`, "ref", () => [glTFObjectReference("skins", node.skin)], ignoreSet, true);
             }
             if (this.objectModel.parents[nodeIndex] !== undefined) {
-                this.pointer(`/nodes/${nodeIndex}/parent`, "ref", () => [ref("nodes", this.objectModel.parents[nodeIndex])], ignoreSet, true);
+                this.pointer(`/nodes/${nodeIndex}/parent`, "ref", () => [glTFObjectReference("nodes", this.objectModel.parents[nodeIndex])], ignoreSet, true);
             }
 
             if (node.weights.length > 0) {
@@ -273,7 +274,7 @@ export class GlTFObjectModelDecorator extends ADecorator {
                 this.generatedPointer(node, pointerDefinition.template.replace("{}", String(nodeIndex)), pointerDefinition);
             }
             if (node.extensions?.KHR_lights_punctual?.light !== undefined) {
-                this.pointer(`/nodes/${nodeIndex}/extensions/KHR_lights_punctual/light`, "ref", () => [ref("extensions/KHR_lights_punctual/lights", node.extensions.KHR_lights_punctual.light)], ignoreSet, true);
+                this.pointer(`/nodes/${nodeIndex}/extensions/KHR_lights_punctual/light`, "ref", () => [glTFObjectReference("extensions/KHR_lights_punctual/lights", node.extensions.KHR_lights_punctual.light)], ignoreSet, true);
             }
         });
     }
@@ -283,7 +284,7 @@ export class GlTFObjectModelDecorator extends ADecorator {
             this.scalarPointer(`/meshes/${meshIndex}/primitives.length`, "int", () => mesh.primitives.length, ignoreSet, true);
             mesh.primitives.forEach((primitive: any, primitiveIndex: number) => {
                 if (primitive.material !== undefined) {
-                    this.pointer(`/meshes/${meshIndex}/primitives/${primitiveIndex}/material`, "ref", () => [ref("materials", primitive.material)], ignoreSet, true);
+                    this.pointer(`/meshes/${meshIndex}/primitives/${primitiveIndex}/material`, "ref", () => [glTFObjectReference("materials", primitive.material)], ignoreSet, true);
                 }
             });
 
@@ -348,10 +349,10 @@ export class GlTFObjectModelDecorator extends ADecorator {
             const joints = skin.joints ?? [];
             this.scalarPointer(`/skins/${skinIndex}/joints.length`, "int", () => joints.length, ignoreSet, true);
             joints.forEach((jointIndex: number, index: number) => {
-                this.pointer(`/skins/${skinIndex}/joints/${index}`, "ref", () => [ref("nodes", jointIndex)], ignoreSet, true);
+                this.pointer(`/skins/${skinIndex}/joints/${index}`, "ref", () => [glTFObjectReference("nodes", jointIndex)], ignoreSet, true);
             });
             if (skin.skeleton !== undefined) {
-                this.pointer(`/skins/${skinIndex}/skeleton`, "ref", () => [ref("nodes", skin.skeleton)], ignoreSet, true);
+                this.pointer(`/skins/${skinIndex}/skeleton`, "ref", () => [glTFObjectReference("nodes", skin.skeleton)], ignoreSet, true);
             }
         });
     }
@@ -372,7 +373,7 @@ export class GlTFObjectModelDecorator extends ADecorator {
 
     private registerAnimationPointers(): void {
         this.objectModel.animations.forEach((animation, animationIndex) => {
-            this.pointer(`/animations/${animationIndex}`, "ref", () => [`/animations/${animationIndex}`], ignoreSet, true);
+            this.pointer(`/animations/${animationIndex}`, "ref", () => [glTFObjectReference("animations", animationIndex)], ignoreSet, true);
             this.scalarPointer(`/animations/${animationIndex}/extensions/KHR_interactivity/playhead`, "float", () => animation.playhead, ignoreSet, true);
             this.scalarPointer(`/animations/${animationIndex}/extensions/KHR_interactivity/virtualPlayhead`, "float", () => animation.virtualPlayhead, (value) => animation.virtualPlayhead = value);
             this.scalarPointer(`/animations/${animationIndex}/extensions/KHR_interactivity/minTime`, "float", () => animation.minTime, ignoreSet, true);
@@ -594,10 +595,6 @@ function setPath(target: any, pathParts: string[], value: any): void {
         current = current[key];
     });
     current[pathParts[pathParts.length - 1]] = cloneValue(value);
-}
-
-function ref(collectionPath: string, index: number): string {
-    return `/${collectionPath}/${index}`;
 }
 
 function scalar(value: any): any {

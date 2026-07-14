@@ -938,7 +938,7 @@ export class BabylonDecorator extends ADecorator {
             //no-op
         }, "int", true);
 
-        this.registerJsonPointer(`/animations/${maxAnimations}/`, (path) => {
+        this.registerJsonPointer(`/animations/${maxAnimations}`, (path) => {
             const parts: string[] = path.split("/");
             const animationIndex = Number(parts[2]);
             return this.world.animations[animationIndex] === undefined ? [null] : [`/animations/${animationIndex}/`];

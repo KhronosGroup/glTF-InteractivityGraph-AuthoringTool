@@ -1,6 +1,7 @@
 import { BasicBehaveEngine } from "../src/BasicBehaveEngine/BasicBehaveEngine";
 import { DOMEventBus } from "../src/BasicBehaveEngine/eventBuses/DOMEventBus";
 import { createGlTFObjectModelFromGltf, GlTFObjectModelDecorator } from "../src/objectModel/glTFObjectModel";
+import { jest } from "@jest/globals";
 
 describe("GlTFObjectModelDecorator", () => {
     it("resolves only concrete object-model references exposed by the loaded glTF", () => {
@@ -42,10 +43,29 @@ describe("GlTFObjectModelDecorator", () => {
             animations: [{ channels: [], samplers: [] }],
         });
 
-        expect(decorator.isValidJsonPtr("/animations/0/")).toBe(true);
-        expect(decorator.getPathtypeName("/animations/0/")).toBe("ref");
-        expect(decorator.getPathValue("/animations/0/")).toEqual(["/animations/0/"]);
-        expect(decorator.isValidJsonPtr("/animations/0")).toBe(false);
+        expect(decorator.isValidJsonPtr("/animations/0")).toBe(true);
+        expect(decorator.getPathtypeName("/animations/0")).toBe("ref");
+        expect(decorator.getPathValue("/animations/0")).toEqual(["/animations/0/"]);
+        expect(decorator.isValidJsonPtr("/animations/0/")).toBe(false);
+    });
+
+    it("keeps animations with an infinite end time active", () => {
+        jest.useFakeTimers();
+        const decorator = createDecorator({
+            animations: [{ channels: [], samplers: [] }],
+        });
+        const completed = jest.fn();
+
+        try {
+            decorator.startAnimation(0, 0, Infinity, 1, completed);
+            jest.advanceTimersByTime(60_000);
+
+            expect(decorator.getPathValue("/animations/0/extensions/KHR_interactivity/isPlaying")).toEqual([true]);
+            expect(completed).not.toHaveBeenCalled();
+        } finally {
+            decorator.dispose();
+            jest.useRealTimers();
+        }
     });
 
     it("registers draft node extension pointers from generated schema metadata", () => {

@@ -54,7 +54,7 @@ const KHR = "extensions/2.0/Khronos";
 export class GlTFObjectModelDecorator extends ADecorator {
     protected objectModel: GlTFObjectModel;
     private pointerBindings = new Map<string, PointerBinding>();
-    private activeAnimations = new Map<number, { timeout: ReturnType<typeof setTimeout>; startTime: number; endTime: number; speed: number; startedAt: number; token: number }>();
+    private activeAnimations = new Map<number, { timeout: ReturnType<typeof setTimeout> | null; startTime: number; endTime: number; speed: number; startedAt: number; token: number }>();
     private animationToken = 0;
 
     constructor(behaveEngine: IBehaveEngine, objectModel: Partial<GlTFObjectModel> = {}) {
@@ -87,17 +87,19 @@ export class GlTFObjectModelDecorator extends ADecorator {
 
         const duration = Math.abs(endTime - startTime) / speed;
         const token = ++this.animationToken;
-        const timeout = setTimeout(() => {
-            if (this.activeAnimations.get(animationIndex)?.token !== token) {
-                return;
-            }
-            animation.isPlaying = false;
-            animation.virtualPlayhead = endTime;
-            animation.playhead = effectiveAnimationTime(animation, endTime);
-            this.applyAnimation(animationIndex, endTime);
-            this.activeAnimations.delete(animationIndex);
-            callback();
-        }, Math.max(0, duration * 1000));
+        const timeout = Number.isFinite(duration)
+            ? setTimeout(() => {
+                if (this.activeAnimations.get(animationIndex)?.token !== token) {
+                    return;
+                }
+                animation.isPlaying = false;
+                animation.virtualPlayhead = endTime;
+                animation.playhead = effectiveAnimationTime(animation, endTime);
+                this.applyAnimation(animationIndex, endTime);
+                this.activeAnimations.delete(animationIndex);
+                callback();
+            }, Math.max(0, duration * 1000))
+            : null;
 
         this.activeAnimations.set(animationIndex, { timeout, startTime, endTime, speed, startedAt: performance.now(), token });
     };
@@ -119,7 +121,9 @@ export class GlTFObjectModelDecorator extends ADecorator {
             return;
         }
 
-        clearTimeout(activeAnimation.timeout);
+        if (activeAnimation.timeout !== null) {
+            clearTimeout(activeAnimation.timeout);
+        }
         const currentTime = this.currentAnimationTime(animationIndex);
         const remainingSeconds = Math.max(0, Math.abs(stopTime - currentTime) / activeAnimation.speed);
         const token = ++this.animationToken;
@@ -368,7 +372,7 @@ export class GlTFObjectModelDecorator extends ADecorator {
 
     private registerAnimationPointers(): void {
         this.objectModel.animations.forEach((animation, animationIndex) => {
-            this.pointer(`/animations/${animationIndex}/`, "ref", () => [`/animations/${animationIndex}/`], ignoreSet, true);
+            this.pointer(`/animations/${animationIndex}`, "ref", () => [`/animations/${animationIndex}/`], ignoreSet, true);
             this.scalarPointer(`/animations/${animationIndex}/extensions/KHR_interactivity/playhead`, "float", () => animation.playhead, ignoreSet, true);
             this.scalarPointer(`/animations/${animationIndex}/extensions/KHR_interactivity/virtualPlayhead`, "float", () => animation.virtualPlayhead, (value) => animation.virtualPlayhead = value);
             this.scalarPointer(`/animations/${animationIndex}/extensions/KHR_interactivity/minTime`, "float", () => animation.minTime, ignoreSet, true);
@@ -398,7 +402,9 @@ export class GlTFObjectModelDecorator extends ADecorator {
     private clearActiveAnimation(animationIndex: number): void {
         const activeAnimation = this.activeAnimations.get(animationIndex);
         if (activeAnimation !== undefined) {
-            clearTimeout(activeAnimation.timeout);
+            if (activeAnimation.timeout !== null) {
+                clearTimeout(activeAnimation.timeout);
+            }
             this.activeAnimations.delete(animationIndex);
         }
     }

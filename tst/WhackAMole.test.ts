@@ -3,6 +3,7 @@ import path from "path";
 import { TextDecoder, TextEncoder } from "util";
 import { jest } from "@jest/globals";
 import { BasicBehaveEngine } from "../src/BasicBehaveEngine/BasicBehaveEngine";
+import { IBehaveEngine } from "../src/BasicBehaveEngine/IBehaveEngine";
 import { BabylonDecorator } from "../src/decorators/BabylonDecorator";
 import { BabylonScene, loadBabylonWorldFromGlb, NullEngine } from "./assets/babylonAssetHarness";
 import { getSampleAssetsRoot, readGlbJson, runGraphAndWait, TestEventBus } from "./assets/sampleAssetHarness";
@@ -38,9 +39,9 @@ describeIfAvailable("KHR_interactivity WhackAMole sample - Babylon engine", () =
             expect(world.animations).toHaveLength(asset.gltf.animations.length);
             expect(graph).toBeDefined();
             for (const animationIndex of animationIndices) {
-                expect(decorator.isValidJsonPtr(`/animations/${animationIndex}/`)).toBe(true);
-                expect(decorator.getPathtypeName(`/animations/${animationIndex}/`)).toBe("ref");
-                expect(decorator.getPathValue(`/animations/${animationIndex}/`)).toEqual([`/animations/${animationIndex}/`]);
+                expect(decorator.isValidJsonPtr(`/animations/${animationIndex}`)).toBe(true);
+                expect(decorator.getPathtypeName(`/animations/${animationIndex}`)).toBe("ref");
+                expect(decorator.getPathValue(`/animations/${animationIndex}`)).toEqual([`/animations/${animationIndex}/`]);
                 expect(decorator.isValidJsonPtr(`/animations/${animationIndex}/extensions/KHR_interactivity/maxTime`)).toBe(true);
                 expect(Number.isFinite(decorator.getPathValue(`/animations/${animationIndex}/extensions/KHR_interactivity/maxTime`)?.[0])).toBe(true);
             }
@@ -66,6 +67,44 @@ describeIfAvailable("KHR_interactivity WhackAMole sample - Babylon engine", () =
 
             await runGraphAndWait(decorator, graph);
         } finally {
+            scene.dispose();
+            nullEngine.dispose();
+        }
+    });
+
+    it("starts every mole's infinite idle animation", async () => {
+        if (asset.loadError) {
+            throw asset.loadError;
+        }
+
+        const nullEngine = new NullEngine();
+        const scene = new BabylonScene(nullEngine);
+        const random = jest.spyOn(Math, "random").mockReturnValue(0);
+        let decorator: BabylonDecorator | undefined;
+        try {
+            const eventBus = new TestEventBus();
+            const engine = new BasicBehaveEngine(60, eventBus);
+            const world = await loadBabylonWorldFromGlb(asset.glbPath, scene);
+            decorator = new BabylonDecorator(engine, world, scene);
+            const startAnimation = jest.fn(decorator.startAnimation);
+            (engine as IBehaveEngine).startAnimation = startAnimation;
+
+            jest.useFakeTimers();
+            decorator.loadBehaveGraph(JSON.parse(JSON.stringify(asset.graph)));
+            jest.advanceTimersByTime(1_700);
+
+            const infiniteAnimationIndices = startAnimation.mock.calls
+                .filter(([, , endTime]) => !Number.isFinite(endTime))
+                .map(([animationIndex]) => animationIndex)
+                .sort((a, b) => a - b);
+            expect(infiniteAnimationIndices).toEqual([1, 4, 7, 10, 13, 16, 19]);
+            for (const animationIndex of infiniteAnimationIndices) {
+                expect(world.animations[animationIndex].metadata?.instance?.isPlaying).toBe(true);
+            }
+        } finally {
+            decorator?.dispose();
+            jest.useRealTimers();
+            random.mockRestore();
             scene.dispose();
             nullEngine.dispose();
         }
@@ -97,7 +136,8 @@ function getGraphReferencedAnimationIndices(graph: any): number[] {
     for (const node of graph.nodes ?? []) {
         const op = graph.declarations?.[node.declaration]?.op;
         const pointer = node.configuration?.pointer?.value?.[0];
-        if (op !== "pointer/get" || typeof pointer !== "string" || !pointer.startsWith("/animations/[index]/")) {
+        if (op !== "pointer/get" || typeof pointer !== "string"
+            || (pointer !== "/animations/[index]" && !pointer.startsWith("/animations/[index]/"))) {
             continue;
         }
 

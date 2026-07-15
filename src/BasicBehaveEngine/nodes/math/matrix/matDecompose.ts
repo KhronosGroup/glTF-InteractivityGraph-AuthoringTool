@@ -26,18 +26,22 @@ export class MatDecompose extends BehaveEngineNode {
             'translation': {value: [0, 0, 0], type: this.getTypeIndex("float3")},
             'rotation': {value: [0, 0, 0, 1], type: this.getTypeIndex("float4")},
             'scale': {value: [1, 1, 1], type: this.getTypeIndex("float3")},
-            'isValid': {value: [true], type: this.getTypeIndex("bool")}
         }
 
         const unflattenedA = unflattenMatrix(a, 4);
 
+        result.translation.value = [unflattenedA[3][0], unflattenedA[3][1], unflattenedA[3][2]];
+
         const s_x = Math.sqrt(unflattenedA[0][0] * unflattenedA[0][0] + unflattenedA[0][1] * unflattenedA[0][1] + unflattenedA[0][2] * unflattenedA[0][2]);
         const s_y = Math.sqrt(unflattenedA[1][0] * unflattenedA[1][0] + unflattenedA[1][1] * unflattenedA[1][1] + unflattenedA[1][2] * unflattenedA[1][2]);
         const s_z = Math.sqrt(unflattenedA[2][0] * unflattenedA[2][0] + unflattenedA[2][1] * unflattenedA[2][1] + unflattenedA[2][2] * unflattenedA[2][2]);
-        // check scale values are non NaN and non infinite
-        if (isNaN(s_x) || isNaN(s_y) || isNaN(s_z) || !isFinite(s_x) || !isFinite(s_y) || !isFinite(s_z)) {
-            console.log("Invalid scale values", s_x, s_y, s_z)
-            result.isValid.value[0] = false;
+        
+        if (
+            isNaN(s_x) || isNaN(s_y) || isNaN(s_z)
+            || !isFinite(s_x) || !isFinite(s_y) || !isFinite(s_z)
+            || s_x === 0 || s_y === 0 || s_z === 0
+        ) {
+            result.scale.value = [s_x, s_y, s_z];
             return result;
         }
 
@@ -48,8 +52,6 @@ export class MatDecompose extends BehaveEngineNode {
         ]
 
         const detB = B[0][0] * (B[1][1] * B[2][2] - B[1][2] * B[2][1]) - B[0][1] * (B[1][0] * B[2][2] - B[1][2] * B[2][0]) + B[0][2] * (B[1][0] * B[2][1] - B[1][1] * B[2][0]);
-
-        result.translation.value = [unflattenedA[3][0], unflattenedA[3][1], unflattenedA[3][2]];
 
         // detemine scale signs based on detB sign
         if (detB > 0) {

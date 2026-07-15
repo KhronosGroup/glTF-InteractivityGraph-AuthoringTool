@@ -9,14 +9,11 @@ export class PointerGet extends BehaveEngineNode {
     _pointerIndices: Record<string, IInteractivityValue>;
     _typeIndex: number;
 
-    resolveRef: (ref: any) => any;
-
     constructor(props: IBehaviourNodeProps) {
         super(props);
         this.name = "PointerGet";
         this.validateValues(this.values);
         this.validateConfigurations(this.configuration);
-        this.resolveRef = props.graphEngine.resolveRef;
 
         const {pointer, type} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
         this._pointer = pointer[0];
@@ -81,8 +78,7 @@ export class PointerGet extends BehaveEngineNode {
                 pathCopy = pathCopy.replace(`{${ref}}`, lastPart);
             }
             else {
-                const resolvedVal = this.resolveRef(refValue);
-                pathCopy = pathCopy.replace(`{${ref}}`, resolvedVal);
+                pathCopy = pathCopy.replace(`{${ref}}`, refValue);
             }
         }
         for (const index of Object.keys(indices)) {

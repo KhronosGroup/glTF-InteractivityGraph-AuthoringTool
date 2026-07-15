@@ -61,7 +61,6 @@ export class GlTFObjectModelDecorator extends ADecorator {
     constructor(behaveEngine: IBehaveEngine, objectModel: Partial<GlTFObjectModel> = {}) {
         super(behaveEngine);
         this.objectModel = completeGlTFObjectModel(objectModel);
-        this.behaveEngine.resolveRef = this.resolveRef;
         this.bridgeObjectModelHooks();
         this.bridgeEngineHooks();
         this.registerKnownPointers();

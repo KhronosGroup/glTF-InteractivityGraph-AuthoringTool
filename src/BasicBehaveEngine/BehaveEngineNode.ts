@@ -281,12 +281,12 @@ export class BehaveEngineNode {
         return configuration.value;
     }
 
-    protected refToIndex(ref: string): number {
-        if (typeof ref !== "string") {
-            return Number(ref);
+    // Resolve a "#/..."-style JSON pointer ref down to its trailing id.
+    protected resolveRef = (ref: string | null): number => {
+        if (ref == null || ref === "") {
+            return -1;
         }
-        const refParts = ref.split("/").filter(Boolean);
-        const lastPart = refParts[refParts.length - 1];
-        return Number(lastPart);
+        const parts = String(ref).split("/").filter(Boolean);
+        return parts.length === 0 ? -1 : Number(parts[parts.length - 1]);
     }
 }

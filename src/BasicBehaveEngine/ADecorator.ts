@@ -25,15 +25,6 @@ export abstract class ADecorator implements IBehaveEngine {
     abstract stopAnimation: (animationIndex: number) => void;
     abstract stopAnimationAt: (animationIndex: number, stopTime: number, callback: () => void) => void
 
-    // Shared by every decorator: resolve a "#/..."-style JSON pointer ref down to its trailing id.
-    resolveRef = (ref: any): any => {
-        if (ref == null || ref === "") {
-            return -1;
-        }
-        const parts = String(ref).split("/").filter(Boolean);
-        return parts.length === 0 ? -1 : parts[parts.length - 1];
-    }
-
     registerJsonPointer = (jsonPtr: string, getterCallback: (path: string) => any, setterCallback: (path: string, value: any) => void, typeName: string, readOnly: boolean) => {
         this.behaveEngine.registerJsonPointer(jsonPtr, getterCallback, setterCallback, typeName, readOnly);
     };

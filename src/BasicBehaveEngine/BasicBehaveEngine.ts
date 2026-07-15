@@ -372,12 +372,6 @@ export class BasicBehaveEngine implements IBehaveEngine {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public resolveRef(ref: any): any {
-        // Implemented by decorators
-        return ref;
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public rayCastRigidBodies(rayStart: [number, number, number], rayEnd: [number, number, number], collisionFilterIndex: number): {hitNodeIndex: number, hitFraction: number | undefined, hitNormal: [number, number, number] | undefined} {
         // Implemented by decorators
         return {hitNodeIndex: -1, hitFraction: undefined, hitNormal: undefined};

@@ -40,13 +40,6 @@ export interface IBehaveEngine {
     registerKnownPointers: () => void;
 
     /**
-     * Resolve a reference to its actual value within the Behave Engine.
-     * @param ref - The reference to be resolved.
-     * @returns The resolved value.
-     */
-    resolveRef: (ref: any) => any;
-
-    /**
      * Get the parent node index of a given node index.
      * @param nodeIndex - The index of the node whose parent index is to be retrieved.
      * @returns The parent node index, or undefined if the node has no parent.

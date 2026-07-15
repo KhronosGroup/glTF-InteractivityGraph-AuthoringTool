@@ -14,7 +14,7 @@ export class AnimationStopAt extends BehaveEngineNode {
         const {animation, stopTime} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
         this.graphEngine.processNodeStarted(this);
 
-        const animationIndex = this.refToIndex(animation);
+        const animationIndex = this.resolveRef(animation);
 
         const validAnimation = this.graphEngine.getWorld().animations.length > animationIndex && animationIndex >= 0;
         const validStopTime = !isNaN(stopTime) && isFinite(stopTime);

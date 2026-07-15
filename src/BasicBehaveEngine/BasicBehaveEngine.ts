@@ -95,6 +95,7 @@ import {QuatMul} from "./nodes/math/quaternion/QuatMul";
 import {QuatConjugate} from "./nodes/math/quaternion/QuatConjugate";
 import {QuatFromAxisAngle} from "./nodes/math/quaternion/QuatFromAxisAngle";
 import {QuatToAxisAngle} from "./nodes/math/quaternion/QuatToAxisAngle";
+import {QuatFromAngles} from "./nodes/math/quaternion/QuatFromAngles";
 import {QuatFromDirections} from "./nodes/math/quaternion/QuatFromDirections";
 import {Not} from "./nodes/math/bitwise/Not";
 import {Xor} from "./nodes/math/bitwise/Xor";
@@ -263,6 +264,7 @@ export const behaveEngineNodeRegistry: ReadonlyArray<[string, any]> = [
     ["math/quatToAxisAngle", QuatToAxisAngle],
     ["math/quatFromDirections", QuatFromDirections],
     ["math/quatFromUpForward", QuatFromUpForward],
+    ["math/quatFromAngles", QuatFromAngles],
     ["math/matDecompose", MatDecompose],
     ["math/matCompose", MatCompose],
     ["math/determinant", Determinant],

@@ -53,7 +53,7 @@ import {Log10} from "./nodes/math/exponential/Log10";
 import {Power} from "./nodes/math/exponential/Power";
 import {SquareRoot} from "./nodes/math/exponential/SquareRoot";
 import {CubeRoot} from "./nodes/math/exponential/CubeRoot";
-import {Random} from "./nodes/experimental/Random";
+import {Random} from "./nodes/math/Random";
 import {Dot} from "./nodes/math/vector/Dot";
 import {Cross} from "./nodes/math/vector/Cross";
 import {Normalize} from "./nodes/math/vector/Normalize";

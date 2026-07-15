@@ -20,11 +20,11 @@ import {
 import {Vector3} from "@babylonjs/core/Maths/math.vector";
 import {cubicBezier, easeFloat, easeFloat3, easeFloat4, linearFloat, slerpFloat4} from "../BasicBehaveEngine/easingUtils";
 import {Scene} from "@babylonjs/core/scene";
-import {OnSelect} from "../BasicBehaveEngine/nodes/experimental/OnSelect";
+import {OnSelect} from "../BasicBehaveEngine/nodes/event/OnSelect";
 import {KHR_materials_variants} from "@babylonjs/loaders/glTF/2.0";
 import {Nullable} from "@babylonjs/core/types.js";
-import { OnHoverIn } from "../BasicBehaveEngine/nodes/experimental/OnHoverIn";
-import { OnHoverOut } from "../BasicBehaveEngine/nodes/experimental/OnHoverOut";
+import { OnHoverIn } from "../BasicBehaveEngine/nodes/event/OnHoverIn";
+import { OnHoverOut } from "../BasicBehaveEngine/nodes/event/OnHoverOut";
 import { IInteractivityFlow } from "../BasicBehaveEngine/types/InteractivityGraph";
 import * as glMatrix from "gl-matrix";
 import {glTFObjectReference} from "../objectModel/glTFReference";

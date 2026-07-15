@@ -5,6 +5,7 @@ export class OnTickNode extends BehaveEngineNode {
     _lastTickTime = NaN;
     _floatTypeIndex = -1;
     _refTypeIndex = -1;
+    
     constructor(props: IBehaviourNodeProps) {
         super(props);
         this.name = "OnTick";

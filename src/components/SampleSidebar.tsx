@@ -1,10 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Button, ListGroup, Offcanvas } from 'react-bootstrap';
+import { Button, ButtonGroup, ListGroup, Offcanvas, ToggleButton } from 'react-bootstrap';
+
+export type SampleVariant = 'glTF-Binary' | 'glTF';
+
+const SAMPLE_VARIANTS: ReadonlyArray<{ key: SampleVariant; label: string }> = [
+  { key: 'glTF-Binary', label: 'GLB' },
+  { key: 'glTF', label: 'glTF' },
+];
+const BASE_REPO_URL = 'https://raw.githubusercontent.com/KhronosGroup/glTF-Test-Assets-Interactivity/main/';
+const SAMPLE_BASE_PATH = 'Models/';
+const TEST_BASE_PATH = 'Tests/Interactivity/';
 
 /**
  * Represents a single sample model from the repository
  */
-interface Sample {
+export interface Sample {
   label: string;
   name: string;
   description?: string;
@@ -37,11 +47,7 @@ export const SampleSidebar: React.FC<SampleSidebarProps> = ({ onSelectModel }) =
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [debugData, setDebugData] = useState<unknown>(null);
-
-  // Base URL for the assets
-  const baseRepoUrl = 'https://raw.githubusercontent.com/KhronosGroup/glTF-Test-Assets-Interactivity/main/';
-  const sampleBasePath = 'Models/';
-  const testBasePath = 'Tests/Interactivity/';
+  const [preferredVariant, setPreferredVariant] = useState<SampleVariant>('glTF-Binary');
 
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
@@ -128,15 +134,13 @@ export const SampleSidebar: React.FC<SampleSidebarProps> = ({ onSelectModel }) =
    * When a sample is selected, construct the full URL and call the onSelectModel callback
    */
   const handleSelectSample = (model: Sample, isTestModel: boolean) => {
-    if (!model || !model.variants || !model.variants['glTF-Binary']) {
-      console.error('Selected model has no glTF-Binary variant', model);
+    const variant = resolveSampleVariant(model, preferredVariant);
+    if (!variant) {
+      console.error('Selected model has no loadable glTF variant', model);
       return;
     }
-    
-    // Construct the full URL to the model
-    const type = 'glTF-Binary';
-    const basePath = isTestModel ? testBasePath : sampleBasePath;
-    const modelUrl = `${baseRepoUrl}${basePath}/${model.name}/${type}/${model.variants[type]}`;
+
+    const modelUrl = buildSampleUrl(model, isTestModel, variant);
     console.log('Loading model:', modelUrl);
     
     onSelectModel(modelUrl);
@@ -171,6 +175,22 @@ export const SampleSidebar: React.FC<SampleSidebarProps> = ({ onSelectModel }) =
         </Offcanvas.Header>
         <Offcanvas.Body>
             <>
+          <ButtonGroup className="w-100 mb-3" aria-label="Asset format">
+            {SAMPLE_VARIANTS.map(({ key, label }) => (
+              <ToggleButton
+                key={key}
+                id={`sample-variant-${key}`}
+                type="radio"
+                name="sample-variant"
+                value={key}
+                variant="outline-primary"
+                checked={preferredVariant === key}
+                onChange={() => setPreferredVariant(key)}
+              >
+                {label}
+              </ToggleButton>
+            ))}
+          </ButtonGroup>
           {loading && <div>Loading samples...</div>}
           
           {error && (
@@ -219,11 +239,12 @@ export const SampleSidebar: React.FC<SampleSidebarProps> = ({ onSelectModel }) =
                   >
                     <div className="d-flex w-100 justify-content-between">
                       <h6 className="mb-1">{model.label || model.name}</h6>
+                      <VariantBadge model={model} preferredVariant={preferredVariant} />
                     </div>
                     <div>{model.description}</div>
                     {model.screenshot && (
                       <img 
-                        src={`${baseRepoUrl}${sampleBasePath}${model.name}/${model.screenshot}`} 
+                        src={`${BASE_REPO_URL}${SAMPLE_BASE_PATH}${model.name}/${model.screenshot}`}
                         alt={model.label || model.name} 
                         className="img-fluid mt-2 mb-2" 
                         style={{ maxWidth: '120px', height: 'auto' }}
@@ -262,6 +283,7 @@ export const SampleSidebar: React.FC<SampleSidebarProps> = ({ onSelectModel }) =
                   >
                     <div className="d-flex w-100 justify-content-between">
                       <h6 className="mb-1">{model.label || model.name}</h6>
+                      <VariantBadge model={model} preferredVariant={preferredVariant} />
                     </div>
                     {model.tags && Array.isArray(model.tags) && model.tags.length > 0 && (
                       <div className="mt-1">
@@ -296,6 +318,7 @@ export const SampleSidebar: React.FC<SampleSidebarProps> = ({ onSelectModel }) =
                   >
                     <div className="d-flex w-100 justify-content-between">
                       <h6 className="mb-1">{model.label || model.name}</h6>
+                      <VariantBadge model={model} preferredVariant={preferredVariant} />
                     </div>
                     {model.tags && Array.isArray(model.tags) && model.tags.length > 0 && (
                       <div className="mt-1">
@@ -319,4 +342,22 @@ export const SampleSidebar: React.FC<SampleSidebarProps> = ({ onSelectModel }) =
       </Offcanvas>
     </>
   );
+};
+
+export function resolveSampleVariant(model: Sample, preferredVariant: SampleVariant): SampleVariant | undefined {
+  if (model.variants?.[preferredVariant]) return preferredVariant;
+  return SAMPLE_VARIANTS.find(({ key }) => model.variants?.[key])?.key;
+}
+
+export function buildSampleUrl(model: Sample, isTestModel: boolean, variant: SampleVariant): string {
+  const fileName = model.variants[variant];
+  if (!fileName) throw new Error(`${model.name} has no ${variant} variant`);
+  const basePath = isTestModel ? TEST_BASE_PATH : SAMPLE_BASE_PATH;
+  return `${BASE_REPO_URL}${basePath}${model.name}/${variant}/${fileName}`;
+}
+
+const VariantBadge: React.FC<{ model: Sample; preferredVariant: SampleVariant }> = ({ model, preferredVariant }) => {
+  const variant = resolveSampleVariant(model, preferredVariant);
+  const label = SAMPLE_VARIANTS.find(({ key }) => key === variant)?.label;
+  return label ? <span className="badge bg-secondary ms-2">{label}</span> : null;
 };

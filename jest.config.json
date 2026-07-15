@@ -15,7 +15,8 @@
     },
     "verbose": true,
     "testMatch": [
-        "**/**.test.ts"
+        "**/**.test.ts",
+        "**/**.test.tsx"
     ],
     "collectCoverage": true,
     "collectCoverageFrom": [

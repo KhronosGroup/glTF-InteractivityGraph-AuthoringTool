@@ -289,4 +289,47 @@ export class BehaveEngineNode {
         const parts = String(ref).split("/").filter(Boolean);
         return parts.length === 0 ? -1 : Number(parts[parts.length - 1]);
     }
+
+    protected populatePath(path: string, refs: Record<string, string>, indices: Record<string, string>): string {
+        for (const ref of Object.keys(refs)) {
+            const refValue = refs[ref];
+            const index = this.resolveRef(refValue);
+            if (index !== -1) {
+                path = path.replace(`{${ref}}`, index.toString());
+            }
+            else {
+                throw new Error(`Invalid reference value for ${ref}: ${refValue}`);
+            }
+        }
+        for (const index of Object.keys(indices)) {
+            path = path.replace(`[${index}]`, indices[index]);
+        }
+        return path;
+    }
+
+    protected parsePathRefVariables(path: string): string[] {
+        return this.parsePathVariables(path, '{', '}');
+    }
+
+    protected parsePathIndexVariables(path: string): string[] {
+        return this.parsePathVariables(path, '[', ']');
+    }
+
+    protected parsePathVariables(path: string, openDel: string, closeDel: string): string[] {
+        const regex = new RegExp(`\\${openDel}([^\\${closeDel}]+)\\${closeDel}`, 'g');
+        const match = path.match(regex);
+        const keys: string[] = [];
+
+        if (!match) {
+            return keys;
+        }
+
+        for (const m of match) {
+            // remove the delimiters from the match
+            const key = m.slice(openDel.length, -closeDel.length);
+            keys.push(key)
+        }
+
+        return keys;
+    }
 }

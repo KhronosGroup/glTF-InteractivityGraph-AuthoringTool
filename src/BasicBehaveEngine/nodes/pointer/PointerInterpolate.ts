@@ -21,87 +21,32 @@ export class PointerInterpolate extends BehaveEngineNode {
         this._typeIndex = type[0];
 
         this._pointerVals = {};
-        const refIds = this.parsePathRefs(this._pointer);
+        const refIds = this.parsePathRefVariables(this._pointer);
         for (let i = 0; i < refIds.length; i++) {
             this._pointerVals[refIds[i]] = {value: [undefined], type: 1};
         }
 
         this._pointerIndices = {};
-        const indexIds = this.parsePathIndices(this._pointer);
+        const indexIds = this.parsePathIndexVariables(this._pointer);
         for (let i = 0; i < indexIds.length; i++) {
             this._pointerIndices[indexIds[i]] = {value: [undefined], type: 1};
         }
 
         // TODO: abstract this into helper function to remove duplicate code
         //create a test path with all 0's to check if the path is read only 
-        const readOnlyTestRefs: Record<string, number> = {};
+        const readOnlyTestRefs: Record<string, string> = {};
         for (let i = 0; i < refIds.length; i++) {
-            readOnlyTestRefs[refIds[i]] = 0;
+            readOnlyTestRefs[refIds[i]] = "0";
         }
-        const readOnlyTestIndices: Record<string, number> = {};
+        const readOnlyTestIndices: Record<string, string> = {};
         for (let i = 0; i < indexIds.length; i++) {
-            readOnlyTestIndices[indexIds[i]] = 0;
+            readOnlyTestIndices[indexIds[i]] = "0";
         }
         const readOnlyTestPath = this.populatePath(this._pointer, readOnlyTestRefs, readOnlyTestIndices);
         const isReadOnly = this.graphEngine.isReadOnly(readOnlyTestPath);
         if (isReadOnly) {
             throw new Error(`Path ${this._pointer} is read only but is included in a pointer/interpolate configuration`);
         }
-    }
-
-    parsePathRefs(path: string): string[] {
-        const regex = /{([^}]+)}/g;
-        const match = path.match(regex);
-        const keys: string[] = [];
-
-        if (!match) {
-            return keys;
-        }
-
-        for (const m of match) {
-            const key = m.slice(1, -1); // remove the curly braces from the match
-            keys.push(key)
-        }
-
-        return keys;
-    }
-
-    parsePathIndices(path: string): string[] {
-        const regex = /\[([^\]]+)\]/g;
-        const match = path.match(regex);
-        const keys: string[] = [];
-
-        if (!match) {
-            return keys;
-        }
-
-        for (const m of match) {
-            const key = m.slice(1, -1); // remove the square brackets from the match
-            keys.push(key)
-        }
-
-        return keys;
-    }
-
-    populatePath(path: string, refs: Record<string, any>, indices: Record<string, any>): string {
-        let pathCopy = path
-        for (const ref of Object.keys(refs)) {
-            const refValue = refs[ref];
-
-            // is refValue is a string and of format /materials/3, extract the last part after the last slash
-            if (typeof refValue === "string" && refValue.includes("/")) {
-                const parts = refValue.split("/").filter(part => part !== "");
-                const lastPart = parts[parts.length - 1];
-                pathCopy = pathCopy.replace(`{${ref}}`, lastPart);
-            }
-            else {
-                pathCopy = pathCopy.replace(`{${ref}}`, refValue);
-            }
-        }
-        for (const index of Object.keys(indices)) {
-            pathCopy = pathCopy.replace(`[${index}]`, indices[index]);
-        }
-        return pathCopy;
     }
 
     override processNode(flowSocket: string) {

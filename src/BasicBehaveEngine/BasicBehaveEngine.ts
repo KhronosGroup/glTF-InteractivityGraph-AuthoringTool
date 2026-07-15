@@ -122,7 +122,7 @@ import { MatCompose } from "./nodes/math/matrix/matCompose";
 import { MatMul } from "./nodes/math/matrix/MatMul";
 import { MathSwitch } from "./nodes/math/special/MathSwitch";
 import { Inverse } from "./nodes/math/matrix/Inverse";
-import { DebugLog } from "./nodes/experimental/Debug";
+import { DebugLog } from "./nodes/debug/Log";
 import { QuatAngleBetween } from "./nodes/math/quaternion/QuatAngleBetween";
 import { QuatSlerp } from "./nodes/math/quaternion/QuatSlerp";
 import { QuatFromUpForward } from "./nodes/math/quaternion/QuatFromUpForward";

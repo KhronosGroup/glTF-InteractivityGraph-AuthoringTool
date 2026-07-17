@@ -1,4 +1,3 @@
-import { IInteractivityValue } from "../../types/InteractivityGraph";
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class PointerSet extends BehaveEngineNode {
@@ -6,8 +5,8 @@ export class PointerSet extends BehaveEngineNode {
     REQUIRED_VALUES = {value: {}}
 
     _pointer: string;
-    _pointerVals: Record<string, IInteractivityValue>;
-    _pointerIndices: Record<string, IInteractivityValue>;
+    _refs: string[];
+    _indices: string[];
     _typeIndex: number;
 
     constructor(props: IBehaviourNodeProps) {
@@ -20,39 +19,18 @@ export class PointerSet extends BehaveEngineNode {
         this._pointer = pointer[0];
         this._typeIndex = type[0];
         
-        this._pointerVals = {};
-        const refIds = this.parsePathRefVariables(this._pointer);
-        for (let i = 0; i < refIds.length; i++) {
-            this._pointerVals[refIds[i]] = {value: [undefined], type: 1};
-        }
+        this._refs = this.parsePathRefVariables(this._pointer);
+        this._indices = this.parsePathIndexVariables(this._pointer);
 
-        this._pointerIndices = {};
-        const indexIds = this.parsePathIndexVariables(this._pointer);
-        for (let i = 0; i < indexIds.length; i++) {
-            this._pointerIndices[indexIds[i]] = {value: [undefined], type: 1};
-        }
-
-        // TODO: abstract this into helper function to remove duplicate code
-        //create a test path with all 0's to check if the path is read only 
-        const readOnlyTestRefs: Record<string, string> = {};
-        for (let i = 0; i < refIds.length; i++) {
-            readOnlyTestRefs[refIds[i]] = "0";
-        }
-        const readOnlyTestIndices: Record<string, string> = {};
-        for (let i = 0; i < indexIds.length; i++) {
-            readOnlyTestIndices[indexIds[i]] = "0";
-        }
-        const readOnlyTestPath = this.populatePath(this._pointer, readOnlyTestRefs, readOnlyTestIndices);
-        const isReadOnly = this.graphEngine.isReadOnly(readOnlyTestPath);
-        if (isReadOnly) {
+        if (this.isReadOnlyPointer(this._pointer, this._refs, this._indices)) {
             throw new Error(`Path ${this._pointer} is read only but is included in a pointer/interpolate configuration`);
         }
     }
 
     override processNode(flowSocket?: string) {
         this.graphEngine.clearValueEvaluationCache();
-        const configValues = this.evaluateAllValues(Object.keys(this._pointerVals));
-        const configIndices = this.evaluateAllValues(Object.keys(this._pointerIndices));
+        const configValues = this.evaluateAllValues(this._refs);
+        const configIndices = this.evaluateAllValues(this._indices);
         const requiredValues = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
         const populatedPath = this.populatePath(this._pointer, configValues, configIndices);
         const targetValue = requiredValues.value;
@@ -60,7 +38,7 @@ export class PointerSet extends BehaveEngineNode {
 
         if (this.graphEngine.isValidJsonPtr(populatedPath)) {
             const typeName = this.getType(this._typeIndex);
-            const type = this.graphEngine.getPathtypeName(populatedPath);
+            const type = this.graphEngine.getPathTypeName(populatedPath);
             if (type !== typeName) {
                 if (this.flows.err) {
                     this.processFlow(this.flows.err);

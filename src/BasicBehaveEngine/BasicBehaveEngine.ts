@@ -557,7 +557,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         return this.jsonPtrTrie.getPathValue(path);
     }
 
-    public getPathtypeName = (path: string) => {
+    public getPathTypeName = (path: string) => {
         return this.jsonPtrTrie.getPathTypeName(path);
     }
 

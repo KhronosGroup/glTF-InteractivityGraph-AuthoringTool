@@ -307,6 +307,19 @@ export class BehaveEngineNode {
         return path;
     }
 
+    protected isReadOnlyPointer(pointer: string, refs: string[], indices: string[]): boolean {
+        const readOnlyTestRefs: Record<string, string> = {};
+        for (const ref of refs) {
+            readOnlyTestRefs[ref] = "0";
+        }
+        const readOnlyTestIndices: Record<string, string> = {};
+        for (const index of indices) {
+            readOnlyTestIndices[index] = "0";
+        }
+        const readOnlyTestPath = this.populatePath(pointer, readOnlyTestRefs, readOnlyTestIndices);
+        return this.graphEngine.isReadOnly(readOnlyTestPath);
+    }
+
     protected parsePathRefVariables(path: string): string[] {
         return this.parsePathVariables(path, '{', '}');
     }

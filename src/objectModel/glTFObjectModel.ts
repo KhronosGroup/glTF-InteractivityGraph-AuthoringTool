@@ -159,7 +159,7 @@ export class GlTFObjectModelDecorator extends ADecorator {
         this.behaveEngine.isValidJsonPtr = this.isValidJsonPtr;
         this.behaveEngine.isReadOnly = this.isReadOnly;
         this.behaveEngine.getPathValue = this.getPathValue;
-        this.behaveEngine.getPathtypeName = this.getPathtypeName;
+        this.behaveEngine.getPathTypeName = this.getPathTypeName;
         this.behaveEngine.setPathValue = this.setPathValue;
         this.behaveEngine.getRegisteredJsonPointers = this.getRegisteredJsonPointers;
     }
@@ -170,7 +170,7 @@ export class GlTFObjectModelDecorator extends ADecorator {
         this.updateActiveAnimations();
         return this.pointerBindings.get(path)?.get() ?? (this.isActiveDelayRef(path) ? [path] : undefined);
     };
-    getPathtypeName = (path: string): string | undefined => this.pointerBindings.get(path)?.typeName ?? (this.isActiveDelayRef(path) ? "ref" : undefined);
+    getPathTypeName = (path: string): string | undefined => this.pointerBindings.get(path)?.typeName ?? (this.isActiveDelayRef(path) ? "ref" : undefined);
     setPathValue = (path: string, value: any): void => {
         const binding = this.pointerBindings.get(path);
         if (binding && !binding.readOnly) {

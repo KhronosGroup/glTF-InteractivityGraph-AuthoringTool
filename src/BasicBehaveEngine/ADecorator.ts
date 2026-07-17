@@ -167,8 +167,8 @@ export abstract class ADecorator implements IBehaveEngine {
         return this.behaveEngine.getPathValue(path);
     }
 
-    getPathtypeName(path: string) {
-        return this.behaveEngine.getPathtypeName(path);
+    getPathTypeName(path: string) {
+        return this.behaveEngine.getPathTypeName(path);
     }
 
     addEntryToValueEvaluationCache(key: string, val: IInteractivityValue): void {

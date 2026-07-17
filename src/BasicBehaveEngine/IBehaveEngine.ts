@@ -182,7 +182,7 @@ export interface IBehaveEngine {
      * @param {string} path - The path to the desired type name.
      * @returns {any} The type name found at the specified path.
      */
-    getPathtypeName: (path: string) => any;
+    getPathTypeName: (path: string) => any;
 
     /**
      * Clears the cache used for value evaluations.

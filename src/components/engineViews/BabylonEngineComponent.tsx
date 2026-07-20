@@ -210,7 +210,6 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
         sceneRef.current?.createDefaultCamera(true, true, true);
         autoFrame();
         const loadedModel = buildBabylonLoadedModel(container);
-        console.log(loadedModel.materials);
         return loadedModel;
     };
 

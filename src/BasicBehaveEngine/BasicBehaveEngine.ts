@@ -495,6 +495,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
     }
 
     public pushScheduledDelay = (delay: NodeJS.Timeout): void => {
+        this.jsonPtrTrie.addPath(`/extensions/KHR_interactivity/delays/${this._scheduledDelays.length}`, () => [delay], () => undefined, "ref", true);
         this._scheduledDelays.push(delay);
     }
 
@@ -509,6 +510,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
     public cancelScheduledDelay = (index: number): void => {
         const delay = this.getScheduledDelay(index);
         if (delay !== undefined) {
+            this.jsonPtrTrie.removePath(`/extensions/KHR_interactivity/delays/${index}`);
             clearTimeout(delay);
             this._scheduledDelays[index] = undefined;
         }
@@ -516,6 +518,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
 
     public removeScheduledDelay = (index: number): void => {
         if (index >= 0 && index < this._scheduledDelays.length) {
+            this.jsonPtrTrie.removePath(`/extensions/KHR_interactivity/delays/${index}`);
             this._scheduledDelays[index] = undefined;
         }
     }

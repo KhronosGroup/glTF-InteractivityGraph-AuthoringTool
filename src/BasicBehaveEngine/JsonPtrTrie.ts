@@ -72,6 +72,22 @@ export class JsonPtrTrie {
         currentNode.readOnly = readOnly;
     }
 
+    public removePath(path: string): void {
+        const pathPieces = path.split('/');
+        let currentNode = this.root;
+
+        for (let i = 0; i < pathPieces.length - 1; i++) {
+            const pathPiece = pathPieces[i];
+            const child = currentNode.children.get(pathPiece);
+            if (!child) {
+                return;
+            }
+            currentNode = child;
+        }
+
+        currentNode.children.delete(pathPieces[pathPieces.length - 1]);
+    }
+
     /**
      * Checks if a given JSON Pointer path is valid within the Trie.
      * @param path - The JSON Pointer path to validate.

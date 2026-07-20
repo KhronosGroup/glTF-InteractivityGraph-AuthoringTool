@@ -31,7 +31,7 @@ export class OnSelect extends BehaveEngineNode {
         };
         this.outValues.event = {
             type: this.getTypeIndex('ref'),
-            value: [this._nodeIndex],
+            value: [null],
         };
 
         this.setUpOnSelect();
@@ -41,10 +41,11 @@ export class OnSelect extends BehaveEngineNode {
 
     setUpOnSelect() {
         const callback = (
-            selectedNodeRef: any,
+            selectedNode: string,
             controllerIndex: number,
             selectionPoint: [number, number, number] | undefined,
-            selectionRayOrigin: [number, number, number] | undefined
+            selectionRayOrigin: [number, number, number] | undefined,
+            event: string,
         ) => {
             this.outValues.selectionPoint = {
                 type: this.getTypeIndex('float3'),
@@ -56,13 +57,17 @@ export class OnSelect extends BehaveEngineNode {
             };
             this.outValues.selectedNode = {
                 type: this.getTypeIndex('ref'),
-                value: [selectedNodeRef ?? null],
+                value: [selectedNode],
             };
             this.outValues.controllerIndex = {
                 type: this.getTypeIndex('int'),
                 value: [controllerIndex],
             };
-            
+            this.outValues.event = {
+                type: this.getTypeIndex('ref'),
+                value: [event],
+            };
+
             this.addEventToWorkQueue(this.flows.out);
         }
         this.graphEngine.selectableNodesIndices.set(Number(this._nodeIndex), callback);

@@ -302,11 +302,12 @@ export class BasicBehaveEngine implements IBehaveEngine {
     private valueEvaluationCache: Map<string, IInteractivityValue>;
     private _timerID: NodeJS.Timeout | null;
     public hoverableNodesIndices: Map<number, IHoverInformation>;
-    public selectableNodesIndices: Map<number, (selectedNodeRef: any, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) => void>;
+    public selectableNodesIndices: Map<number, (selectedNode: string, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined, event: string) => void>;
     public selectNodes: Array<OnSelect>;
     public lastHoveredNodeIndices: Map<number, number | undefined>;
     public rigidBodyTriggerNodeIndices: Map<number, IRigidBodyTriggerInformation>;
     public propagationCancelled: Set<string>;
+    public propagationCancelledPending: Set<string>;
 
     constructor(fps: number, eventBus: IEventBus) {
         this.registry = new Map<string, any>();
@@ -327,10 +328,11 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this._timerID = null;
         this.hoverableNodesIndices = new Map<number, IHoverInformation>();
         this.lastHoveredNodeIndices = new Map<number, number>();
-        this.selectableNodesIndices = new Map<number, (selectedNodeRef: any, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) => void>();
+        this.selectableNodesIndices = new Map();
         this.selectNodes = [];
         this.rigidBodyTriggerNodeIndices = new Map<number, IRigidBodyTriggerInformation>();
         this.propagationCancelled = new Set<string>();
+        this.propagationCancelledPending = new Set<string>();
 
         this.registerKnownBehaviorNodes();
     }
@@ -392,14 +394,19 @@ export class BasicBehaveEngine implements IBehaveEngine {
     }
 
     public select(selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) {
+        const onSelectEventIndex = this.events.findIndex((event) => event.id === "onSelect");
+        const eventRef = `/extensions/KHR_interactivity/events/${onSelectEventIndex}`;
+
         for (let nodeIndex = selectedNodeIndex;;) {
-            // if (this.propagationCancelled.has("")) {
-            //     break;
-            // }
+            this.flushPendingPropagationCancellations();
+
+            if (this.propagationCancelled.has(eventRef)) {
+                break;
+            }
 
             const callback = this.selectableNodesIndices.get(nodeIndex);
             if (callback !== undefined) {
-                callback(`/nodes/${selectedNodeIndex}`, controllerIndex, selectionPoint, selectionRayOrigin);
+                callback(`/nodes/${selectedNodeIndex}`, controllerIndex, selectionPoint, selectionRayOrigin, eventRef);
                 return;
             }
 
@@ -597,6 +604,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.selectableNodesIndices.clear();
         this.lastHoveredNodeIndices.clear();
         this.propagationCancelled.clear();
+        this.propagationCancelledPending.clear();
         this._pauseDuration = 0;
         this._pauseTickTime = NaN;
         try {
@@ -833,6 +841,8 @@ export class BasicBehaveEngine implements IBehaveEngine {
         }
 
         this.propagationCancelled.clear();
+        this.propagationCancelledPending.clear();
+
         const eventQueueCopy = [...this.eventBus.getEventList()];
         this.eventBus.clearEventList();
         while (eventQueueCopy.length > 0) {
@@ -871,7 +881,12 @@ export class BasicBehaveEngine implements IBehaveEngine {
         }, 1000 / this.fps)
     }
 
-   
+    public flushPendingPropagationCancellations = () => {
+        for (const event of this.propagationCancelledPending) {
+            this.propagationCancelled.add(event);
+        }
+        this.propagationCancelledPending.clear();
+    }
 
     setPointerInterpolationCallback(path: string, action: IInterpolateAction): void {
         this.eventBus.setPointerInterpolationCallback(path, action);

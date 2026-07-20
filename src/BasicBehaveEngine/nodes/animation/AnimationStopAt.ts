@@ -20,8 +20,8 @@ export class AnimationStopAt extends BehaveEngineNode {
         const validStopTime = !isNaN(stopTime) && isFinite(stopTime);
 
         if (validAnimation && validStopTime) {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
+            this.graphEngine.animationCompletionCallbacks.delete(animationIndex);
+
             this.graphEngine.stopAnimationAt(animationIndex, stopTime, () => {
                 if (this.flows.done) {
                     this.addEventToWorkQueue(this.flows.done);

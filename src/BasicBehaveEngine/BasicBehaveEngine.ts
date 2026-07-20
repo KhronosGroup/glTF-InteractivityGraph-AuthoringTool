@@ -308,6 +308,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
     public rigidBodyTriggerNodeIndices: Map<number, IRigidBodyTriggerInformation>;
     public propagationCancelled: Set<string>;
     public propagationCancelledPending: Set<string>;
+    public animationCompletionCallbacks: Map<number, () => void>;
 
     constructor(fps: number, eventBus: IEventBus) {
         this.registry = new Map<string, any>();
@@ -333,6 +334,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.rigidBodyTriggerNodeIndices = new Map<number, IRigidBodyTriggerInformation>();
         this.propagationCancelled = new Set<string>();
         this.propagationCancelledPending = new Set<string>();
+        this.animationCompletionCallbacks = new Map();
 
         this.registerKnownBehaviorNodes();
     }
@@ -349,7 +351,13 @@ export class BasicBehaveEngine implements IBehaveEngine {
         return this._variables;
     }
 
-    public startAnimation() {
+    public completeAnimation(animationIndex: number) {
+        const callback = this.animationCompletionCallbacks.get(animationIndex);
+        callback?.();
+        this.animationCompletionCallbacks.delete(animationIndex);
+    }
+
+    public startAnimation(animationIndex: number, startTime: number, endTime: number, speed: number, callback: () => void) {
         // Implemented by decorators
     }
 

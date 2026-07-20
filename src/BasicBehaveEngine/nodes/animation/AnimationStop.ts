@@ -19,8 +19,8 @@ export class AnimationStop extends BehaveEngineNode {
         const validAnimation = this.graphEngine.getWorld().animations.length > animationIndex && animationIndex >= 0;
 
         if (validAnimation) {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
+            this.graphEngine.animationCompletionCallbacks.delete(animationIndex);
+
             this.graphEngine.stopAnimation(animationIndex);
 
             if (this.flows.out) {

@@ -25,13 +25,14 @@ export class AnimationStart extends BehaveEngineNode {
         const validSpeed = !isNaN(speed) && isFinite(speed) && speed > 0;
 
         if (validAnimation && validStartTime && validEndTime && validSpeed) {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            this.graphEngine.startAnimation(animationIndex, startTime, endTime, speed, () => {
+
+            this.graphEngine.animationCompletionCallbacks.set(animationIndex, () => {
                 if (this.flows.done) {
                     this.addEventToWorkQueue(this.flows.done);
                 }
             });
+
+            this.graphEngine.startAnimation(animationIndex, startTime, endTime, speed, () => this.graphEngine.completeAnimation(animationIndex));
 
             if (this.flows.out) {
                 this.processFlow(this.flows.out);

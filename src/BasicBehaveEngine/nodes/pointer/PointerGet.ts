@@ -51,20 +51,6 @@ export class PointerGet extends BehaveEngineNode {
                     'isValid': {value: [false], type: this.getTypeIndex('bool')}
                 };
             }
-
-            // try {
-            //     const value = this.graphEngine.getPathValue(populatedPath);
-            //     return {
-            //         'value': {value, type: this._typeIndex},
-            //         'isValid': {value: [true], type: this.getTypeIndex('bool')}
-            //     };
-            // } catch (error) {
-            //     console.error(`Error retrieving value at path ${populatedPath}:`, error);
-            //     return {
-            //         'value': {value: this.getDefaultValueForType(configuredTypeName), type: this._typeIndex},
-            //         'isValid': {value: [false], type: this.getTypeIndex('bool')}
-            //     };
-            // }
         } else {
             const typeName = this.getType(this._typeIndex);
             return {

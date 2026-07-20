@@ -79,7 +79,7 @@ export function loadAssetCases(options: LoadAssetCasesOptions = {}): AssetCase[]
 
     return loadAssetEntries(root)
         .filter((entry) => {
-            const isInterGlb = entry.name.startsWith("InterGlb/");
+            const isInterGlb = entry.name.startsWith("InterGlb");
             if (interGlbMode === "only") {
                 return isInterGlb;
             }

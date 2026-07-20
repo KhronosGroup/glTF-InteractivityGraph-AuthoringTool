@@ -1054,7 +1054,7 @@ export class BabylonDecorator extends ADecorator {
             const parts: string[] = path.split("/");
             const node = this.world.glTFNodes[Number(parts[2])] as any;
             const target = node.morphTargetManager?.getTarget(Number(parts[4]));
-            return target === undefined ? [NaN] : [target.influence];
+            return target !== undefined ? [target.influence] : undefined;
         }, (path, value) => {
             const parts: string[] = path.split("/");
             const node = this.world.glTFNodes[Number(parts[2])] as any;
@@ -1065,6 +1065,9 @@ export class BabylonDecorator extends ADecorator {
         this.registerJsonPointer(`/nodes/${maxGltfNode}/weights.length`, (path) => {
             const parts: string[] = path.split("/");
             const node = this.world.glTFNodes[Number(parts[2])] as any;
+            if (node.morphTargetManager === undefined) {
+                return undefined;
+            }
             return [node.morphTargetManager?.numTargets ?? 0];
         }, (path, value) => {
             //no-op

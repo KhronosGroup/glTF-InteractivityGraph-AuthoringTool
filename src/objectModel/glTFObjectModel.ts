@@ -264,7 +264,9 @@ export class GlTFObjectModelDecorator extends ADecorator {
                     this.scalarPointer(`/nodes/${nodeIndex}/weights/${weightIndex}`, "float", () => node.weights[weightIndex], (value) => node.weights[weightIndex] = value);
                 });
             }
-            this.scalarPointer(`/nodes/${nodeIndex}/weights.length`, "int", () => node.weights.length, ignoreSet, true);
+            if (node.mesh !== undefined) {
+                this.scalarPointer(`/nodes/${nodeIndex}/weights.length`, "int", () => node.weights.length, ignoreSet, true);
+            }
 
             for (const pointerDefinition of NODE_EXTENSION_POINTERS) {
                 if (node.extensions?.[pointerDefinition.extension ?? ""] === undefined) {

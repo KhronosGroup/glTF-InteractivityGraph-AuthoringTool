@@ -1,5 +1,6 @@
 import { GLTFLoader, IGLTFLoaderExtension } from '@babylonjs/loaders/glTF/2.0';
 import { registerGLTFExtension, unregisterGLTFExtension } from '@babylonjs/loaders/glTF/2.0/glTFLoaderExtensionRegistry';
+import { Material, PBRMaterial } from '@babylonjs/core';
 import { buildGltfObjectModel } from '../authoring/gltfObjectModel';
 
 export const KHR_INTERACTIVITY_EXTENSION_NAME = 'KHR_interactivity';
@@ -57,5 +58,40 @@ export class KHR_interactivity implements IGLTFLoaderExtension {
             }
         }
         this._loader.babylonScene.metadata.khrLightsNodeToLightIndex = khrLightsNodeToLightIndex;
+    }
+
+    public async loadMaterialPropertiesAsync(context: string, material: any, babylonMaterial: Material): Promise<void> {
+        await this._loader.loadMaterialPropertiesAsync(context, material, babylonMaterial);
+        if (!(babylonMaterial instanceof PBRMaterial)) {
+            return;
+        }
+
+        const transmission = material.extensions?.KHR_materials_transmission;
+        if (transmission?.transmissionTexture && babylonMaterial.subSurface.refractionIntensityTexture == null) {
+            transmission.transmissionTexture.nonColorData = true;
+            await this._loader.loadTextureInfoAsync(
+                `${context}/extensions/KHR_materials_transmission/transmissionTexture`,
+                transmission.transmissionTexture,
+                (texture: any) => {
+                    texture.name = `${babylonMaterial.name} (Transmission)`;
+                    babylonMaterial.subSurface.refractionIntensityTexture = texture;
+                    babylonMaterial.subSurface.useGltfStyleTextures = true;
+                },
+            );
+        }
+
+        const volume = material.extensions?.KHR_materials_volume;
+        if (volume?.thicknessTexture && babylonMaterial.subSurface.thicknessTexture == null) {
+            volume.thicknessTexture.nonColorData = true;
+            await this._loader.loadTextureInfoAsync(
+                `${context}/extensions/KHR_materials_volume/thicknessTexture`,
+                volume.thicknessTexture,
+                (texture: any) => {
+                    texture.name = `${babylonMaterial.name} (Thickness)`;
+                    babylonMaterial.subSurface.thicknessTexture = texture;
+                    babylonMaterial.subSurface.useGltfStyleTextures = true;
+                },
+            );
+        }
     }
 }

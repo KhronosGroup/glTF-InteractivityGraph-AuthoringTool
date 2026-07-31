@@ -5,10 +5,10 @@ export const glTFSchemaMetadata = {
   "source": {
     "defaultRepoPath": "../glTF",
     "env": "KHR_INTERACTIVITY_GLTF_REPO",
-    "branch": "interactivity",
+    "branch": "detached",
     "commit": "5e87b48cecf6a3776dc3dfce65e76bb074fe7ae1",
     "ratifiedRef": "origin/main",
-    "ratifiedCommit": "5ec16c42e5ed044f26ce2a5b741ed5c57cf622f3"
+    "ratifiedCommit": "77b44be7bef26e01fb0b140e3d5bb1716421c5e9"
   },
   "ratifiedKhronosExtensions": [
     "KHR_animation_pointer",
@@ -1221,6 +1221,25 @@ export const glTFSchemaMetadata = {
       "extension": "KHR_materials_clearcoat"
     },
     {
+      "template": "/materials/{}/extensions/KHR_materials_clearcoat/clearcoatNormalTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_clearcoat",
+        "clearcoatNormalTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_clearcoat/schema/material.KHR_materials_clearcoat.schema.json#/properties/clearcoatNormalTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_clearcoat",
+        "clearcoatNormalTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_clearcoat"
+    },
+    {
       "template": "/materials/{}/extensions/KHR_materials_clearcoat/clearcoatRoughnessFactor",
       "segments": [
         "extensions",
@@ -1644,6 +1663,20 @@ export const glTFSchemaMetadata = {
       "defaultValue": 1
     },
     {
+      "template": "/materials/{}/normalTexture/texCoord",
+      "segments": [
+        "normalTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/normalTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "normalTexture"
+      ],
+      "defaultValue": 0
+    },
+    {
       "template": "/materials/{}/occlusionTexture/strength",
       "segments": [
         "occlusionTexture",
@@ -1656,6 +1689,20 @@ export const glTFSchemaMetadata = {
         "occlusionTexture"
       ],
       "defaultValue": 1
+    },
+    {
+      "template": "/materials/{}/occlusionTexture/texCoord",
+      "segments": [
+        "occlusionTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/occlusionTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "occlusionTexture"
+      ],
+      "defaultValue": 0
     },
     {
       "template": "/materials/{}/pbrMetallicRoughness/baseColorFactor",
@@ -2080,6 +2127,21 @@ export const glTFSchemaMetadata = {
       "extension": "KHR_materials_anisotropy"
     },
     {
+      "template": "/materials/[]/extensions/KHR_materials_anisotropy/anisotropyTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_anisotropy/anisotropyTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_anisotropy/anisotropyTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
       "template": "/materials/[]/extensions/KHR_materials_anisotropy/anisotropyTexture/texCoord",
       "segments": [
         "extensions",
@@ -2112,6 +2174,21 @@ export const glTFSchemaMetadata = {
       "extension": "KHR_materials_clearcoat"
     },
     {
+      "template": "/materials/[]/extensions/KHR_materials_clearcoat/clearcoatNormalTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_clearcoat/clearcoatNormalTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_clearcoat/clearcoatNormalTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
       "template": "/materials/[]/extensions/KHR_materials_clearcoat/clearcoatNormalTexture/scale",
       "segments": [
         "extensions",
@@ -2131,6 +2208,25 @@ export const glTFSchemaMetadata = {
       "extension": "KHR_materials_clearcoat"
     },
     {
+      "template": "/materials/[]/extensions/KHR_materials_clearcoat/clearcoatNormalTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_clearcoat",
+        "clearcoatNormalTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_clearcoat/schema/material.KHR_materials_clearcoat.schema.json#/properties/clearcoatNormalTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_clearcoat",
+        "clearcoatNormalTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_clearcoat"
+    },
+    {
       "template": "/materials/[]/extensions/KHR_materials_clearcoat/clearcoatRoughnessFactor",
       "segments": [
         "extensions",
@@ -2142,6 +2238,21 @@ export const glTFSchemaMetadata = {
       "schemaPointer": "extensions/2.0/Khronos/KHR_materials_clearcoat/schema/material.KHR_materials_clearcoat.schema.json#/properties/clearcoatRoughnessFactor",
       "defaultValue": 0,
       "extension": "KHR_materials_clearcoat"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_clearcoat/clearcoatRoughnessTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_clearcoat/clearcoatRoughnessTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_clearcoat/clearcoatRoughnessTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
     },
     {
       "template": "/materials/[]/extensions/KHR_materials_clearcoat/clearcoatRoughnessTexture/texCoord",
@@ -2161,6 +2272,21 @@ export const glTFSchemaMetadata = {
       ],
       "defaultValue": 0,
       "extension": "KHR_materials_clearcoat"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_clearcoat/clearcoatTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_clearcoat/clearcoatTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_clearcoat/clearcoatTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
     },
     {
       "template": "/materials/[]/extensions/KHR_materials_clearcoat/clearcoatTexture/texCoord",
@@ -2247,6 +2373,21 @@ export const glTFSchemaMetadata = {
       "extension": "KHR_materials_iridescence"
     },
     {
+      "template": "/materials/[]/extensions/KHR_materials_iridescence/iridescenceTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_iridescence/iridescenceTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_iridescence/iridescenceTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
       "template": "/materials/[]/extensions/KHR_materials_iridescence/iridescenceTexture/texCoord",
       "segments": [
         "extensions",
@@ -2292,6 +2433,21 @@ export const glTFSchemaMetadata = {
       "extension": "KHR_materials_iridescence"
     },
     {
+      "template": "/materials/[]/extensions/KHR_materials_iridescence/iridescenceThicknessTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_iridescence/iridescenceThicknessTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_iridescence/iridescenceThicknessTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
       "template": "/materials/[]/extensions/KHR_materials_iridescence/iridescenceThicknessTexture/texCoord",
       "segments": [
         "extensions",
@@ -2328,6 +2484,21 @@ export const glTFSchemaMetadata = {
       "extension": "KHR_materials_sheen"
     },
     {
+      "template": "/materials/[]/extensions/KHR_materials_sheen/sheenColorTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_sheen/sheenColorTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_sheen/sheenColorTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
       "template": "/materials/[]/extensions/KHR_materials_sheen/sheenColorTexture/texCoord",
       "segments": [
         "extensions",
@@ -2358,6 +2529,21 @@ export const glTFSchemaMetadata = {
       "schemaPointer": "extensions/2.0/Khronos/KHR_materials_sheen/schema/material.KHR_materials_sheen.schema.json#/properties/sheenRoughnessFactor",
       "defaultValue": 0,
       "extension": "KHR_materials_sheen"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_sheen/sheenRoughnessTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_sheen/sheenRoughnessTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_sheen/sheenRoughnessTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
     },
     {
       "template": "/materials/[]/extensions/KHR_materials_sheen/sheenRoughnessTexture/texCoord",
@@ -2396,6 +2582,21 @@ export const glTFSchemaMetadata = {
       "extension": "KHR_materials_specular"
     },
     {
+      "template": "/materials/[]/extensions/KHR_materials_specular/specularColorTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_specular/specularColorTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_specular/specularColorTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
       "template": "/materials/[]/extensions/KHR_materials_specular/specularColorTexture/texCoord",
       "segments": [
         "extensions",
@@ -2428,6 +2629,21 @@ export const glTFSchemaMetadata = {
       "extension": "KHR_materials_specular"
     },
     {
+      "template": "/materials/[]/extensions/KHR_materials_specular/specularTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_specular/specularTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_specular/specularTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
       "template": "/materials/[]/extensions/KHR_materials_specular/specularTexture/texCoord",
       "segments": [
         "extensions",
@@ -2458,6 +2674,21 @@ export const glTFSchemaMetadata = {
       "schemaPointer": "extensions/2.0/Khronos/KHR_materials_transmission/schema/material.KHR_materials_transmission.schema.json#/properties/transmissionFactor",
       "defaultValue": 0,
       "extension": "KHR_materials_transmission"
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_transmission/transmissionTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_transmission/transmissionTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_transmission/transmissionTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
     },
     {
       "template": "/materials/[]/extensions/KHR_materials_transmission/transmissionTexture/texCoord",
@@ -2521,6 +2752,21 @@ export const glTFSchemaMetadata = {
       "extension": "KHR_materials_volume"
     },
     {
+      "template": "/materials/[]/extensions/KHR_materials_volume/thicknessTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_volume/thicknessTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/[]/extensions/KHR_materials_volume/thicknessTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
       "template": "/materials/[]/extensions/KHR_materials_volume/thicknessTexture/texCoord",
       "segments": [
         "extensions",
@@ -2569,6 +2815,20 @@ export const glTFSchemaMetadata = {
       "defaultValue": 1
     },
     {
+      "template": "/materials/[]/normalTexture/texCoord",
+      "segments": [
+        "normalTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/normalTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "normalTexture"
+      ],
+      "defaultValue": 0
+    },
+    {
       "template": "/materials/[]/occlusionTexture/extensions/KHR_texture_transform/offset",
       "typeName": "float2",
       "readOnly": false
@@ -2596,6 +2856,20 @@ export const glTFSchemaMetadata = {
         "occlusionTexture"
       ],
       "defaultValue": 1
+    },
+    {
+      "template": "/materials/[]/occlusionTexture/texCoord",
+      "segments": [
+        "occlusionTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/occlusionTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "occlusionTexture"
+      ],
+      "defaultValue": 0
     },
     {
       "template": "/materials/[]/pbrMetallicRoughness/baseColorFactor",
@@ -2787,6 +3061,21 @@ export const glTFSchemaMetadata = {
       "extension": "KHR_materials_anisotropy"
     },
     {
+      "template": "/materials/{}/extensions/KHR_materials_anisotropy/anisotropyTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_anisotropy/anisotropyTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_anisotropy/anisotropyTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
       "template": "/materials/{}/extensions/KHR_materials_anisotropy/anisotropyTexture/texCoord",
       "segments": [
         "extensions",
@@ -2819,6 +3108,21 @@ export const glTFSchemaMetadata = {
       "extension": "KHR_materials_clearcoat"
     },
     {
+      "template": "/materials/{}/extensions/KHR_materials_clearcoat/clearcoatNormalTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_clearcoat/clearcoatNormalTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_clearcoat/clearcoatNormalTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
       "template": "/materials/{}/extensions/KHR_materials_clearcoat/clearcoatNormalTexture/scale",
       "segments": [
         "extensions",
@@ -2838,6 +3142,25 @@ export const glTFSchemaMetadata = {
       "extension": "KHR_materials_clearcoat"
     },
     {
+      "template": "/materials/{}/extensions/KHR_materials_clearcoat/clearcoatNormalTexture/texCoord",
+      "segments": [
+        "extensions",
+        "KHR_materials_clearcoat",
+        "clearcoatNormalTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_materials_clearcoat/schema/material.KHR_materials_clearcoat.schema.json#/properties/clearcoatNormalTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "extensions",
+        "KHR_materials_clearcoat",
+        "clearcoatNormalTexture"
+      ],
+      "defaultValue": 0,
+      "extension": "KHR_materials_clearcoat"
+    },
+    {
       "template": "/materials/{}/extensions/KHR_materials_clearcoat/clearcoatRoughnessFactor",
       "segments": [
         "extensions",
@@ -2849,6 +3172,21 @@ export const glTFSchemaMetadata = {
       "schemaPointer": "extensions/2.0/Khronos/KHR_materials_clearcoat/schema/material.KHR_materials_clearcoat.schema.json#/properties/clearcoatRoughnessFactor",
       "defaultValue": 0,
       "extension": "KHR_materials_clearcoat"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_clearcoat/clearcoatRoughnessTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_clearcoat/clearcoatRoughnessTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_clearcoat/clearcoatRoughnessTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
     },
     {
       "template": "/materials/{}/extensions/KHR_materials_clearcoat/clearcoatRoughnessTexture/texCoord",
@@ -2868,6 +3206,21 @@ export const glTFSchemaMetadata = {
       ],
       "defaultValue": 0,
       "extension": "KHR_materials_clearcoat"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_clearcoat/clearcoatTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_clearcoat/clearcoatTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_clearcoat/clearcoatTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
     },
     {
       "template": "/materials/{}/extensions/KHR_materials_clearcoat/clearcoatTexture/texCoord",
@@ -2954,6 +3307,21 @@ export const glTFSchemaMetadata = {
       "extension": "KHR_materials_iridescence"
     },
     {
+      "template": "/materials/{}/extensions/KHR_materials_iridescence/iridescenceTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_iridescence/iridescenceTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_iridescence/iridescenceTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
       "template": "/materials/{}/extensions/KHR_materials_iridescence/iridescenceTexture/texCoord",
       "segments": [
         "extensions",
@@ -2999,6 +3367,21 @@ export const glTFSchemaMetadata = {
       "extension": "KHR_materials_iridescence"
     },
     {
+      "template": "/materials/{}/extensions/KHR_materials_iridescence/iridescenceThicknessTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_iridescence/iridescenceThicknessTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_iridescence/iridescenceThicknessTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
       "template": "/materials/{}/extensions/KHR_materials_iridescence/iridescenceThicknessTexture/texCoord",
       "segments": [
         "extensions",
@@ -3035,6 +3418,21 @@ export const glTFSchemaMetadata = {
       "extension": "KHR_materials_sheen"
     },
     {
+      "template": "/materials/{}/extensions/KHR_materials_sheen/sheenColorTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_sheen/sheenColorTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_sheen/sheenColorTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
       "template": "/materials/{}/extensions/KHR_materials_sheen/sheenColorTexture/texCoord",
       "segments": [
         "extensions",
@@ -3065,6 +3463,21 @@ export const glTFSchemaMetadata = {
       "schemaPointer": "extensions/2.0/Khronos/KHR_materials_sheen/schema/material.KHR_materials_sheen.schema.json#/properties/sheenRoughnessFactor",
       "defaultValue": 0,
       "extension": "KHR_materials_sheen"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_sheen/sheenRoughnessTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_sheen/sheenRoughnessTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_sheen/sheenRoughnessTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
     },
     {
       "template": "/materials/{}/extensions/KHR_materials_sheen/sheenRoughnessTexture/texCoord",
@@ -3103,6 +3516,21 @@ export const glTFSchemaMetadata = {
       "extension": "KHR_materials_specular"
     },
     {
+      "template": "/materials/{}/extensions/KHR_materials_specular/specularColorTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_specular/specularColorTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_specular/specularColorTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
       "template": "/materials/{}/extensions/KHR_materials_specular/specularColorTexture/texCoord",
       "segments": [
         "extensions",
@@ -3135,6 +3563,21 @@ export const glTFSchemaMetadata = {
       "extension": "KHR_materials_specular"
     },
     {
+      "template": "/materials/{}/extensions/KHR_materials_specular/specularTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_specular/specularTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_specular/specularTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
       "template": "/materials/{}/extensions/KHR_materials_specular/specularTexture/texCoord",
       "segments": [
         "extensions",
@@ -3165,6 +3608,21 @@ export const glTFSchemaMetadata = {
       "schemaPointer": "extensions/2.0/Khronos/KHR_materials_transmission/schema/material.KHR_materials_transmission.schema.json#/properties/transmissionFactor",
       "defaultValue": 0,
       "extension": "KHR_materials_transmission"
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_transmission/transmissionTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_transmission/transmissionTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_transmission/transmissionTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
     },
     {
       "template": "/materials/{}/extensions/KHR_materials_transmission/transmissionTexture/texCoord",
@@ -3228,6 +3686,21 @@ export const glTFSchemaMetadata = {
       "extension": "KHR_materials_volume"
     },
     {
+      "template": "/materials/{}/extensions/KHR_materials_volume/thicknessTexture/extensions/KHR_texture_transform/offset",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_volume/thicknessTexture/extensions/KHR_texture_transform/rotation",
+      "typeName": "float",
+      "readOnly": false
+    },
+    {
+      "template": "/materials/{}/extensions/KHR_materials_volume/thicknessTexture/extensions/KHR_texture_transform/scale",
+      "typeName": "float2",
+      "readOnly": false
+    },
+    {
       "template": "/materials/{}/extensions/KHR_materials_volume/thicknessTexture/texCoord",
       "segments": [
         "extensions",
@@ -3276,6 +3749,20 @@ export const glTFSchemaMetadata = {
       "defaultValue": 1
     },
     {
+      "template": "/materials/{}/normalTexture/texCoord",
+      "segments": [
+        "normalTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/normalTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "normalTexture"
+      ],
+      "defaultValue": 0
+    },
+    {
       "template": "/materials/{}/occlusionTexture/extensions/KHR_texture_transform/offset",
       "typeName": "float2",
       "readOnly": false
@@ -3303,6 +3790,20 @@ export const glTFSchemaMetadata = {
         "occlusionTexture"
       ],
       "defaultValue": 1
+    },
+    {
+      "template": "/materials/{}/occlusionTexture/texCoord",
+      "segments": [
+        "occlusionTexture",
+        "texCoord"
+      ],
+      "typeName": "int",
+      "readOnly": false,
+      "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/occlusionTexture/properties/texCoord",
+      "requiredParentSegments": [
+        "occlusionTexture"
+      ],
+      "defaultValue": 0
     },
     {
       "template": "/materials/{}/pbrMetallicRoughness/baseColorFactor",

@@ -143,6 +143,80 @@ export class BabylonDecorator extends ADecorator {
         }
     }
 
+    private registerMaterialTextureCoordinatePointers(maxMaterialIndex: number): void {
+        const bindings: Array<{ path: string; select: (material: PBRMaterial) => any }> = [
+            { path: "emissiveTexture", select: (material) => material.emissiveTexture },
+            { path: "normalTexture", select: (material) => material.bumpTexture },
+            { path: "occlusionTexture", select: (material) => material.ambientTexture },
+            { path: "pbrMetallicRoughness/baseColorTexture", select: (material) => material.albedoTexture },
+            { path: "pbrMetallicRoughness/metallicRoughnessTexture", select: (material) => material.metallicTexture },
+            { path: "extensions/KHR_materials_anisotropy/anisotropyTexture", select: (material) => material.anisotropy.texture },
+            { path: "extensions/KHR_materials_clearcoat/clearcoatTexture", select: (material) => material.clearCoat.texture },
+            { path: "extensions/KHR_materials_clearcoat/clearcoatRoughnessTexture", select: (material) => material.clearCoat.textureRoughness },
+            { path: "extensions/KHR_materials_clearcoat/clearcoatNormalTexture", select: (material) => material.clearCoat.bumpTexture },
+            { path: "extensions/KHR_materials_iridescence/iridescenceTexture", select: (material) => material.iridescence.texture },
+            { path: "extensions/KHR_materials_iridescence/iridescenceThicknessTexture", select: (material) => material.iridescence.thicknessTexture },
+            { path: "extensions/KHR_materials_sheen/sheenColorTexture", select: (material) => material.sheen.texture },
+            { path: "extensions/KHR_materials_sheen/sheenRoughnessTexture", select: (material) => material.sheen.textureRoughness },
+            { path: "extensions/KHR_materials_specular/specularTexture", select: (material) => material.metallicReflectanceTexture },
+            { path: "extensions/KHR_materials_specular/specularColorTexture", select: (material) => material.reflectanceTexture },
+            { path: "extensions/KHR_materials_transmission/transmissionTexture", select: (material) => material.subSurface.refractionIntensityTexture },
+            { path: "extensions/KHR_materials_volume/thicknessTexture", select: (material) => material.subSurface.thicknessTexture },
+        ];
+
+        for (const binding of bindings) {
+            this.registerJsonPointer(`/materials/${maxMaterialIndex}/${binding.path}/texCoord`, (path) => {
+                const texture = binding.select(this.world.materials[Number(path.split("/")[2])] as PBRMaterial);
+                return texture == null ? [NaN] : [texture.coordinatesIndex];
+            }, (path, value) => {
+                const texture = binding.select(this.world.materials[Number(path.split("/")[2])] as PBRMaterial);
+                if (texture != null) {
+                    texture.coordinatesIndex = Array.isArray(value) ? value[0] : value;
+                }
+            }, "int", false);
+        }
+    }
+
+    private registerClearcoatNormalTexturePointers(maxMaterialIndex: number): void {
+        const pointer = `/materials/${maxMaterialIndex}/extensions/KHR_materials_clearcoat/clearcoatNormalTexture`;
+        const select = (path: string): any => (this.world.materials[Number(path.split("/")[2])] as PBRMaterial).clearCoat.bumpTexture;
+
+        this.registerJsonPointer(`${pointer}/scale`, (path) => {
+            const texture = select(path);
+            return texture == null ? [NaN] : [texture.level];
+        }, (path, value) => {
+            const texture = select(path);
+            if (texture != null) {
+                texture.level = Array.isArray(value) ? value[0] : value;
+            }
+        }, "float", false);
+
+        const transform = `${pointer}/extensions/KHR_texture_transform`;
+        this.registerJsonPointer(`${transform}/offset`, (path) => {
+            const texture = select(path);
+            return texture == null ? [NaN, NaN] : [texture.uOffset, texture.vOffset];
+        }, (path, value) => {
+            const texture = select(path);
+            if (texture != null) {
+                texture.uOffset = value[0];
+                texture.vOffset = value[1];
+            }
+        }, "float2", false);
+        this.registerJsonPointer(`${transform}/scale`, (path) => {
+            const texture = select(path);
+            return texture == null ? [NaN, NaN] : [texture.uScale, texture.vScale];
+        }, (path, value) => {
+            const texture = select(path);
+            if (texture != null) {
+                texture.uScale = value[0];
+                texture.vScale = value[1];
+            }
+        }, "float2", false);
+        this.registerJsonPointer(`${transform}/rotation`, (path) => BabylonDecorator.getTextureRotation(select(path)), (path, value) => {
+            BabylonDecorator.setTextureRotation(select(path), Array.isArray(value) ? value[0] : value);
+        }, "float", false);
+    }
+
     public dispose(): void {
         if (this.beforeRenderObserver != null) {
             this.scene.onBeforeRenderObservable.remove(this.beforeRenderObserver);
@@ -397,11 +471,7 @@ export class BabylonDecorator extends ADecorator {
             const parts: string[] = path.split("/");
             const material = this.world.materials[Number(parts[2])] as Material;
             return [material.backFaceCulling === false];
-        }, (path, value) => {
-            const parts: string[] = path.split("/");
-            const material = this.world.materials[Number(parts[2])] as Material;
-            material.backFaceCulling = !value;
-        }, "bool", false);
+        }, () => {/* read-only */}, "bool", true);
 
         this.registerJsonPointer(`/materials/${maxGlTFMaterials}/emissiveFactor`, (path) => {
             const parts: string[] = path.split("/");
@@ -1319,6 +1389,9 @@ export class BabylonDecorator extends ADecorator {
             const emissiveTexture = this.world.materials[Number(parts[2])].emissiveTexture;
             BabylonDecorator.setTextureRotation(emissiveTexture, value);
         }, "float", false);
+
+        this.registerMaterialTextureCoordinatePointers(maxGlTFMaterials);
+        this.registerClearcoatNormalTexturePointers(maxGlTFMaterials);
 
         this.registerJsonPointer(`/nodes/${maxGltfNode}/extensions/KHR_node_selectability/selectable`, (path) => {
             const parts: string[] = path.split("/");

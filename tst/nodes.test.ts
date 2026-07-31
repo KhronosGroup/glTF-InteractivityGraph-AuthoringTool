@@ -436,21 +436,24 @@ describe('nodes', () => {
         });
 
         throttleNode.processFlow = jest.fn<(flow: IInteractivityFlow) => Promise<void>>();
+        const now = jest.spyOn(performance, 'now').mockReturnValue(0);
+        graphEngine.executeEventQueueTick();
         expect(throttleNode.outValues.lastRemainingTime.value![0]).toBe(NaN);
         graphEngine.executeEventQueueTick();
         throttleNode.processNode('in');
         expect(throttleNode.processFlow).toHaveBeenCalledWith({ socket: 'in', node: 0 });
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        now.mockReturnValue(100);
         graphEngine.executeEventQueueTick();
         throttleNode.processNode('in');
         expect(throttleNode.outValues.lastRemainingTime.value![0]).not.toBe(NaN);
         expect(throttleNode.outValues.lastRemainingTime.value![0]).toBeGreaterThan(0);
 
         //clear throttle limit
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        now.mockReturnValue(1600);
         graphEngine.executeEventQueueTick();
         await throttleNode.processNode('in');
         expect(throttleNode.outValues.lastRemainingTime.value![0]).toBe(0);
+        now.mockRestore();
     });
 
     it('flow/waitAll', async () => {

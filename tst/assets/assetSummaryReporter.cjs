@@ -2,6 +2,13 @@ const path = require("path");
 const fs = require("fs");
 
 const ENGINE_ORDER = ["Core", "Babylon", "Three"];
+const ANSI = {
+    bold: "\u001b[1m",
+    green: "\u001b[32m",
+    red: "\u001b[31m",
+    yellow: "\u001b[33m",
+    reset: "\u001b[0m",
+};
 // Mirrors MANUAL_SUBTEST_MARKER in sampleAssetHarness.ts.
 const MANUAL_SUBTEST_MARKER = "[manual]";
 const CATEGORY_ORDER = [
@@ -30,19 +37,24 @@ class AssetSummaryReporter {
 
         const engines = collectEngines(rows);
         const categories = orderCategories([...rows.keys()]);
-        const fullRun = engines.length > 1 || categories.includes("InterGlb") || categories.includes("Overview");
+        const executionTotals = collectExecutionTotals(rows);
 
-        process.stdout.write("\nAsset subtest summary\n");
-        if (fullRun) {
-            process.stdout.write("=====================\n");
+        process.stdout.write(`\n${color("bold", "Asset test summary")}\n`);
+        process.stdout.write("==================\n");
+
+        if (validation.totalAssets > 0) {
+            const validationLine = `Validation: ${validation.validAssets}/${validation.totalAssets} assets passed schema validation`;
+            process.stdout.write(`${color(validation.validAssets === validation.totalAssets ? "green" : "red", validationLine)}\n`);
+        }
+        if (rows.size > 0) {
+            const executionLine = `Execution: ${executionTotals.passed}/${executionTotals.total} subtests passed, ${executionTotals.failed} failed`;
+            process.stdout.write(`${color(executionTotals.failed === 0 ? "green" : "red", executionLine)}\n`);
         }
 
         if (validation.totalAssets > 0) {
-            process.stdout.write(`Validation: ${validation.validAssets}/${validation.totalAssets} assets valid`);
-            process.stdout.write(`, ${validation.validSubtests}/${validation.totalSubtests} subtests behind valid graphs\n`);
             if (validation.invalidAssets.length > 0) {
-                process.stdout.write(`Invalid graphs: ${formatInvalidAssets(validation.invalidAssets)}\n`);
-                process.stdout.write("Invalid graph details:\n");
+                process.stdout.write(`${color("red", `Invalid graphs: ${formatInvalidAssets(validation.invalidAssets)}`)}\n`);
+                process.stdout.write(`${color("red", "Invalid graph details:")}\n`);
                 for (const asset of validation.invalidAssets) {
                     process.stdout.write(`- ${asset.name}: ${asset.reason ?? "graph did not validate"} (${asset.subtests} subtests)\n`);
                 }
@@ -58,24 +70,14 @@ class AssetSummaryReporter {
             }
         }
 
-        const missingEngines = ENGINE_ORDER.filter((engine) => !engines.includes(engine));
-        if (rows.size > 0 && fullRun && missingEngines.length > 0) {
-            process.stdout.write(`\nNo asset suite results for: ${missingEngines.join(", ")}\n`);
-        }
-
         if (rows.size > 0) {
-            const executionTotals = collectExecutionTotals(rows);
-            process.stdout.write(`\nTotal: ${executionTotals.passed}/${executionTotals.total} passed`);
-            if (executionTotals.failed > 0) {
-                process.stdout.write(`, ${executionTotals.failed} failed`);
-            }
             process.stdout.write("\n\n");
         } else {
             process.stdout.write("\n");
         }
 
         if (manual.total > 0) {
-            process.stdout.write(`Skipped (entryPoints requiresUserInteraction): ${manual.total} subtest(s)\n`);
+            process.stdout.write(`${color("yellow", `Skipped (entryPoints requiresUserInteraction): ${manual.total} subtest(s)`)}\n`);
             for (const [asset, count] of [...manual.byAsset].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))) {
                 process.stdout.write(`- ${asset}: ${count}\n`);
             }
@@ -97,9 +99,9 @@ class AssetSummaryReporter {
         }
 
         if (failures.length > 0) {
-            process.stdout.write("Failing assets:\n");
+            process.stdout.write(`${color("red", "Failing assets:")}\n`);
             for (const failure of failures) {
-                process.stdout.write(`- ${failure.engine} ${failure.asset}: ${failure.failed}/${failure.total} failed`);
+                process.stdout.write(color("red", `- ${failure.engine} ${failure.asset}: ${failure.failed}/${failure.total} failed`));
                 if (failure.reason) {
                     process.stdout.write(` - ${failure.reason}`);
                 }
@@ -299,7 +301,8 @@ function getAssertionName(assertion) {
 }
 
 function formatCell(engine, stats) {
-    return `${engine} ${stats.passed}/${stats.total}`;
+    const cell = `${engine} ${stats.passed}/${stats.total}`;
+    return color(stats.passed === stats.total ? "green" : "red", cell);
 }
 
 function formatCells(engines, byEngine) {
@@ -308,16 +311,20 @@ function formatCells(engines, byEngine) {
         const core = byEngine.get("Core");
         const babylon = byEngine.get("Babylon");
         if (sameStats(core, babylon)) {
-            return [`both ${core.passed}/${core.total}`];
+            return [formatCombinedCell("both", core)];
         }
     }
     if (presentEngines.length > 2) {
         const first = byEngine.get(presentEngines[0]);
         if (presentEngines.every((engine) => sameStats(first, byEngine.get(engine)))) {
-            return [`all ${first.passed}/${first.total}`];
+            return [formatCombinedCell("all", first)];
         }
     }
     return presentEngines.map((engine) => formatCell(engine, byEngine.get(engine)));
+}
+
+function formatCombinedCell(label, stats) {
+    return color(stats.passed === stats.total ? "green" : "red", `${label} ${stats.passed}/${stats.total}`);
 }
 
 function collectExecutionTotals(rows) {
@@ -629,11 +636,29 @@ function canonicalPointer(pointer) {
 
 function formatCoverage(covered, total) {
     const percent = total === 0 ? 100 : (covered / total) * 100;
-    return `${covered}/${total} (${percent.toFixed(1)}%)`;
+    const summary = `${covered}/${total} (${percent.toFixed(1)}%)`;
+    return color(covered === total ? "green" : "yellow", summary);
 }
 
 function formatMissingPointers(pointers) {
     return pointers.map((pointer) => `- ${pointer}\n`).join("");
+}
+
+function color(name, value) {
+    if (!colorsEnabled()) {
+        return value;
+    }
+    return `${ANSI[name]}${value}${ANSI.reset}`;
+}
+
+function colorsEnabled() {
+    if (Object.prototype.hasOwnProperty.call(process.env, "FORCE_COLOR")) {
+        return process.env.FORCE_COLOR !== "0";
+    }
+    if (Object.prototype.hasOwnProperty.call(process.env, "NO_COLOR")) {
+        return false;
+    }
+    return process.stdout.isTTY === true;
 }
 
 module.exports = AssetSummaryReporter;

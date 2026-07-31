@@ -199,14 +199,20 @@ const resolveRef = (ref, currentSchemaFile) => {
     };
 };
 
-const mergeSchema = (base, next) => ({
-    ...base,
-    ...next,
-    properties: {
-        ...(base.properties ?? {}),
-        ...(next.properties ?? {}),
-    },
-});
+const mergeSchema = (base, next) => {
+    const merged = { ...base, ...next };
+    const propertyNames = new Set([
+        ...Object.keys(base.properties ?? {}),
+        ...Object.keys(next.properties ?? {}),
+    ]);
+    if (propertyNames.size > 0) {
+        merged.properties = Object.fromEntries([...propertyNames].map((propertyName) => [
+            propertyName,
+            mergeSchema(base.properties?.[propertyName] ?? {}, next.properties?.[propertyName] ?? {}),
+        ]));
+    }
+    return merged;
+};
 
 const dereferenceSchema = (schema, currentSchemaFile, seen = new Set()) => {
     if (!schema) {
@@ -362,17 +368,17 @@ const nodeExtensionPointers = [
     .sort((a, b) => a.template.localeCompare(b.template));
 
 const pointer = (template, typeName, readOnly = false, schemaPointer = undefined) => ({ template, typeName, readOnly, schemaPointer });
-const textureTransformPointers = [
-    "normalTexture",
-    "occlusionTexture",
-    "emissiveTexture",
-    "pbrMetallicRoughness/baseColorTexture",
-    "pbrMetallicRoughness/metallicRoughnessTexture",
-].flatMap((texturePath) => [
-    pointer(`/materials/{}/${texturePath}/extensions/KHR_texture_transform/offset`, "float2"),
-    pointer(`/materials/{}/${texturePath}/extensions/KHR_texture_transform/scale`, "float2"),
-    pointer(`/materials/{}/${texturePath}/extensions/KHR_texture_transform/rotation`, "float"),
-]);
+const materialTextureTemplates = [...new Set(materialPointers
+    .filter((definition) => definition.requiredParentSegments?.at(-1)?.endsWith("Texture"))
+    .map((definition) => `/materials/{}/${definition.requiredParentSegments.join("/")}`))];
+const textureTransformPointers = materialTextureTemplates
+    .flatMap((textureTemplate) => {
+        return [
+            pointer(`${textureTemplate}/extensions/KHR_texture_transform/offset`, "float2"),
+            pointer(`${textureTemplate}/extensions/KHR_texture_transform/scale`, "float2"),
+            pointer(`${textureTemplate}/extensions/KHR_texture_transform/rotation`, "float"),
+        ];
+    });
 
 const objectModelPointers = dedupePointers([
     pointer("/animations.length", "int", true),

@@ -5,6 +5,16 @@ import { reconcileNodeSockets } from "../src/authoring/socketReconciler";
 import { interactivityNodeSpecs, propagateGraphGroupTypes } from "../src/authoring/spec/nodes";
 import { AuthoredNode, AuthoredValue } from "../src/authoring/spec/AuthoredGraph";
 
+const cloneValue = <T>(value: T): T => {
+    if (Array.isArray(value)) {
+        return value.map(cloneValue) as T;
+    }
+    if (value !== null && typeof value === "object") {
+        return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, cloneValue(entry)])) as T;
+    }
+    return value;
+};
+
 // standard type indices (see standardTypes in nodes.ts)
 const INT = 1;
 const FLOAT = 2;
@@ -64,7 +74,7 @@ describe("reconcile → propagate → reconcile idempotence (mount order must no
         expect(end.values!.input!.b.type).toBe(FLOAT);
 
         // a node scrolling into view re-runs the reconcile — the model must not move
-        const snapshot = structuredClone(nodes);
+        const snapshot = cloneValue(nodes);
         nodes.forEach(reconcile);
         expect(nodes).toEqual(snapshot);
     });
@@ -107,7 +117,7 @@ describe("reconcile → propagate → reconcile idempotence (mount order must no
         expect(noOp.values!.output!.out.type).toBe(FLOAT);
 
         // and a second pass stays stable
-        const snapshot = structuredClone(noOp);
+        const snapshot = cloneValue(noOp);
         reconcile(noOp);
         expect(noOp).toEqual(snapshot);
     });
@@ -117,7 +127,7 @@ describe("reconcile → propagate → reconcile idempotence (mount order must no
         reconcile(node);
         expect(node.values!.input!.b).not.toBe(subSpec.values!.input!.b);
         expect(node.values!.output!.value).not.toBe(subSpec.values!.output!.value);
-        const specBefore = structuredClone(subSpec);
+        const specBefore = cloneValue(subSpec);
         propagateGraphGroupTypes([node], true);
         expect(node.values!.output!.value.type).toBe(FLOAT); // propagation did run
         expect(subSpec).toEqual(specBefore);                  // ...without touching the registry

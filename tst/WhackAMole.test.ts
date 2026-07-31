@@ -99,7 +99,7 @@ describeIfAvailable("KHR_interactivity WhackAMole sample - Babylon engine", () =
                 .sort((a, b) => a - b);
             expect(infiniteAnimationIndices).toEqual([1, 4, 7, 10, 13, 16, 19]);
             for (const animationIndex of infiniteAnimationIndices) {
-                expect(world.animations[animationIndex].metadata?.instance?.isPlaying).toBe(true);
+                expect(decorator.getPathValue(`/animations/${animationIndex}/extensions/KHR_interactivity/isPlaying`)).toEqual([true]);
             }
         } finally {
             decorator?.dispose();

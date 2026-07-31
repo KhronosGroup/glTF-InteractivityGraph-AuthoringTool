@@ -190,7 +190,9 @@ function findTestJsonFiles(root: string): string[] {
 function createDiscoveredAssetEntry(root: string, metadataPath: string): AssetIndexEntry {
     const metadata = JSON.parse(fs.readFileSync(metadataPath, "utf8")) as AssetTestMetadata;
     const assetDir = path.dirname(path.dirname(metadataPath));
-    const name = path.relative(root, assetDir);
+    // Index entries use forward slashes, and callers look assets up by that name (e.g. the InterGlb
+    // pair), so normalize away the Windows separator path.relative would otherwise hand back.
+    const name = path.relative(root, assetDir).split(path.sep).join("/");
     return {
         label: metadata.name || name,
         name,

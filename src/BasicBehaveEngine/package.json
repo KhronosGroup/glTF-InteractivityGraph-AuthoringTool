@@ -1,5 +1,5 @@
 {
-  "name": "@khronosgroup/gltf-interactivity-sample-engine",
+  "name": "@khronosgroup/gltf-interactivity-engine",
   "version": "0.1.0",
   "main": "build/index.ts",
   "browser": "build/index.js",

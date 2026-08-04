@@ -60,7 +60,6 @@ export class JsonPtrTrie {
                 }
 
                 currentNode.children.set(pathPiece, nodeToSet);
-                currentNode.isEndOfPath = false;
             }
 
             currentNode = currentNode.children.get(pathPiece)!;
@@ -71,6 +70,22 @@ export class JsonPtrTrie {
         currentNode.setterCallback = setterCallback;
         currentNode.typeName = typeName;
         currentNode.readOnly = readOnly;
+    }
+
+    public removePath(path: string): void {
+        const pathPieces = path.split('/');
+        let currentNode = this.root;
+
+        for (let i = 0; i < pathPieces.length - 1; i++) {
+            const pathPiece = pathPieces[i];
+            const child = currentNode.children.get(pathPiece);
+            if (!child) {
+                return;
+            }
+            currentNode = child;
+        }
+
+        currentNode.children.delete(pathPieces[pathPieces.length - 1]);
     }
 
     /**
@@ -119,7 +134,30 @@ export class JsonPtrTrie {
         }
     }
 
+    /**
+     * Returns all registered paths exactly as they were added to the trie.
+     */
+    public getRegisteredPaths(): string[] {
+        const paths: string[] = [];
+
+        const walk = (node: TrieNode, segments: string[]) => {
+            if (node.isEndOfPath) {
+                paths.push(segments.join("/"));
+            }
+            for (const [segment, child] of node.children.entries()) {
+                walk(child, [...segments, segment]);
+            }
+        };
+
+        walk(this.root, []);
+        return paths.sort();
+    }
+
     private traversePath(path: string): TrieNode | undefined {
+        // while (path.endsWith('/')) {
+        //     path = path.slice(0, -1);
+        // }
+
         const pathPieces = path.split('/');
         let currentNode = this.root;
 

@@ -1,0 +1,687 @@
+/* ============================================================================
+   Design tokens + app shell.
+   Imported after bootstrap (see index.tsx) so the bootstrap overrides at the
+   bottom win at equal specificity.
+
+   Sizing rule for everything in here: type and control metrics are in `rem`, so
+   the whole UI scales with the browser's font size / OS zoom instead of only
+   with device-pixel zoom. Fixed pixel values are reserved for hairlines,
+   radii and shadows, which should not grow with the text.
+   ========================================================================= */
+
+:root {
+    /* brand: --brand-600 is the exact brand green (#2C882C) and is what every brand surface uses
+       — primary buttons, active markers, toolbar hover/active states (the bars themselves are
+       neutral gray, so green reads as "interactive"). It is dark enough to carry white text (~4.5:1),
+       so unlike a light green it needs no special-casing; the other steps are hover/tint variants
+       of the same hue. --brand-ink is the slightly darker step for green *text* on white. */
+    --brand-900: #164516;
+    --brand-800: #1e5c1e;
+    --brand-700: #237023;
+    --brand-600: #2c882c;
+    --brand-500: #3aa63a;
+    --brand-200: #b6ddb6;
+    --brand-100: #dcf0dc;
+    --brand-50: #eff8ef;
+    /* green text/icons on light surfaces (~6:1 on white) */
+    --brand-ink: #256f25;
+    /* focus ring / soft glow, brand green at low alpha */
+    --brand-glow: rgba(44, 136, 44, 0.30);
+
+    --accent-500: #f8a848;
+
+    --danger-600: #b32323;
+    --danger-500: #d05c65;
+    --danger-100: #fbe2e2;
+    --warn-700: #6b4a0f;
+    --warn-600: #8a6116;
+    --warn-100: #fdf1d8;
+    --ok-600: #2e7d32;
+
+    --page-bg: #eef1f6;
+    --surface-0: #ffffff;
+    --surface-1: #f7f8fa;
+    --surface-2: #eef1f5;
+
+    --border: #dfe3ea;
+    --border-strong: #c7ceda;
+
+    --text: #1c2430;
+    --text-muted: #5c6879;
+    --text-faint: #8b95a5;
+
+    --radius-sm: 6px;
+    --radius: 10px;
+    --radius-lg: 14px;
+    --radius-pill: 999px;
+
+    --shadow-sm: 0 1px 2px rgba(20, 30, 50, 0.06);
+    --shadow: 0 4px 16px rgba(20, 30, 50, 0.08);
+    --shadow-lg: 0 12px 32px rgba(20, 30, 50, 0.18);
+
+    /* spacing scale (rem so it tracks the user's font size) */
+    --sp-1: 0.25rem;
+    --sp-2: 0.5rem;
+    --sp-3: 0.75rem;
+    --sp-4: 1rem;
+    --sp-5: 1.5rem;
+
+    /* one control height for every bar in the app: toolbar, menu bar, footer */
+    --control-h: 2.125rem;
+
+    --fs-xs: 0.6875rem;
+    --fs-sm: 0.8125rem;
+    --fs-md: 0.875rem;
+    --fs-lg: 1rem;
+
+    --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+    --transition: 0.12s ease;
+}
+
+html,
+body,
+#root {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    background: var(--page-bg);
+    color: var(--text);
+    font-family: var(--font-ui);
+    /* the app is a fixed-height shell; only inner regions scroll */
+    overflow: hidden;
+}
+
+/* ---------------------------------------------------------------- shell -- */
+
+/* dvh (not vh) so mobile/desktop browser chrome that appears and disappears
+   doesn't leave the split row overflowing the window */
+.app-shell {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.app-header {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    flex-wrap: wrap;
+    padding: var(--sp-3) var(--sp-4);
+    background: var(--surface-0);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+}
+
+.app-header__brand {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    /* claims the leftover width so the tabs and actions stay put while the
+       subtitle ellipsizes on a narrow window */
+    flex: 1 1 18rem;
+}
+
+.app-title {
+    margin: 0;
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    color: var(--text);
+}
+
+.app-subtitle {
+    margin: 0;
+    font-size: var(--fs-sm);
+    line-height: 1.35;
+    color: var(--text-muted);
+}
+
+.app-subtitle a {
+    color: var(--brand-ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--brand-200);
+}
+
+.app-subtitle a:hover {
+    color: var(--brand-900);
+    border-bottom-color: var(--brand-600);
+}
+
+.app-header__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    flex: 0 0 auto;
+    margin-left: auto;
+}
+
+/* segmented control replacing the bootstrap <Tabs> for engine selection */
+.app-tabs {
+    display: flex;
+    gap: 2px;
+    margin: 0;
+    padding: 3px;
+    list-style: none;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    flex: 0 0 auto;
+}
+
+.app-tab {
+    display: flex;
+}
+
+.app-tab > button {
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-pill);
+    padding: 0 var(--sp-4);
+    height: var(--control-h);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--text-muted);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition);
+}
+
+.app-tab > button:hover {
+    color: var(--text);
+}
+
+.app-tab.is-active > button {
+    background: var(--surface-0);
+    color: var(--brand-ink);
+    box-shadow: var(--shadow-sm);
+}
+
+/* diagnostics strip below the workspace */
+.app-notice {
+    flex: 0 0 auto;
+    padding: 0 var(--sp-4) var(--sp-4);
+}
+
+.app-notice .alert {
+    margin-bottom: 0;
+    border-radius: var(--radius);
+    font-size: var(--fs-md);
+}
+
+/* a long diagnostics list scrolls inside the strip instead of squeezing the workspace */
+.app-notice .alert ul {
+    max-height: 22vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.app-main {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    padding: var(--sp-3) var(--sp-4) var(--sp-4);
+}
+
+.app-split {
+    display: flex;
+    flex-direction: row;
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+}
+
+.app-split__pane {
+    flex-shrink: 1;
+    flex-basis: 0;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+}
+
+/* graph editor hidden: the pane keeps its children mounted (so the built canvas survives a
+   toggle) but takes no space, leaving the engine view the full workspace width */
+.app-split__pane--hidden {
+    display: none;
+}
+
+.app-divider {
+    flex: 0 0 0.75rem;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: col-resize;
+    background: transparent;
+    border-radius: var(--radius-sm);
+    transition: background var(--transition);
+}
+
+.app-divider.is-active {
+    background: rgba(44, 136, 44, 0.10);
+}
+
+.app-divider__grip {
+    width: 2px;
+    height: 2.5rem;
+    border-radius: var(--radius-pill);
+    background: var(--border-strong);
+    transition: all var(--transition);
+}
+
+.app-divider.is-active .app-divider__grip {
+    width: 4px;
+    height: 4rem;
+    background: var(--brand-600);
+}
+
+/* --------------------------------------------------------------- panels -- */
+
+/* the two workspace halves (3D/logging view, graph editor): identical card so
+   they line up on the same top and bottom edge */
+.panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    background: var(--surface-0);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.panel__toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0 1px;
+    flex: 0 0 auto;
+    min-height: calc(var(--control-h) + var(--sp-4));
+    padding: var(--sp-2) var(--sp-3);
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border-strong);
+}
+
+.panel__toolbar-label {
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+    margin: 0 0 0 var(--sp-2);
+}
+
+.panel__toolbar-spacer {
+    flex: 1 1 auto;
+}
+
+.panel__body {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ---- 3D viewport (an engine pane's body) ---- */
+
+.viewport-pane {
+    overflow: hidden;
+    background: #fff;
+}
+
+.viewport-pane:fullscreen,
+.viewport-pane:-webkit-full-screen,
+.viewport-pane--fullscreen-fallback {
+    width: 100vw !important;
+    height: 100dvh !important;
+}
+
+/* no Fullscreen API (old WebKit, or an embedding page whose permissions policy blocks it): cover
+   the viewport by hand instead. Same fallback the graph pane uses. */
+.viewport-pane--fullscreen-fallback {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+}
+
+/* fit-view / fullscreen bar, bottom-left of the viewport — deliberately the same corner, size and
+   colors as reactflow's <Controls/> on the graph side (see flowNodes.css) */
+.viewport-controls {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    margin: var(--sp-3);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+
+.viewport-controls__btn {
+    box-sizing: content-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    padding: 5px;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.92);
+    color: var(--text);
+    transition: background var(--transition), color var(--transition);
+}
+
+.viewport-controls__btn:last-child {
+    border-bottom: none;
+}
+
+.viewport-controls__btn:hover:not(:disabled) {
+    background: var(--brand-50);
+    color: var(--brand-ink);
+}
+
+.viewport-controls__btn:disabled {
+    color: var(--text-muted);
+    cursor: default;
+}
+
+.viewport-controls__btn.is-active,
+.viewport-controls__btn.is-active:hover {
+    background: var(--brand-600);
+    color: #fff;
+}
+
+/* the icons declare width/height 16 inline; match reactflow's 12px glyph size */
+.viewport-controls__btn svg {
+    width: 100%;
+    max-width: 12px;
+    max-height: 12px;
+}
+
+@media (max-width: 767.98px), (pointer: coarse) {
+    .viewport-controls__btn {
+        width: 28px;
+        height: 28px;
+    }
+}
+
+/* -------------------------------------------------------------- buttons -- */
+
+.btn-app {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-2);
+    height: var(--control-h);
+    padding: 0 var(--sp-3);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-strong);
+    background: var(--surface-0);
+    color: var(--text);
+    font-family: inherit;
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background var(--transition), border-color var(--transition), color var(--transition);
+}
+
+.btn-app:hover:not(:disabled) {
+    background: var(--surface-2);
+    border-color: var(--brand-600);
+}
+
+.btn-app:focus-visible {
+    outline: 2px solid var(--brand-600);
+    outline-offset: 2px;
+}
+
+.btn-app:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.btn-app--primary {
+    background: var(--brand-600);
+    border-color: var(--brand-600);
+    color: #fff;
+}
+
+.btn-app--primary:hover:not(:disabled) {
+    background: var(--brand-700);
+    border-color: var(--brand-600);
+    color: #fff;
+}
+
+/* the button style for anything sitting on a .panel__toolbar — both workspace halves use it, so
+   the engine bar and the graph editor's menu bar are one control set. Borderless at rest (the
+   toolbar itself is the frame); the outline only appears on hover/focus, and it is brand green —
+   the bar itself is neutral gray, so green is reserved for the interactive/active state.
+   .graph-menu-bar-btn is the graph editor's historical name for the same thing, kept as an alias. */
+.panel__toolbar-btn,
+.graph-menu-bar-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-1);
+    height: var(--control-h);
+    border: 1px solid transparent;
+    background: transparent;
+    border-radius: var(--radius-sm);
+    padding: 0 var(--sp-2);
+    font-family: inherit;
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    line-height: 1;
+    color: var(--text);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+
+.panel__toolbar-btn:hover:not(:disabled),
+.graph-menu-bar-btn:hover:not(:disabled) {
+    background: var(--brand-50);
+    border-color: var(--brand-600);
+    color: var(--brand-ink);
+}
+
+/* toggle buttons that open an overlay editor read as pressed while it is open */
+.panel__toolbar-btn.is-active,
+.graph-menu-bar-btn.is-active {
+    background: var(--brand-600);
+    border-color: var(--brand-600);
+    color: #fff;
+}
+
+.panel__toolbar-btn:focus-visible,
+.graph-menu-bar-btn:focus-visible {
+    outline: 2px solid var(--brand-600);
+    outline-offset: 2px;
+}
+
+.panel__toolbar-btn:disabled,
+.graph-menu-bar-btn:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.panel__toolbar-btn svg,
+.graph-menu-bar-btn svg {
+    flex-shrink: 0;
+}
+
+.btn-app--icon {
+    width: var(--control-h);
+    padding: 0;
+}
+
+.btn-app svg {
+    flex-shrink: 0;
+}
+
+/* ------------------------------------------------- bootstrap alignment --- */
+/* the in-graph editors still use react-bootstrap controls; re-point their
+   colors at the tokens above so nothing reads as "default bootstrap blue" */
+
+/* bootstrap's own "primary" (blue) still drives links, list groups, focus rings and anything else
+   we don't restyle by hand — most visibly the Samples and Tests offcanvas. Re-point it at the brand
+   green at the root so those components follow along without per-component overrides. */
+:root {
+    --bs-primary: #2c882c;
+    --bs-primary-rgb: 44, 136, 44;
+    --bs-link-color: var(--brand-ink);
+    --bs-link-color-rgb: 37, 111, 37;
+    --bs-link-hover-color: var(--brand-900);
+    --bs-link-hover-color-rgb: 22, 69, 22;
+    --bs-focus-ring-color: var(--brand-glow);
+}
+
+.btn {
+    --bs-btn-font-size: var(--fs-sm);
+    --bs-btn-font-weight: 600;
+    --bs-btn-border-radius: var(--radius-sm);
+    /* the focus halo is set per-variant from the blue, so it needs its own override */
+    --bs-btn-focus-shadow-rgb: 44, 136, 44;
+}
+
+/* sample/test lists in the offcanvas: selection and hover in the brand green */
+.list-group {
+    --bs-list-group-active-bg: var(--brand-600);
+    --bs-list-group-active-border-color: var(--brand-600);
+    --bs-list-group-action-hover-bg: var(--brand-50);
+    --bs-list-group-action-active-bg: var(--brand-100);
+    --bs-list-group-border-color: var(--border);
+}
+
+/* also the checked state of a <ToggleButton> (btn-check + outline-primary), e.g. the GLB / glTF
+   selector in the offcanvas — hence the active colors staying at the brand green rather than
+   dropping to the near-black step */
+.btn-outline-primary {
+    --bs-btn-color: var(--brand-ink);
+    --bs-btn-border-color: var(--border-strong);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--brand-600);
+    --bs-btn-hover-border-color: var(--brand-600);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--brand-600);
+    --bs-btn-active-border-color: var(--brand-600);
+}
+
+.btn-primary {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: var(--brand-600);
+    --bs-btn-border-color: var(--brand-600);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--brand-700);
+    --bs-btn-hover-border-color: var(--brand-700);
+    --bs-btn-active-bg: var(--brand-900);
+    --bs-btn-active-border-color: var(--brand-900);
+}
+
+.btn-outline-secondary {
+    --bs-btn-color: var(--text-muted);
+    --bs-btn-border-color: var(--border-strong);
+    --bs-btn-hover-color: var(--text);
+    --bs-btn-hover-bg: var(--surface-2);
+    --bs-btn-hover-border-color: var(--border-strong);
+}
+
+.btn-outline-danger {
+    --bs-btn-color: var(--danger-600);
+    --bs-btn-border-color: #e6bcbc;
+    --bs-btn-hover-bg: var(--danger-600);
+    --bs-btn-hover-border-color: var(--danger-600);
+}
+
+.form-control,
+.form-select {
+    --bs-border-color: var(--border-strong);
+    --bs-body-color: var(--text);
+    border-radius: var(--radius-sm);
+    font-size: var(--fs-md);
+}
+
+/* placeholders are hints, not content: bootstrap's default is dark enough to read as a filled-in
+   value at a glance (most visible in the Search Graph panel, whose two fields are long examples) */
+.form-control::placeholder,
+input::placeholder,
+textarea::placeholder {
+    color: var(--text-faint);
+    opacity: 0.65;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--brand-600);
+    box-shadow: 0 0 0 2px var(--brand-glow);
+}
+
+.offcanvas {
+    --bs-offcanvas-width: min(26rem, 92vw);
+}
+
+.modal-content {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+}
+
+/* ------------------------------------------- samples & tests offcanvas --- */
+
+/* the GLB / glTF marker on each entry: a brand-tinted chip, since it says something about the
+   asset you are about to load */
+.sample-variant-badge {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    margin-left: var(--sp-2);
+    padding: 1px 7px;
+    border: 1px solid var(--brand-200);
+    border-radius: var(--radius-pill);
+    background: var(--brand-50);
+    color: var(--brand-ink);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+/* content tags (interactivity, showcase, ...): neutral, they are metadata rather than an action */
+.sample-tag {
+    display: inline-flex;
+    align-items: center;
+    margin: 2px 4px 0 0;
+    padding: 1px 7px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+    color: var(--text-muted);
+    font-size: var(--fs-xs);
+    line-height: 1.5;
+}
+
+/* anything still rendering bootstrap's secondary badge (e.g. the node marker in the diagnostics
+   strip) — its default gray is noticeably blue-tinted next to the rest of the palette */
+.badge.bg-secondary {
+    --bs-secondary-rgb: 226, 231, 237;
+    color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------- misc ---- */
+
+.debug-pre {
+    max-height: 18rem;
+    overflow: auto;
+    font-size: var(--fs-xs);
+}

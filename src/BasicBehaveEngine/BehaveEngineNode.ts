@@ -1,7 +1,9 @@
 import { IInteractivityConfigurationValue, IInteractivityDeclaration, IInteractivityEvent, IInteractivityFlow, IInteractivityValue, IInteractivityValueType, IInteractivityVariable } from "./types/InteractivityGraph";
 import {BasicBehaveEngine} from "./BasicBehaveEngine";
+import { isNoOpNode } from "./nodes/experimental/noOpRegistry";
 
 export interface IBehaviourNodeProps {
+    index: number,
     graphEngine: BasicBehaveEngine,
     idToBehaviourNodeMap: Map<number, BehaveEngineNode>
     declaration: IInteractivityDeclaration,
@@ -11,13 +13,13 @@ export interface IBehaviourNodeProps {
     events: IInteractivityEvent[],
     types:IInteractivityValueType[],
     configuration: Record<string, IInteractivityConfigurationValue>,
-    addEventToWorkQueue: any
+    addEventToWorkQueue: any,
 }
 
 export class BehaveEngineNode {
     REQUIRED_VALUES: Record<string, IInteractivityValue> = {};
     REQUIRED_CONFIGURATIONS: Record<string, IInteractivityConfigurationValue> = {};
-
+    index: number;
     name: string | undefined;
     world: any;
     graphEngine: BasicBehaveEngine;
@@ -33,7 +35,8 @@ export class BehaveEngineNode {
     addEventToWorkQueue: any;
 
     constructor(props: IBehaviourNodeProps) {
-        const {flows, values, idToBehaviourNodeMap, graphEngine, variables, events, types, configuration, addEventToWorkQueue, declaration} = props;
+        const {index, flows, values, idToBehaviourNodeMap, graphEngine, variables, events, types, configuration, addEventToWorkQueue, declaration} = props;
+        this.index = index;
         this.idToBehaviourNodeMap = idToBehaviourNodeMap;
         this.graphEngine = graphEngine;
         this.variables = variables;
@@ -141,6 +144,10 @@ export class BehaveEngineNode {
     }
 
     private evaluateValue(key: string, val: IInteractivityValue): any {
+        if (val === undefined) {
+            throw new Error(`Value ${key} is missing for ${this.name}`);
+        }
+
         if (val.value != null) {
             const typeName = this.getType(val.type!);
             return this.parseType(typeName, val.value);
@@ -167,6 +174,12 @@ export class BehaveEngineNode {
             } else {
                 //this node has not been evaluated yet, so we need to process it in order to get the output
                 const dependentNodeValues = dependentNode.processNode();
+                if (dependentNodeValues === undefined || dependentNodeValues[val.socket!] === undefined) {
+                    if (isNoOpNode(dependentNode)) {
+                        throw new Error(`"${this.name}" depends on output socket "${val.socket}" of "${dependentNode.name}", which does not execute or produce output because this tool does not implement its operation.`);
+                    }
+                    throw new Error(`Output socket ${val.socket} is missing on ${dependentNode.name}`);
+                }
                 const dependentValue = dependentNodeValues[val.socket!];
 
                 typeIndex = dependentValue.type
@@ -213,8 +226,10 @@ export class BehaveEngineNode {
         return typeNames.indexOf(name);
     }
 
-    protected getDefualtValueForType(type: string): any {
+    protected getDefaultValueForType(type: string): any {
         switch (type) {
+            case "ref":
+                return [null];
             case "bool":
                 return [false];
             case "int":
@@ -239,13 +254,14 @@ export class BehaveEngineNode {
     }
 
     protected parseType(type: string, val: any) {
+        const scalarValue = Array.isArray(val) ? val[0] : val;
         switch (type) {
             case "bool":
-                return val[0] === "true" || val[0] === true;
+                return scalarValue === "true" || scalarValue === true;
             case "int":
-                return Number(val[0]);
+                return Number(scalarValue);
             case "float":
-                return Number(val[0]);
+                return Number(scalarValue);
             case "float2":
                 return val;
             case "float3":
@@ -254,6 +270,8 @@ export class BehaveEngineNode {
                 return val;
             case "float4x4":
                 return val;
+            case "ref":
+                return scalarValue;
             default:
                 return val
         }
@@ -261,5 +279,70 @@ export class BehaveEngineNode {
 
     private evaluateConfiguration(configuration: IInteractivityConfigurationValue): any {
         return configuration.value;
+    }
+
+    // Resolve a "#/..."-style JSON pointer ref down to its trailing id.
+    protected resolveRef = (ref: string | null): number => {
+        if (ref == null || ref === "") {
+            return -1;
+        }
+        const parts = String(ref).split("/").filter(Boolean);
+        return parts.length === 0 ? -1 : Number(parts[parts.length - 1]);
+    }
+
+    protected populatePath(path: string, refs: Record<string, string>, indices: Record<string, string>): string {
+        for (const ref of Object.keys(refs)) {
+            const refValue = refs[ref];
+            const index = this.resolveRef(refValue);
+            if (index !== -1) {
+                path = path.replace(`{${ref}}`, index.toString());
+            }
+            else {
+                throw new Error(`Invalid reference value for ${ref}: ${refValue}`);
+            }
+        }
+        for (const index of Object.keys(indices)) {
+            path = path.replace(`[${index}]`, indices[index]);
+        }
+        return path;
+    }
+
+    protected isReadOnlyPointer(pointer: string, refs: string[], indices: string[]): boolean {
+        const readOnlyTestRefs: Record<string, string> = {};
+        for (const ref of refs) {
+            readOnlyTestRefs[ref] = "0";
+        }
+        const readOnlyTestIndices: Record<string, string> = {};
+        for (const index of indices) {
+            readOnlyTestIndices[index] = "0";
+        }
+        const readOnlyTestPath = this.populatePath(pointer, readOnlyTestRefs, readOnlyTestIndices);
+        return this.graphEngine.isReadOnly(readOnlyTestPath);
+    }
+
+    protected parsePathRefVariables(path: string): string[] {
+        return this.parsePathVariables(path, '{', '}');
+    }
+
+    protected parsePathIndexVariables(path: string): string[] {
+        return this.parsePathVariables(path, '[', ']');
+    }
+
+    protected parsePathVariables(path: string, openDel: string, closeDel: string): string[] {
+        const regex = new RegExp(`\\${openDel}([^\\${closeDel}]+)\\${closeDel}`, 'g');
+        const match = path.match(regex);
+        const keys: string[] = [];
+
+        if (!match) {
+            return keys;
+        }
+
+        for (const m of match) {
+            // remove the delimiters from the match
+            const key = m.slice(openDel.length, -closeDel.length);
+            keys.push(key)
+        }
+
+        return keys;
     }
 }

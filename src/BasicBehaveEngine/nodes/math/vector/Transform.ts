@@ -1,5 +1,4 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../../BehaveEngineNode";
-import { unflattenMatrix } from "../../../matrixUtils";
 
 export class Transform extends BehaveEngineNode {
     REQUIRED_VALUES = {a: {}, b: {}}
@@ -23,14 +22,13 @@ export class Transform extends BehaveEngineNode {
         if (!validTypePairings) {
             throw Error("Invalid type pairings")
         }
-        const val: number[] = [];
         const dimension = Number(typeA.charAt(typeA.length - 1))
-        const unflattenedB = unflattenMatrix(b, dimension);
+        const val: number[] = [];
 
-        for (let col = 0; col < dimension; col++) {
+        for (let row = 0; row < dimension; row++) {
             let sum = 0;
-            for (let row = 0; row < dimension; row++) {
-                sum += unflattenedB[col][row] * a[row];
+            for (let col = 0; col < dimension; col++) {
+                sum += b[col * dimension + row] * a[col];
             }
             val.push(sum);
         }

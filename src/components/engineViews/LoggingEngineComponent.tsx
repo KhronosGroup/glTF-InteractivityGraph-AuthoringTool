@@ -1,77 +1,137 @@
 import React, {useContext, useEffect, useRef, useState} from "react";
 import {Button, Col, Container, Form, Modal, Row, Tab, Tabs} from "react-bootstrap";
-import {Spacer} from "../Spacer";
 import {BasicBehaveEngine} from "../../BasicBehaveEngine/BasicBehaveEngine";
 import {LoggingDecorator} from "../../decorators/LoggingDecorator";
 import { InteractivityGraphContext } from "../../InteractivityGraphContext";
 import { DOMEventBus } from "../../BasicBehaveEngine/eventBuses/DOMEventBus";
+import { buildNormalizedTemplateSet } from "../../authoring/pointerCatalogue";
+import { createGlTFObjectModelFromGltf, readGlbJsonFromArrayBuffer } from "../../objectModel/glTFObjectModel";
+import { IconJsonFile, IconPlay, IconSendEvent } from "../toolbarIcons";
 
 enum LoggingEngineModal {
-    WORLD = "WORLD",
+    OBJECT_MODEL = "OBJECT_MODEL",
     CUSTOM_EVENT = "CUSTOM_EVENT",
     NONE = "NONE"
 }
-export const LoggingEngineComponent = () => {
+
+interface LoggingEngineComponentProps {
+    modelUrl?: string | null;
+}
+
+export const LoggingEngineComponent: React.FC<LoggingEngineComponentProps> = ({ modelUrl }) => {
     const [executionLog, setExecutionLog] = useState("");
     const [openModal, setOpenModal] = useState<LoggingEngineModal>(LoggingEngineModal.NONE);
-    const [world, setWorld] = useState("{}");
+    const [objectModelJson, setObjectModelJson] = useState("{}");
     const [activeKey, setActiveKey] = useState("1");
     const [graphRunning, setGraphRunning] = useState(false);
-    const worldInputRef = useRef<HTMLTextAreaElement | null>(null);
+    const objectModelInputRef = useRef<HTMLTextAreaElement | null>(null);
     const loggingEngineRef = useRef<LoggingDecorator | null>(null);
 
-    const {getExecutableGraph} = useContext(InteractivityGraphContext);
+    const {getExecutableGraph, setSupportedPointerTemplates, clearGraphDirty, registerPlayHandler} = useContext(InteractivityGraphContext);
 
     useEffect(() => {
         return () => {
             // Clean up resources when the component unmounts
-            loggingEngineRef.current?.clearCustomEventListeners();
+            loggingEngineRef.current?.dispose();
+            setSupportedPointerTemplates(null);
         };
-    }, [])
+    }, []);
 
+    const play = () => {
+        setExecutionLog("");
+        runGraph(getExecutableGraph(), setExecutionLog, JSON.parse(objectModelJson));
+        setGraphRunning(true);
+        clearGraphDirty();
+    };
 
-    const runGraph = (behaveGraph: any, setExecutionLog: any, world: any) => {
+    // let the authoring menu bar's Reload button trigger this engine's Play without a direct
+    // component reference (see registerPlayHandler on InteractivityGraphContext). `play` closes
+    // over `objectModelJson`/`getExecutableGraph`, which change across renders, so the registered
+    // handler is a stable trampoline through a ref rather than the closure captured by this
+    // mount-only effect.
+    const playRef = useRef(play);
+    playRef.current = play;
+    useEffect(() => {
+        registerPlayHandler(() => playRef.current());
+        return () => registerPlayHandler(null);
+    }, []);
+
+    // Effect to handle model URL
+    useEffect(() => {
+        if (!modelUrl) {
+            return;
+        }
+
+        let isCancelled = false;
+        fetch(modelUrl)
+            .then((response) => response.arrayBuffer())
+            .then((arrayBuffer) => {
+                const gltf = readGlbJsonFromArrayBuffer(arrayBuffer);
+                const objectModel = createGlTFObjectModelFromGltf(gltf);
+                if (isCancelled) {
+                    return;
+                }
+
+                setObjectModelJson(JSON.stringify(objectModel, null, 2));
+                setExecutionLog("");
+                runGraph(getExecutableGraph(), setExecutionLog, objectModel);
+                setGraphRunning(true);
+                clearGraphDirty();
+            })
+            .catch((error) => {
+                if (!isCancelled) {
+                    setExecutionLog(`Failed to load object model: ${error instanceof Error ? error.message : String(error)}`);
+                }
+            });
+
+        return () => {
+            isCancelled = true;
+        };
+    }, [modelUrl]);
+
+    const runGraph = (behaveGraph: any, setExecutionLog: any, objectModel: any) => {
         console.log(behaveGraph);
         if (loggingEngineRef.current !== null) {
-            loggingEngineRef.current?.clearCustomEventListeners()
+            loggingEngineRef.current?.dispose()
         }
 
         const eventBus = new DOMEventBus();
-        loggingEngineRef.current = new LoggingDecorator(new BasicBehaveEngine(1, eventBus), (line: string) => setExecutionLog((prev: string) => prev + "\n" + line), world)
+        loggingEngineRef.current = new LoggingDecorator(new BasicBehaveEngine(1, eventBus), (line: string) => setExecutionLog((prev: string) => prev + "\n" + line), objectModel)
+        const runtimeTemplates = buildNormalizedTemplateSet(loggingEngineRef.current.getRegisteredJsonPointers());
+        setSupportedPointerTemplates(runtimeTemplates);
         loggingEngineRef.current?.loadBehaveGraph(behaveGraph);
     }
 
     return (
-        <div style={{width: "90vw", margin: "0 auto"}}>
-            <div style={{background: "#3d5987", padding: 16, borderTopLeftRadius: 16, borderTopRightRadius: 16}}>
-                <Button variant="outline-light" data-testid={"logging-engine-play-btn"} onClick={() => {
-                    setExecutionLog("");
-                    runGraph(getExecutableGraph(), setExecutionLog, JSON.parse(world));
-                    setGraphRunning(true);
-                }}>
+        <div className={"panel"}>
+            <div className={"panel__toolbar"}>
+                <button type="button" className="panel__toolbar-btn" data-testid={"logging-engine-play-btn"} onClick={play}>
+                    <IconPlay/>
                     Play
-                </Button>
-                <Spacer width={16} height={0}/>
-                <Button variant="outline-light" onClick={() => setOpenModal(LoggingEngineModal.WORLD)}>
-                    Upload world JSON
-                </Button>
-                <Spacer width={16} height={0}/>
-                <Button variant="outline-light" onClick={() => setOpenModal(LoggingEngineModal.CUSTOM_EVENT)} disabled={!graphRunning}>
+                </button>
+                <button type="button" className="panel__toolbar-btn" onClick={() => setOpenModal(LoggingEngineModal.OBJECT_MODEL)}>
+                    <IconJsonFile/>
+                    Upload object model JSON
+                </button>
+                <button type="button" className="panel__toolbar-btn" onClick={() => setOpenModal(LoggingEngineModal.CUSTOM_EVENT)} disabled={!graphRunning}>
+                    <IconSendEvent/>
                     Send Custom Event
-                </Button>
+                </button>
             </div>
-            <pre style={{background: "black", color: "white", fontFamily: "monospace", padding: 10, height: 700}} data-testid={"logging-engine-log"}>
+            {/* fills the panel instead of a fixed 700px, so the log ends level with the graph
+                editor next to it at any window size or browser zoom */}
+            <pre className={"panel__body"} style={{background: "#12161d", color: "#e6e9ef", fontFamily: "var(--font-mono)", fontSize: "var(--fs-sm)", padding: "var(--sp-3)", margin: 0, overflow: "auto"}} data-testid={"logging-engine-log"}>
                 {executionLog}
             </pre>
 
-            <Modal show={openModal === LoggingEngineModal.WORLD}>
+            <Modal show={openModal === LoggingEngineModal.OBJECT_MODEL}>
                 <Container style={{padding: 16}}>
-                    <h3>Upload World</h3>
+                    <h3>Upload Object Model</h3>
                     <Row style={{textAlign: "left"}}>
                         <Col>
                             <Form.Group>
-                                <Form.Label>World JSON</Form.Label>
-                                <Form.Control ref={worldInputRef} defaultValue={world} as="textarea" rows={10} />
+                                <Form.Label>Object Model JSON</Form.Label>
+                                <Form.Control ref={objectModelInputRef} defaultValue={objectModelJson} as="textarea" rows={10} />
                             </Form.Group>
                         </Col>
                     </Row>
@@ -79,7 +139,7 @@ export const LoggingEngineComponent = () => {
                     <Row style={{ marginTop: 16 }}>
                         <Col xs={12} md={6}>
                             <Button variant={"outline-primary"} id={"upload-graph-btn"} style={{width: "100%"}} onClick={() => {
-                                setWorld(worldInputRef.current?.value ?? "{}");
+                                setObjectModelJson(objectModelInputRef.current?.value ?? "{}");
                                 setOpenModal(LoggingEngineModal.NONE);
                             }}>Save</Button>
                         </Col>
@@ -140,5 +200,3 @@ export const LoggingEngineComponent = () => {
         </div>
     )
 }
-
-

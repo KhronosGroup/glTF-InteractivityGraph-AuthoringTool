@@ -14,22 +14,32 @@ export class AnimationStart extends BehaveEngineNode {
         const {animation, startTime, endTime, speed} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
 
         this.graphEngine.processNodeStarted(this);
+        
+        const animationIndex = this.resolveRef(animation);
 
-        if (speed <= 0 || this.graphEngine.getWorld().animations.length <= animation || animation < 0) {
-            if (this.flows.err) {
-                this.processFlow(this.flows.err);
-            }
-        } else {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            this.graphEngine.startAnimation(animation, startTime, endTime, speed, () => {
+        const validAnimation = this.graphEngine.getWorld().animations.length > animationIndex && animationIndex >= 0;
+        const validStartTime = !isNaN(startTime) && isFinite(startTime);
+        // Infinite end times are valid and represent unbounded playback. Only the start time is
+        // required to be finite by the KHR_interactivity animation/start operation.
+        const validEndTime = !isNaN(endTime);
+        const validSpeed = !isNaN(speed) && isFinite(speed) && speed > 0;
+
+        if (validAnimation && validStartTime && validEndTime && validSpeed) {
+
+            this.graphEngine.animationCompletionCallbacks.set(animationIndex, () => {
                 if (this.flows.done) {
                     this.addEventToWorkQueue(this.flows.done);
                 }
             });
 
+            this.graphEngine.startAnimation(animationIndex, startTime, endTime, speed, () => this.graphEngine.completeAnimation(animationIndex));
+
             if (this.flows.out) {
                 this.processFlow(this.flows.out);
+            }
+        } else {
+            if (this.flows.err) {
+                this.processFlow(this.flows.err);
             }
         }
     }

@@ -1,7 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class CancelDelay extends BehaveEngineNode {
-    REQUIRED_VALUES = {delayIndex: {}}
+    REQUIRED_VALUES = {delay: {}}
 
     constructor(props: IBehaviourNodeProps) {
         super(props);
@@ -11,17 +11,10 @@ export class CancelDelay extends BehaveEngineNode {
 
     override processNode(flowSocket?: string) {
         this.graphEngine.clearValueEvaluationCache();
-        const {delayIndex} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const {delay} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
         this.graphEngine.processNodeStarted(this);
-        if (delayIndex < 0 || delayIndex >= this.graphEngine.scheduledDelays.length) {
-            if (this.flows.err) {
-                this.processFlow(this.flows.err);
-            }
-        } else {
-            const delayId = this.graphEngine.getScheduledDelay(delayIndex);
-            clearTimeout(delayId);
-
-            this.processFlow(this.flows.out);
-        }
+        const delayIndex = this.resolveRef(delay);
+        this.graphEngine.cancelScheduledDelay(delayIndex);
+        this.processFlow(this.flows.out);
     }
 }

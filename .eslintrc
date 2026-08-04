@@ -13,6 +13,19 @@
     "@typescript-eslint/no-this-alias": "off",
     "no-case-declarations": "off"
   },
+  "overrides": [
+    {
+      "files": ["src/BasicBehaveEngine/**/*.ts", "src/BasicBehaveEngine/**/*.tsx"],
+      "rules": {
+        "no-restricted-imports": ["error", {
+          "patterns": [
+            { "group": ["**/authoring/**", "**/components/**", "**/decorators/**", "**/loaderExtensions/**", "**/hooks/**"], "message": "Engine code must not import authoring/UI modules (one-way Authoring -> Engine boundary)." },
+            { "group": ["react", "react-dom", "reactflow"], "message": "Engine code must stay renderer-agnostic: no React/reactflow imports." }
+          ]
+        }]
+      }
+    }
+  ],
   "globals": {
     "module": true
   }

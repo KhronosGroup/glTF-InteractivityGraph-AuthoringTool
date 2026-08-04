@@ -295,13 +295,5 @@
 		{
 			"name": "float4x4",
 			"signature": "float4x4"
-		},
-		{
-			"name": "AMZN_interactivity_string",
-			"signature": "custom",
-			"extensions": {
-				"AMZN_interactivity_string": {}
-			}
-		}
-	]
+		}]
 }

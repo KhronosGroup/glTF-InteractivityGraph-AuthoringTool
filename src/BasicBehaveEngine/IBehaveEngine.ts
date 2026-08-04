@@ -2,8 +2,8 @@ import { IInteractivityFlow, IInteractivityValue } from "./types/InteractivityGr
 import {BehaveEngineNode} from "./BehaveEngineNode";
 
 export interface IHoverInformation {
-    callbackHoverIn?: (selectedNodeIndex: number | undefined, controllerIndex: number, firstCommonHoverNodeIndex: number | undefined) => void;
-    callbackHoverOut?: (selectedNodeIndex: number | undefined, controllerIndex: number, firstCommonHoverNodeIndex: number | undefined) => void;
+    callbackHoverIn?: (selectedNodeRef: unknown, controllerIndex: number, firstCommonHoverNodeIndex: number | undefined) => void;
+    callbackHoverOut?: (selectedNodeRef: unknown, controllerIndex: number, firstCommonHoverNodeIndex: number | undefined) => void;
 }
 
 export interface IRigidBodyTriggerInformation {
@@ -80,6 +80,21 @@ export interface IBehaveEngine {
     ) => void;
 
     /**
+     * Returns the full list of registered JSON pointer paths.
+     */
+    getRegisteredJsonPointers: () => string[];
+
+    /**
+     * Checks whether a JSON pointer can be resolved by the active object model.
+     */
+    isValidJsonPtr: (jsonPtr: string) => boolean;
+
+    /**
+     * Checks whether a JSON pointer is read-only in the active object model.
+     */
+    isReadOnly: (jsonPtr: string) => boolean;
+
+    /**
      * Register a Behave Engine node type along with its corresponding class.
      * @param type - The type of the Behave Engine node.
      * @param behaveEngineNode - The class representing the Behave Engine node.
@@ -127,6 +142,8 @@ export interface IBehaveEngine {
      */
     pauseEventQueue: () => void;
 
+    dispose: () => void;
+
     /**
      * Start/Resume the event queue processing.
      */
@@ -165,7 +182,7 @@ export interface IBehaveEngine {
      * @param {string} path - The path to the desired type name.
      * @returns {any} The type name found at the specified path.
      */
-    getPathtypeName: (path: string) => any;
+    getPathTypeName: (path: string) => any;
 
     /**
      * Clears the cache used for value evaluations.

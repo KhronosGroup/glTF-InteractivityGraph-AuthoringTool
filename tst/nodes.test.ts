@@ -50,7 +50,7 @@ import {Log10} from "../src/BasicBehaveEngine/nodes/math/exponential/Log10";
 import {CubeRoot} from "../src/BasicBehaveEngine/nodes/math/exponential/CubeRoot";
 import {SquareRoot} from "../src/BasicBehaveEngine/nodes/math/exponential/SquareRoot";
 import {Power} from "../src/BasicBehaveEngine/nodes/math/exponential/Power";
-import {standardTypes} from "../src/BasicBehaveEngine/types/nodes";
+import {standardTypes} from "../src/authoring/spec/nodes";
 import {Clamp} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Clamp";
 import {Saturate} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Saturate";
 import {Negate} from "../src/BasicBehaveEngine/nodes/math/arithmetic/Negate";
@@ -123,6 +123,7 @@ import { DebugLog } from '../src/BasicBehaveEngine/nodes/experimental/Debug';
 import { QuatAngleBetween } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatAngleBetween';
 import { QuatFromUpForward } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatFromUpForward';
 import { QuatSlerp } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatSlerp';
+import { RefEquality } from '../src/BasicBehaveEngine/nodes/ref/RefEquality';
 import * as glMatrix from 'gl-matrix';
 
 describe('nodes', () => {
@@ -138,6 +139,7 @@ describe('nodes', () => {
         graphEngine = new BasicBehaveEngine(60, eventBus);
 
         defaultProps = {
+            index: 0,
             declaration: {
                 op: "NoOp",
                 inputValueSockets: {},
@@ -238,14 +240,14 @@ describe('nodes', () => {
         setDelay.processFlow = jest.fn<(flow: IInteractivityFlow) => Promise<void>>();
         setDelay.processNode('in');
         setDelay.processNode('cancel');
-        expect(setDelay.outValues.lastDelayIndex.value![0]).toBe(-1);
+        expect(setDelay.outValues.lastDelay.value![0]).toBe(-1);
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
         expect(setDelay.addEventToWorkQueue).not.toHaveBeenCalled()
         expect(setDelay.processFlow).toHaveBeenCalledWith({ socket: 'in', node: 1 });
 
         setDelay.processNode('in');
-        expect(setDelay.outValues.lastDelayIndex.value![0]).toBe(1);
+        expect(setDelay.outValues.lastDelay.value![0]).toBe(1);
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
         expect(setDelay.addEventToWorkQueue).toHaveBeenCalledWith({ socket: 'in', node: 2 });
@@ -256,7 +258,7 @@ describe('nodes', () => {
         graphEngine.clearScheduledDelays();
         const cancelDelay: CancelDelay = new CancelDelay({
             ...defaultProps,
-            values: {delayIndex: { value: [0], type: 1 }},
+            values: {delay: { value: [0], type: 1 }},
             flows: {out: { node: 1, socket: 'in' }}
         });
         cancelDelay.processFlow = jest.fn<(flow: IInteractivityFlow) => Promise<void>>();
@@ -477,7 +479,7 @@ describe('nodes', () => {
                 const parts: string[] = path.split('/');
                 world.nodes[Number(parts[2])].value = value;
             },
-            "float", false
+            "int", false
         );
 
         const res  = pointerGet.processNode();
@@ -490,6 +492,38 @@ describe('nodes', () => {
 
         const resCustom = await pointerGetCustomPtr.processNode();
         expect(resCustom['value']!.value[0]).toBe(1);
+    });
+
+    it('pointer/get returns invalid for unresolved ref pointers', async () => {
+        const pointerGet: PointerGet = new PointerGet({
+            ...defaultProps,
+            graphEngine: new BasicBehaveEngine(60, new DOMEventBus()),
+            configuration: {pointer: { value: ['/nodes/3/camera'] }, type: { value: [9] }},
+        });
+
+        const res = pointerGet.processNode();
+        expect(res['value']!.value).toStrictEqual([null]);
+        expect(res['isValid']!.value).toStrictEqual([false]);
+    });
+
+    it('pointer/get resolves reference properties through the object model', () => {
+        const refEngine = new BasicBehaveEngine(60, new DOMEventBus());
+        refEngine.registerJsonPointer(
+            '/nodes/6/children/3',
+            () => ['/nodes/10'],
+            () => undefined,
+            'ref',
+            true,
+        );
+        const pointerGet = new PointerGet({
+            ...defaultProps,
+            graphEngine: refEngine,
+            configuration: {pointer: { value: ['/nodes/6/children/3'] }, type: { value: [9] }},
+        });
+
+        const res = pointerGet.processNode();
+        expect(res['value']!.value).toStrictEqual(['/nodes/10']);
+        expect(res['isValid']!.value).toStrictEqual([true]);
     });
 
     it('math/matCompose',  () => {
@@ -2012,6 +2046,24 @@ describe('nodes', () => {
         eq = new Equality({
             ...defaultProps,
             values: {a: { value: [-10.5, 0.5, 9] , type: 4}, b: { value: [-10.5, 0.5, 9] , type: 4}}
+        });
+
+        val = eq.processNode()['value'].value;
+        expect(val[0]).toBe(true);
+    });
+
+    it("ref/eq", () => {
+        let eq: RefEquality = new RefEquality({
+            ...defaultProps,
+            values: {a: { value: ["/meshes/0"], type: 9}, b: { value: ["/nodes/0"], type: 9}}
+        });
+
+        let val = eq.processNode()['value'].value;
+        expect(val[0]).toBe(false);
+
+        eq = new RefEquality({
+            ...defaultProps,
+            values: {a: { value: ["/meshes/0"], type: 9}, b: { value: ["/meshes/0"], type: 9}}
         });
 
         val = eq.processNode()['value'].value;

@@ -1,5 +1,5 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
-import { cubicBezier, linearFloat, slerpFloat4 } from "../../easingUtils";
+import { cubicBezierEase, linearFloat, slerpFloat4 } from "../../easingUtils";
 
 export class VariableInterpolate extends BehaveEngineNode {
     REQUIRED_CONFIGURATIONS = {variable: {}, useSlerp: {}}
@@ -50,24 +50,25 @@ export class VariableInterpolate extends BehaveEngineNode {
         const interpolationAction = () => {
             const elapsedDuration = (this.graphEngine.lastTickTime - startTime) / 1000;
             const t = Math.min(elapsedDuration / duration, 1);
-            const p = cubicBezier(t, {x: 0, y:0}, {x: p1[0], y:p1[1]}, {x: p2[0], y:p2[1]}, {x: 1, y:1});
+            // q is the output progress position: the easing curve evaluated at input progress t
+            const q = cubicBezierEase(t, p1, p2);
 
             if (this._valueType === "float3") {
-                const value = [linearFloat(p.y, initialValue[0], targetValue[0]), linearFloat(p.y, initialValue[1], targetValue[1]), linearFloat(p.y, initialValue[2], targetValue[2])]
+                const value = [linearFloat(q, initialValue[0], targetValue[0]), linearFloat(q, initialValue[1], targetValue[1]), linearFloat(q, initialValue[2], targetValue[2])]
                 this.variables[this._variable].value = value;
             } else if (this._valueType === "float4") {
                 if (this._useSlerp) {
-                    const value = slerpFloat4(t, initialValue, targetValue);
+                    const value = slerpFloat4(q, initialValue, targetValue);
                     this.variables[this._variable].value = value;
                 } else {
-                    const value = [linearFloat(p.y, initialValue[0], targetValue[0]), linearFloat(p.y, initialValue[1], targetValue[1]), linearFloat(p.y, initialValue[2], targetValue[2]), linearFloat(p.y, initialValue[3], targetValue[3])]
+                    const value = [linearFloat(q, initialValue[0], targetValue[0]), linearFloat(q, initialValue[1], targetValue[1]), linearFloat(q, initialValue[2], targetValue[2]), linearFloat(q, initialValue[3], targetValue[3])]
                     this.variables[this._variable].value = value;
                 }
             } else if (this._valueType === "float") {
-                const value = [linearFloat(p.y, initialValue, targetValue)]
+                const value = [linearFloat(q, initialValue, targetValue)]
                 this.variables[this._variable].value = [value];
             } else if (this._valueType == "float2") {
-                const value = [linearFloat(p.y, initialValue[0], targetValue[0]), linearFloat(p.y, initialValue[1], targetValue[1])]
+                const value = [linearFloat(q, initialValue[0], targetValue[0]), linearFloat(q, initialValue[1], targetValue[1])]
                 this.variables[this._variable].value = value;
             }
 

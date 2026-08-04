@@ -8,7 +8,8 @@ export enum InteractivityValueType {
     FLOAT2X2 = "float2x2",
     FLOAT3X3 = "float3x3",
     FLOAT4X4 = "float4x4",
-    CUSTOM = "custom"
+    CUSTOM = "custom",
+    REF = "ref"
 }
 
 export interface IInteractivityValueType {
@@ -52,6 +53,8 @@ export enum InteractivityConfigurationValueType {
 }
 
 export interface IInteractivityConfigurationValue {
+   type?: InteractivityConfigurationValueType
+   description?: string
    value?: any[]
    defaultValue?: any[]
 }
@@ -67,14 +70,10 @@ export interface IInteractivityValue {
     value?: any[],
     node?: number | string,
     socket?: string
-    description?: string
 }
 
 export interface IInteractivityNode {
-    uid?: string,
-    op?: string,
     declaration: number,
-    description?: string,
     configuration?: Record<string, IInteractivityConfigurationValue>,
     flows?: {
         input?: Record<string, IInteractivityFlow>,
@@ -83,10 +82,6 @@ export interface IInteractivityNode {
     values?: {
         input?: Record<string, IInteractivityValue>,
         output?: Record<string, IInteractivityValue>
-    },
-    metadata?: {
-        positionX?: number,
-        positionY?: number
     }
 }
 

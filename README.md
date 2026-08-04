@@ -48,6 +48,8 @@ Follow these instructions to set up and use the DCC React app for authoring glTF
    npm install
    ```
 
+Schema metadata is committed to the repo. `npm start`, `npm run build`, and the asset test commands attempt to refresh it from a local Khronos glTF spec checkout, but will keep the committed file if that checkout is not present. By default the generator looks for `../glTF`; override it with `KHR_INTERACTIVITY_GLTF_REPO=/path/to/glTF`.
+
 ## Usage
 
 1. Start the DCC React app:
@@ -72,6 +74,23 @@ This project contains E2E cypress tests which operate on a visual spin up of the
 
 ### Unit Tests
 - npm run test
+
+### Sample Asset Tests
+These tests use the Khronos glTF Interactivity test asset catalog. By default the harness looks for the official asset repo next to this project at `../glTF-Test-Assets-Interactivity`; override it with `KHR_INTERACTIVITY_SAMPLE_ASSETS=/path/to/glTF-Test-Assets-Interactivity`.
+
+- `npm run test:assets:core` runs all Core-engine asset suites with a programmatic glTF object-model test decorator, including Overview and the Core side of the paired InterGlb assets.
+- `npm run test:assets:e2e` runs the same assets through a lightweight, browserless Babylon engine world, including the Babylon side of the paired InterGlb assets.
+- `npm run test:assets` runs all sample asset suites.
+
+The suites report one Jest test per sample metadata subtest. Each asset graph is loaded and executed once per suite; if an asset cannot load or execute, every declared subtest for that asset fails. The harness loads assets from `test-index.json` and `mathtests-index.json`, then also includes any unindexed `test-Json/*.json` files. InterGlb assets are tested in a dedicated paired suite because the Khronos assets require both files to be loaded into the same runtime session.
+
+Asset test commands first report how many sample asset graphs validate before execution. They then print a compact category summary, such as `pointer: Core 55/151` for focused core runs or `flow: both 43/50` when the full run has matching Core and Babylon results.
+
+For focused runs, set `KHR_INTERACTIVITY_ASSET_NAME_FILTER=math/add` to run one asset by catalog name, or `KHR_INTERACTIVITY_ASSET_FILTER=math/add` to include assets whose name, label, or tags match.
+
+Detailed spec pointer coverage is optional; set `KHR_INTERACTIVITY_SPEC_COVERAGE=1`, for example `KHR_INTERACTIVITY_SPEC_COVERAGE=1 npm run test:assets:core`.
+
+To keep a full log for inspection, pipe both stdout and stderr through `tee`, for example `KHR_INTERACTIVITY_SPEC_COVERAGE=1 npm run test:assets 2>&1 | tee test-assets.log`. Focused runs work the same way, for example `KHR_INTERACTIVITY_ASSET_FILTER=pointer KHR_INTERACTIVITY_SPEC_COVERAGE=1 npm run test:assets:core 2>&1 | tee pointer-core.log`.
 
 ### Cypress Tests
 1. start a local host of the app using `npm start`

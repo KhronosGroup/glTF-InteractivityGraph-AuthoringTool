@@ -1,8 +1,8 @@
 import {IBehaveEngine, IEventBus, IEventQueueItem, IHoverInformation, IInterpolateAction, IRigidBodyTriggerInformation} from "./IBehaveEngine";
 import {JsonPtrTrie} from "./JsonPtrTrie";
 import {BehaveEngineNode, IBehaviourNodeProps} from "./BehaveEngineNode";
-import {OnStartNode} from "./nodes/lifecycle/onStart";
-import {OnTickNode} from "./nodes/lifecycle/onTick";
+import {OnStartNode} from "./nodes/event/OnStart";
+import {OnTickNode} from "./nodes/event/OnTick";
 import {Branch} from "./nodes/flow/Branch";
 import {DoN} from "./nodes/flow/DoN";
 import {ForLoop} from "./nodes/flow/ForLoop";
@@ -14,17 +14,19 @@ import {WaitAll} from "./nodes/flow/WaitAll";
 import {WhileLoop} from "./nodes/flow/WhileLoop";
 import {PointerGet} from "./nodes/pointer/PointerGet";
 import {PointerSet} from "./nodes/pointer/PointerSet";
-import {Receive} from "./nodes/customEvent/Receive";
-import {Send} from "./nodes/customEvent/Send";
+import {Receive} from "./nodes/event/Receive";
+import {Send} from "./nodes/event/Send";
 import {VariableGet} from "./nodes/variable/VariableGet";
 import {VariableSet} from "./nodes/variable/VariableSet";
 import {AbsoluteValue} from "./nodes/math/arithmetic/AbsoluteValue";
 import {Euler} from "./nodes/math/constants/Euler";
 import {Pi} from "./nodes/math/constants/Pi";
+import {Tau} from "./nodes/math/constants/Tau";
 import {Sign} from "./nodes/math/arithmetic/Sign";
 import {Truncate} from "./nodes/math/arithmetic/Truncate";
 import {Floor} from "./nodes/math/arithmetic/Floor";
 import {Ceil} from "./nodes/math/arithmetic/Ceil";
+import {Round} from "./nodes/math/arithmetic/Round";
 import {Negate} from "./nodes/math/arithmetic/Negate";
 import {Add} from "./nodes/math/arithmetic/Add";
 import {Subtract} from "./nodes/math/arithmetic/Subtract";
@@ -51,8 +53,9 @@ import {Log10} from "./nodes/math/exponential/Log10";
 import {Power} from "./nodes/math/exponential/Power";
 import {SquareRoot} from "./nodes/math/exponential/SquareRoot";
 import {CubeRoot} from "./nodes/math/exponential/CubeRoot";
-import {Random} from "./nodes/experimental/Random";
+import {Random} from "./nodes/math/Random";
 import {Dot} from "./nodes/math/vector/Dot";
+import {Cross} from "./nodes/math/vector/Cross";
 import {Normalize} from "./nodes/math/vector/Normalize";
 import {Rotate2D} from "./nodes/math/vector/Rotate2D";
 import {Rotate3D} from "./nodes/math/vector/Rotate3D";
@@ -65,7 +68,6 @@ import {Equality} from "./nodes/math/comparison/Equality";
 import {GreaterThanOrEqualTo} from "./nodes/math/comparison/GreaterThanOrEqualTo";
 import {GreaterThan} from "./nodes/math/comparison/GreaterThan";
 import {Inf} from "./nodes/math/constants/Inf";
-import {OutputConsole} from "./nodes/experimental/OutputConsole";
 import {SetDelay} from "./nodes/flow/SetDelay";
 import {CancelDelay} from "./nodes/flow/CancelDelay";
 import {NotANumber} from "./nodes/math/constants/NotANumber";
@@ -79,16 +81,21 @@ import {IntToFloat} from "./nodes/math/typeConversion/IntToFloat";
 import {Extract2} from "./nodes/math/extract/Extract2";
 import {Extract3} from "./nodes/math/extract/Extract3";
 import {Extract4} from "./nodes/math/extract/Extract4";
+import {Extract2x2} from "./nodes/math/extract/Extract2x2";
+import {Extract3x3} from "./nodes/math/extract/Extract3x3";
 import {Extract4x4} from "./nodes/math/extract/Extract4x4";
 import {Combine2} from "./nodes/math/combine/Combine2";
 import {Combine3} from "./nodes/math/combine/Combine3";
 import {Combine4} from "./nodes/math/combine/Combine4";
+import {Combine2x2} from "./nodes/math/combine/Combine2x2";
+import {Combine3x3} from "./nodes/math/combine/Combine3x3";
 import {Combine4x4} from "./nodes/math/combine/Combine4x4";
 import {PointerInterpolate} from "./nodes/pointer/PointerInterpolate";
 import {QuatMul} from "./nodes/math/quaternion/QuatMul";
 import {QuatConjugate} from "./nodes/math/quaternion/QuatConjugate";
 import {QuatFromAxisAngle} from "./nodes/math/quaternion/QuatFromAxisAngle";
 import {QuatToAxisAngle} from "./nodes/math/quaternion/QuatToAxisAngle";
+import {QuatFromAngles} from "./nodes/math/quaternion/QuatFromAngles";
 import {QuatFromDirections} from "./nodes/math/quaternion/QuatFromDirections";
 import {Not} from "./nodes/math/bitwise/Not";
 import {Xor} from "./nodes/math/bitwise/Xor";
@@ -115,14 +122,170 @@ import { MatCompose } from "./nodes/math/matrix/matCompose";
 import { MatMul } from "./nodes/math/matrix/MatMul";
 import { MathSwitch } from "./nodes/math/special/MathSwitch";
 import { Inverse } from "./nodes/math/matrix/Inverse";
-import { DebugLog } from "./nodes/experimental/Debug";
+import { DebugLog } from "./nodes/debug/Log";
 import { QuatAngleBetween } from "./nodes/math/quaternion/QuatAngleBetween";
 import { QuatSlerp } from "./nodes/math/quaternion/QuatSlerp";
 import { QuatFromUpForward } from "./nodes/math/quaternion/QuatFromUpForward";
-import { cubicBezier, linearFloat, slerpFloat4 } from "./easingUtils";
+import { cubicBezierEase, linearFloat, slerpFloat4 } from "./easingUtils";
 import { Determinant } from "./nodes/math/matrix/Determinant";
 import { Transform } from "./nodes/math/vector/Transform";
 import { Transpose } from "./nodes/math/matrix/Transpose";
+import { RefEquality } from "./nodes/ref/RefEquality";
+import { EventStopPropagation } from "./nodes/event/StopPropagation";
+import { SmoothStep } from "./nodes/math/arithmetic/SmoothStep";
+import { Slerp } from "./nodes/math/vector/Slerp";
+import { RgbToOkLCh } from "./nodes/math/color/RgbToOkLCh";
+import { RgbFromOkLCh } from "./nodes/math/color/RgbFromOkLCh";
+import { OnSelect } from "./nodes/event/OnSelect";
+import { AnimationStart } from "./nodes/animation/AnimationStart";
+import { AnimationStop } from "./nodes/animation/AnimationStop";
+import { AnimationStopAt } from "./nodes/animation/AnimationStopAt";
+import { OnHoverIn } from "./nodes/event/OnHoverIn";
+import { OnHoverOut } from "./nodes/event/OnHoverOut";
+
+
+// Single source of truth for op -> runtime BehaveEngineNode class. registerKnownBehaviorNodes
+// iterates this; tools/tests import it to check parity with the authoring palette (tst/opRegistryParity.test.ts).
+export const behaveEngineNodeRegistry: ReadonlyArray<[string, any]> = [
+    ["event/onStart", OnStartNode],
+    ["event/onTick", OnTickNode],
+    ["flow/branch", Branch],
+    ["flow/setDelay", SetDelay],
+    ["flow/cancelDelay", CancelDelay],
+    ["flow/doN", DoN],
+    ["flow/for", ForLoop],
+    ["flow/multiGate", MultiGate],
+    ["flow/sequence", Sequence],
+    ["flow/switch", Switch],
+    ["flow/throttle", Throttle],
+    ["flow/waitAll", WaitAll],
+    ["flow/while", WhileLoop],
+    ["pointer/get", PointerGet],
+    ["pointer/set", PointerSet],
+    ["pointer/interpolate", PointerInterpolate],
+    ["math/abs", AbsoluteValue],
+    ["event/receive", Receive],
+    ["event/send", Send],
+    ["variable/get", VariableGet],
+    ["variable/set", VariableSet],
+    ["variable/interpolate", VariableInterpolate],
+    ["math/E", Euler],
+    ["math/Inf", Inf],
+    ["math/NaN", NotANumber],
+    ["math/Pi", Pi],
+    ["math/Tau", Tau],
+    ["math/sign", Sign],
+    ["math/trunc", Truncate],
+    ["math/floor", Floor],
+    ["math/fract", Fraction],
+    ["math/ceil", Ceil],
+    ["math/round", Round],
+    ["math/neg", Negate],
+    ["math/add", Add],
+    ["math/sub", Subtract],
+    ["math/mul", Multiply],
+    ["math/div", Divide],
+    ["math/rem", Remainder],
+    ["math/min", Min],
+    ["math/max", Max],
+    ["math/mix", Mix],
+    ["math/saturate", Saturate],
+    ["math/clamp", Clamp],
+    ["math/smoothStep", SmoothStep],
+    ["math/rad", DegreeToRadians],
+    ["math/deg", RadiansToDegrees],
+    ["math/sin", Sine],
+    ["math/cos", Cosine],
+    ["math/tan", Tangent],
+    ["math/asin", Arcsine],
+    ["math/acos", Arccosine],
+    ["math/atan", Arctangent],
+    ["math/atan2", Arctangent2],
+    ["math/sinh", HyperbolicSine],
+    ["math/cosh", HyperbolicCosine],
+    ["math/tanh", HyperbolicTangent],
+    ["math/asinh", InverseHyperbolicSine],
+    ["math/acosh", InverseHyperbolicCosine],
+    ["math/atanh", InverseHyperbolicTangent],
+    ["math/exp", Exponential],
+    ["math/log", Log],
+    ["math/log2", Log2],
+    ["math/log10", Log10],
+    ["math/pow", Power],
+    ["math/sqrt", SquareRoot],
+    ["math/cbrt", CubeRoot],
+    ["math/random", Random],
+    ["math/lt", LessThan],
+    ["math/le", LessThanOrEqualTo],
+    ["math/eq", Equality],
+    ["math/ge", GreaterThanOrEqualTo],
+    ["math/gt", GreaterThan],
+    ["math/dot", Dot],
+    ["math/cross", Cross],
+    ["math/normalize", Normalize],
+    ["math/rotate2D", Rotate2D],
+    ["math/rotate3D", Rotate3D],
+    ["math/length", VectorLength],
+    ["math/slerp", Slerp],
+    ["math/isInf", IsInfNode],
+    ["math/isNaN", IsNaNNode],
+    ["math/select", Select],
+    ["math/switch", MathSwitch],
+    ["math/extract2", Extract2],
+    ["math/extract3", Extract3],
+    ["math/extract4", Extract4],
+    ["math/extract2x2", Extract2x2],
+    ["math/extract3x3", Extract3x3],
+    ["math/extract4x4", Extract4x4],
+    ["math/combine2", Combine2],
+    ["math/combine3", Combine3],
+    ["math/combine4", Combine4],
+    ["math/combine2x2", Combine2x2],
+    ["math/combine3x3", Combine3x3],
+    ["math/combine4x4", Combine4x4],
+    ["type/boolToInt", BoolToInt],
+    ["type/boolToFloat", BoolToFloat],
+    ["type/floatToBool", FloatToBool],
+    ["type/floatToInt", FloatToInt],
+    ["type/intToBool", IntToBool],
+    ["type/intToFloat", IntToFloat],
+    ["math/not", Not],
+    ["math/xor", Xor],
+    ["math/or", Or],
+    ["math/and", And],
+    ["math/lsl", LeftShift],
+    ["math/asr", RightShift],
+    ["math/clz", CountLeadingZeros],
+    ["math/ctz", CountTrailingZeros],
+    ["math/popcnt", CountOneBits],
+    ["math/quatMul", QuatMul],
+    ["math/quatConjugate", QuatConjugate],
+    ["math/quatFromAxisAngle", QuatFromAxisAngle],
+    ["math/quatAngleBetween", QuatAngleBetween],
+    ["math/quatSlerp", QuatSlerp],
+    ["math/quatToAxisAngle", QuatToAxisAngle],
+    ["math/quatFromDirections", QuatFromDirections],
+    ["math/quatFromUpForward", QuatFromUpForward],
+    ["math/quatFromAngles", QuatFromAngles],
+    ["math/matDecompose", MatDecompose],
+    ["math/matCompose", MatCompose],
+    ["math/determinant", Determinant],
+    ["math/transform", Transform],
+    ["math/transpose", Transpose],
+    ["math/matMul", MatMul],
+    ["math/inverse", Inverse],
+    ["debug/log", DebugLog],
+    ["event/stopPropagation", EventStopPropagation],
+    ["ref/eq", RefEquality],
+    ["math/rgbToOkLCh", RgbToOkLCh],
+    ["math/rgbFromOkLCh", RgbFromOkLCh],
+    ["animation/start", AnimationStart],
+    ["animation/stop", AnimationStop],
+    ["animation/stopAt", AnimationStopAt],
+    ["event/onSelect", OnSelect],
+    ["event/onHoverIn", OnHoverIn],
+    ["event/onHoverOut", OnHoverOut],
+];
 
 
 export class BasicBehaveEngine implements IBehaveEngine {
@@ -133,7 +296,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
     private _lastTickTime: number;
     private _pauseTickTime: number;
     private _pauseDuration : number;
-    private _scheduledDelays: NodeJS.Timeout[];
+    private _scheduledDelays: Array<NodeJS.Timeout | undefined>;
     protected nodes: IInteractivityNode[];
     protected _variables: IInteractivityVariable[];
     protected events: IInteractivityEvent[];
@@ -144,10 +307,13 @@ export class BasicBehaveEngine implements IBehaveEngine {
     private valueEvaluationCache: Map<string, IInteractivityValue>;
     private _timerID: NodeJS.Timeout | null;
     public hoverableNodesIndices: Map<number, IHoverInformation>;
-    public selectableNodesIndices: Map<number, (selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) => void>;
+    public selectableNodesIndices: Map<number, (selectedNode: string, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined, event: string) => void>;
+    public selectNodes: Array<OnSelect>;
     public lastHoveredNodeIndices: Map<number, number | undefined>;
     public rigidBodyTriggerNodeIndices: Map<number, IRigidBodyTriggerInformation>;
-
+    public propagationCancelled: Set<string>;
+    public propagationCancelledPending: Set<string>;
+    public animationCompletionCallbacks: Map<number, () => void>;
 
     constructor(fps: number, eventBus: IEventBus) {
         this.registry = new Map<string, any>();
@@ -168,8 +334,12 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this._timerID = null;
         this.hoverableNodesIndices = new Map<number, IHoverInformation>();
         this.lastHoveredNodeIndices = new Map<number, number>();
-        this.selectableNodesIndices = new Map<number, (selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) => void>();
+        this.selectableNodesIndices = new Map();
+        this.selectNodes = [];
         this.rigidBodyTriggerNodeIndices = new Map<number, IRigidBodyTriggerInformation>();
+        this.propagationCancelled = new Set<string>();
+        this.propagationCancelledPending = new Set<string>();
+        this.animationCompletionCallbacks = new Map();
 
         this.registerKnownBehaviorNodes();
     }
@@ -186,7 +356,13 @@ export class BasicBehaveEngine implements IBehaveEngine {
         return this._variables;
     }
 
-    public startAnimation() {
+    public completeAnimation(animationIndex: number) {
+        const callback = this.animationCompletionCallbacks.get(animationIndex);
+        callback?.();
+        this.animationCompletionCallbacks.delete(animationIndex);
+    }
+
+    public startAnimation(animationIndex: number, startTime: number, endTime: number, speed: number, callback: () => void) {
         // Implemented by decorators
     }
 
@@ -231,17 +407,27 @@ export class BasicBehaveEngine implements IBehaveEngine {
     }
 
     public select(selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined) {
-        this.alertOnSelect(selectedNodeIndex, controllerIndex, selectionPoint, selectionRayOrigin, selectedNodeIndex);
-    }
+        const onSelectEventIndex = this.events.findIndex((event) => event.id === "onSelect");
+        const eventRef = `/extensions/KHR_interactivity/events/${onSelectEventIndex}`;
 
-    public alertOnSelect(selectedNodeIndex: number, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined, currentNodeIndex: number | undefined) {
-        while (currentNodeIndex !== undefined) {
-            const callback = this.selectableNodesIndices.get(currentNodeIndex);
+        for (let nodeIndex = selectedNodeIndex;;) {
+            this.flushPendingPropagationCancellations();
+
+            if (this.propagationCancelled.has(eventRef)) {
+                break;
+            }
+
+            const callback = this.selectableNodesIndices.get(nodeIndex);
             if (callback !== undefined) {
-                callback(selectedNodeIndex, controllerIndex, selectionPoint, selectionRayOrigin);
+                callback(`/nodes/${selectedNodeIndex}`, controllerIndex, selectionPoint, selectionRayOrigin, eventRef);
                 return;
             }
-            currentNodeIndex = this.getParentNodeIndex(currentNodeIndex);
+
+            const parent = this.getParentNodeIndex(nodeIndex);
+            if (parent === undefined) {
+                return;
+            }
+            nodeIndex = parent;
         }
     }
 
@@ -268,28 +454,31 @@ export class BasicBehaveEngine implements IBehaveEngine {
             }
         }
 
-        this.alertOnHoverOut(nodeIndex, controllerIndex, lastHoverNodeIndex, firstCommonHoverNodeIndex);
-        this.alertOnHoverIn(nodeIndex, controllerIndex, nodeIndex,  firstCommonHoverNodeIndex);
+        const lastHoverNodeRef = lastHoverNodeIndex !== undefined ? `/nodes/${lastHoverNodeIndex}` : undefined;
+        const newHoverNodeRef = nodeIndex !== undefined ? `/nodes/${nodeIndex}` : undefined;
+
+        this.alertOnHoverOut(lastHoverNodeRef, controllerIndex, lastHoverNodeIndex, firstCommonHoverNodeIndex);
+        this.alertOnHoverIn(newHoverNodeRef, controllerIndex, nodeIndex,  firstCommonHoverNodeIndex);
         
         this.lastHoveredNodeIndices.set(controllerIndex, nodeIndex);
     }
 
-    public alertOnHoverIn(selectedNodeIndex: number | undefined, controllerIndex: number, currentHoverNodeIndex: number | undefined, firstCommonHoverNodeIndex: number | undefined) {
+    public alertOnHoverIn(selectedNodeRef: unknown, controllerIndex: number, currentHoverNodeIndex: number | undefined, firstCommonHoverNodeIndex: number | undefined) {
         while (currentHoverNodeIndex !== undefined && currentHoverNodeIndex !== firstCommonHoverNodeIndex) {
             const hoverInformation = this.hoverableNodesIndices.get(currentHoverNodeIndex);
             if (hoverInformation?.callbackHoverIn !== undefined) {
-                hoverInformation.callbackHoverIn(selectedNodeIndex, controllerIndex, firstCommonHoverNodeIndex);
+                hoverInformation.callbackHoverIn(selectedNodeRef, controllerIndex, firstCommonHoverNodeIndex);
                 break;
             }
             currentHoverNodeIndex = this.getParentNodeIndex(currentHoverNodeIndex);
         }
     }
 
-    public alertOnHoverOut(selectedNodeIndex: number | undefined, controllerIndex: number, currentHoverNodeIndex: number | undefined, firstCommonHoverNodeIndex: number | undefined) {
+    public alertOnHoverOut(selectedNodeRef: unknown, controllerIndex: number, currentHoverNodeIndex: number | undefined, firstCommonHoverNodeIndex: number | undefined) {
         while (currentHoverNodeIndex !== undefined && currentHoverNodeIndex !== firstCommonHoverNodeIndex) {
             const hoverInformation = this.hoverableNodesIndices.get(currentHoverNodeIndex);
             if (hoverInformation?.callbackHoverOut !== undefined) {
-                hoverInformation.callbackHoverOut(selectedNodeIndex, controllerIndex, firstCommonHoverNodeIndex);
+                hoverInformation.callbackHoverOut(selectedNodeRef, controllerIndex, firstCommonHoverNodeIndex);
                 break;
             }
             currentHoverNodeIndex = this.getParentNodeIndex(currentHoverNodeIndex);
@@ -297,7 +486,24 @@ export class BasicBehaveEngine implements IBehaveEngine {
     }
 
     public clearScheduledDelays() {
+        // actually cancel the pending flow/setDelay timers - dropping the references alone leaves
+        // them queued, so their callbacks keep firing after the graph is torn down
+        for (const delay of this._scheduledDelays) {
+            if (delay !== undefined) {
+                clearTimeout(delay);
+            }
+        }
         this._scheduledDelays = [];
+    }
+
+    public dispose = () => {
+        if (this._timerID !== null) {
+            clearTimeout(this._timerID);
+            this._timerID = null;
+        }
+        this.clearScheduledDelays();
+        this.clearEventList();
+        this.clearCustomEventListeners();
     }
 
     public get scheduledDelays() {
@@ -305,6 +511,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
     }
 
     public pushScheduledDelay = (delay: NodeJS.Timeout): void => {
+        this.jsonPtrTrie.addPath(`/extensions/KHR_interactivity/delays/${this._scheduledDelays.length}`, () => [delay], () => undefined, "ref", true);
         this._scheduledDelays.push(delay);
     }
 
@@ -314,6 +521,22 @@ export class BasicBehaveEngine implements IBehaveEngine {
         }
 
         return this._scheduledDelays[index];
+    }
+
+    public cancelScheduledDelay = (index: number): void => {
+        const delay = this.getScheduledDelay(index);
+        if (delay !== undefined) {
+            this.jsonPtrTrie.removePath(`/extensions/KHR_interactivity/delays/${index}`);
+            clearTimeout(delay);
+            this._scheduledDelays[index] = undefined;
+        }
+    }
+
+    public removeScheduledDelay = (index: number): void => {
+        if (index >= 0 && index < this._scheduledDelays.length) {
+            this.jsonPtrTrie.removePath(`/extensions/KHR_interactivity/delays/${index}`);
+            this._scheduledDelays[index] = undefined;
+        }
     }
 
     public getEventList = (): IEventQueueItem[] => {
@@ -344,6 +567,10 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.jsonPtrTrie.addPath(jsonPtr, getterCallback, setterCallback, typeName, readOnly);
     }
 
+    public getRegisteredJsonPointers = (): string[] => {
+        return this.jsonPtrTrie.getRegisteredPaths();
+    }
+
     public isValidJsonPtr = (jsonPtr: string): boolean => {
         return this.jsonPtrTrie.isPathValid(jsonPtr);
     }
@@ -356,7 +583,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         return this.jsonPtrTrie.getPathValue(path);
     }
 
-    public getPathtypeName = (path: string) => {
+    public getPathTypeName = (path: string) => {
         return this.jsonPtrTrie.getPathTypeName(path);
     }
 
@@ -376,10 +603,27 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.eventBus.clearCustomEventListeners();
     }
 
+    public queueFunctionCall = (func: () => void): void => {
+        this.eventBus.addEvent({func});
+    }
+
+    private registerGraphEventPointers = (): void => {
+        const eventCountWithLifecycleEvents = (this.events?.length ?? 0) + 2;
+        this.registerJsonPointer(
+            `/extensions/KHR_interactivity/events/${eventCountWithLifecycleEvents}`,
+            (path) => [path],
+            () => undefined,
+            "ref",
+            true
+        );
+    }
+
     public loadBehaveGraph = (behaveGraph: any, runGraph = true) => {
         this.hoverableNodesIndices.clear();
         this.selectableNodesIndices.clear();
         this.lastHoveredNodeIndices.clear();
+        this.propagationCancelled.clear();
+        this.propagationCancelledPending.clear();
         this._pauseDuration = 0;
         this._pauseTickTime = NaN;
         try {
@@ -393,6 +637,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.events = behaveGraph.events;
         this.types = behaveGraph.types;
         this.idToBehaviourNodeMap.clear();
+        this.registerGraphEventPointers();
 
         const defaultProps = {
             idToBehaviourNodeMap: this.idToBehaviourNodeMap,
@@ -419,6 +664,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
             }
             const behaviourNodeProps: IBehaviourNodeProps = {
                 ...defaultProps,
+                index: index,
                 flows:node.flows || {},
                 values: node.values || {},
                 configuration: node.configuration || {},
@@ -426,7 +672,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
                 types: behaveGraph.types,
                 graphEngine: this,
                 declaration: nodeDeclaration,
-                addEventToWorkQueue: this.addEventToWorkQueue
+                addEventToWorkQueue: this.addEventToWorkQueue,
             };
             const nodeType = nodeDeclaration.op;
             let behaviourNode: BehaveEngineNode;
@@ -523,23 +769,24 @@ export class BasicBehaveEngine implements IBehaveEngine {
         const action = async () => {
             const elapsedDuration = (this.lastTickTime - startTime) / 1000;
             const t = Math.min(elapsedDuration / duration, 1);
-            const p = cubicBezier(t, {x: 0, y:0}, {x: p1[0], y:p1[1]}, {x: p2[0], y:p2[1]}, {x: 1, y:1});
+            // q is the output progress position: the easing curve evaluated at input progress t
+            const q = cubicBezierEase(t, p1, p2);
             if (valueType === "float3") {
-                const value = [linearFloat(p.y, initialValue[0], targetValue[0]), linearFloat(p.y, initialValue[1], targetValue[1]), linearFloat(p.y, initialValue[2], targetValue[2])];
+                const value = [linearFloat(q, initialValue[0], targetValue[0]), linearFloat(q, initialValue[1], targetValue[1]), linearFloat(q, initialValue[2], targetValue[2])];
                 this.setPathValue(path, value);
             } else if (valueType === "float4") {
                 if (this.isSlerpPath(path)) {
-                    const value = slerpFloat4(p.y, initialValue, targetValue);
+                    const value = slerpFloat4(q, initialValue, targetValue);
                     this.setPathValue(path, value);
                 } else {
-                    const value = [linearFloat(p.y, initialValue[0], targetValue[0]), linearFloat(p.y, initialValue[1], targetValue[1]), linearFloat(p.y, initialValue[2], targetValue[2]), linearFloat(p.y, initialValue[3], targetValue[3])];
+                    const value = [linearFloat(q, initialValue[0], targetValue[0]), linearFloat(q, initialValue[1], targetValue[1]), linearFloat(q, initialValue[2], targetValue[2]), linearFloat(q, initialValue[3], targetValue[3])];
                     this.setPathValue(path, value);
                 }
             } else if (valueType === "float") {
-                const value = [linearFloat(p.y, initialValue[0], targetValue[0])];
+                const value = [linearFloat(q, initialValue[0], targetValue[0])];
                 this.setPathValue(path, value);
             } else if (valueType == "float2") {
-                const value = [linearFloat(p.y, initialValue[0], targetValue[0]), linearFloat(p.y, initialValue[1], targetValue[1])];
+                const value = [linearFloat(q, initialValue[0], targetValue[0]), linearFloat(q, initialValue[1], targetValue[1])];
                 this.setPathValue(path, value);
             }
 
@@ -554,125 +801,9 @@ export class BasicBehaveEngine implements IBehaveEngine {
     }
 
     private registerKnownBehaviorNodes = () => {
-        this.registerBehaveEngineNode("event/onStart", OnStartNode);
-        this.registerBehaveEngineNode("event/onTick", OnTickNode);
-        this.registerBehaveEngineNode("flow/branch", Branch);
-        this.registerBehaveEngineNode("flow/setDelay", SetDelay);
-        this.registerBehaveEngineNode("flow/cancelDelay", CancelDelay);
-        this.registerBehaveEngineNode("flow/doN", DoN);
-        this.registerBehaveEngineNode("flow/for", ForLoop);
-        this.registerBehaveEngineNode("flow/multiGate", MultiGate);
-        this.registerBehaveEngineNode("flow/sequence", Sequence);
-        this.registerBehaveEngineNode("flow/switch", Switch);
-        this.registerBehaveEngineNode("flow/throttle", Throttle);
-        this.registerBehaveEngineNode("flow/waitAll", WaitAll);
-        this.registerBehaveEngineNode("flow/while", WhileLoop);
-        this.registerBehaveEngineNode("pointer/get", PointerGet);
-        this.registerBehaveEngineNode("pointer/set", PointerSet);
-        this.registerBehaveEngineNode("pointer/interpolate", PointerInterpolate)
-        this.registerBehaveEngineNode("ADBE/output_console_node", OutputConsole);
-        this.registerBehaveEngineNode("math/abs", AbsoluteValue);
-        this.registerBehaveEngineNode("event/receive", Receive);
-        this.registerBehaveEngineNode("event/send", Send);
-        this.registerBehaveEngineNode("variable/get", VariableGet);
-        this.registerBehaveEngineNode("variable/set", VariableSet);
-        this.registerBehaveEngineNode("variable/interpolate", VariableInterpolate);
-        this.registerBehaveEngineNode("math/E", Euler);
-        this.registerBehaveEngineNode("math/Inf", Inf);
-        this.registerBehaveEngineNode("math/NaN", NotANumber);
-        this.registerBehaveEngineNode("math/Pi", Pi);
-        this.registerBehaveEngineNode("math/sign", Sign);
-        this.registerBehaveEngineNode("math/trunc", Truncate);
-        this.registerBehaveEngineNode("math/floor", Floor);
-        this.registerBehaveEngineNode("math/fract", Fraction);
-        this.registerBehaveEngineNode("math/ceil", Ceil);
-        this.registerBehaveEngineNode("math/neg", Negate);
-        this.registerBehaveEngineNode("math/add", Add);
-        this.registerBehaveEngineNode("math/sub", Subtract);
-        this.registerBehaveEngineNode("math/mul", Multiply);
-        this.registerBehaveEngineNode("math/div", Divide);
-        this.registerBehaveEngineNode("math/rem", Remainder);
-        this.registerBehaveEngineNode("math/min", Min);
-        this.registerBehaveEngineNode("math/max", Max);
-        this.registerBehaveEngineNode("math/mix", Mix);
-        this.registerBehaveEngineNode("math/saturate", Saturate);
-        this.registerBehaveEngineNode("math/clamp", Clamp);
-        this.registerBehaveEngineNode("math/rad", DegreeToRadians);
-        this.registerBehaveEngineNode("math/deg", RadiansToDegrees);
-        this.registerBehaveEngineNode("math/sin", Sine);
-        this.registerBehaveEngineNode("math/cos", Cosine);
-        this.registerBehaveEngineNode("math/tan", Tangent);
-        this.registerBehaveEngineNode("math/asin", Arcsine);
-        this.registerBehaveEngineNode("math/acos", Arccosine);
-        this.registerBehaveEngineNode("math/atan", Arctangent);
-        this.registerBehaveEngineNode("math/atan2", Arctangent2);
-        this.registerBehaveEngineNode("math/sinh", HyperbolicSine);
-        this.registerBehaveEngineNode("math/cosh", HyperbolicCosine);
-        this.registerBehaveEngineNode("math/tanh", HyperbolicTangent);
-        this.registerBehaveEngineNode("math/asinh", InverseHyperbolicSine);
-        this.registerBehaveEngineNode("math/acosh", InverseHyperbolicCosine);
-        this.registerBehaveEngineNode("math/atanh", InverseHyperbolicTangent);
-        this.registerBehaveEngineNode("math/exp", Exponential);
-        this.registerBehaveEngineNode("math/log", Log);
-        this.registerBehaveEngineNode("math/log2", Log2);
-        this.registerBehaveEngineNode("math/log10", Log10);
-        this.registerBehaveEngineNode("math/pow", Power);
-        this.registerBehaveEngineNode("math/sqrt", SquareRoot);
-        this.registerBehaveEngineNode("math/cbrt", CubeRoot);
-        this.registerBehaveEngineNode("math/random", Random);
-        this.registerBehaveEngineNode("math/lt", LessThan);
-        this.registerBehaveEngineNode("math/le", LessThanOrEqualTo);
-        this.registerBehaveEngineNode("math/eq", Equality);
-        this.registerBehaveEngineNode("math/ge", GreaterThanOrEqualTo);
-        this.registerBehaveEngineNode("math/gt", GreaterThan);
-        this.registerBehaveEngineNode("math/dot", Dot);
-        this.registerBehaveEngineNode("math/normalize", Normalize);
-        this.registerBehaveEngineNode("math/rotate2D", Rotate2D);
-        this.registerBehaveEngineNode("math/rotate3D", Rotate3D);
-        this.registerBehaveEngineNode("math/length", VectorLength);
-        this.registerBehaveEngineNode("math/isInf", IsInfNode);
-        this.registerBehaveEngineNode("math/isNaN", IsNaNNode);
-        this.registerBehaveEngineNode("math/select", Select);
-        this.registerBehaveEngineNode("math/switch", MathSwitch);
-        this.registerBehaveEngineNode("math/extract2", Extract2);
-        this.registerBehaveEngineNode("math/extract3", Extract3);
-        this.registerBehaveEngineNode("math/extract4", Extract4);
-        this.registerBehaveEngineNode("math/extract4x4", Extract4x4);
-        this.registerBehaveEngineNode("math/combine2", Combine2);
-        this.registerBehaveEngineNode("math/combine3", Combine3);
-        this.registerBehaveEngineNode("math/combine4", Combine4);
-        this.registerBehaveEngineNode("math/combine4x4", Combine4x4);
-        this.registerBehaveEngineNode("type/boolToInt", BoolToInt);
-        this.registerBehaveEngineNode("type/boolToFloat", BoolToFloat);
-        this.registerBehaveEngineNode("type/floatToBool", FloatToBool);
-        this.registerBehaveEngineNode("type/floatToInt", FloatToInt);
-        this.registerBehaveEngineNode("type/intToBool", IntToBool);
-        this.registerBehaveEngineNode("type/intToFloat", IntToFloat);
-        this.registerBehaveEngineNode("math/not", Not);
-        this.registerBehaveEngineNode("math/xor", Xor);
-        this.registerBehaveEngineNode("math/or", Or);
-        this.registerBehaveEngineNode("math/and", And);
-        this.registerBehaveEngineNode("math/lsl", LeftShift);
-        this.registerBehaveEngineNode("math/asr", RightShift);
-        this.registerBehaveEngineNode("math/clz", CountLeadingZeros);
-        this.registerBehaveEngineNode("math/ctz", CountTrailingZeros);
-        this.registerBehaveEngineNode("math/popcnt", CountOneBits);
-        this.registerBehaveEngineNode("math/quatMul", QuatMul);
-        this.registerBehaveEngineNode("math/quatConjugate", QuatConjugate);
-        this.registerBehaveEngineNode("math/quatFromAxisAngle", QuatFromAxisAngle);
-        this.registerBehaveEngineNode("math/quatAngleBetween", QuatAngleBetween);
-        this.registerBehaveEngineNode("math/quatSlerp", QuatSlerp);
-        this.registerBehaveEngineNode("math/quatToAxisAngle", QuatToAxisAngle);
-        this.registerBehaveEngineNode("math/quatFromDirections", QuatFromDirections);
-        this.registerBehaveEngineNode("math/quatFromUpForward", QuatFromUpForward);
-        this.registerBehaveEngineNode("math/matDecompose", MatDecompose);
-        this.registerBehaveEngineNode("math/matCompose", MatCompose);
-        this.registerBehaveEngineNode("math/determinant", Determinant);
-        this.registerBehaveEngineNode("math/transform", Transform);
-        this.registerBehaveEngineNode("math/transpose", Transpose);
-        this.registerBehaveEngineNode("math/matMul", MatMul);
-        this.registerBehaveEngineNode("math/inverse", Inverse);
-        this.registerBehaveEngineNode("debug/log", DebugLog);
+        for (const [op, behaveEngineNode] of behaveEngineNodeRegistry) {
+            this.registerBehaveEngineNode(op, behaveEngineNode);
+        }
     }
 
     protected validateGraph = (behaviorGraph: any) => {
@@ -684,8 +815,13 @@ export class BasicBehaveEngine implements IBehaveEngine {
             if (node.values !== undefined) {
                 for (const key of Object.keys(node.values)) {
                     if (node.values[key].node !== undefined) {
-                        if (Number(node.values[key].node) >= index) {
-                            throw Error(`Invalid reference, node ${index} references ${node.values[key].node}`);
+                        const referencedNode = Number(node.values[key].node);
+                        if (referencedNode >= index) {
+                            const opOf = (idx: number) => {
+                                const declIdx = (nodes[idx] as any)?.declaration;
+                                return behaviorGraph.declarations?.[declIdx]?.op ?? `declaration ${declIdx}`;
+                            };
+                            throw Error(`Invalid reference: node ${index} ('${opOf(index)}', socket '${key}') references node ${referencedNode} ('${opOf(referencedNode)}'), but a node may only reference nodes that appear earlier in the array (index < ${index}). Reorder the nodes so that node ${referencedNode} comes before node ${index}.`);
                         }
                     }
                 }
@@ -704,13 +840,12 @@ export class BasicBehaveEngine implements IBehaveEngine {
 
     protected addEventToWorkQueue = (flow: IInteractivityFlow) => {
         if (flow === undefined || flow.node === undefined) {return}
-        const nextNode: BehaveEngineNode | undefined = this.idToBehaviourNodeMap.get(Number(flow.node));
 
+        const nextNode = this.idToBehaviourNodeMap.get(Number(flow.node));
         if (nextNode === undefined) {return}
-        const nodeToPush = this.idToBehaviourNodeMap.get(Number(flow.node))!;
 
         this.processAddingNodeToQueue(flow);
-        this.eventBus.addEvent({behaveNode: nodeToPush, inSocketId: flow.socket});
+        this.eventBus.addEvent({behaveNode: nextNode, inSocketId: flow.socket});
     }
 
     public executeEventQueueTick = () => {
@@ -724,6 +859,9 @@ export class BasicBehaveEngine implements IBehaveEngine {
             this._pauseDuration += this._lastTickTime - this._pauseTickTime;
             this._pauseTickTime = NaN;
         }
+
+        this.propagationCancelled.clear();
+        this.propagationCancelledPending.clear();
 
         const eventQueueCopy = [...this.eventBus.getEventList()];
         this.eventBus.clearEventList();
@@ -763,7 +901,12 @@ export class BasicBehaveEngine implements IBehaveEngine {
         }, 1000 / this.fps)
     }
 
-   
+    public flushPendingPropagationCancellations = () => {
+        for (const event of this.propagationCancelledPending) {
+            this.propagationCancelled.add(event);
+        }
+        this.propagationCancelledPending.clear();
+    }
 
     setPointerInterpolationCallback(path: string, action: IInterpolateAction): void {
         this.eventBus.setPointerInterpolationCallback(path, action);
@@ -779,5 +922,9 @@ export class BasicBehaveEngine implements IBehaveEngine {
 
     clearVariableInterpolation(variable: number): void {
         this.eventBus.clearVariableInterpolation(variable);
+    }
+
+    isEventPropagationCancelled(event: string): boolean {
+        return this.propagationCancelled.has(event);
     }
 }

@@ -113,6 +113,63 @@ export const linearFloat = (t: number, initialVal: number, targetVal: number): n
     return initialVal + (targetVal - initialVal) * t;
 }
 
+/**
+ * Evaluates the cubic Bézier easing function defined by the implicit end points P0 (0,0) and
+ * P3 (1,1) and the control points P1/P2, as required by `variable/interpolate` and
+ * `pointer/interpolate` ("construct a cubic Bézier easing function for the [0, 1] input range").
+ *
+ * This is a function of x, not of the Bézier parameter: the input progress `x` is the elapsed
+ * fraction of the duration, and the curve parameter `s` with Bx(s) = x has to be solved for
+ * before By(s) can be taken as the output progress. Same definition as CSS `cubic-bezier()`.
+ * The spec's requirement that P1.x and P2.x lie within [0, 1] is what makes Bx monotonic and
+ * therefore invertible; y is unconstrained, so the result may leave [0, 1] (e.g. "back" curves).
+ *
+ * @param x - input progress position, expected within [0, 1]
+ * @param p1 - control point P1 as [x, y]
+ * @param p2 - control point P2 as [x, y]
+ * @returns the output progress position used as the interpolation coefficient
+ */
+export const cubicBezierEase = (x: number, p1: number[], p2: number[]): number => {
+    // polynomial coefficients of B(s) with the implicit end points, per coordinate
+    const cx = 3 * p1[0];
+    const bx = 3 * (p2[0] - p1[0]) - cx;
+    const ax = 1 - cx - bx;
+    const cy = 3 * p1[1];
+    const by = 3 * (p2[1] - p1[1]) - cy;
+    const ay = 1 - cy - by;
+
+    const sampleX = (s: number) => ((ax * s + bx) * s + cx) * s;
+    const sampleY = (s: number) => ((ay * s + by) * s + cy) * s;
+    const sampleDerivativeX = (s: number) => (3 * ax * s + 2 * bx) * s + cx;
+
+    if (x <= 0) { return 0; }
+    if (x >= 1) { return 1; }
+
+    // Newton-Raphson from an initial guess of s = x, which converges for most curves
+    let s = x;
+    for (let i = 0; i < 8; i++) {
+        const error = sampleX(s) - x;
+        if (Math.abs(error) < 1e-7) { return sampleY(s); }
+        const derivative = sampleDerivativeX(s);
+        if (Math.abs(derivative) < 1e-7) { break; }
+        s -= error / derivative;
+    }
+
+    // bisection fallback for curves with (near) zero horizontal slope, e.g. p1.x = p2.x = 0
+    let low = 0;
+    let high = 1;
+    s = x;
+    while (low < high) {
+        const sampled = sampleX(s);
+        if (Math.abs(sampled - x) < 1e-7) { break; }
+        if (sampled < x) { low = s; } else { high = s; }
+        const next = (high + low) / 2;
+        if (next === s) { break; }
+        s = next;
+    }
+    return sampleY(s);
+}
+
 export const cubicBezier = (t: number, P0: {x: number, y: number}, P1: {x: number, y: number}, P2: {x: number, y: number}, P3: {x: number, y: number}) => {
     const u = 1 - t;
     const tt = t * t;

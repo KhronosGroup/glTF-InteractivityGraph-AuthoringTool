@@ -1,6 +1,6 @@
 import { IInteractivityFlow, IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityVariable, InteractivityValueType } from "../BasicBehaveEngine/types/InteractivityGraph";
 import { AuthoredNode, AuthoredValue, NodeSpecFlag } from "./spec/AuthoredGraph";
-import { anyType, hasNodeSpecFlag, interactivityNodeSpecs, standardTypes } from "./spec/nodes";
+import { anyType, getNodeSpec, hasNodeSpecFlag, standardTypes } from "./spec/nodes";
 import { buildPointerSlotValue, getMessageTemplateSocketIds, getPathTemplateSockets, getRefSlotPointerPrefix } from "./pathTemplate";
 
 const getStandardTypeIndex = (signature: InteractivityValueType): number => {
@@ -260,11 +260,19 @@ export function mergeValueSockets(params: {
         const pointerSlotKindChanged = pointerSlotType !== undefined && existingSocket !== undefined && existingSocket.type !== pointerSlotType;
 
         if (existingHasData && !pointerSlotKindChanged) {
-            // the loaded/wired socket may predate the spec's `description` (e.g. loaded from a
-            // glTF file, which has no such field) — backfill it without touching value/connection
-            result[key] = existingSocket.description === undefined && specDefaults[key]?.description !== undefined
-                ? { ...existingSocket, description: specDefaults[key].description }
-                : existingSocket;
+            // description/typeOptions/typeGroup/objectPicker are declaration-derived, never authored:
+            // a graph file carries none of them (they're stripped on export), so a socket loaded with
+            // a static value arrives with only value+type and a single-entry typeOptions guess. Take
+            // them from the generated/spec definition so the socket keeps its full type choice and
+            // stays a member of its type group; only value/node/socket/type come from the file.
+            const declared = generated[key] ?? specDefaults[key];
+            result[key] = declared === undefined ? existingSocket : {
+                ...existingSocket,
+                ...(declared.description !== undefined ? { description: declared.description } : {}),
+                ...(declared.typeOptions !== undefined ? { typeOptions: declared.typeOptions } : {}),
+                ...(declared.typeGroup !== undefined ? { typeGroup: declared.typeGroup } : {}),
+                ...(declared.objectPicker !== undefined ? { objectPicker: declared.objectPicker } : {}),
+            };
         } else if (!existingHasData && !generatedKeys.has(key) && specDefaults[key] !== undefined) {
             // A grouped socket the file/model left without a static value or wire still carries a
             // resolved group type (propagated across connections on load, or set by an earlier
@@ -359,7 +367,7 @@ export function reconcileNodeSockets(params: {
     variables: IInteractivityVariable[];
 }): ReconciledNodeSockets {
     const { op, isNoOp, configuration, inputValues, outputValues, inputFlows, outputFlows, events, variables } = params;
-    const nodeSpec: AuthoredNode | undefined = interactivityNodeSpecs.find((n) => n.op === op);
+    const nodeSpec: AuthoredNode | undefined = getNodeSpec(op);
 
     // ops with a fixed (non-configuration-driven) socket set fully rely on the spec/config-key
     // lists below to decide what still exists; ops carrying this flag instead own their current

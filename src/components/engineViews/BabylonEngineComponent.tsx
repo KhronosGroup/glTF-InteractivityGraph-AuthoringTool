@@ -14,7 +14,6 @@ import {
 } from "@babylonjs/core";
 import {Scene} from "@babylonjs/core/scene";
 import "@babylonjs/loaders/glTF";
-import {Spacer} from "../Spacer";
 import {registerKHRInteractivityExtension} from "../../loaderExtensions/KHR_interactivity";
 import {BabylonDecorator} from "../../decorators/BabylonDecorator";
 import {BasicBehaveEngine} from "../../BasicBehaveEngine/BasicBehaveEngine";
@@ -26,13 +25,20 @@ import { computeExtensionDiagnostics } from "../../diagnostics";
 import { buildNormalizedTemplateSet } from "../../authoring/pointerCatalogue";
 import { loadSelectedModelGraph } from "./modelGraphExecution";
 import { attachSkinLoadedMetadata, BabylonLoadedModel, buildBabylonDecoratorWorld, buildBabylonLoadedModel } from "./babylonLoadedModel";
-import { downloadInteractivityGlb } from "./glbExport";
+import { downloadInteractivityGlb, GlbSource } from "./glbExport";
 import { MODEL_VIEW_Z_DIRECTION } from "./cameraFraming";
+import { useDevicePixelRatio } from "../../hooks/useDevicePixelRatio";
+import { useFullscreen } from "../../hooks/useFullscreen";
+import { IconDownload, IconPlay, IconSendEvent, IconUpload } from "../toolbarIcons";
+import { ViewportControls } from "./ViewportControls";
 
 enum BabylonEngineModal {
     CUSTOM_EVENT = "CUSTOM_EVENT",
     NONE = "NONE"
 }
+
+/** upper bound for the device-pixel render scale (see the devicePixelRatio effect) */
+const MAX_RENDER_SCALE = 2;
 
 registerKHRInteractivityExtension();
 
@@ -42,6 +48,7 @@ interface BabylonEngineComponentProps {
 
 export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ modelUrl }) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    const viewportRef = useRef<HTMLDivElement | null>(null);
     const engineRef = useRef<Engine | null>(null);
     const sceneRef = useRef<Scene>();
     const [graphRunning, setGraphRunning] = useState(false);
@@ -54,6 +61,8 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
     // sample/URL). modelUrl stays set in state/URL after a sample load, so resetScene needs this
     // to know which source should win the next time it (re)loads.
     const [useUploadedFile, setUseUploadedFile] = useState(false);
+    const devicePixelRatio = useDevicePixelRatio();
+    const viewportFullscreen = useFullscreen(viewportRef);
 
     const {getExecutableGraph, loadGraphFromJson, setDiagnosticsForCategory, setGltfObjectModel, setSupportedPointerTemplates, clearGraphDirty, registerPlayHandler} = useContext(InteractivityGraphContext);
 
@@ -72,8 +81,10 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
     };
 
     useEffect(() => {
-        // Create the Babylon.js engines
-        engineRef.current = new Engine(canvasRef.current, true);
+        // Create the Babylon.js engines. adaptToDeviceRatio (4th arg) makes the very first frame
+        // render at the display's native pixels instead of CSS pixels — without it the viewport is
+        // visibly soft on any HiDPI screen. The ongoing ratio is owned by the effect below.
+        engineRef.current = new Engine(canvasRef.current, true, undefined, true);
 
         createScene();
 
@@ -99,6 +110,16 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
             setSupportedPointerTemplates(null);
         };
     }, []);
+
+    // Render at the display's native pixels, capped: on a 4K/200% screen an uncapped ratio means
+    // ~4x the fragments for a viewport that is only half the window, which costs more than it
+    // visibly gains.
+    useEffect(() => {
+        const engine = engineRef.current;
+        if (!engine) { return; }
+        engine.setHardwareScalingLevel(1 / Math.min(devicePixelRatio, MAX_RENDER_SCALE));
+        engine.resize();
+    }, [devicePixelRatio]);
 
     useEffect(() => {
         const resizeEngine = () => {
@@ -241,10 +262,30 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
         }
     }
 
-    const exportKHRInteractivityGLB = async () => {
+    // Mirrors the source resolution in resetScene: whichever glb the viewport currently shows is
+    // the one the graph gets embedded into. A sample loaded via modelUrl has no file input entry,
+    // so resolving only from fileInputRef made the button a no-op for every sample.
+    const currentGlbSource = (): GlbSource | null => {
         const file = fileInputRef.current?.files?.[0];
-        if (file) {
-            await downloadInteractivityGlb(file, getExecutableGraph());
+        if (useUploadedFile && file) {
+            return { kind: "file", file };
+        }
+        if (modelUrl) {
+            return { kind: "url", url: modelUrl };
+        }
+        return file ? { kind: "file", file } : null;
+    };
+
+    const exportKHRInteractivityGLB = async () => {
+        const source = currentGlbSource();
+        if (source == null) {
+            console.warn("No model loaded to export");
+            return;
+        }
+        try {
+            await downloadInteractivityGlb(source, getExecutableGraph());
+        } catch (error) {
+            console.error("Failed to export glb:", error);
         }
     }
 
@@ -326,6 +367,9 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
                 loadGraphFromJson,
                 loadBehaveGraph: (graph) => babylonEngineRef.current!.loadBehaveGraph(graph),
             });
+            // this path runs the graph just like play() does, so the toolbar (Send Custom Event)
+            // has to see it as running too
+            setGraphRunning(true);
             clearGraphDirty();
         } catch (error) {
             console.error("Error loading model from URL:", error);
@@ -333,23 +377,19 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
     };
 
     return (
-        <div style={{width: "100%", height: "100%", display: "flex", flexDirection: "column"}}>
-            <div style={{background: "#3d5987", padding: 16, borderTopLeftRadius: 16, borderTopRightRadius: 16}}>
-                <Button variant="outline-light" onClick={() => {
-                    play(false)
-                }} disabled={fileUploaded == null}>
+        <div className={"panel"}>
+            <div className={"panel__toolbar"}>
+                <button type="button" className="panel__toolbar-btn" onClick={() => play(false)} disabled={fileUploaded == null}>
+                    <IconPlay/>
                     Play
-                </Button>
+                </button>
 
-                <Spacer width={16} height={0}/>
-
-                <Button variant="outline-light" onClick={() => setOpenModal(BabylonEngineModal.CUSTOM_EVENT)} disabled={!graphRunning}>
+                <button type="button" className="panel__toolbar-btn" onClick={() => setOpenModal(BabylonEngineModal.CUSTOM_EVENT)} disabled={!graphRunning}>
+                    <IconSendEvent/>
                     Send Custom Event
-                </Button>
+                </button>
 
-                <Spacer width={16} height={0}/>
-
-                <label className="mx-3" style={{color: "white"}}>Choose file: </label>
+                <span className={"panel__toolbar-label"}>Model</span>
                 <input className="d-none" type="file" accept=".glb" ref={fileInputRef} data-testid={"babylon-engine-file-input"} onChange={() => {
                     if (fileInputRef.current == null || fileInputRef.current.files == null || fileInputRef.current.files.length == 0) {
                         setFileUploaded(null);
@@ -358,22 +398,31 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
                     setUseUploadedFile(true);
                     setFileUploaded(fileInputRef.current.files[0].name)
                 }}/>
-                <Button variant="outline-light" onClick={() => fileInputRef.current!.click()}>
+                <button type="button" className="panel__toolbar-btn" onClick={() => fileInputRef.current!.click()}>
+                    <IconUpload/>
                     Upload glb
-                </Button>
+                </button>
 
-                <Spacer width={16} height={0}/>
-
-                <Button variant="outline-light" disabled={fileUploaded == null} onClick={() => exportKHRInteractivityGLB()}>
+                <button type="button" className="panel__toolbar-btn" disabled={fileUploaded == null} onClick={() => exportKHRInteractivityGLB()}>
+                    <IconDownload/>
                     Download glb
-                </Button>
-                <Spacer width={16} height={0}/>
-                <Button data-testid={"frame-btn"} variant="outline-light" onClick={() => autoFrame()}>
-                    Auto Frame
-                </Button>
+                </button>
+
             </div>
 
-            <canvas ref={canvasRef} style={{ width: '100%', flex: 1, minHeight: 0 }} data-testid={"babylon-engine-canvas"} />
+            <div
+                ref={viewportRef}
+                className={`panel__body viewport-pane${viewportFullscreen.fallback ? " viewport-pane--fullscreen-fallback" : ""}`}
+            >
+                <canvas ref={canvasRef} style={{ width: '100%', flex: 1, minHeight: 0 }} data-testid={"babylon-engine-canvas"} />
+                <ViewportControls
+                    onFitView={() => autoFrame()}
+                    fitTestId={"frame-btn"}
+                    isFullscreen={viewportFullscreen.isFullscreen}
+                    onToggleFullscreen={() => void viewportFullscreen.toggle()}
+                    fullscreenTestId={"babylon-fullscreen-btn"}
+                />
+            </div>
 
             <Modal size="lg" show={openModal === BabylonEngineModal.CUSTOM_EVENT} onHide={() => setOpenModal(BabylonEngineModal.NONE)}>
                 <Container style={{padding: 16}}>

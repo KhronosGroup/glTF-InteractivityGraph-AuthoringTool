@@ -12,7 +12,9 @@ export const categoryLabel: Record<IGraphDiagnostic["category"], string> = {
 };
 
 export const DiagnosticsPanel: React.FC = () => {
-    const { allDiagnostics: diagnostics, clearDiagnostics } = useContext(InteractivityGraphContext);
+    // the applied graph's issues (load + last Reload/Play), not the in-progress edits — those are
+    // reported live by the editor's own counter/node badges instead
+    const { appliedDiagnostics: diagnostics } = useContext(InteractivityGraphContext);
     const [collapsed, setCollapsed] = useState(false);
 
     if (!diagnostics || diagnostics.length === 0) {
@@ -23,7 +25,7 @@ export const DiagnosticsPanel: React.FC = () => {
     const warningCount = diagnostics.length - errorCount;
 
     return (
-        <div style={{ width: "90vw", margin: "16px auto 0 auto" }} data-testid={"diagnostics-panel"}>
+        <div className={"app-notice"} data-testid={"diagnostics-panel"}>
             <Alert variant={errorCount > 0 ? "danger" : "warning"} style={{ marginBottom: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <Alert.Heading style={{ marginBottom: 0, fontSize: "1.1rem" }}>
@@ -35,19 +37,13 @@ export const DiagnosticsPanel: React.FC = () => {
                             <Badge bg="warning" text="dark" style={{ marginLeft: 8 }}>{warningCount} warning{warningCount > 1 ? "s" : ""}</Badge>
                         )}
                     </Alert.Heading>
-                    <div>
-                        <Button
-                            variant="outline-secondary"
-                            size="sm"
-                            onClick={() => setCollapsed(prev => !prev)}
-                            style={{ marginRight: 8 }}
-                        >
-                            {collapsed ? "Show details" : "Hide details"}
-                        </Button>
-                        <Button variant="outline-secondary" size="sm" onClick={clearDiagnostics}>
-                            Dismiss
-                        </Button>
-                    </div>
+                    <Button
+                        variant="outline-secondary"
+                        size="sm"
+                        onClick={() => setCollapsed(prev => !prev)}
+                    >
+                        {collapsed ? "Show details" : "Hide details"}
+                    </Button>
                 </div>
 
                 {!collapsed && (

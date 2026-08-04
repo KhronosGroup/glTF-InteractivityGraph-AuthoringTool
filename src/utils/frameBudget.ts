@@ -5,8 +5,10 @@
 // before continuing.
 
 export interface RunChunkedOptions {
-    // Max time (ms) to spend working within a single frame before yielding. ~8ms leaves headroom in a
-    // 16ms/60fps frame for React reconciliation and paint.
+    // Max time (ms) to spend working before yielding a frame. The yield costs a whole rAF turn
+    // (~8ms of waiting for the next vsync on top of the browser's own frame work), so the budget
+    // sets the duty cycle: at 8ms roughly half the wall-clock time of a long load was spent idle.
+    // 24ms keeps input latency within a couple of frames while spending ~75% of the time working.
     budgetMs?: number;
     // Called after each yield (and once at the end) with progress in [0, 1].
     onProgress?: (progress: number) => void;
@@ -37,7 +39,7 @@ export const runChunked = async <T>(
     worker: (item: T, index: number) => void,
     options: RunChunkedOptions = {},
 ): Promise<void> => {
-    const { budgetMs = 8, onProgress, cancelled } = options;
+    const { budgetMs = 24, onProgress, cancelled } = options;
     const total = items.length;
     if (total === 0) {
         onProgress?.(1);

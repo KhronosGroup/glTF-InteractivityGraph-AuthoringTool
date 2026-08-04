@@ -4218,6 +4218,23 @@ export const interactivityNodeSpecs: AuthoredNode[] = rawNodeSpecs.map((node, in
     declaration: index,
 }));
 
+// op -> spec. The specs are immutable and looked up by op on nearly every hot path (per node per
+// load phase, per socket per validation pass, per render); a linear .find over ~150 entries there
+// dominated large-graph load time.
+const specByOp = new Map<string, AuthoredNode>(
+    interactivityNodeSpecs.filter((spec) => spec.op !== undefined).map((spec) => [spec.op!, spec]),
+);
+
+/** The registry spec for an op, or undefined for an op this tool doesn't implement (a NoOp). */
+export const getNodeSpec = (op: string | undefined): AuthoredNode | undefined =>
+    op === undefined ? undefined : specByOp.get(op);
+
+// Per-spec caches. Specs are shared, immutable module objects (every consumer clones before
+// writing - see socketReconciler's no-aliasing rule), so these derived views can be computed once.
+const typeGroupMembersBySpec = new WeakMap<AuthoredNode, Map<string, { inputs: string[]; outputs: string[] }>>();
+const typeGroupsBySpec = new WeakMap<AuthoredNode, string[]>();
+
+const EMPTY_GROUP_MEMBERS = { inputs: [] as string[], outputs: [] as string[] };
 
 /**
  * Spec-declared socket names that share `group` on a node. Membership is read from the immutable
@@ -4228,13 +4245,62 @@ export const getTypeGroupMembers = (
     spec: AuthoredNode | undefined,
     group: string,
 ): { inputs: string[]; outputs: string[] } => {
-    const specInputs = spec?.values?.input ?? {};
-    const specOutputs = spec?.values?.output ?? {};
-    return {
+    if (spec === undefined) { return EMPTY_GROUP_MEMBERS; }
+    let byGroup = typeGroupMembersBySpec.get(spec);
+    if (byGroup === undefined) {
+        byGroup = new Map();
+        typeGroupMembersBySpec.set(spec, byGroup);
+    }
+    const cached = byGroup.get(group);
+    if (cached !== undefined) { return cached; }
+
+    const specInputs = spec.values?.input ?? {};
+    const specOutputs = spec.values?.output ?? {};
+    const members = {
         inputs: Object.keys(specInputs).filter((name) => specInputs[name].typeGroup === group),
         outputs: Object.keys(specOutputs).filter((name) => specOutputs[name].typeGroup === group),
     };
+    byGroup.set(group, members);
+    return members;
 };
+
+/** Every typeGroup a spec declares across its input and output value sockets. */
+const getSpecTypeGroups = (spec: AuthoredNode): string[] => {
+    const cached = typeGroupsBySpec.get(spec);
+    if (cached !== undefined) { return cached; }
+    const collected = new Set<string>();
+    for (const socket of Object.values(spec.values?.input ?? {})) {
+        if (socket.typeGroup !== undefined) { collected.add(socket.typeGroup); }
+    }
+    for (const socket of Object.values(spec.values?.output ?? {})) {
+        if (socket.typeGroup !== undefined) { collected.add(socket.typeGroup); }
+    }
+    const groups = [...collected];
+    typeGroupsBySpec.set(spec, groups);
+    return groups;
+};
+
+/**
+ * uid -> node index over a graph's node list. Every resolver below takes one optionally: without it
+ * each wired-source lookup is a linear scan of the node list, which turns whole-graph passes
+ * (type propagation, live validation, edge recoloring) into O(n²) on a large graph.
+ */
+export type NodeByUid = ReadonlyMap<string, AuthoredNode>;
+
+export const buildNodeByUid = (graphNodes: AuthoredNode[]): Map<string, AuthoredNode> => {
+    const byUid = new Map<string, AuthoredNode>();
+    for (const node of graphNodes) {
+        if (node.uid !== undefined) { byUid.set(node.uid, node); }
+    }
+    return byUid;
+};
+
+const findByUid = (
+    graphNodes: AuthoredNode[],
+    byUid: NodeByUid | undefined,
+    uid: string | number | undefined,
+): AuthoredNode | undefined =>
+    byUid !== undefined ? byUid.get(String(uid)) : graphNodes.find((g) => g.uid === uid);
 
 /**
  * Resolve the single concrete type shared by `group` on `node`, from its live model + the spec.
@@ -4263,6 +4329,7 @@ export const resolveTypeGroupType = (
     group: string,
     graphNodes: AuthoredNode[],
     preferConnections = false,
+    byUid?: NodeByUid,
 ): number | undefined => {
     const { inputs, outputs } = getTypeGroupMembers(spec, group);
     const nodeInputs = node.values?.input ?? {};
@@ -4291,7 +4358,7 @@ export const resolveTypeGroupType = (
     for (const name of inputs) {
         const socket = nodeInputs[name];
         if (socket?.node !== undefined) {
-            const source = graphNodes.find((g) => g.uid === socket.node);
+            const source = findByUid(graphNodes, byUid, socket.node);
             const sourceType = source?.values?.output?.[socket.socket!]?.type;
             if (sourceType !== undefined) { return sourceType; }
         }
@@ -4315,13 +4382,14 @@ export const resolveOutputSocketType = (
     node: AuthoredNode | undefined,
     socket: string,
     graphNodes: AuthoredNode[],
+    byUid?: NodeByUid,
 ): number | undefined => {
     const value = node?.values?.output?.[socket];
     if (value === undefined) { return undefined; }
-    const spec = interactivityNodeSpecs.find((n) => n.op === node!.op);
+    const spec = getNodeSpec(node!.op);
     const group = value.typeGroup ?? spec?.values?.output?.[socket]?.typeGroup;
     if (group !== undefined) {
-        const resolved = resolveTypeGroupType(node!, spec, group, graphNodes);
+        const resolved = resolveTypeGroupType(node!, spec, group, graphNodes, false, byUid);
         if (resolved !== undefined) { return resolved; }
     }
     return value.type;
@@ -4341,8 +4409,9 @@ const propagateNodeGroup = (
     group: string,
     graphNodes: AuthoredNode[],
     preferConnections: boolean,
+    byUid: NodeByUid | undefined,
 ): boolean => {
-    const resolvedType = resolveTypeGroupType(node, spec, group, graphNodes, preferConnections);
+    const resolvedType = resolveTypeGroupType(node, spec, group, graphNodes, preferConnections, byUid);
     if (resolvedType === undefined) { return false; }
     const { inputs, outputs } = getTypeGroupMembers(spec, group);
     let changed = false;
@@ -4382,27 +4451,16 @@ export const propagateNodeGroupTypes = (
     graphNodes: AuthoredNode[],
     preferConnections = true,
     onlyGroup?: string,
+    byUid?: NodeByUid,
 ): boolean => {
-    const spec = interactivityNodeSpecs.find((n) => n.op === node.op);
+    const spec = getNodeSpec(node.op);
     if (spec === undefined) { return false; }
 
-    let groups: Iterable<string>;
-    if (onlyGroup !== undefined) {
-        groups = [onlyGroup];
-    } else {
-        const collected = new Set<string>();
-        for (const socket of Object.values(spec.values?.input ?? {})) {
-            if (socket.typeGroup !== undefined) { collected.add(socket.typeGroup); }
-        }
-        for (const socket of Object.values(spec.values?.output ?? {})) {
-            if (socket.typeGroup !== undefined) { collected.add(socket.typeGroup); }
-        }
-        groups = collected;
-    }
+    const groups = onlyGroup !== undefined ? [onlyGroup] : getSpecTypeGroups(spec);
 
     let changed = false;
     for (const group of groups) {
-        if (propagateNodeGroup(node, spec, group, graphNodes, preferConnections)) { changed = true; }
+        if (propagateNodeGroup(node, spec, group, graphNodes, preferConnections, byUid)) { changed = true; }
     }
     return changed;
 };
@@ -4422,10 +4480,18 @@ export const propagateGraphGroupTypes = (
     graphNodes: AuthoredNode[],
     preferConnections = true,
 ): void => {
-    for (let pass = 0; pass < graphNodes.length; pass++) {
+    // built once for the whole fixpoint rather than per wired socket lookup, and narrowed to the
+    // nodes that actually declare a typeGroup so ungrouped ops aren't re-walked every pass
+    const byUid = buildNodeByUid(graphNodes);
+    const grouped = graphNodes.filter((node) => {
+        const spec = getNodeSpec(node.op);
+        return spec !== undefined && getSpecTypeGroups(spec).length > 0;
+    });
+
+    for (let pass = 0; pass < grouped.length; pass++) {
         let changed = false;
-        for (const node of graphNodes) {
-            if (propagateNodeGroupTypes(node, graphNodes, preferConnections)) { changed = true; }
+        for (const node of grouped) {
+            if (propagateNodeGroupTypes(node, graphNodes, preferConnections, undefined, byUid)) { changed = true; }
         }
         if (!changed) { break; }
     }

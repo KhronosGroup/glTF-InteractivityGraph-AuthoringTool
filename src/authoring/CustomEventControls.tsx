@@ -2,6 +2,7 @@ import { CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from
 import { IInteractivityEvent, IInteractivityGraph, InteractivityValueType } from "../BasicBehaveEngine/types/InteractivityGraph";
 import { standardTypes } from "./spec/nodes";
 import { RefValuePicker } from "./RefValuePicker";
+import { TypedValueInput } from "./TypedValueInput";
 import "../css/flowNodes.css";
 
 const refSelectButtonStyle: CSSProperties = {
@@ -259,40 +260,78 @@ export const attachPointerEventLogging = (engine: any): void => {
     instrument(); // in case a graph was already loaded before attaching
 };
 
-const placeholderForType = (typeIndex: number): string => {
-    switch (standardTypes[typeIndex]?.signature) {
-        case "bool": return "true / false";
-        case "int": return "0";
-        case "float": return "0.0";
-        case "float2": return "[0, 0]";
-        case "float3": return "[0, 0, 0]";
-        case "float4": return "[0, 0, 0, 0]";
-        default: return "";
+// how many components each vector/matrix type carries, used to pad a partially filled grid
+const COMPONENT_COUNTS: Record<string, number> = {
+    float2: 2, float3: 3, float4: 4,
+    float2x2: 4, float3x3: 9, float4x4: 16,
+};
+
+/**
+ * Turn the edited (typed) argument value into the detail the event/receive node expects:
+ * it runs each value through its own parseType, which JSON-parses booleans and vectors and
+ * Number()s scalars. Unset components fall back to 0 / false so a partially filled grid still
+ * sends a well-formed value.
+ */
+const serializeArg = (typeIndex: number, raw: any): any => {
+    const signature = standardTypes[typeIndex]?.signature ?? "";
+    const componentCount = COMPONENT_COUNTS[signature];
+    if (componentCount !== undefined) {
+        return Array.from({ length: componentCount }, (_, i) => {
+            const v = Array.isArray(raw) ? Number(raw[i]) : NaN;
+            return Number.isFinite(v) ? v : 0;
+        });
+    }
+    switch (signature) {
+        case InteractivityValueType.BOOLEAN:
+            return Array.isArray(raw) && raw[0] === true ? "true" : "false";
+        case InteractivityValueType.INT:
+        case InteractivityValueType.FLOAT: {
+            const v = Array.isArray(raw) ? Number(raw[0]) : NaN;
+            return Number.isFinite(v) ? v : 0;
+        }
+        // ref (and anything unrecognised) is sent as the raw string it was edited as
+        default:
+            return typeof raw === "string" ? raw : Array.isArray(raw) ? String(raw[0] ?? "") : "";
     }
 };
 
 /**
- * Manual trigger UI for an event/receive node. Renders an input per event argument and a button
- * that dispatches the custom event onto the document bus, driving any running graph's receive node.
+ * Manual trigger UI for an event/receive node. Renders a type-specific editor per event argument
+ * (the same TypedValueInput used for socket/variable defaults, so a float3 gets three component
+ * fields, a bool a checkbox, …) and a button that dispatches the custom event onto the document
+ * bus, driving any running graph's receive node.
  *
- * Raw string values are sent as the event detail; the event/receive engine node parses each value
- * according to its declared type (matching the existing engine "Send Custom Event" modals).
+ * Values are serialized per type into the event detail; the event/receive engine node then parses
+ * each one according to its declared type.
  */
 export const CustomEventReceiveTrigger = (props: { event: IInteractivityEvent; disabled?: boolean }) => {
     const channel = eventChannel(props.event.id);
     const valueEntries = Object.entries(props.event.values || {});
-    const [args, setArgs] = useState<Record<string, string>>({});
+    // per-argument edit state, in TypedValueInput's shape: an array of components (ref: a string)
+    const [args, setArgs] = useState<Record<string, any>>({});
     const [flash, setFlash] = useState(false);
     // which ref argument currently has the object picker open (null = closed)
     const [refPickerArg, setRefPickerArg] = useState<string | null>(null);
 
-    // clear entered args when the target event changes
-    useEffect(() => { setArgs({}); setRefPickerArg(null); }, [channel]);
+    // start from the values declared on the event itself, so its defaults are visible (and aren't
+    // silently replaced by zeros on trigger); reset when the target event changes
+    const declaredValues = props.event.values;
+    const defaultArgs = useMemo(() => {
+        const initial: Record<string, any> = {};
+        for (const [key, value] of Object.entries(declaredValues || {})) {
+            if (value.value === undefined) { continue; }
+            initial[key] = standardTypes[value.type]?.signature === InteractivityValueType.REF
+                ? String((value.value as any[])[0] ?? "")
+                : value.value;
+        }
+        return initial;
+    }, [declaredValues]);
+    useEffect(() => { setArgs(defaultArgs); setRefPickerArg(null); }, [channel, defaultArgs]);
 
     const trigger = useCallback(() => {
         const detail: Record<string, any> = {};
-        for (const [key] of valueEntries) {
-            detail[key] = args[key] ?? "";
+        for (const [key, value] of valueEntries) {
+            detail[key] = serializeArg(value.type, args[key]);
         }
         document.dispatchEvent(new CustomEvent(channel, { detail }));
         setFlash(true);
@@ -305,12 +344,13 @@ export const CustomEventReceiveTrigger = (props: { event: IInteractivityEvent; d
                 const isRef = standardTypes[value.type]?.signature === InteractivityValueType.REF;
                 return (
                     <div key={key} className={"flow-node-field"}>
-                        <label htmlFor={`trigger-${channel}-${key}`}>
+                        <label htmlFor={isRef ? `trigger-${channel}-${key}` : undefined}>
                             {key}
                             <span className={"flow-node-event-arg-type"}>{getEventTypeLabel(value.type)}</span>
                         </label>
                         {isRef ? (
-                            // ref args reuse the shared object-reference picker (same as ref input sockets)
+                            // ref args keep their own picker here (rather than TypedValueInput's) so the
+                            // picker can be hinted with the argument name, as ref input sockets are
                             <div style={{ display: "flex", gap: 4 }}>
                                 <input
                                     id={`trigger-${channel}-${key}`}
@@ -325,12 +365,11 @@ export const CustomEventReceiveTrigger = (props: { event: IInteractivityEvent; d
                                 </button>
                             </div>
                         ) : (
-                            <input
-                                id={`trigger-${channel}-${key}`}
-                                className={"flow-node-control"}
-                                placeholder={placeholderForType(value.type)}
-                                value={args[key] ?? ""}
-                                onChange={(e) => setArgs((prev) => ({ ...prev, [key]: e.target.value }))}
+                            // every other type reuses the shared type-specific editor
+                            <TypedValueInput
+                                typeIndex={value.type}
+                                value={args[key]}
+                                onChange={(next) => setArgs((prev) => ({ ...prev, [key]: next }))}
                             />
                         )}
                     </div>

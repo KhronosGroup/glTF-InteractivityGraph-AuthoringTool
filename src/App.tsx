@@ -4,18 +4,35 @@ import {EngineType} from "./components/engineViews/EngineType";
 import {RenderIf} from "./components/RenderIf";
 import {LoggingEngineComponent} from "./components/engineViews/LoggingEngineComponent";
 import {BabylonEngineComponent} from "./components/engineViews/BabylonEngineComponent";
-import {Tab, Tabs} from "react-bootstrap";
-import {Spacer} from "./components/Spacer";
 import { InteractivityGraphProvider } from './InteractivityGraphContext';
 import { SampleSidebar } from './components/SampleSidebar';
 import { DiagnosticsPanel } from './components/DiagnosticsPanel';
 
 // Storage key for persisting the engine type
 const ENGINE_TYPE_STORAGE_KEY = 'interactivity-graph-engine-type';
+// Storage key for persisting which workspace panes are shown
+const VIEW_MODE_STORAGE_KEY = 'interactivity-graph-view-mode';
+
+// which workspace pane(s) are visible: the 3D/logging engine view, the graph authoring view, or
+// both side by side (the default)
+type ViewMode = 'scene' | 'graph' | 'both';
+
+const viewModeFromString = (value: string | null): ViewMode | undefined => {
+  switch (value?.toLowerCase()) {
+    case 'scene': return 'scene';
+    case 'graph': return 'graph';
+    case 'both': return 'both';
+    default: return undefined;
+  }
+};
 
 export const App = () => {
   const [engineType, setEngineType] = useState<EngineType>(EngineType.BABYLON);
   const [modelUrl, setModelUrl] = useState<string | null>(null);
+  // which pane(s) of the workspace are shown — hiding a pane leaves it mounted (see
+  // app-split__pane--hidden) so switching back doesn't pay for rebuilding the canvas or graph
+  // from scratch.
+  const [viewMode, setViewMode] = useState<ViewMode>('both');
   // fraction of the split row's width given to the left (engine) panel; the divider drags this
   const [splitRatio, setSplitRatio] = useState(0.5);
   const [dividerHovered, setDividerHovered] = useState(false);
@@ -82,7 +99,24 @@ export const App = () => {
     if (modelParam) {
       setModelUrl(modelParam);
     }
+
+    // View mode: URL parameter wins over the stored preference, so a "?view=scene" link opens
+    // straight into the viewer-only layout
+    const viewParam = viewModeFromString(params.get('view'));
+    if (viewParam) {
+      setViewMode(viewParam);
+    } else {
+      const storedViewMode = viewModeFromString(localStorage.getItem(VIEW_MODE_STORAGE_KEY));
+      if (storedViewMode) {
+        setViewMode(storedViewMode);
+      }
+    }
   }, []);
+
+  const handleViewModeChange = (mode: ViewMode) => {
+    setViewMode(mode);
+    localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode);
+  };
 
   // Handle browser back/forward navigation
   useEffect(() => {
@@ -160,20 +194,25 @@ export const App = () => {
 
   return (
     <InteractivityGraphProvider>
-        <div style={{width: "100vw", height: "100vh"}}>
-
-        <EngineSelector setEngineType={handleEngineTypeChange} currentEngineType={engineType} />
-
-        <SampleSidebar onSelectModel={handleModelUrlChange} />
-
-        <DiagnosticsPanel />
-
-        <Spacer width={0} height={32}/>
+      <div className={"app-shell"}>
+        <AppHeader
+          setEngineType={handleEngineTypeChange}
+          currentEngineType={engineType}
+          onSelectModel={handleModelUrlChange}
+          viewMode={viewMode}
+          onViewModeChange={handleViewModeChange}
+        />
 
         {/* side-by-side, resizable: 3D/logging engine view on the left, graph authoring on the
             right, with a draggable divider controlling the split (see startSplitDrag) */}
-        <div ref={splitRowRef} style={{display: "flex", flexDirection: "row", width: "100vw", height: "85vh", boxSizing: "border-box", padding: "0 16px"}}>
-            <div style={{flexGrow: splitRatio, flexShrink: 1, flexBasis: 0, minWidth: 0, height: "100%"}}>
+        <main className={"app-main"}>
+          <div ref={splitRowRef} className={"app-split"}>
+            {/* with the graph pane hidden the engine pane is the only flex item, and a grow factor
+                below 1 would leave the rest of the row empty — give it the full width instead */}
+            <div
+                className={`app-split__pane${viewMode === "graph" ? " app-split__pane--hidden" : ""}`}
+                style={{flexGrow: viewMode === "both" ? splitRatio : 1}}
+            >
                 <RenderIf shouldShow={engineType === EngineType.LOGGING}>
                      <LoggingEngineComponent modelUrl={modelUrl} />
                 </RenderIf>
@@ -181,33 +220,33 @@ export const App = () => {
                     <BabylonEngineComponent modelUrl={modelUrl} />
                 </RenderIf>
             </div>
+            <RenderIf shouldShow={viewMode === "both"}>
+                <div
+                    role={"separator"}
+                    aria-orientation={"vertical"}
+                    onMouseDown={startSplitDrag}
+                    onMouseEnter={() => setDividerHovered(true)}
+                    onMouseLeave={() => setDividerHovered(false)}
+                    title={"Drag to resize"}
+                    className={`app-divider${dividerActive ? " is-active" : ""}`}
+                >
+                    <div className={"app-divider__grip"}/>
+                </div>
+            </RenderIf>
             <div
-                onMouseDown={startSplitDrag}
-                onMouseEnter={() => setDividerHovered(true)}
-                onMouseLeave={() => setDividerHovered(false)}
-                title={"Drag to resize"}
-                style={{
-                    flex: "0 0 12px", height: "100%", cursor: "col-resize",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    background: dividerActive ? "rgba(61, 89, 135, 0.08)" : "transparent",
-                    transition: "background 120ms ease",
-                }}
+                className={`app-split__pane${viewMode === "scene" ? " app-split__pane--hidden" : ""}`}
+                style={{flexGrow: viewMode === "both" ? 1 - splitRatio : 1}}
             >
-                <div style={{
-                    width: dividerActive ? 4 : 2,
-                    height: dividerActive ? 64 : 40,
-                    borderRadius: 3,
-                    background: dividerActive ? "#3d5987" : "#adb5bd",
-                    transition: "all 120ms ease",
-                }}/>
-            </div>
-            <div style={{flexGrow: 1 - splitRatio, flexShrink: 1, flexBasis: 0, minWidth: 0, height: "100%"}}>
                 <AuthoringComponent/>
             </div>
-        </div>
+          </div>
+        </main>
+
+        {/* below the workspace so it never pushes it down on load; renders nothing (and takes no
+            space) while there are no diagnostics */}
+        <DiagnosticsPanel />
       </div>
     </InteractivityGraphProvider>
-      
   );
 }
 
@@ -216,58 +255,84 @@ interface EngineSelectorProps {
     currentEngineType: EngineType;
 }
 
-export const EngineSelector: React.FC<EngineSelectorProps> = ({ setEngineType, currentEngineType }) => {
-    // Initialize the activeKey based on the engineType prop
-    const getInitialTabKey = () => {
-        switch (currentEngineType) {
-            case EngineType.LOGGING:
-                return '1';
-            case EngineType.BABYLON:
-                return '2';
-            default:
-                return '2'; // Default to Babylon
-        }
-    };
+// the engine tabs, kept in the order Babylon-then-Logging. Rendered as a plain <ul>/<li>
+// segmented control rather than react-bootstrap's <Tabs> so it can carry the app's own styling
+// (and so a tab is still an <li>, which the e2e spec clicks).
+const ENGINE_TABS: ReadonlyArray<{ engine: EngineType; label: string }> = [
+    { engine: EngineType.BABYLON, label: "Babylon Engine" },
+    { engine: EngineType.LOGGING, label: "Logging Engine" },
+];
 
-    const [activeKey, setActiveKey] = useState(getInitialTabKey());
-    
-    // Update tab key when engineType changes
-    useEffect(() => {
-        setActiveKey(getInitialTabKey());
-    }, [currentEngineType]);
-    
-    const handleEngineChange = (key: string | null) => {
-        if (key) {
-            let engine;
-            switch (key) {
-                case '1':
-                    engine = EngineType.LOGGING;
-                    break;
-                case '2':
-                    engine = EngineType.BABYLON;
-                    break;
-                default:
-                    throw Error("Invalid Selection")
-            }
-            setActiveKey(key);
-            setEngineType(engine);
-        }
-    };
+export const EngineSelector: React.FC<EngineSelectorProps> = ({ setEngineType, currentEngineType }) => (
+    <div data-testid={"engine-selector"}>
+        <ul className={"app-tabs"} role={"tablist"}>
+            {ENGINE_TABS.map(({ engine, label }) => {
+                const isActive = currentEngineType === engine;
+                return (
+                    <li
+                        key={engine}
+                        role={"presentation"}
+                        className={`app-tab${isActive ? " is-active" : ""}`}
+                        onClick={() => setEngineType(engine)}
+                    >
+                        <button type={"button"} role={"tab"} aria-selected={isActive}>{label}</button>
+                    </li>
+                );
+            })}
+        </ul>
+    </div>
+);
 
-    return (
-        <div style={{width: "90vw", margin: "0 auto", textAlign: "center", marginTop: 32}}>
-            <h2>glTF Interactivity Editor and Viewer</h2>
-            <p style={{marginBottom: "0"}}>This web app allows interacting with, graph inspection and authoring of glTF files using the <a href="https://github.com/KhronosGroup/glTF/blob/interactivity/extensions/2.0/Khronos/KHR_interactivity/Specification.adoc" target="_blank">KHR_interactivity</a> extension.</p>
-            <p style={{marginBottom: "0"}}>You can load samples and test assets and inspect their graphs, or create your own files with the experimental graph UI.</p>
-            <div data-testid={"engine-selector"}>
-                <Tabs
-                    activeKey={activeKey}
-                    onSelect={handleEngineChange}
-                >
-                    <Tab title={"Babylon Engine"} eventKey={2}/>
-                    <Tab title={"Logging Engine (for development)"} eventKey={1}/>
-                </Tabs>
-            </div>
-        </div>
-    );
+interface ViewModeSelectorProps {
+    viewMode: ViewMode;
+    onViewModeChange: (mode: ViewMode) => void;
 }
+
+// the workspace pane tabs, styled as the same segmented control as the engine selector
+const VIEW_MODE_TABS: ReadonlyArray<{ mode: ViewMode; label: string; title: string }> = [
+    { mode: "scene", label: "3D Scene", title: "Show only the engine view" },
+    { mode: "graph", label: "Graph", title: "Show only the graph authoring panel" },
+    { mode: "both", label: "Both", title: "Show the engine view and the graph authoring panel side by side" },
+];
+
+export const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({ viewMode, onViewModeChange }) => (
+    <div data-testid={"view-mode-selector"}>
+        <ul className={"app-tabs"} role={"tablist"}>
+            {VIEW_MODE_TABS.map(({ mode, label, title }) => {
+                const isActive = viewMode === mode;
+                return (
+                    <li
+                        key={mode}
+                        role={"presentation"}
+                        className={`app-tab${isActive ? " is-active" : ""}`}
+                        onClick={() => onViewModeChange(mode)}
+                    >
+                        <button type={"button"} role={"tab"} aria-selected={isActive} title={title}>{label}</button>
+                    </li>
+                );
+            })}
+        </ul>
+    </div>
+);
+
+interface AppHeaderProps extends EngineSelectorProps, ViewModeSelectorProps {
+    onSelectModel: (url: string) => void;
+}
+
+const AppHeader: React.FC<AppHeaderProps> = ({ setEngineType, currentEngineType, onSelectModel, viewMode, onViewModeChange }) => (
+    <header className={"app-header"}>
+        <div className={"app-header__brand"}>
+            <h1 className={"app-title"}>glTF Interactivity Editor and Viewer</h1>
+            <p className={"app-subtitle"}>
+                Inspect, run and author glTF files using the{" "}
+                <a href="https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_interactivity/Specification.adoc" target="_blank" rel="noreferrer">KHR_interactivity</a>
+                {" "}extension — load a sample or test asset, or build your own graph.
+            </p>
+        </div>
+        <div className={"app-header__actions"}>
+            <EngineSelector setEngineType={setEngineType} currentEngineType={currentEngineType} />
+            <ViewModeSelector viewMode={viewMode} onViewModeChange={onViewModeChange} />
+            <SampleSidebar onSelectModel={onSelectModel} />
+        </div>
+    </header>
+);

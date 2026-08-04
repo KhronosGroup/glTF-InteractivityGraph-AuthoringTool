@@ -1,12 +1,12 @@
 import React, {useContext, useEffect, useRef, useState} from "react";
 import {Button, Col, Container, Form, Modal, Row, Tab, Tabs} from "react-bootstrap";
-import {Spacer} from "../Spacer";
 import {BasicBehaveEngine} from "../../BasicBehaveEngine/BasicBehaveEngine";
 import {LoggingDecorator} from "../../decorators/LoggingDecorator";
 import { InteractivityGraphContext } from "../../InteractivityGraphContext";
 import { DOMEventBus } from "../../BasicBehaveEngine/eventBuses/DOMEventBus";
 import { buildNormalizedTemplateSet } from "../../authoring/pointerCatalogue";
 import { createGlTFObjectModelFromGltf, readGlbJsonFromArrayBuffer } from "../../objectModel/glTFObjectModel";
+import { IconJsonFile, IconPlay, IconSendEvent } from "../toolbarIcons";
 
 enum LoggingEngineModal {
     OBJECT_MODEL = "OBJECT_MODEL",
@@ -103,21 +103,24 @@ export const LoggingEngineComponent: React.FC<LoggingEngineComponentProps> = ({ 
     }
 
     return (
-        <div style={{width: "100%", height: "100%", margin: "0 auto", overflow: "auto"}}>
-            <div style={{background: "#3d5987", padding: 16, borderTopLeftRadius: 16, borderTopRightRadius: 16}}>
-                <Button variant="outline-light" data-testid={"logging-engine-play-btn"} onClick={play}>
+        <div className={"panel"}>
+            <div className={"panel__toolbar"}>
+                <button type="button" className="panel__toolbar-btn" data-testid={"logging-engine-play-btn"} onClick={play}>
+                    <IconPlay/>
                     Play
-                </Button>
-                <Spacer width={16} height={0}/>
-                <Button variant="outline-light" onClick={() => setOpenModal(LoggingEngineModal.OBJECT_MODEL)}>
+                </button>
+                <button type="button" className="panel__toolbar-btn" onClick={() => setOpenModal(LoggingEngineModal.OBJECT_MODEL)}>
+                    <IconJsonFile/>
                     Upload object model JSON
-                </Button>
-                <Spacer width={16} height={0}/>
-                <Button variant="outline-light" onClick={() => setOpenModal(LoggingEngineModal.CUSTOM_EVENT)} disabled={!graphRunning}>
+                </button>
+                <button type="button" className="panel__toolbar-btn" onClick={() => setOpenModal(LoggingEngineModal.CUSTOM_EVENT)} disabled={!graphRunning}>
+                    <IconSendEvent/>
                     Send Custom Event
-                </Button>
+                </button>
             </div>
-            <pre style={{background: "black", color: "white", fontFamily: "monospace", padding: 10, height: 700}} data-testid={"logging-engine-log"}>
+            {/* fills the panel instead of a fixed 700px, so the log ends level with the graph
+                editor next to it at any window size or browser zoom */}
+            <pre className={"panel__body"} style={{background: "#12161d", color: "#e6e9ef", fontFamily: "var(--font-mono)", fontSize: "var(--fs-sm)", padding: "var(--sp-3)", margin: 0, overflow: "auto"}} data-testid={"logging-engine-log"}>
                 {executionLog}
             </pre>
 

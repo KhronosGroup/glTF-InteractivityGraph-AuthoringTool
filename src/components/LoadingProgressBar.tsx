@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useSyncExternalStore } from "react";
 import { InteractivityGraphContext } from "../InteractivityGraphContext";
 
 /**
@@ -6,9 +6,13 @@ import { InteractivityGraphContext } from "../InteractivityGraphContext";
  * pipeline reports its current phase (`step`) and overall `progress` (0..1); this renders both the
  * active operation and an exact percentage over the graph viewport.
  * Renders nothing while idle.
+ *
+ * Subscribed via useSyncExternalStore rather than read off the context value, so a progress tick
+ * re-renders only this bar and not every other context consumer (see setLoadingState).
  */
 export const LoadingProgressBar: React.FC = () => {
-    const { loadingState } = useContext(InteractivityGraphContext);
+    const { subscribeLoadingState, getLoadingState } = useContext(InteractivityGraphContext);
+    const loadingState = useSyncExternalStore(subscribeLoadingState, getLoadingState, getLoadingState);
 
     if (!loadingState || !loadingState.active) {
         return null;

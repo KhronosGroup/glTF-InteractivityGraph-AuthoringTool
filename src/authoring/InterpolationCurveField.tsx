@@ -37,7 +37,9 @@ export const EASING_PRESETS: EasingPreset[] = [
 const SIZE = 150;
 const PAD = 18;
 const INNER = SIZE - PAD * 2;
-const ACCENT = "#3d5987";
+// literal rather than var(--brand-800): these feed SVG presentation attributes (stroke/fill),
+// which do not resolve CSS custom properties
+const ACCENT = "#2c882c";
 
 const approxEqual = (a: number, b: number) => Math.abs(a - b) < 1e-3;
 const pointsEqual = (a: ControlPoint, b: ControlPoint) => approxEqual(a[0], b[0]) && approxEqual(a[1], b[1]);

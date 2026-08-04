@@ -24,7 +24,7 @@ const rowStyle = (selected: boolean, depth = 0): React.CSSProperties => ({
     paddingLeft: 8 + depth * 16,
     cursor: "pointer",
     borderRadius: 4,
-    background: selected ? "#3d5987" : "transparent",
+    background: selected ? "var(--brand-600)" : "transparent",
     color: selected ? "white" : "#222",
     fontSize: 13,
     display: "flex",

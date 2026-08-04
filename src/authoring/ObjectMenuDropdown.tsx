@@ -1,4 +1,5 @@
 import { CSSProperties, useEffect, useRef, useState } from "react";
+import { useLiftNodeContainment } from "./useLiftNodeContainment";
 
 // Compact caret button that opens a small popover menu. Used on `int` sockets flagged with
 // `objectPicker` to offer an "Open Object Menu" entry (which opens the RefValuePicker). Kept generic
@@ -63,6 +64,9 @@ export const ObjectMenuDropdown = ({ items, disabled, title }: ObjectMenuDropdow
         document.addEventListener("mousedown", onDocPointerDown);
         return () => document.removeEventListener("mousedown", onDocPointerDown);
     }, [open]);
+
+    // let the menu extend beyond the node instead of being clipped by its paint containment
+    useLiftNodeContainment(rootRef, open);
 
     return (
         <div ref={rootRef} className={"nodrag"} style={{ position: "relative", flexShrink: 0 }}>

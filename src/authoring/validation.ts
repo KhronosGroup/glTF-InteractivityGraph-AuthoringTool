@@ -1,6 +1,6 @@
 import { IInteractivityVariable } from "../BasicBehaveEngine/types/InteractivityGraph";
 import { AuthoredNode, AuthoredValue } from "./spec/AuthoredGraph";
-import { getTypeGroupMembers, interactivityNodeSpecs, resolveOutputSocketType, resolveTypeGroupType } from "./spec/nodes";
+import { NodeByUid, getNodeSpec, getTypeGroupMembers, resolveOutputSocketType, resolveTypeGroupType } from "./spec/nodes";
 import { getTypeLabel } from "./socketColors";
 
 /**
@@ -45,20 +45,20 @@ export const resolveInputSocketType = (
     socket: string,
     value: AuthoredValue,
     graphNodes: AuthoredNode[],
-    byUid?: Map<string, AuthoredNode>,
+    byUid?: NodeByUid,
 ): number | undefined => {
     const link = node.values?.input?.[socket] ?? value;
     if (link?.node !== undefined) {
         const sourceNode = byUid !== undefined ? byUid.get(String(link.node)) : graphNodes.find((n) => n.uid === link.node);
         // group-aware resolution of the source output (matches the wire color) — see getOwnSocketType
-        const sourceType = resolveOutputSocketType(sourceNode, link.socket!, graphNodes);
+        const sourceType = resolveOutputSocketType(sourceNode, link.socket!, graphNodes, byUid);
         if (sourceType !== undefined) {
             return sourceType;
         }
     }
     const group = value.typeGroup ?? spec?.values?.input?.[socket]?.typeGroup;
     if (group !== undefined) {
-        const groupType = resolveTypeGroupType(node, spec, group, graphNodes);
+        const groupType = resolveTypeGroupType(node, spec, group, graphNodes, false, byUid);
         if (groupType !== undefined) { return groupType; }
     }
     return value?.type;
@@ -77,7 +77,7 @@ const getOwnSocketType = (
     socket: string,
     value: AuthoredValue,
     graphNodes: AuthoredNode[],
-    byUid: Map<string, AuthoredNode> | undefined,
+    byUid: NodeByUid | undefined,
 ): number | undefined => {
     const link = node.values?.input?.[socket] ?? value;
     if (link?.node !== undefined) {
@@ -85,7 +85,7 @@ const getOwnSocketType = (
         // Resolve the source's output the same way its outgoing wire is colored — group-aware —
         // instead of reading the raw stored `.type`, which can be a stale spec-default placeholder
         // while the wire is correctly resolved (see resolveOutputSocketType).
-        return resolveOutputSocketType(sourceNode, link.socket!, graphNodes);
+        return resolveOutputSocketType(sourceNode, link.socket!, graphNodes, byUid);
     }
     return value?.type;
 };
@@ -125,7 +125,7 @@ const getGroupTypeConflict = (
     socket: string,
     value: AuthoredValue,
     graphNodes: AuthoredNode[],
-    byUid: Map<string, AuthoredNode> | undefined,
+    byUid: NodeByUid | undefined,
     variables: IInteractivityVariable[],
 ): string | undefined => {
     const group = value.typeGroup ?? spec?.values?.input?.[socket]?.typeGroup;
@@ -187,9 +187,9 @@ export const computeNodeLiveWarnings = (
     node: AuthoredNode,
     graphNodes: AuthoredNode[],
     variables: IInteractivityVariable[],
-    byUid?: Map<string, AuthoredNode>,
+    byUid?: NodeByUid,
 ): NodeLiveWarning[] => {
-    const spec = interactivityNodeSpecs.find((n) => n.op === node.op);
+    const spec = getNodeSpec(node.op);
     if (spec === undefined) { return []; }
     const warnings: NodeLiveWarning[] = [];
     for (const [socket, value] of Object.entries(node.values?.input ?? {})) {

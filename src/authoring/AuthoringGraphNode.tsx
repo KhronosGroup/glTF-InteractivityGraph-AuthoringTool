@@ -6,7 +6,7 @@ import { RenderIf } from "../components/RenderIf";
 import { NodeInfoTooltip, NodeTooltipSections } from "./NodeInfoTooltip";
 import { IInteractivityFlow, IInteractivityConfigurationValue, IInteractivityEvent, IInteractivityVariable, InteractivityValueType, InteractivityConfigurationValueType } from "../BasicBehaveEngine/types/InteractivityGraph";
 import { AuthoredValue, AuthoredNode, NodeSpecFlag } from "./spec/AuthoredGraph";
-import { hasNodeSpecFlag, interactivityNodeSpecs, resolveTypeGroupType, standardTypes } from "./spec/nodes";
+import { getNodeSpec, hasNodeSpecFlag, resolveTypeGroupType, standardTypes } from "./spec/nodes";
 import { InteractivityGraphContext } from "../InteractivityGraphContext";
 import { reconcileNodeSockets } from "./socketReconciler";
 import { resolveInputSocketType } from "./validation";
@@ -68,6 +68,68 @@ export const LOD_ZOOM_THRESHOLD = 0.35;
 // (nodeWarnings only stores entries for nodes that have warnings)
 const EMPTY_WARNINGS: readonly IGraphDiagnostic[] = [];
 
+// Field-wise comparison of two socket records, used to detect that a reconcile pass produced
+// nothing new. The pass runs on every node mount and at load time is a deliberate no-op (the model
+// was already materialised by "Building nodes"), so without this each mounted node paid four
+// forced re-renders and a full edge-list rebuild (recolorEdges) for an unchanged model. Key order
+// is part of the comparison: sockets render and execute in declaration order, so a reorder is a
+// real change that must still be written back.
+const sameRecord = <T extends object>(a: Record<string, T>, b: Record<string, T>, sameEntry: (x: T, y: T) => boolean): boolean => {
+    const aKeys = Object.keys(a);
+    const bKeys = Object.keys(b);
+    if (aKeys.length !== bKeys.length) { return false; }
+    for (let i = 0; i < aKeys.length; i++) {
+        if (aKeys[i] !== bKeys[i]) { return false; }
+        if (!sameEntry(a[aKeys[i]], b[bKeys[i]])) { return false; }
+    }
+    return true;
+};
+
+const sameValueArray = (a: any[] | undefined, b: any[] | undefined): boolean => {
+    if (a === b) { return true; }
+    if (a === undefined || b === undefined || a.length !== b.length) { return false; }
+    // NaN is the authored "unset float", so it has to compare equal to itself here
+    return a.every((v, i) => v === b[i] || (typeof v === "number" && typeof b[i] === "number" && Number.isNaN(v) && Number.isNaN(b[i])));
+};
+
+const sameValueSocket = (a: AuthoredValue, b: AuthoredValue): boolean =>
+    a === b || (
+        a !== undefined && b !== undefined
+        && a.type === b.type && a.node === b.node && a.socket === b.socket
+        && a.typeGroup === b.typeGroup && a.description === b.description
+        && a.objectPicker === b.objectPicker
+        && sameValueArray(a.typeOptions, b.typeOptions)
+        && sameValueArray(a.value, b.value)
+    );
+
+const sameFlowSocket = (a: IInteractivityFlow, b: IInteractivityFlow): boolean =>
+    a === b || (a !== undefined && b !== undefined && a.node === b.node && a.socket === b.socket);
+
+// reactflow's useUpdateNodeInternals schedules its own requestAnimationFrame and its own store
+// update *per call*. Each one re-measures that node's handles (a document querySelector plus a
+// getBoundingClientRect per handle, so a forced layout), re-runs the O(nodes) absolute-position
+// pass, and notifies the store — which re-runs the O(nodes) viewport-culling selector, the O(edges)
+// edge-visibility filter, and re-renders both renderers. Every node calls it as it mounts, so
+// loading a big graph into an already zoomed-out viewport, crossing the LOD threshold, or simply
+// panning fired hundreds to thousands of those in a row.
+//
+// reactflow's API already accepts an id array, so all calls made within one commit are coalesced
+// into a single update here. A microtask (not a frame) keeps the handles registered in the same
+// task, so nothing downstream waits longer than it used to.
+const pendingInternalsUpdates = new Set<string>();
+let internalsFlushScheduled = false;
+const requestNodeInternalsUpdate = (uid: string, updateNodeInternals: (ids: string[]) => void) => {
+    pendingInternalsUpdates.add(uid);
+    if (internalsFlushScheduled) { return; }
+    internalsFlushScheduled = true;
+    queueMicrotask(() => {
+        internalsFlushScheduled = false;
+        const ids = Array.from(pendingInternalsUpdates);
+        pendingInternalsUpdates.clear();
+        if (ids.length > 0) { updateNodeInternals(ids); }
+    });
+};
+
 export interface IAuthoringGraphNodeProps {
     data: any
     dragging?: boolean
@@ -108,6 +170,51 @@ const getComponentTitle = (layout: { rows: number; cols: number }, row: number, 
 }
 
 /**
+ * A native <select> that only materialises its full option list once the user interacts with it.
+ * A loaded graph can declare a thousand variables, and every variable/get node rendering all of
+ * them up-front put ~1M option elements on the canvas. Collapsed, only the selected option is in
+ * the DOM; mousedown/focus/keydown all fire before the popup opens, and React flushes those
+ * discrete events synchronously, so the list is complete by the time the dropdown appears.
+ */
+const LazyOptionsSelect = (props: {
+    id: string;
+    value: number;
+    /** read at *render* time, so the list rebuilds from the live model on every open */
+    getCount: () => number;
+    labelAt: (index: number) => string;
+    onChange: (evt: { target: { value: any; id: string } }) => void;
+}) => {
+    // a counter rather than a boolean: variables added after the first open must still show up, and
+    // the model is mutated in place (no new graph reference), so only a re-render here refreshes it
+    const [openCount, expand] = useReducer((n: number) => n + 1, 0);
+    const expanded = openCount > 0;
+    const count = props.getCount();
+    const hasSelection = props.value >= 0 && props.value < count;
+    return (
+        <select
+            id={props.id}
+            name={props.id}
+            className="nodrag"
+            value={hasSelection ? props.value : -1}
+            onMouseDown={() => expand()}
+            onFocus={() => expand()}
+            onKeyDown={() => expand()}
+            onChange={(event) => {
+                if (Number(event.target.value) === -1) { return; }
+                props.onChange(event);
+            }}
+        >
+            <option value={-1}>--NO SELECTION--</option>
+            {expanded
+                ? Array.from({ length: count }, (_, index) => (
+                    <option key={index} value={index}>{props.labelAt(index)}</option>
+                ))
+                : hasSelection && <option value={props.value}>{props.labelAt(props.value)}</option>}
+        </select>
+    );
+};
+
+/**
  * AuthoringGraphNode component is a React component used to display and edit the properties of an authoring node in a flow-based visual programming environment.
  *
  * @component
@@ -117,7 +224,7 @@ const getComponentTitle = (layout: { rows: number; cols: number }, row: number, 
  */
 
 export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
-    const { graph, gltfObjectModel, diagnostics, nodeWarnings, markGraphDirty } = useContext(InteractivityGraphContext);
+    const { graph, nodeByUid, gltfObjectModel, diagnosticsByNodeUid, nodeWarnings, markGraphDirty } = useContext(InteractivityGraphContext);
     const updateNodeInternals = useUpdateNodeInternals();
     const { deleteElements } = useReactFlow();
     // Select a boolean from zoom so this node re-renders only when it crosses the
@@ -129,9 +236,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     // React Flow still had that empty handle set cached. This is especially visible for a
     // config-driven pointer/get `value` output feeding animation/start or animation/stop: the
     // connection remains in the model/tooltips but has no drawable edge.
-    const [node, setNode] = useState<AuthoredNode | null>(() =>
-        graph.nodes.find(graphNode => graphNode.uid === uid) ?? null
-    );
+    const [node, setNode] = useState<AuthoredNode | null>(() => nodeByUid.get(uid) ?? null);
     // which ref input socket currently has the object picker open (null = closed)
     const [refPickerSocket, setRefPickerSocket] = useState<string | null>(null);
     // whether the node-index configuration's node picker dialog is open
@@ -196,8 +301,14 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         const prev = node.values.output ?? {};
         const resolved = applyUpdate(next, prev);
         node.values.output = resolved;
-        // output socket types may have changed; recolor this node's outgoing wires to match
+        // output socket types may have changed: recolor this node's outgoing wires, and re-resolve
+        // everything downstream (a consumer reads its types through this node's outputs). The
+        // downstream walk is skipped for the automatic reconcile pass, which only normalises the
+        // model — an O(graph) walk per node mount would make loading quadratic.
         props.data.recolorEdges?.(props.data.uid);
+        if (!suppressDirtyRef.current) {
+            props.data.refreshValueConsumers?.(props.data.uid);
+        }
         markDirtyIfChanged();
         forceRender();
     };
@@ -211,9 +322,8 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     };
 
     useEffect(() => {
-        const node: AuthoredNode = graph.nodes.find(node => node.uid === uid)!;
-        setNode(node);
-    }, [graph, uid]);
+        setNode(nodeByUid.get(uid) ?? null);
+    }, [nodeByUid, uid]);
 
     // node just resolved/changed: run the reconciler once so configuration-driven sockets
     // (flow/switch cases, variable/set variables, ...) are materialised into the model. Reads come
@@ -241,8 +351,19 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     // stale handleBounds and edges into that socket permanently error. isLod is here too because
     // crossing the LOD threshold swaps the whole handle set (detailed per-socket handles <-> the LOD
     // box's collapsed handles).
+    // A freshly mounted node needs no explicit refresh: reactflow's NodeRenderer observes every
+    // node element with a ResizeObserver, and that initial observation already measures it and
+    // computes its handleBounds — batched across all entries, off entry.target, with none of the
+    // per-id document querySelector this hook does. Firing it on mount as well duplicated all of
+    // that once per node, which is what made loading and panning a big graph crawl. Only *changes*
+    // to the handle set after mount need it.
+    const handlesMeasuredRef = useRef(false);
     useLayoutEffect(() => {
-        updateNodeInternals(uid);
+        if (!handlesMeasuredRef.current) {
+            handlesMeasuredRef.current = true;
+            return;
+        }
+        requestNodeInternalsUpdate(uid, updateNodeInternals);
     }, [
         uid, updateNodeInternals, isLod,
         Object.keys(inputFlows).join(","), Object.keys(outputFlows).join(","),
@@ -444,15 +565,28 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
             outputValues,
             inputFlows,
             outputFlows,
-            events: props.data.events ?? {},
+            events: graph.events ?? {},
             variables: graph.variables ?? [],
         });
 
-        setOutputFlows(reconciled.outputFlows);
-        setInputFlows(reconciled.inputFlows);
-        setInputValues(reconciled.inputValues);
-        setOutputValues(reconciled.outputValues);
-    }, [inputValues, outputValues, inputFlows, outputFlows, node, configuration, graph.variables, props.data.events, props.data.isNoOp])
+        // the setters used to materialise all four records unconditionally; keep that invariant
+        // even on the skip path below, where no write-back happens
+        if (node) {
+            node.values = node.values ?? {};
+            node.values.input = node.values.input ?? {};
+            node.values.output = node.values.output ?? {};
+            node.flows = node.flows ?? {};
+            node.flows.input = node.flows.input ?? {};
+            node.flows.output = node.flows.output ?? {};
+        }
+
+        // each setter forces a re-render (and setOutputValues also recolors this node's wires), so
+        // only write back the records the reconcile actually changed — see sameRecord
+        if (!sameRecord(outputFlows, reconciled.outputFlows, sameFlowSocket)) { setOutputFlows(reconciled.outputFlows); }
+        if (!sameRecord(inputFlows, reconciled.inputFlows, sameFlowSocket)) { setInputFlows(reconciled.inputFlows); }
+        if (!sameRecord(inputValues, reconciled.inputValues, sameValueSocket)) { setInputValues(reconciled.inputValues); }
+        if (!sameRecord(outputValues, reconciled.outputValues, sameValueSocket)) { setOutputValues(reconciled.outputValues); }
+    }, [inputValues, outputValues, inputFlows, outputFlows, node, configuration, graph.variables, graph.events, props.data.isNoOp])
 
     const stringToListOfNumbers = (inputString: string) => {
         const numberStrings = inputString.split(',');
@@ -483,19 +617,23 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
 
     // immutable spec for this node — the source of truth for typeGroup membership (a wired socket's
     // live object loses its typeGroup tag when overwritten by the connection link)
-    const nodeSpec = interactivityNodeSpecs.find(n => n.op === node?.op);
+    const nodeSpec = getNodeSpec(node?.op);
 
     // Resolve the concrete type shared by every socket tagged with `group` on this node instance.
     // Delegates to the shared resolver, fed this node's freshest values (local state), so the
     // priority (static value > connection > default) and spec-based membership stay consistent with
     // the connect/disconnect side in AuthoringComponent. Mirrors the KHR_interactivity rule that
     // sockets sharing a type variable (e.g. floatN's `T`) resolve to the same concrete type.
+    // nodeByUid is threaded into both resolvers below: each wired socket they walk otherwise scans
+    // the whole node list, so one detailed node re-render cost O(sockets x nodes)
     const getGroupType = (group: string): number | undefined =>
         resolveTypeGroupType(
             { declaration: -1, op: node?.op, values: { input: inputValues, output: outputValues } },
             nodeSpec,
             group,
             graph.nodes,
+            false,
+            nodeByUid,
         );
 
     // A wired socket's badge/handle should reflect the connected value's type only when that type
@@ -513,7 +651,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     // model resolver in validation.ts — the exact same resolution the whole-graph live validation
     // uses — so the badge and the reported warnings can never disagree.
     const resolveSocketType = (socket: string, value: AuthoredValue): number | undefined =>
-        node !== null ? resolveInputSocketType(node, nodeSpec, socket, value, graph.nodes) : value?.type;
+        node !== null ? resolveInputSocketType(node, nodeSpec, socket, value, graph.nodes, nodeByUid) : value?.type;
 
     // parse the currently-selected variable ids for the multi-variable config (variable/set).
     // The stored value may be a plain number array (["0", "1"] / [0, 1]) or, from legacy text
@@ -568,8 +706,10 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     // interpolate nodes expose p1/p2 as the cubic-bezier easing control points; show a curve
     // preview + preset picker when both are present as inline (unwired) float2 values.
     const isInterpolateNode = node?.op === "variable/interpolate" || node?.op === "pointer/interpolate";
+    // read from the model only: a props.data mirror went stale on every connect/disconnect, and was
+    // copied verbatim onto a pasted node (leaving its value inputs permanently hidden)
     const isSocketLinked = (socket: string) =>
-        (props.data.linked && props.data.linked[socket]) || node?.values?.input?.[socket]?.node !== undefined;
+        node?.values?.input?.[socket]?.node !== undefined;
     const readControlPoint = (socket: string): ControlPoint => {
         const v = inputValues[socket]?.value;
         return [Number(v?.[0]), Number(v?.[1])];
@@ -584,7 +724,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     const configuredEventIndex = configuration.event?.value?.[0];
     const configuredEvent: IInteractivityEvent | undefined =
         configuredEventIndex != null && Number(configuredEventIndex) >= 0
-            ? props.data.events?.[Number(configuredEventIndex)]
+            ? graph.events?.[Number(configuredEventIndex)]
             : undefined;
 
     // add a new output flow socket with a unique numeric name
@@ -614,10 +754,6 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         props.data.renameFlowSocket?.(props.data.uid, oldName, newName);
     };
 
-    // this node's position in the graph's node list — the index used by KHR_interactivity
-    // node references (e.g. configuration.nodeIndex) elsewhere in the graph
-    const nodeIndex = graph.nodes.findIndex((n) => n.uid === uid);
-
     // NodeIndex that a given uid resolves to, for annotating a wired socket's tooltip row with
     // what it's connected to.
     const nodeIndexForUid = (targetUid: string | number | undefined): number | undefined => {
@@ -645,9 +781,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
 
     // load-time spec-validity diagnostics attributed to this node instance (unknown socket names /
     // socket type mismatches against this op's declaration in nodes.ts - see loadGraphFromJson)
-    const specDiagnosticLines = diagnostics
-        .filter((d) => d.category === "node" && d.nodeUid === uid)
-        .map((d) => d.title);
+    const specDiagnosticLines = (diagnosticsByNodeUid.get(uid) ?? EMPTY_WARNINGS).map((d) => d.title);
 
     // this node instance's own live socket warnings (missing values, type mismatches, type-group
     // conflicts) — computed whole-graph from the model by the context's chunked live validation
@@ -699,7 +833,9 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     // every render is O(N²) per pass. The function overlay on OverlayTrigger only invokes this while
     // the tooltip is actually shown, so the scans run on hover, not for every node every render.
     const buildHeaderTooltipSections = (): NodeTooltipSections => ({
-        nodeIndex,
+        // this node's position in the graph's node list — the index used by KHR_interactivity
+        // node references (e.g. configuration.nodeIndex) elsewhere in the graph
+        nodeIndex: graph.nodes.findIndex((n) => n.uid === uid),
         description: node?.description,
         warnings: typeMismatchLines,
         flowIn: Object.keys(inputFlows).map((socket) => ({
@@ -770,7 +906,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                             (configuration.event !== undefined) &&
                             <div className={"flow-node-field"}>
                                 <label htmlFor="event">event</label>
-                                <select id="event" name="event" className="nodrag" defaultValue={configuration.event.value?.[0] === undefined ? -1 : configuration.event.value[0]} onChange={(event) => {
+                                <select id="event" name="event" className="nodrag" defaultValue={configuration.event.value?.[0] == null ? -1 : configuration.event.value[0]} onChange={(event) => {
                                     if (Number(event.target.value) === -1) {
                                         return
                                     }
@@ -778,7 +914,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                 }} >
                                     <option key={-1} value={-1}>--NO SELECTION--</option>
                                     {
-                                        props.data.events.map((ce: any, index: number) => (
+                                        (graph.events ?? []).map((ce: any, index: number) => (
                                             <option key={index} value={index}>{ce.id}</option>
                                         ))
                                     }
@@ -789,24 +925,22 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                             (configuration.variable !== undefined) &&
                             <div className={"flow-node-field"}>
                                 <label htmlFor="variable">variable</label>
-                                <select id="variable" name="variable" className="nodrag" defaultValue={configuration.variable.value?.[0] === undefined ? -1 : configuration.variable.value[0]} onChange={(event) => {
-                                    if (Number(event.target.value) === -1) {
-                                        return
-                                    }
-                                    onChangeConfiguration(event)
-                                }}>
-                                    <option key={-1} value={-1}>--NO SELECTION--</option>
-                                    {
-
-                                        graph.variables.map((v: any, index: number) => {
-                                            const name = v.name ?? v.id;
-                                            const label = name ? `${name} (#${index})` : `variable #${index}`;
-                                            return (
-                                                <option key={index} value={index}>{`${label} — ${getTypeLabel(v.type)}`}</option>
-                                            );
-                                        })
-                                    }
-                                </select>
+                                {/* `== null`, not `=== undefined`: a freshly added node's config comes from a
+                                    JSON round-trip of the spec, which turns [undefined] into [null] — Number(null)
+                                    is 0, which showed variable #0 as selected while the reconciler (which skips
+                                    null) had left the output socket untyped */}
+                                <LazyOptionsSelect
+                                    id="variable"
+                                    value={configuration.variable.value?.[0] == null ? -1 : Number(configuration.variable.value[0])}
+                                    getCount={() => graph.variables.length}
+                                    labelAt={(index) => {
+                                        const v = graph.variables[index] as any;
+                                        const name = v?.name ?? v?.id;
+                                        const label = name ? `${name} (#${index})` : `variable #${index}`;
+                                        return `${label} — ${getTypeLabel(v?.type)}`;
+                                    }}
+                                    onChange={onChangeConfiguration}
+                                />
                             </div>
                         }
                         {
@@ -814,7 +948,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                             <div className={"flow-node-field"}>
                                 <label htmlFor="variables">variables</label>
                                 <VariablesConfigField
-                                    variables={graph.variables}
+                                    getVariables={() => graph.variables}
                                     selectedIds={getSelectedVariableIds()}
                                     onChange={onChangeVariables}
                                 />
@@ -866,7 +1000,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                             (configuration.type !== undefined) &&
                             <div className={"flow-node-field"}>
                                 <label htmlFor="type">{isPointerNode ? "Pointer Type" : "type"}</label>
-                                <select id="type" name="type" className="nodrag" key={`type-${configuration.type.value?.[0]}`} defaultValue={configuration.type.value?.[0] === undefined ? -1 : configuration.type.value[0]} onChange={(event) => {
+                                <select id="type" name="type" className="nodrag" key={`type-${configuration.type.value?.[0]}`} defaultValue={configuration.type.value?.[0] == null ? -1 : configuration.type.value[0]} onChange={(event) => {
                                     if (Number(event.target.value) === -1) {
                                         return
                                     }
@@ -996,7 +1130,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                         {/*inputValues*/}
                         <div>
                             {Object.entries(inputValues).map(([socket, value]) => {
-                                const isLinked = (props.data.linked && props.data.linked[socket]) || node?.values?.input?.[socket]?.node !== undefined;
+                                const isLinked = isSocketLinked(socket);
                                 const isUnknown = isUnknownInputValueSocket(socket);
                                 const resolvedInputType = resolveSocketType(socket, value);
                                 // per-socket ⚠: the model-driven validator already attributed each

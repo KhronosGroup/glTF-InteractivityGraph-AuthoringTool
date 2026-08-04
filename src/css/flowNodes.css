@@ -3,16 +3,15 @@
 .graph-loading-bar {
     position: relative;
     width: 100%;
-    margin-top: 8px;
     z-index: 2000;
     box-sizing: border-box;
     padding: 10px 12px 12px;
-    border: 1px solid rgba(107, 79, 138, 0.3);
-    border-radius: 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
     background: rgba(255, 255, 255, 0.96);
-    box-shadow: 0 4px 18px rgba(35, 24, 48, 0.2);
+    box-shadow: var(--shadow);
     pointer-events: none;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: var(--font-ui);
 }
 
 .graph-loading-bar__header {
@@ -27,16 +26,15 @@
     width: 100%;
     height: 6px;
     overflow: hidden;
-    border-radius: 999px;
-    background: rgba(177, 140, 217, 0.18);
+    border-radius: var(--radius-pill);
+    background: var(--brand-100);
 }
 
 .graph-loading-bar__fill {
     height: 100%;
     border-radius: inherit;
-    background: #b18cd9;
+    background: var(--brand-600);
     transition: width 120ms linear;
-    box-shadow: 0 0 6px rgba(177, 140, 217, 0.8);
 }
 
 .graph-loading-bar__label {
@@ -44,16 +42,16 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 13px;
+    font-size: var(--fs-sm);
     font-weight: 600;
-    color: #6b4f8a;
+    color: var(--brand-ink);
 }
 
 .graph-loading-bar__percent {
     flex: 0 0 auto;
-    font-size: 12px;
+    font-size: var(--fs-xs);
     font-variant-numeric: tabular-nums;
-    color: #6b4f8a;
+    color: var(--brand-ink);
 }
 
 .flow-node {
@@ -125,33 +123,19 @@
     content: none;
 }
 
-/* ---- top menu bar (replaces the old top-right stacked button panel) ---- */
+/* ---- graph panel toolbar (shares .panel__toolbar with the engine panel) ---- */
 
 .graph-menu-bar {
-    position: relative;
-    display: flex;
-    align-items: stretch;
-    gap: 2px;
-    background: rgba(255, 255, 255, 0.96);
-    border: 1px solid #e2e2e2;
-    border-radius: 12px;
-    padding: 6px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-    backdrop-filter: blur(6px);
-    justify-content: center;
-    flex-wrap: wrap;
+    gap: 0 1px;
 }
 
-/* error/warning counter: pinned to the right edge of the bar so it doesn't disturb the
-   centered button group */
+/* error/warning counter: sits at the end of the toolbar row (the flexible spacer before it
+   pushes it to the right edge) */
 .graph-diagnostics-counter {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--sp-1);
+    flex: 0 0 auto;
     cursor: default;
 }
 
@@ -221,65 +205,238 @@
     border: none;
     padding: 0;
     text-align: left;
-    color: #2a5db0;
+    color: var(--brand-ink);
     text-decoration: underline;
     cursor: pointer;
     font-size: 12.5px;
 }
 
 .diagnostics-counter-item-btn:hover {
-    color: #163d80;
+    color: var(--brand-900);
 }
 
 .diagnostics-counter-item-text {
     color: #333;
 }
 
-.graph-menu-bar-btn {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    border: none;
-    background: transparent;
-    border-radius: 8px;
-    padding: 8px 14px;
-    font-size: 13px;
-    font-weight: 600;
-    color: #444;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: background 0.12s ease, color 0.12s ease;
-}
-
-.graph-menu-bar-btn:hover {
-    background: #eef2f8;
-    color: #1c1c1c;
-}
-
-.graph-menu-bar-btn.is-active {
-    background: #e2ebfa;
-    color: #3d5987;
-}
-
-.graph-menu-bar-btn svg {
-    flex-shrink: 0;
-}
-
+/* base style lives in theme.css (.panel__toolbar-btn), shared with the engine panel's bar */
 .graph-menu-bar-btn--reload {
-    background: #fdf1d8;
-    color: #8a6116;
+    background: var(--warn-100);
+    border-color: var(--warn-100);
+    color: var(--warn-600);
+    margin-left: var(--sp-2);
 }
 
-.graph-menu-bar-btn--reload:hover {
+/* the amber hover has to out-specify the shared :hover:not(:disabled) rule in theme.css */
+.graph-menu-bar-btn--reload:hover:not(:disabled) {
     background: #fbe6ba;
-    color: #6b4a0f;
+    border-color: #fbe6ba;
+    color: var(--warn-700);
 }
 
 .graph-menu-bar-divider {
     width: 1px;
-    align-self: stretch;
-    margin: 4px 2px;
-    background: #e2e2e2;
+    align-self: center;
+    height: 1.25rem;
+    margin: 0 var(--sp-1);
+    background: var(--border-strong);
+}
+
+/* ---- key mapping footer bar (bottom of the graph panel) ---- */
+
+.graph-keymap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 2px var(--sp-3);
+    flex: 0 0 auto;
+    padding: var(--sp-1) var(--sp-2);
+    background: var(--surface-1);
+    border-top: 1px solid var(--border);
+    /* a reference bar, not a control bar: deliberately the smallest type in the app */
+    font-size: 0.625rem;
+    line-height: 1.4;
+    color: var(--text-faint);
+    user-select: none;
+}
+
+.graph-keymap__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    white-space: nowrap;
+}
+
+.graph-keymap__key {
+    background: var(--surface-0);
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+    padding: 0 4px;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    line-height: 1.5;
+    color: var(--text-muted);
+}
+
+/* ---- in-graph overlay panels (Add Node, JSON View, Variables, ...) ----
+   Sized against the graph panel, not the viewport: the wrapper spans the canvas full-bleed
+   (react-flow's top-center Panel otherwise anchors at left:50% with a translate, which makes
+   percentage widths resolve against half the container) and the card inside is capped by both a
+   rem max-width and the container's own width/height, so nothing overflows at any zoom level or
+   split ratio. */
+
+/* The `.react-flow` prefix is load-bearing, not decoration: AuthoringGraphNode.tsx imports this
+   file before AuthoringComponent.tsx imports reactflow/dist/style.css, so reactflow's sheet ends up
+   *after* ours in the bundle. Without the extra class this selector ties on specificity with
+   `.react-flow__panel.center` and loses the tie-break, leaving the card pinned at left:50% —
+   i.e. half width, centred, with a wide empty gutter each side. */
+.react-flow .graph-overlay.react-flow__panel {
+    left: 0;
+    right: 0;
+    top: 0;
+    transform: none;
+    display: flex;
+    justify-content: center;
+    box-sizing: border-box;
+    margin: 0;
+    padding: var(--sp-3);
+    max-height: 100%;
+    pointer-events: none;
+    z-index: 10;
+}
+
+/* The card itself never scrolls — its body does. If the card scrolled, a header/footer would
+   scroll away and the gap below the last element would depend on scroll position instead of
+   staying equal to the gap above it. */
+.graph-overlay__card {
+    box-sizing: border-box;
+    width: 100%;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    pointer-events: auto;
+    background: var(--surface-0);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    text-align: left;
+}
+
+.graph-overlay__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-3);
+    flex: 0 0 auto;
+    padding: var(--sp-3) var(--sp-4);
+    border-bottom: 1px solid var(--border);
+}
+
+/* the graph canvas expanded by the control stack's fullscreen toggle. :fullscreen covers the real
+   Fullscreen API (the element is promoted out of the split layout, so it needs its own sizing);
+   the fallback class is the same look as a fixed overlay for browsers that refuse the request. */
+.authoring-view:fullscreen,
+.authoring-view:-webkit-full-screen,
+.authoring-view--fullscreen-fallback {
+    width: 100vw !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    margin: 0 !important;
+    border: 0 !important;
+    background: #fff;
+}
+
+.authoring-view--fullscreen-fallback {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+}
+
+.graph-overlay__title {
+    margin: 0;
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    color: var(--text);
+}
+
+.graph-overlay__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding: var(--sp-4);
+}
+
+/* the two-column editors (Variables, Custom Events): a list on the left, a live JSON pane on the
+   right. The JSON pane keeps a fixed width so it doesn't resize as the JSON content changes;
+   it may shrink on a narrow panel and wrap below the list, but never grows. */
+.graph-overlay-columns {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: var(--sp-4);
+}
+
+/* two thirds of the row, against the JSON column's one third */
+.graph-overlay-columns__main {
+    flex: 2 1 0;
+    min-width: min(24rem, 100%);
+    display: flex;
+    flex-direction: column;
+    /* content-height until it hits the cap, so a short list gives a short card with the same
+       padding all round rather than a fixed-height card with dead space */
+    max-height: min(28rem, 46vh);
+}
+
+/* Variables: its rows pack four controls (id, type, value, delete) into the left column, so give
+   that column three quarters of the card instead of two thirds — the JSON pane only mirrors state
+   and reads fine narrower. */
+.graph-overlay-columns--wide-main .graph-overlay-columns__main {
+    flex-grow: 3;
+}
+
+/* Takes a third of the row and keeps it while the graph panel is resized: both columns grow and
+   shrink from a zero basis, so their widths are a pure ratio of whatever width the card has, never
+   a function of the JSON text. `min-width: 0` is what stops a long line from widening the column
+   (a flex item's automatic minimum size is its content) — the <pre> scrolls instead. Below the
+   wrap breakpoint the column drops under the list at full width. */
+.graph-overlay-columns__json {
+    flex: 1 1 0;
+    min-width: min(14rem, 100%);
+    display: flex;
+    flex-direction: column;
+    max-height: min(28rem, 46vh);
+}
+
+.graph-overlay-columns__json-label {
+    flex: 0 0 auto;
+    margin-bottom: var(--sp-1);
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+}
+
+.graph-overlay-columns__json pre {
+    flex: 1 1 auto;
+    min-height: 0;
+    margin: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: var(--sp-2);
+    background: var(--surface-1);
+    font-size: var(--fs-xs);
+}
+
+.graph-overlay__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--sp-2);
+    flex: 0 0 auto;
+    padding: var(--sp-3) var(--sp-4);
+    border-top: 1px solid var(--border);
 }
 
 .node-picker-item {
@@ -309,14 +466,14 @@
 }
 
 .graph-search-result:hover {
-    background: #eef2f8;
-    border-color: #d4deee;
+    background: var(--brand-50);
+    border-color: var(--brand-200);
 }
 
 .graph-search-result-title {
     font-size: 13px;
     font-weight: 700;
-    color: #2c3e62;
+    color: var(--brand-900);
 }
 
 .graph-search-result-config {
@@ -506,8 +663,8 @@
 .flow-node-field input:focus,
 .flow-node-control:focus {
     outline: none;
-    border-color: #3d5987;
-    box-shadow: 0 0 0 2px rgba(61, 89, 135, 0.15);
+    border-color: var(--brand-600);
+    box-shadow: 0 0 0 2px var(--brand-glow);
 }
 
 .flow-node-socket label {
@@ -541,8 +698,8 @@
 .flow-node-socket input:focus,
 .flow-node-socket select:focus {
     outline: none;
-    border-color: #3d5987;
-    box-shadow: 0 0 0 2px rgba(61, 89, 135, 0.15);
+    border-color: var(--brand-600);
+    box-shadow: 0 0 0 2px var(--brand-glow);
 }
 
 /* per-component vector/matrix editor: a grid of small number fields */
@@ -567,8 +724,8 @@
 
 .flow-node-vec-grid .flow-node-vec-cell:focus {
     outline: none;
-    border-color: #3d5987;
-    box-shadow: 0 0 0 2px rgba(61, 89, 135, 0.15);
+    border-color: var(--brand-600);
+    box-shadow: 0 0 0 2px var(--brand-glow);
 }
 
 /* hide the number-input spinners so cells stay compact and consistent */
@@ -625,8 +782,8 @@
 
 .flow-node-flow-name:focus {
     outline: none;
-    border-color: #3d5987;
-    box-shadow: 0 0 0 2px rgba(61, 89, 135, 0.15);
+    border-color: var(--brand-600);
+    box-shadow: 0 0 0 2px var(--brand-glow);
 }
 
 .flow-node-type-badge {
@@ -741,14 +898,14 @@
     border: 1px solid #ccc;
     border-radius: 6px;
     background: white;
-    color: #3d5987;
+    color: var(--brand-ink);
     font-weight: 700;
     cursor: pointer;
     margin: 4px 0 0 auto;
 }
 
 .flow-node-add:hover {
-    background: #eef5ff;
+    background: var(--brand-50);
 }
 
 /* hover "×" button to remove an edge (see DeletableEdge). Positioned by an inline transform
@@ -807,7 +964,7 @@
 }
 
 .vars-config-trigger:hover {
-    border-color: #3d5987;
+    border-color: var(--brand-600);
 }
 
 .vars-config-chips {
@@ -829,7 +986,7 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    background: #eef2f8;
+    background: var(--brand-50);
     border: 1px solid #d5deeb;
     border-radius: 4px;
     padding: 1px 5px;
@@ -892,7 +1049,7 @@
 }
 
 .vars-config-option:hover {
-    background: #eef2f8;
+    background: var(--brand-50);
 }
 
 .vars-config-option input {
@@ -949,7 +1106,7 @@
     gap: 4px;
     width: 100%;
     box-sizing: border-box;
-    background: #eef2f8;
+    background: var(--brand-50);
     border: 1px solid #d5deeb;
     border-radius: 6px;
     padding: 2px 6px 2px 8px;
@@ -1187,12 +1344,12 @@
 }
 
 .send-event-item:hover {
-    background: #f3f5f9;
+    background: var(--surface-1);
 }
 
 .send-event-item.is-selected {
-    background: #eaf0fb;
-    border-left-color: #3d5987;
+    background: var(--brand-50);
+    border-left-color: var(--brand-600);
 }
 
 .send-event-item.is-orphan .send-event-item-id {
@@ -1281,4 +1438,133 @@
     font-style: italic;
     color: #888;
     margin-bottom: 8px;
+}
+
+/* ---- zoom/fit/lock controls (reactflow <Controls/>, bottom-left of the canvas) ----
+   Every selector here carries the `.react-flow` prefix for the load-order reason described at
+   .graph-overlay above: reactflow's own sheet lands after this one, so a bare
+   `.react-flow__controls-button` would tie and lose. */
+
+.react-flow .react-flow__controls {
+    margin: var(--sp-3);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+
+/* reactflow sizes these content-box (16px box + 5px padding = 26px); keep that footprint and
+   restyle only the colors, so ours don't come out noticeably larger than the stock control stack */
+.react-flow .react-flow__controls-button {
+    box-sizing: content-box;
+    width: 16px;
+    height: 16px;
+    padding: 5px;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.92);
+    color: var(--text);
+    transition: background var(--transition), color var(--transition);
+}
+
+.react-flow .react-flow__controls-button:last-child {
+    border-bottom: none;
+}
+
+.react-flow .react-flow__controls-button:hover {
+    background: var(--brand-50);
+    color: var(--brand-ink);
+}
+
+/* reactflow ships its own glyphs as fill-only <svg>; currentColor makes them follow the states
+   above. Excluded by the [stroke] guard: our custom ControlButton icons (toolbarIcons.tsx), which
+   are stroke-drawn and would turn into solid blobs if filled. */
+.react-flow .react-flow__controls-button svg:not([stroke]) {
+    fill: currentColor;
+}
+
+/* our icons declare width/height 16 inline; cap them at reactflow's 12px glyph size so a custom
+   button's icon matches the built-in ones */
+.react-flow .react-flow__controls-button svg {
+    width: 100%;
+    max-width: 12px;
+    max-height: 12px;
+}
+
+/* custom toggles in the control stack read as pressed the same way the menu-bar toggles do */
+.react-flow .react-flow__controls-button.is-active,
+.react-flow .react-flow__controls-button.is-active:hover {
+    background: var(--brand-600);
+    color: #fff;
+}
+
+/* ---- mini map (GraphMiniMap) ---- */
+
+/* the reactflow Panel wrapping map + Frame button; the button sits right above the map */
+.graph-minimap.react-flow__panel {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--sp-2);
+    margin: var(--sp-3);
+    max-width: calc(100% - 2 * var(--sp-3));
+}
+
+.graph-minimap__body {
+    user-select: none;
+    position: relative;
+    max-width: 100%;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    /* the map paints itself; keep it off the compositor's paint path for the canvas below */
+    contain: strict;
+}
+
+.graph-minimap__canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.graph-minimap__viewport {
+    position: absolute;
+    top: 0;
+    left: 0;
+    box-sizing: border-box;
+    border: 1.5px solid var(--brand-600);
+    border-radius: 2px;
+    background: rgba(44, 136, 44, 0.16);
+    pointer-events: none;
+    /* transform-only updates so a pan never triggers layout */
+    will-change: transform;
+}
+
+/* screen-space overlay badging warning nodes once the LOD box's dotted border is too thin to
+   read; see WARNING_ANNOTATION_ZOOM_THRESHOLD in NodeWarningAnnotations.tsx */
+.node-warning-annotations {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 4;
+}
+
+/* Bubble and tail are SVG shapes (see NodeWarningAnnotations.tsx) rather than a div plus a
+   rotated pseudo-element: will-change below makes this a stacking context, so a z-index:-1 tail
+   could not paint behind the div's own background and showed up as a diamond stuck to the corner.
+   In SVG the tail just paints first and the body covers its base. */
+.node-warning-badge {
+    position: absolute;
+    top: 0;
+    left: 0;
+    line-height: 0;
+    pointer-events: none;
+    /* follows the SVG silhouette, unlike box-shadow which would trace the bounding box */
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
+    will-change: transform;
 }

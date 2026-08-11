@@ -11,6 +11,31 @@ const getStandardTypeIndex = (signature: InteractivityValueType): number => {
     return index;
 };
 
+/**
+ * Normalise variable/set's `variables` configuration to the list of variable ids it references.
+ * The stored value is normally a plain number array, but legacy text entry could leave a single
+ * comma/bracket-delimited string in value[0], and the UI accepts partial input while typing
+ * ("0,1,", "[0,1,2"). Shared with the delete-time index remap (referenceRemap.ts) so the ids that
+ * get rewritten are exactly the ids that generate sockets here.
+ */
+export function parseVariableIdConfig(value: any): any[] {
+    const raw = value || "";
+    if (typeof raw[0] !== "string") {
+        return Array.isArray(raw) ? raw : [];
+    }
+    let idString = raw[0];
+    if (idString.endsWith(",")) idString = idString.slice(0, -1);
+    idString = idString.replace(/\s/g, "");
+    if (!idString.startsWith("[")) idString = `[${idString}`;
+    if (!idString.endsWith("]")) idString = `${idString}]`;
+    try {
+        return JSON.parse(idString);
+    } catch (e) {
+        console.error("Couldn't parse configuration array string: ", idString, e);
+        return [];
+    }
+}
+
 export interface SocketReconcilerContext {
     nodeType: string | undefined;
     events: Record<number, IInteractivityEvent>;
@@ -165,25 +190,7 @@ export function computeConfigDrivenSockets(
     }
 
     if (updatedConfiguration.variables !== undefined) {
-        let variableIds = updatedConfiguration.variables.value || "";
-        // Allow input formats in the UI, such as:
-        // - 0,1, (while typing)
-        // - [0,1,2 (while typing)
-        // - [0,1,2]
-        // - 0,1,2
-        if (typeof variableIds[0] === "string") {
-            let variablesIdString = variableIds[0];
-            if (variablesIdString.endsWith(",")) variablesIdString = variablesIdString.slice(0, -1);
-            variablesIdString = variablesIdString.replace(/\s/g, "");
-            if (!variablesIdString.startsWith("[")) variablesIdString = `[${variablesIdString}`;
-            if (!variablesIdString.endsWith("]")) variablesIdString = `${variablesIdString}]`;
-            try {
-                variableIds = JSON.parse(variablesIdString);
-            } catch (e) {
-                console.error("Couldn't parse configuration array string: ", variablesIdString, e);
-                variableIds = [];
-            }
-        }
+        const variableIds = parseVariableIdConfig(updatedConfiguration.variables.value);
         for (const variableId of variableIds) {
             if (variableId == null) { continue; }
             const v: IInteractivityVariable | undefined = variables?.[variableId];

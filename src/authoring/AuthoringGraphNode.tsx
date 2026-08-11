@@ -906,7 +906,10 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                             (configuration.event !== undefined) &&
                             <div className={"flow-node-field"}>
                                 <label htmlFor="event">event</label>
-                                <select id="event" name="event" className="nodrag" defaultValue={configuration.event.value?.[0] == null ? -1 : configuration.event.value[0]} onChange={(event) => {
+                                {/* uncontrolled, so `key` is what re-syncs it when the model changes
+                                    underneath (deleting a custom event renumbers the rest — see
+                                    referenceRemap.ts); same trick as the `type` select below */}
+                                <select id="event" name="event" className="nodrag" key={`event-${configuration.event.value?.[0]}`} defaultValue={configuration.event.value?.[0] == null ? -1 : configuration.event.value[0]} onChange={(event) => {
                                     if (Number(event.target.value) === -1) {
                                         return
                                     }

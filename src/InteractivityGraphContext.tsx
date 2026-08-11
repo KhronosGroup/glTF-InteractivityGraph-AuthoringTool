@@ -303,6 +303,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
 
         const graphNodes = graphRef.current.nodes;
         const variables = graphRef.current.variables ?? [];
+        const events = graphRef.current.events ?? [];
         const byUid = buildNodeByUidMap(graphNodes);
         const nodeIndexByUid = new Map<string, number>();
         graphNodes.forEach((graphNode, index) => { if (graphNode.uid !== undefined) { nodeIndexByUid.set(graphNode.uid, index); } });
@@ -311,7 +312,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         try {
             await runChunked(graphNodes, (graphNode) => {
                 if (graphNode.uid === undefined) { return; }
-                const warnings = computeNodeLiveWarnings(graphNode, graphNodes, variables, byUid);
+                const warnings = computeNodeLiveWarnings(graphNode, graphNodes, variables, byUid, events);
                 if (warnings.length === 0) { return; }
                 next[graphNode.uid] = warnings.map((w) => ({
                     severity: 'warning', category: 'node',

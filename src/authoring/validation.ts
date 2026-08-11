@@ -1,7 +1,8 @@
-import { IInteractivityVariable } from "../BasicBehaveEngine/types/InteractivityGraph";
+import { IInteractivityEvent, IInteractivityVariable } from "../BasicBehaveEngine/types/InteractivityGraph";
 import { AuthoredNode, AuthoredValue } from "./spec/AuthoredGraph";
 import { NodeByUid, getNodeSpec, getTypeGroupMembers, resolveOutputSocketType, resolveTypeGroupType } from "./spec/nodes";
 import { getTypeLabel } from "./socketColors";
+import { findDanglingReferences } from "./referenceRemap";
 
 /**
  * Model-driven live socket validation — the single source of truth for the per-node "live"
@@ -12,8 +13,10 @@ import { getTypeLabel } from "./socketColors";
  */
 
 export interface NodeLiveWarning {
-    // input socket the warning is attributed to, so the node UI can flag it inline
-    socket: string;
+    // input socket the warning is attributed to, so the node UI can flag it inline. Omitted for
+    // warnings about the node's *configuration* rather than one of its sockets (dangling
+    // variable/event references), which surface in the node header and diagnostics panel only.
+    socket?: string;
     message: string;
 }
 
@@ -174,24 +177,43 @@ const getMissingValueWarning = (
     return `Missing value on socket "${getInputSocketFullLabel(node, socket, variables)}": not connected and has no value set`;
 };
 
+// A node still pointing at a variable/event index that no longer exists. Nothing else catches this:
+// the socket reconciler silently skips an unresolvable index (leaving the node looking configured
+// but wired to nothing), and the index itself would export as an invalid reference.
+const getDanglingReferenceWarnings = (
+    node: AuthoredNode,
+    variables: IInteractivityVariable[],
+    events: IInteractivityEvent[],
+): NodeLiveWarning[] =>
+    findDanglingReferences(node, variables.length, events.length).map(({ kind, configKey, index }) => {
+        const count = kind === "variable" ? variables.length : events.length;
+        const available = count === 0 ? `none are declared` : `only 0-${count - 1} exist`;
+        return {
+            message: `Configuration "${configKey}" references ${kind} #${index}, which does not exist (${available}). Pick a valid ${kind}.`,
+        };
+    });
+
 /**
- * All live socket warnings for one node, computed purely from the model. At most one warning per
- * input socket, in fixed priority: wired type mismatch, then type-group conflict, then missing
- * value — matching what the node UI has always surfaced.
+ * All live warnings for one node, computed purely from the model. At most one warning per input
+ * socket, in fixed priority: wired type mismatch, then type-group conflict, then missing value —
+ * matching what the node UI has always surfaced — plus any dangling variable/event reference in
+ * the node's configuration.
  *
- * A NoOp (an op without a registry spec) yields no live warnings: its declaration-seeded sockets
- * carry no typeOptions/typeGroups to check, and the unsupported op itself is already surfaced by
- * the load-time "Unsupported node operation" diagnostic.
+ * A NoOp (an op without a registry spec) yields no *socket* warnings: its declaration-seeded
+ * sockets carry no typeOptions/typeGroups to check, and the unsupported op itself is already
+ * surfaced by the load-time "Unsupported node operation" diagnostic. Its configuration references
+ * are still checked, matching the set of nodes the delete-time remap rewrites (referenceRemap.ts).
  */
 export const computeNodeLiveWarnings = (
     node: AuthoredNode,
     graphNodes: AuthoredNode[],
     variables: IInteractivityVariable[],
     byUid?: NodeByUid,
+    events: IInteractivityEvent[] = [],
 ): NodeLiveWarning[] => {
+    const warnings: NodeLiveWarning[] = getDanglingReferenceWarnings(node, variables, events);
     const spec = getNodeSpec(node.op);
-    if (spec === undefined) { return []; }
-    const warnings: NodeLiveWarning[] = [];
+    if (spec === undefined) { return warnings; }
     for (const [socket, value] of Object.entries(node.values?.input ?? {})) {
         const resolvedType = resolveInputSocketType(node, spec, socket, value, graphNodes, byUid);
         const message =
@@ -213,12 +235,13 @@ export const computeNodeLiveWarnings = (
 export const computeGraphLiveWarnings = (
     graphNodes: AuthoredNode[],
     variables: IInteractivityVariable[],
+    events: IInteractivityEvent[] = [],
 ): Map<string, NodeLiveWarning[]> => {
     const byUid = buildNodeByUidMap(graphNodes);
     const result = new Map<string, NodeLiveWarning[]>();
     for (const node of graphNodes) {
         if (node.uid === undefined) { continue; }
-        const warnings = computeNodeLiveWarnings(node, graphNodes, variables, byUid);
+        const warnings = computeNodeLiveWarnings(node, graphNodes, variables, byUid, events);
         if (warnings.length > 0) {
             result.set(node.uid, warnings);
         }

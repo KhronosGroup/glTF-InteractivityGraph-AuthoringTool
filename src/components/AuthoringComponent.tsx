@@ -29,6 +29,7 @@ import { GraphMiniMap } from './GraphMiniMap';
 import { NodeWarningAnnotations } from './NodeWarningAnnotations';
 import { applyNodePreset, getNodePresetSearchText, NodePreset, nodePresets } from '../authoring/nodePresets';
 import { reconcileNodeSockets } from '../authoring/socketReconciler';
+import { countReferencesByIndex, findNodesWithReferences, remapReferencesAfterDelete, type ReferenceKind } from '../authoring/referenceRemap';
 import { joinSearchTerms } from '../authoring/searchText';
 import { useFullscreen } from '../hooks/useFullscreen';
 import { IconAddNode, IconCustomEvents, IconFullscreen, IconJsonView, IconLegend, IconNodeTypes, IconReload, IconSearch, IconVariables } from './toolbarIcons';
@@ -232,6 +233,11 @@ const DiagnosticsCounter = (props: { diagnostics: IGraphDiagnostic[], onJumpToNo
         </OverlayTrigger>
     );
 };
+
+// Signature of a node's output sockets for change detection: names plus resolved types, which is
+// exactly what wire colors and downstream type resolution read.
+const outputSocketTypes = (outputs: Record<string, AuthoredValue> | undefined): string =>
+    Object.entries(outputs ?? {}).map(([socket, value]) => `${socket}:${value?.type}`).join(",");
 
 export const AuthoringComponent = () => {
     const reactFlowRef = useRef<HTMLDivElement | null>(null);
@@ -500,6 +506,88 @@ export const AuthoringComponent = () => {
         // in-place propagation doesn't change node identity, so bump `data` to force a re-read
         setNodes((nds: Node[]) => nds.map((n) => (touched.has(n.id) ? { ...n, data: { ...n.data } } : n)));
     }, [graph, setEdges, setNodes]);
+
+    // Delete a graph variable / custom event without silently corrupting the nodes that use it.
+    // Nodes reference these by index, so removing one shifts every higher index down — see
+    // referenceRemap.ts. `applyDeletion` is the editor's own commit (local state + graph list); it
+    // has to run between the remap (which reads the *pre*-delete indices) and the reconcile (which
+    // must see the *post*-delete lists).
+    const deleteGraphReference = useCallback((kind: ReferenceKind, index: number, applyDeletion: () => void) => {
+        // every node carrying a reference of this kind can move, not just the ones pointing at the
+        // deleted index — collect them before the remap rewrites what they point at
+        const affected = findNodesWithReferences(graph.nodes, kind);
+        const affectedUids = new Set(affected.map((node) => node.uid).filter((uid): uid is string => uid !== undefined));
+
+        const socketRemaps = remapReferencesAfterDelete(graph.nodes, kind, index);
+        applyDeletion();
+
+        // re-derive each affected node's config-driven sockets against the shortened lists: types
+        // follow whichever variable an index now names, and a node reset to "no selection" drops
+        // the sockets its old variable/event generated
+        const outputsChanged: string[] = [];
+        for (const node of affected) {
+            const outputsBefore = outputSocketTypes(node.values?.output);
+            const reconciled = reconcileNodeSockets({
+                op: node.op,
+                isNoOp: getNodeSpec(node.op) === undefined,
+                configuration: node.configuration ?? {},
+                inputValues: node.values?.input ?? {},
+                outputValues: node.values?.output ?? {},
+                inputFlows: node.flows?.input ?? {},
+                outputFlows: node.flows?.output ?? {},
+                events: graph.events ?? {},
+                variables: graph.variables ?? [],
+            });
+            node.values = node.values ?? {};
+            node.values.input = reconciled.inputValues;
+            node.values.output = reconciled.outputValues;
+            node.flows = node.flows ?? {};
+            node.flows.input = reconciled.inputFlows;
+            node.flows.output = reconciled.outputFlows;
+            if (node.uid !== undefined && outputSocketTypes(reconciled.outputValues) !== outputsBefore) {
+                outputsChanged.push(node.uid);
+            }
+        }
+
+        // an endpoint socket that survives under a new name keeps its wire; one the reconcile above
+        // removed (its variable/event is gone) loses it. Renames run first — applied in the other
+        // order, a renamed handle would look like a missing one and the wire would be dropped.
+        const renameByKey = new Map(socketRemaps.map((remap) => [`${remap.nodeUid} ${remap.from}`, remap.to]));
+        const affectedByUid = new Map(affected.filter((node) => node.uid !== undefined).map((node) => [node.uid!, node]));
+        const hasHandle = (uid: string, handle: string | null | undefined, side: "source" | "target"): boolean => {
+            if (handle == null) { return true; }
+            // only the reconciled nodes can have lost a socket; every other edge is left untouched
+            const node = affectedByUid.get(uid);
+            if (node === undefined) { return true; }
+            return side === "source"
+                ? node.values?.output?.[handle] !== undefined || node.flows?.output?.[handle] !== undefined
+                : node.values?.input?.[handle] !== undefined || node.flows?.input?.[handle] !== undefined;
+        };
+        setEdges((eds: Edge[]) => eds.flatMap((edge) => {
+            let targetHandle = edge.targetHandle;
+            if (targetHandle != null) {
+                const renamed = renameByKey.get(`${edge.target} ${targetHandle}`);
+                if (renamed === null) { return []; }
+                if (renamed !== undefined) { targetHandle = renamed; }
+            }
+            if (!hasHandle(edge.target, targetHandle, "target")) { return []; }
+            if (!hasHandle(edge.source, edge.sourceHandle, "source")) { return []; }
+            return [targetHandle === edge.targetHandle ? edge : { ...edge, targetHandle }];
+        }));
+
+        // the model changed underneath mounted nodes, which read it directly, so force a re-render —
+        // one pass for all of them rather than a full node-list map each (bumpNodeData)
+        setNodes((nds: Node[]) => nds.map((n) => (affectedUids.has(n.id) ? { ...n, data: { ...n.data } } : n)));
+        // recoloring and downstream re-resolution both walk the whole graph, so they are reserved
+        // for the nodes whose *output* types actually moved — variable/set and event/send only ever
+        // gain and lose inputs, and are the bulk of what a delete touches
+        for (const uid of outputsChanged) {
+            recolorEdges(uid);
+            refreshValueConsumers(uid);
+        }
+        trackEvent(kind === "variable" ? 'graph_variable_deleted' : 'graph_event_deleted', { referencingNodes: affectedUids.size });
+        markGraphDirty();
+    }, [graph, setEdges, setNodes, recolorEdges, refreshValueConsumers]);
 
     // handle creation and deletion of edges
     const onConnect = useCallback((vals: Edge<any> | Connection) => {
@@ -1413,10 +1501,16 @@ export const AuthoringComponent = () => {
                         <NodeListComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)}/>
                     </RenderIf>
                     <RenderIf shouldShow={authoringComponentModal === AuthoringComponentModelType.CUSTOM_EVENTS}>
-                        <CustomEventsComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)}/>
+                        <CustomEventsComponent
+                            closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)}
+                            onDeleteReference={deleteGraphReference}
+                        />
                     </RenderIf>
                     <RenderIf shouldShow={authoringComponentModal === AuthoringComponentModelType.VARIABLES}>
-                        <VariablesComponent closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)}/>
+                        <VariablesComponent
+                            closeModal={() => setAuthoringComponentModal(AuthoringComponentModelType.NONE)}
+                            onDeleteReference={deleteGraphReference}
+                        />
                     </RenderIf>
 
                     {/* react-flow's "center" panel positions via left:50%+translateX(-50%); with an
@@ -2060,6 +2154,59 @@ const GraphSearchComponent = (props: {
     );
 };
 
+// Hands a variable/event deletion to the canvas, which rewrites the node references that shift
+// before invoking `applyDeletion` to remove the entry itself (see deleteGraphReference).
+type DeleteReferenceHandler = (kind: ReferenceKind, index: number, applyDeletion: () => void) => void;
+
+/**
+ * Shared delete guard for the Variables and Custom Events editors. Nodes reference both by index,
+ * so deleting one is never a local edit — it clears the nodes pointing at it and renumbers every
+ * entry above. This tracks how many nodes use each row and makes deleting a row that *is* used
+ * take an explicit confirmation.
+ *
+ * Counts are recomputed when the list length changes: adding or removing a row is the only edit
+ * these panels make that can move an index (renaming or retyping leaves every reference in place).
+ */
+const useReferenceUsage = (kind: ReferenceKind, listLength: number) => {
+    const { graph } = useContext(InteractivityGraphContext);
+    const counts = useMemo(() => countReferencesByIndex(graph.nodes, kind), [graph, kind, listLength]);
+    // the row whose delete is waiting for confirmation, if any
+    const [armedIndex, setArmedIndex] = useState<number | null>(null);
+    // a delete renumbers the rows, so a leftover armed index would be pointing at a different one
+    useEffect(() => { setArmedIndex(null); }, [listLength]);
+
+    const countAt = (index: number) => counts.get(index) ?? 0;
+    return {
+        countAt,
+        isArmed: (index: number) => armedIndex === index,
+        disarm: () => setArmedIndex(null),
+        /** delete straight away when nothing references this row, otherwise ask first */
+        requestDelete: (index: number, perform: () => void) => {
+            if (countAt(index) === 0) { perform(); return; }
+            setArmedIndex(index);
+        },
+        confirmDelete: (perform: () => void) => { setArmedIndex(null); perform(); },
+    };
+};
+
+// The "this is used by N nodes" prompt shown in place of an immediate delete. Spells out both
+// consequences, because neither is visible on the canvas until the user goes looking.
+const ReferenceDeleteConfirm = (props: { kind: ReferenceKind; count: number; onConfirm: () => void; onCancel: () => void }) => (
+    <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, marginTop: 6, padding: "6px 8px", background: "#fcf8e3", border: "1px solid #faebcc", borderRadius: 6 }}>
+        <span style={{ flex: "1 1 16rem", fontSize: 12, color: "#8a6d3b" }}>
+            {props.count} node{props.count > 1 ? "s" : ""} reference this {props.kind}.
+            {" "}Deleting it resets {props.count > 1 ? "them" : "it"} to no selection and renumbers the {props.kind}s after it.
+        </span>
+        <Button variant={"danger"} size={"sm"} onClick={props.onConfirm}>Delete anyway</Button>
+        <Button variant={"outline-secondary"} size={"sm"} onClick={props.onCancel}>Cancel</Button>
+    </div>
+);
+
+const referenceDeleteTitle = (kind: ReferenceKind, count: number): string =>
+    count === 0
+        ? `Remove ${kind}`
+        : `Remove ${kind} (used by ${count} node${count > 1 ? "s" : ""})`;
+
 // shared between the Variables and Custom Events editors' type dropdowns
 const typeSignatureName = (type: any): string => {
     if (type.signature === "custom" && type.extensions) {
@@ -2089,7 +2236,7 @@ const toGraphVariables = (variables: EditableVariable[]): IInteractivityVariable
         return entry;
     });
 
-const VariablesComponent = (props: {closeModal: any}) => {
+const VariablesComponent = (props: {closeModal: any, onDeleteReference: DeleteReferenceHandler}) => {
     const {graph, setVariables: setGraphVariables} = useContext(InteractivityGraphContext);
     // seed the editor from the current graph once; from here on the editor owns the state and
     // pushes each change straight back to the graph so the rest of the app stays in sync
@@ -2123,8 +2270,12 @@ const VariablesComponent = (props: {closeModal: any}) => {
         commit(variables.map((v, i) => (i === index ? { ...v, ...patch } : v)));
     };
 
+    const usage = useReferenceUsage("variable", variables.length);
+
+    // routed through the canvas so the nodes referencing this variable (and every variable after
+    // it, whose index shifts down) are rewritten in the same step as the list edit
     const removeVariable = (index: number) => {
-        commit(variables.filter((_, i) => i !== index));
+        props.onDeleteReference("variable", index, () => commit(variables.filter((_, i) => i !== index)));
     };
 
     // maxWidth "none", unlike the other overlays: variable rows carry four controls each, so this
@@ -2188,11 +2339,24 @@ const VariablesComponent = (props: {closeModal: any}) => {
                                             />
                                         </Col>
                                         <Col style={{ width: 44, flexShrink: 0, padding: "0 4px", textAlign: "right" }}>
-                                            <Button variant="outline-secondary" size={"sm"} title={"Remove variable"} onClick={() => removeVariable(index)}>
+                                            <Button
+                                                variant={usage.countAt(index) > 0 ? "outline-danger" : "outline-secondary"}
+                                                size={"sm"}
+                                                title={referenceDeleteTitle("variable", usage.countAt(index))}
+                                                onClick={() => usage.requestDelete(index, () => removeVariable(index))}
+                                            >
                                                 ✕
                                             </Button>
                                         </Col>
                                     </Row>
+                                    {usage.isArmed(index) && (
+                                        <ReferenceDeleteConfirm
+                                            kind={"variable"}
+                                            count={usage.countAt(index)}
+                                            onConfirm={() => usage.confirmDelete(() => removeVariable(index))}
+                                            onCancel={usage.disarm}
+                                        />
+                                    )}
                                 </div>
                             ))}
                         </div>
@@ -2249,7 +2413,7 @@ const toGraphEvents = (events: EditableEvent[]): IInteractivityEvent[] =>
         }, {} as Record<string, { type: number; value?: any }>),
     }));
 
-const CustomEventsComponent = (props: {closeModal: any}) => {
+const CustomEventsComponent = (props: {closeModal: any, onDeleteReference: DeleteReferenceHandler}) => {
     const {graph, setEvents: setGraphEvents} = useContext(InteractivityGraphContext);
     // seed the editor from the current graph once; from here on the editor owns the state and
     // pushes each change straight back to the graph so the rest of the app stays in sync
@@ -2283,8 +2447,12 @@ const CustomEventsComponent = (props: {closeModal: any}) => {
         commit([...events, { id, values: [] }]);
     };
 
+    const usage = useReferenceUsage("event", events.length);
+
+    // routed through the canvas so the event/send and event/receive nodes referencing this event
+    // (and every event after it, whose index shifts down) are rewritten in the same step
     const deleteEvent = (index: number) => {
-        commit(events.filter((_, i) => i !== index));
+        props.onDeleteReference("event", index, () => commit(events.filter((_, i) => i !== index)));
     };
 
     const addValue = (eventIndex: number) => {
@@ -2325,7 +2493,14 @@ const CustomEventsComponent = (props: {closeModal: any}) => {
                                         <div style={{ flex: 1 }}>
                                             {/* the index is what nodes reference (and the only handle on an
                                                 event whose id is left empty), so surface it next to the id */}
-                                            <div style={{ fontSize: 12, color: "#666", marginBottom: 2 }}>Event ID (#{eventIndex})</div>
+                                            <div style={{ fontSize: 12, color: "#666", marginBottom: 2, display: "flex", alignItems: "center", gap: 6 }}>
+                                                <span>Event ID (#{eventIndex})</span>
+                                                {usage.countAt(eventIndex) > 0 && (
+                                                    <span style={{ color: "#8a6d3b", background: "#fcf8e3", border: "1px solid #faebcc", borderRadius: 10, padding: "0 6px", fontSize: 11 }}>
+                                                        used by {usage.countAt(eventIndex)} node{usage.countAt(eventIndex) > 1 ? "s" : ""}
+                                                    </span>
+                                                )}
+                                            </div>
                                             <Form.Control
                                                 type="text"
                                                 value={event.id}
@@ -2335,10 +2510,23 @@ const CustomEventsComponent = (props: {closeModal: any}) => {
                                                 onChange={(e) => updateEventId(eventIndex, e.target.value)}
                                             />
                                         </div>
-                                        <Button variant="outline-danger" size={"sm"} title={"Delete event"} onClick={() => deleteEvent(eventIndex)}>
+                                        <Button
+                                            variant="outline-danger"
+                                            size={"sm"}
+                                            title={referenceDeleteTitle("event", usage.countAt(eventIndex))}
+                                            onClick={() => usage.requestDelete(eventIndex, () => deleteEvent(eventIndex))}
+                                        >
                                             Delete
                                         </Button>
                                     </div>
+                                    {usage.isArmed(eventIndex) && (
+                                        <ReferenceDeleteConfirm
+                                            kind={"event"}
+                                            count={usage.countAt(eventIndex)}
+                                            onConfirm={() => usage.confirmDelete(() => deleteEvent(eventIndex))}
+                                            onCancel={usage.disarm}
+                                        />
+                                    )}
                                     <div style={{ marginTop: 10 }}>
                                         <div style={{ fontSize: 12, color: "#666", marginBottom: 4 }}>Values</div>
                                         {event.values.length > 0 && (

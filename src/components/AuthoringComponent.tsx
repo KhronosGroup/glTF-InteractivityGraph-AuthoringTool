@@ -9,6 +9,7 @@ import ReactFlow, {
 } from 'reactflow';
 import {AuthoringGraphNode, LOD_ZOOM_THRESHOLD} from "../authoring/AuthoringGraphNode";
 import {DeletableEdge} from "../authoring/DeletableEdge";
+import {getUnnamedEventName} from "../authoring/CustomEventControls";
 import React, {useCallback, useContext, useEffect, useMemo, useRef, useState} from "react";
 import {v4 as uuidv4} from "uuid";
 import {RenderIf} from "./RenderIf";
@@ -2322,11 +2323,15 @@ const CustomEventsComponent = (props: {closeModal: any}) => {
                                     {/* event header: label+input flex-end so Delete sits at input baseline */}
                                     <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
                                         <div style={{ flex: 1 }}>
-                                            <div style={{ fontSize: 12, color: "#666", marginBottom: 2 }}>Event ID</div>
+                                            {/* the index is what nodes reference (and the only handle on an
+                                                event whose id is left empty), so surface it next to the id */}
+                                            <div style={{ fontSize: 12, color: "#666", marginBottom: 2 }}>Event ID (#{eventIndex})</div>
                                             <Form.Control
                                                 type="text"
                                                 value={event.id}
-                                                placeholder="event id"
+                                                // the placeholder is the exact stand-in the rest of the UI
+                                                // shows for this event while its id is empty
+                                                placeholder={getUnnamedEventName(eventIndex)}
                                                 onChange={(e) => updateEventId(eventIndex, e.target.value)}
                                             />
                                         </div>

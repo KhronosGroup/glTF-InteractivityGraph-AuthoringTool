@@ -35,6 +35,20 @@ const pointerNodeEventChannel = (op: string) => `AUTHORING_NODE_EVENT:${op}`;
 const getEventTypeLabel = (typeIndex: number): string =>
     standardTypes[typeIndex]?.name ?? standardTypes[typeIndex]?.signature ?? String(typeIndex);
 
+/**
+ * Stand-in name for a custom event with an empty id (e.g. internal-only events). The number is the
+ * event's own index in the graph — the same index shown as `(#n)` next to a named event, and the
+ * one nodes reference through configuration.event — so it is 0-based, not a 1-based ordinal.
+ */
+export const getUnnamedEventName = (index: number): string => `[EVENT-${String(index).padStart(2, "0")}]`;
+
+/**
+ * Label a custom event for any selection UI. An event id may be empty and isn't guaranteed unique,
+ * so the index is always shown. Mirrors the variable dropdown's `name (#index)` format.
+ */
+export const getEventLabel = (event: { id?: string } | undefined, index: number): string =>
+    event?.id ? `${event.id} (#${index})` : getUnnamedEventName(index);
+
 const formatTime = (t: number): string => {
     const d = new Date(t);
     const pad = (n: number, w = 2) => String(n).padStart(w, "0");
@@ -447,12 +461,13 @@ export const SendCustomEventPanel = (props: { graph: IInteractivityGraph }) => {
                     const argCount = Object.keys(ev.values || {}).length;
                     return (
                         <button
-                            key={ev.id ?? i}
+                            // keyed by index, not id: ids may be empty and aren't unique
+                            key={i}
                             type="button"
                             className={`send-event-item${i === safeSelected ? " is-selected" : ""}${count === 0 ? " is-orphan" : ""}`}
                             onClick={() => setSelected(i)}
                         >
-                            <span className={"send-event-item-id"}>{ev.id || `event ${i}`}</span>
+                            <span className={"send-event-item-id"}>{getEventLabel(ev, i)}</span>
                             <span className={"send-event-item-meta"}>
                                 <span className={"send-event-arg-count"}>{argCount} arg{argCount === 1 ? "" : "s"}</span>
                                 {count > 0 ? (
@@ -466,7 +481,7 @@ export const SendCustomEventPanel = (props: { graph: IInteractivityGraph }) => {
                 })}
             </div>
             <div className={"send-event-detail"}>
-                <div className={"send-event-detail-title"}>{selectedEvent.id || `event ${safeSelected}`}</div>
+                <div className={"send-event-detail-title"}>{getEventLabel(selectedEvent, safeSelected)}</div>
                 {selectedHasReceiver ? (
                     <div className={"send-event-status is-ok"}>
                         {receiverCounts[safeSelected]} event/receive node{receiverCounts[safeSelected] === 1 ? "" : "s"} in the graph listen{receiverCounts[safeSelected] === 1 ? "s" : ""} for this event.
@@ -479,7 +494,7 @@ export const SendCustomEventPanel = (props: { graph: IInteractivityGraph }) => {
                 {selectedArgCount === 0 && (
                     <div className={"send-event-noargs"}>This event carries no arguments.</div>
                 )}
-                <CustomEventReceiveTrigger key={selectedEvent.id ?? safeSelected} event={selectedEvent} disabled={!selectedHasReceiver} />
+                <CustomEventReceiveTrigger key={`${safeSelected}-${selectedEvent.id ?? ""}`} event={selectedEvent} disabled={!selectedHasReceiver} />
             </div>
         </div>
     );

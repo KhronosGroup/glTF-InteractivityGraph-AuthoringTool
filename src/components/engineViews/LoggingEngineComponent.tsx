@@ -5,6 +5,7 @@ import {LoggingDecorator} from "../../decorators/LoggingDecorator";
 import { InteractivityGraphContext } from "../../InteractivityGraphContext";
 import { DOMEventBus } from "../../BasicBehaveEngine/eventBuses/DOMEventBus";
 import { buildNormalizedTemplateSet } from "../../authoring/pointerCatalogue";
+import { getEventLabel } from "../../authoring/CustomEventControls";
 import { createGlTFObjectModelFromGltf, readGlbJsonFromArrayBuffer } from "../../objectModel/glTFObjectModel";
 import { IconJsonFile, IconPlay, IconSendEvent } from "../toolbarIcons";
 
@@ -161,7 +162,7 @@ export const LoggingEngineComponent: React.FC<LoggingEngineComponentProps> = ({ 
                     >
                         {getExecutableGraph().events?.map((customEvent: any, index: number) => {
                             return (
-                                <Tab title={customEvent.id} eventKey={index + 1}>
+                                <Tab title={getEventLabel(customEvent, index)} eventKey={index + 1}>
                                     <Row style={{textAlign: "left"}}>
                                         {Object.keys(customEvent.values).map((val: any) => {
                                             return (

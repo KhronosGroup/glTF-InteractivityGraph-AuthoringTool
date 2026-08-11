@@ -20,7 +20,7 @@ import { BoolSwitch } from "./TypedValueInput";
 import { VariablesConfigField } from "./VariablesConfigField";
 import { IntArrayConfigField } from "./IntArrayConfigField";
 import { InterpolationCurveField, ControlPoint } from "./InterpolationCurveField";
-import { CustomEventSendMonitor, CustomEventReceiveTrigger, PointerEventMonitor } from "./CustomEventControls";
+import { CustomEventSendMonitor, CustomEventReceiveTrigger, PointerEventMonitor, getEventLabel } from "./CustomEventControls";
 import "../css/flowNodes.css";
 
 // a setState-style updater: either the next value directly, or a function of the previous value
@@ -915,7 +915,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                     <option key={-1} value={-1}>--NO SELECTION--</option>
                                     {
                                         (graph.events ?? []).map((ce: any, index: number) => (
-                                            <option key={index} value={index}>{ce.id}</option>
+                                            <option key={index} value={index}>{getEventLabel(ce, index)}</option>
                                         ))
                                     }
                                 </select>

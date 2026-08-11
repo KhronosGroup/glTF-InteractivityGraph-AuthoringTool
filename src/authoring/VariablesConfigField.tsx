@@ -90,8 +90,9 @@ export const VariablesConfigField: React.FC<VariablesConfigFieldProps> = ({ getV
                 <span className={"vars-config-arrow"}>▾</span>
             </div>
 
+            {/* nowheel: the menu scrolls internally, so React Flow must not turn the wheel into a zoom */}
             {open && (
-                <div className={"vars-config-menu"}>
+                <div className={"vars-config-menu nowheel"}>
                     {variables.length === 0 ? (
                         <div className={"vars-config-empty"}>No variables declared</div>
                     ) : (

@@ -150,7 +150,7 @@ const FireLogView = (props: { log: FireLogEntry[]; total: number; clear: () => v
             <span className={"flow-node-event-monitor-title"}>fired ×{props.total}</span>
             <button type="button" className={"flow-node-event-clear"} onClick={props.clear} disabled={props.log.length === 0} title={"Clear log"}>clear</button>
         </div>
-        <div className={"flow-node-event-log"}>
+        <div className={"flow-node-event-log nowheel"}>
             {props.log.length === 0 ? (
                 <div className={"flow-node-event-log-empty"}>waiting for events…</div>
             ) : (

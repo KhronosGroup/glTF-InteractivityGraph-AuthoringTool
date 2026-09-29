@@ -276,7 +276,8 @@ export class BehaveEngineNode {
             case "float4x4":
                 return val;
             case "ref":
-                return scalarValue;
+                // spec: a ref literal that cannot be resolved is a null reference; "" is the document root, never an object
+                return scalarValue === "" ? null : scalarValue;
             default:
                 return val
         }

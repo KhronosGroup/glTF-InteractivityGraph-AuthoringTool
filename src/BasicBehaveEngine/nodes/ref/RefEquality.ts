@@ -22,9 +22,7 @@ export class RefEquality extends BehaveEngineNode {
         if (typeA !== "ref") {
             throw Error(`input types not ref: a=${typeA}, b=${typeB}, values=${JSON.stringify(this.values)}`)
         }
-        // spec: an unresolvable ref literal (e.g. "") is a null reference; two nulls are equal
-        const isNull = (v: any) => v == null || v === "";
-        const val: boolean = isNull(a) || isNull(b) ? isNull(a) && isNull(b) : a === b;
+        const val: boolean = a === b;
         return {'value': {value: [val], type: this.getTypeIndex('bool')}};
     }
 }

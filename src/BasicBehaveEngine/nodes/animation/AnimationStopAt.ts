@@ -17,11 +17,10 @@ export class AnimationStopAt extends BehaveEngineNode {
         const animationIndex = this.resolveRef(animation);
 
         const validAnimation = this.graphEngine.getWorld().animations.length > animationIndex && animationIndex >= 0;
-        const validStopTime = !isNaN(stopTime) && isFinite(stopTime);
+        // spec: only NaN is invalid; an out-of-range stop time lets the animation reach its end
+        const validStopTime = !isNaN(stopTime);
 
         if (validAnimation && validStopTime) {
-            this.graphEngine.animationCompletionCallbacks.delete(animationIndex);
-
             this.graphEngine.stopAnimationAt(animationIndex, stopTime, () => {
                 if (this.flows.done) {
                     this.addEventToWorkQueue(this.flows.done);

@@ -2299,7 +2299,7 @@ const VariablesComponent = (props: {closeModal: any, onDeleteReference: DeleteRe
                             )}
                             {variables.length > 0 && (
                                 <Row style={{ marginBottom: 0, marginLeft: 0, marginRight: 0 }}>
-                                    <Col style={{ flexGrow: 2 }}><span style={{ fontSize: 11, color: "#999" }}>Name</span></Col>
+                                    <Col style={{ flexGrow: 2 }}><span style={{ fontSize: 11, color: "#999" }}>Name (optional)</span></Col>
                                     <Col xs={2}><span style={{ fontSize: 11, color: "#999" }}>Type</span></Col>
                                     <Col xs={5}><span style={{ fontSize: 11, color: "#999" }}>Value</span></Col>
                                     <Col style={{ width: 44, flexShrink: 0, padding: 0 }}></Col>
@@ -2318,7 +2318,7 @@ const VariablesComponent = (props: {closeModal: any, onDeleteReference: DeleteRe
                                                 size={"sm"}
                                                 type="text"
                                                 value={variable.name}
-                                                placeholder={`variable #${index} (optional name)`}
+                                                placeholder={`variable #${index}`}
                                                 onChange={(e) => updateVariable(index, { name: e.target.value })}
                                             />
                                         </Col>
@@ -2509,7 +2509,7 @@ const CustomEventsComponent = (props: {closeModal: any, onDeleteReference: Delet
                                         </div>
                                         <div style={{ flex: 1 }}>
                                             <div style={{ fontSize: 12, color: "#666", marginBottom: 2, display: "flex", alignItems: "center", gap: 6 }}>
-                                                <span>Name</span>
+                                                <span>Name <span style={{ color: "#999" }}>(optional)</span></span>
                                                 {usage.countAt(eventIndex) > 0 && (
                                                     <span style={{ color: "#8a6d3b", background: "#fcf8e3", border: "1px solid #faebcc", borderRadius: 10, padding: "0 6px", fontSize: 11 }}>
                                                         used by {usage.countAt(eventIndex)} node{usage.countAt(eventIndex) > 1 ? "s" : ""}

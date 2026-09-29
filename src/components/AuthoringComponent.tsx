@@ -585,7 +585,6 @@ export const AuthoringComponent = () => {
             recolorEdges(uid);
             refreshValueConsumers(uid);
         }
-        trackEvent(kind === "variable" ? 'graph_variable_deleted' : 'graph_event_deleted', { referencingNodes: affectedUids.size });
         markGraphDirty();
     }, [graph, setEdges, setNodes, recolorEdges, refreshValueConsumers]);
 

@@ -632,10 +632,11 @@ export class BasicBehaveEngine implements IBehaveEngine {
             throw new Error(`The graph is invalid ${e}`)
         }
 
-        this.nodes = behaveGraph.nodes;
-        this._variables = behaveGraph.variables;
-        this.events = behaveGraph.events;
-        this.types = behaveGraph.types;
+        // spec: all top-level graph arrays are optional
+        this.nodes = behaveGraph.nodes ?? [];
+        this._variables = behaveGraph.variables ?? [];
+        this.events = behaveGraph.events ?? [];
+        this.types = behaveGraph.types ?? [];
         this.idToBehaviourNodeMap.clear();
         this.registerGraphEventPointers();
 
@@ -807,7 +808,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
     }
 
     protected validateGraph = (behaviorGraph: any) => {
-        const nodes: BehaveEngineNode[] = behaviorGraph.nodes;
+        const nodes: BehaveEngineNode[] = behaviorGraph.nodes ?? [];
 
         let index = 0;
         for (const node of nodes) {

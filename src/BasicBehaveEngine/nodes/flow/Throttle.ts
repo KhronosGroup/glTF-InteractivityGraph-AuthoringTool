@@ -1,6 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class Throttle extends BehaveEngineNode {
+    INPUT_FLOWS = ["in", "reset"];
     REQUIRED_VALUES = {duration: {}};
 
     _lastRemainingTime: number;

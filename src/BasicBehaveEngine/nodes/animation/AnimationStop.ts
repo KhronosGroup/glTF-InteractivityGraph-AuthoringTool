@@ -1,6 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class AnimationStop extends BehaveEngineNode {
+    INPUT_FLOWS = ["in"];
     REQUIRED_VALUES = {animation: {}}
 
     constructor(props: IBehaviourNodeProps) {

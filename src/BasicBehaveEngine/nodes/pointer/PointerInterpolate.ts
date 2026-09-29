@@ -1,6 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class PointerInterpolate extends BehaveEngineNode {
+    INPUT_FLOWS = ["in"];
     REQUIRED_CONFIGURATIONS = {pointer: {}, type: {}}
     REQUIRED_VALUES = {value: {}, duration: {}, p1: {}, p2: {}}
 

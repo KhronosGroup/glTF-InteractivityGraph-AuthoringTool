@@ -2,6 +2,7 @@ import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 import { cubicBezierEase, linearFloat, slerpFloat4 } from "../../easingUtils";
 
 export class VariableInterpolate extends BehaveEngineNode {
+    INPUT_FLOWS = ["in"];
     REQUIRED_CONFIGURATIONS = {variable: {}, useSlerp: {}}
     REQUIRED_VALUES = {value: {}, duration: {}, p1: {}, p2: {}}
 

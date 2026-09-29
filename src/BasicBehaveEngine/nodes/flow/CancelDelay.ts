@@ -1,6 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class CancelDelay extends BehaveEngineNode {
+    INPUT_FLOWS = ["in"];
     REQUIRED_VALUES = {delay: {}}
 
     constructor(props: IBehaviourNodeProps) {

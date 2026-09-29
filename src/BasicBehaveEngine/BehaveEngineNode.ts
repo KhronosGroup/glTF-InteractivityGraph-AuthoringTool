@@ -20,6 +20,8 @@ export interface IBehaviourNodeProps {
 export class BehaveEngineNode {
     REQUIRED_VALUES: Record<string, IInteractivityValue> = {};
     REQUIRED_CONFIGURATIONS: Record<string, IInteractivityConfigurationValue> = {};
+    // input flow socket ids of the operation; empty for value and event operations
+    INPUT_FLOWS: string[] = [];
     index: number;
     name: string | undefined;
     world: any;
@@ -47,7 +49,11 @@ export class BehaveEngineNode {
         this.flows = flows;
         this.configuration = configuration;
         this.outValues = {};
-        this.addEventToWorkQueue = addEventToWorkQueue;
+        this.addEventToWorkQueue = (flow: IInteractivityFlow) => {
+            const nextNode = flow?.node === undefined ? undefined : this.idToBehaviourNodeMap.get(Number(flow.node));
+            if (nextNode !== undefined && !nextNode.INPUT_FLOWS.includes(flow.socket ?? "in")) {return}
+            addEventToWorkQueue(flow);
+        };
         this.declaration = declaration;
     }
 
@@ -77,7 +83,8 @@ export class BehaveEngineNode {
     public processFlow(flow: IInteractivityFlow) {
         if (flow === undefined || flow.node === undefined) {return}
         const nextNode: BehaveEngineNode | undefined = this.idToBehaviourNodeMap.get(Number(flow.node));
-        if (nextNode === undefined) {return}
+        // spec: a flow to an input socket the target does not have is unconnected
+        if (nextNode === undefined || !nextNode.INPUT_FLOWS.includes(flow.socket ?? "in")) {return}
         this.graphEngine.processExecutingNextNode(flow);
         nextNode.processNode(flow.socket);
     }

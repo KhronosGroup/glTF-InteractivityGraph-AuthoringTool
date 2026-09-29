@@ -1,6 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class AnimationStart extends BehaveEngineNode {
+    INPUT_FLOWS = ["in"];
     REQUIRED_VALUES = {animation: {}, startTime: {}, endTime: {}, speed: {}}
 
     constructor(props: IBehaviourNodeProps) {

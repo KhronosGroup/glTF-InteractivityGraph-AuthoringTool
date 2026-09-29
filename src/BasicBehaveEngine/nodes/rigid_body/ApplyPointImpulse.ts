@@ -1,6 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class ApplyPointImpulse extends BehaveEngineNode {
+    INPUT_FLOWS = ["in"];
     REQUIRED_VALUES = {nodeIndex: {}, impulse: {}, position: {}}
 
     constructor(props: IBehaviourNodeProps) {

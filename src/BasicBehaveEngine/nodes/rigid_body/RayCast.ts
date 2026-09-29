@@ -1,6 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class RayCast extends BehaveEngineNode {
+    INPUT_FLOWS = ["in"];
     REQUIRED_VALUES = {rayStart: {}, rayEnd: {}, collisionFilterIndex: {}}
 
     constructor(props: IBehaviourNodeProps) {

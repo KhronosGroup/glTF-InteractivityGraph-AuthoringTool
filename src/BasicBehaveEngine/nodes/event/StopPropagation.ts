@@ -1,6 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class EventStopPropagation extends BehaveEngineNode {
+    INPUT_FLOWS = ["in"];
     REQUIRED_VALUES = {stopImmediate: {}, event: {}}
 
     constructor(props: IBehaviourNodeProps) {

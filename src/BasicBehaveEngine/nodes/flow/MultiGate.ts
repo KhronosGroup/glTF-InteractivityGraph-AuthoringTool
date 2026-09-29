@@ -1,6 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class MultiGate extends BehaveEngineNode {
+    INPUT_FLOWS = ["in", "reset"];
     REQUIRED_CONFIGURATIONS = {isRandom: {defaultValue: [false]}, isLoop: {defaultValue: [false]}}
     _numberOutputFlows: number;
     _currentIndex: number;

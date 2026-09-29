@@ -1,6 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 import {getCustomEventChannel, IInteractivityEvent} from "../../types/InteractivityGraph";
 export class Send extends BehaveEngineNode {
+    INPUT_FLOWS = ["in"];
     REQUIRED_CONFIGURATIONS = {event: {}}
     _event: number;
 

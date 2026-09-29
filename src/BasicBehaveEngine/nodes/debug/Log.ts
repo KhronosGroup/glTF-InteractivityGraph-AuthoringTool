@@ -3,6 +3,7 @@ import { IInteractivityValue } from "../../types/InteractivityGraph";
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class DebugLog extends BehaveEngineNode {
+    INPUT_FLOWS = ["in"];
     REQUIRED_CONFIGURATIONS = {message: {defaultValue: [""]}, severity: {defaultValue: [0]}}
 
     _message: string;

@@ -1,6 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class Sequence extends BehaveEngineNode {
+    INPUT_FLOWS = ["in"];
     _numberOutputFlows: number;
 
     constructor(props: IBehaviourNodeProps) {

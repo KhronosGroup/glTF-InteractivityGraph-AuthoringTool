@@ -35,6 +35,7 @@ export class MultiGate extends BehaveEngineNode {
         if (flowSocket === "reset") {
             this._currentIndex = this._isRandom ? Math.floor(Math.random() * this._unSeenOutIndexes.length) : 0;
             this._unSeenOutIndexes = Array(this._numberOutputFlows).fill(0).map((_, index) => index);
+            this.outValues.lastIndex = { value: [-1], type: this.getTypeIndex('int')};
             return;
         }
 

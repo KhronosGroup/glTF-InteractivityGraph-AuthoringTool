@@ -34,7 +34,7 @@ export class Throttle extends BehaveEngineNode {
             const now = this.graphEngine.lastTickTime;
             if (!isNaN(this._lastRemainingTime)) {
                 const timeSinceLastCall = now - this._lastSuccessfulCall;
-                if (timeSinceLastCall <= duration * 1000) {
+                if (timeSinceLastCall < duration * 1000) {
                     // throttle
                     this._lastRemainingTime = duration - timeSinceLastCall/1000;
                     this.outValues.lastRemainingTime = { value: [duration - timeSinceLastCall/1000], type: this.getTypeIndex('float')};

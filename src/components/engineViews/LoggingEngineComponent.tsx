@@ -6,6 +6,7 @@ import { InteractivityGraphContext } from "../../InteractivityGraphContext";
 import { DOMEventBus } from "../../BasicBehaveEngine/eventBuses/DOMEventBus";
 import { buildNormalizedTemplateSet } from "../../authoring/pointerCatalogue";
 import { getEventLabel } from "../../authoring/CustomEventControls";
+import { getCustomEventChannel } from "../../BasicBehaveEngine/types/InteractivityGraph";
 import { createGlTFObjectModelFromGltf, readGlbJsonFromArrayBuffer } from "../../objectModel/glTFObjectModel";
 import { IconJsonFile, IconPlay, IconSendEvent } from "../toolbarIcons";
 
@@ -180,7 +181,7 @@ export const LoggingEngineComponent: React.FC<LoggingEngineComponentProps> = ({ 
                                             for (const val of Object.keys(customEvent.values)) {
                                                 payload[val] = (document.getElementById(val) as HTMLInputElement).value;
                                             }
-                                            loggingEngineRef.current?.dispatchCustomEvent(`KHR_INTERACTIVITY:${customEvent.id}`, payload)
+                                            loggingEngineRef.current?.dispatchCustomEvent(getCustomEventChannel(customEvent, index), payload)
                                             setOpenModal(LoggingEngineModal.NONE);
                                         }}>Send</Button>
                                     </Row>

@@ -1,5 +1,5 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
-import {IInteractivityEvent} from "../../types/InteractivityGraph";
+import {getCustomEventChannel, IInteractivityEvent} from "../../types/InteractivityGraph";
 export class Send extends BehaveEngineNode {
     REQUIRED_CONFIGURATIONS = {event: {}}
     _event: number;
@@ -20,7 +20,7 @@ export class Send extends BehaveEngineNode {
         const vals = this.evaluateAllValues(Object.keys(customEventDesc.values));
         this.graphEngine.processNodeStarted(this);
 
-        this.graphEngine.dispatchCustomEvent(`KHR_INTERACTIVITY:${customEventDesc.id}`, vals);
+        this.graphEngine.dispatchCustomEvent(getCustomEventChannel(customEventDesc, this._event), vals);
 
         super.processNode(flowSocket);
     }

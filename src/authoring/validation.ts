@@ -28,8 +28,7 @@ const REF_TYPE = 9;
 // instead so the warning stays identifiable without cross-referencing the "variables" config
 const getInputSocketFullLabel = (node: AuthoredNode, socket: string, variables: IInteractivityVariable[]): string => {
     if (node.op === "variable/set") {
-        const variable = variables[Number(socket)] as (IInteractivityVariable & { id?: string }) | undefined;
-        const name = variable?.name ?? variable?.id;
+        const name = (variables[Number(socket)] as IInteractivityVariable | undefined)?.name;
         if (name) { return name; }
     }
     return socket;

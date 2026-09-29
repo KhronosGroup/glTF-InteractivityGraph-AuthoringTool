@@ -2214,8 +2214,14 @@ const typeSignatureName = (type: any): string => {
     return type.signature;
 };
 
+// index badge shown in the first column of the Variables / Custom Events editors: the index is
+// what nodes reference, and the only handle on an entry whose optional name is left empty
+const ReferenceIndexBadge = (props: { index: number }) => (
+    <span style={{ fontSize: 11, color: "#888", fontFamily: "monospace", minWidth: 28, flexShrink: 0 }}>#{props.index}</span>
+);
+
 // local, editing-friendly shape for a graph variable: kept as an ordered list (rather than
-// mutating the graph directly per keystroke) so a variable's id can be renamed a character at a
+// mutating the graph directly per keystroke) so a variable's name can be edited a character at a
 // time without disturbing the rest of the list.
 interface EditableVariable {
     name: string;
@@ -2224,8 +2230,7 @@ interface EditableVariable {
 }
 
 const fromGraphVariables = (variables: IInteractivityVariable[]): EditableVariable[] =>
-    // loaded KHR_interactivity graphs carry the name in `id`, authored ones in `name`
-    (variables || []).map((variable) => ({ name: variable.name ?? (variable as any).id ?? "", type: variable.type, value: variable.value }));
+    (variables || []).map((variable) => ({ name: variable.name ?? "", type: variable.type, value: variable.value }));
 
 const toGraphVariables = (variables: EditableVariable[]): IInteractivityVariable[] =>
     variables.map(({ name, type, value }) => {
@@ -2257,7 +2262,7 @@ const VariablesComponent = (props: {closeModal: any, onDeleteReference: DeleteRe
     };
 
     const addVariable = () => {
-        // suggest a unique-ish default id so a fresh variable is valid immediately
+        // suggest a unique-ish default name so a fresh variable is identifiable immediately
         const existing = new Set(variables.map((v) => v.name));
         let n = variables.length + 1;
         let name = `variable_${n}`;
@@ -2294,7 +2299,7 @@ const VariablesComponent = (props: {closeModal: any, onDeleteReference: DeleteRe
                             )}
                             {variables.length > 0 && (
                                 <Row style={{ marginBottom: 0, marginLeft: 0, marginRight: 0 }}>
-                                    <Col style={{ flexGrow: 2 }}><span style={{ fontSize: 11, color: "#999" }}>ID</span></Col>
+                                    <Col style={{ flexGrow: 2 }}><span style={{ fontSize: 11, color: "#999" }}>Name</span></Col>
                                     <Col xs={2}><span style={{ fontSize: 11, color: "#999" }}>Type</span></Col>
                                     <Col xs={5}><span style={{ fontSize: 11, color: "#999" }}>Value</span></Col>
                                     <Col style={{ width: 44, flexShrink: 0, padding: 0 }}></Col>
@@ -2304,15 +2309,16 @@ const VariablesComponent = (props: {closeModal: any, onDeleteReference: DeleteRe
                                 <div key={index}>
                                     {index > 0 && <hr style={{ margin: "6px 0", borderColor: "#bbb" }} />}
                                     <Row className={"align-items-center"} style={{ marginTop: 6, marginLeft: 0, marginRight: 0 }}>
-                                        {/* flexGrow 2 lets the ID field claim ~2/3 of the leftover
+                                        {/* flexGrow 2 lets the name field claim ~2/3 of the leftover
                                             space (the delete column keeps the default 1) so names
                                             have more room while the ✕ stays pinned to the right */}
-                                        <Col style={{ flexGrow: 2 }}>
+                                        <Col style={{ flexGrow: 2, display: "flex", alignItems: "center", gap: 6 }}>
+                                            <ReferenceIndexBadge index={index} />
                                             <Form.Control
                                                 size={"sm"}
                                                 type="text"
                                                 value={variable.name}
-                                                placeholder="variable id"
+                                                placeholder={`variable #${index} (optional name)`}
                                                 onChange={(e) => updateVariable(index, { name: e.target.value })}
                                             />
                                         </Col>
@@ -2384,13 +2390,15 @@ interface EditableEventValue {
     defaultValue: any;
 }
 interface EditableEvent {
+    name: string;
     id: string;
     values: EditableEventValue[];
 }
 
 const fromGraphEvents = (events: IInteractivityEvent[]): EditableEvent[] =>
     (events || []).map((event) => ({
-        id: event.id,
+        name: event.name ?? "",
+        id: event.id ?? "",
         values: Object.entries(event.values || {}).map(([key, value]) => ({
             key,
             type: value.type,
@@ -2398,19 +2406,23 @@ const fromGraphEvents = (events: IInteractivityEvent[]): EditableEvent[] =>
         })),
     }));
 
-// project the editing model back onto the graph's IInteractivityEvent[] shape, dropping any
-// value rows whose id is still blank so the committed graph never carries an empty-string key
+// project the editing model back onto the graph's IInteractivityEvent[] shape. name and id are
+// optional in the spec, so blank ones are omitted; so are value rows whose id is still blank, so
+// the committed graph never carries an empty-string key
 const toGraphEvents = (events: EditableEvent[]): IInteractivityEvent[] =>
-    events.map((event) => ({
-        id: event.id,
-        values: event.values.reduce((acc, { key, type, defaultValue }) => {
+    events.map((event) => {
+        const entry: IInteractivityEvent = { values: {} };
+        if (event.name !== "") { entry.name = event.name; }
+        if (event.id !== "") { entry.id = event.id; }
+        entry.values = event.values.reduce((acc, { key, type, defaultValue }) => {
             if (key === "") return acc;
-            const entry: { type: number; value?: any } = { type };
-            if (defaultValue !== undefined) { entry.value = defaultValue; }
-            acc[key] = entry;
+            const value: { type: number; value?: any } = { type };
+            if (defaultValue !== undefined) { value.value = defaultValue; }
+            acc[key] = value;
             return acc;
-        }, {} as Record<string, { type: number; value?: any }>),
-    }));
+        }, {} as Record<string, { type: number; value?: any }>);
+        return entry;
+    });
 
 const CustomEventsComponent = (props: {closeModal: any, onDeleteReference: DeleteReferenceHandler}) => {
     const {graph, setEvents: setGraphEvents} = useContext(InteractivityGraphContext);
@@ -2433,17 +2445,18 @@ const CustomEventsComponent = (props: {closeModal: any, onDeleteReference: Delet
         setGraphEvents(toGraphEvents(next));
     };
 
-    const updateEventId = (index: number, id: string) => {
-        commit(events.map((event, i) => (i === index ? { ...event, id } : event)));
+    const updateEvent = (index: number, patch: Partial<Pick<EditableEvent, "name" | "id">>) => {
+        commit(events.map((event, i) => (i === index ? { ...event, ...patch } : event)));
     };
 
     const addEvent = () => {
-        // suggest a unique-ish default id so a fresh event is valid immediately
-        const existing = new Set(events.map((e) => e.id));
+        // suggest a unique-ish default name so a fresh event is identifiable immediately; the id
+        // stays empty (internal-only) until the author opts into external addressing
+        const existing = new Set(events.map((e) => e.name));
         let n = events.length + 1;
-        let id = `event_${n}`;
-        while (existing.has(id)) { id = `event_${++n}`; }
-        commit([...events, { id, values: [] }]);
+        let name = `event_${n}`;
+        while (existing.has(name)) { name = `event_${++n}`; }
+        commit([...events, { name, id: "", values: [] }]);
     };
 
     const usage = useReferenceUsage("event", events.length);
@@ -2489,11 +2502,12 @@ const CustomEventsComponent = (props: {closeModal: any, onDeleteReference: Delet
                                 <div key={eventIndex} style={{ border: "1px solid #ddd", borderRadius: 8, padding: 12, marginBottom: 12, background: "#fafafa" }}>
                                     {/* event header: label+input flex-end so Delete sits at input baseline */}
                                     <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
+                                        <div style={{ alignSelf: "flex-end", paddingBottom: 8 }}>
+                                            <ReferenceIndexBadge index={eventIndex} />
+                                        </div>
                                         <div style={{ flex: 1 }}>
-                                            {/* the index is what nodes reference (and the only handle on an
-                                                event whose id is left empty), so surface it next to the id */}
                                             <div style={{ fontSize: 12, color: "#666", marginBottom: 2, display: "flex", alignItems: "center", gap: 6 }}>
-                                                <span>Event ID (#{eventIndex})</span>
+                                                <span>Name</span>
                                                 {usage.countAt(eventIndex) > 0 && (
                                                     <span style={{ color: "#8a6d3b", background: "#fcf8e3", border: "1px solid #faebcc", borderRadius: 10, padding: "0 6px", fontSize: 11 }}>
                                                         used by {usage.countAt(eventIndex)} node{usage.countAt(eventIndex) > 1 ? "s" : ""}
@@ -2502,11 +2516,22 @@ const CustomEventsComponent = (props: {closeModal: any, onDeleteReference: Delet
                                             </div>
                                             <Form.Control
                                                 type="text"
-                                                value={event.id}
+                                                value={event.name}
                                                 // the placeholder is the exact stand-in the rest of the UI
-                                                // shows for this event while its id is empty
-                                                placeholder={getUnnamedEventName(eventIndex)}
-                                                onChange={(e) => updateEventId(eventIndex, e.target.value)}
+                                                // shows for this event while it has neither name nor id
+                                                placeholder={event.id || getUnnamedEventName(eventIndex)}
+                                                onChange={(e) => updateEvent(eventIndex, { name: e.target.value })}
+                                            />
+                                        </div>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ fontSize: 12, color: "#666", marginBottom: 2 }}>
+                                                ID <span style={{ color: "#999" }}>(optional, for external dispatch)</span>
+                                            </div>
+                                            <Form.Control
+                                                type="text"
+                                                value={event.id}
+                                                placeholder={"internal only"}
+                                                onChange={(e) => updateEvent(eventIndex, { id: e.target.value })}
                                             />
                                         </div>
                                         <Button

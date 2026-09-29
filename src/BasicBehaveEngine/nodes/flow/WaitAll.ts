@@ -13,7 +13,9 @@ export class WaitAll extends BehaveEngineNode {
         this.validateConfigurations(this.configuration);
 
         const {inputFlows} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
-        this._numberInputFlows = Number(inputFlows);
+        // spec: inputFlows must be an integer in [0, 64], otherwise the default configuration (0) is used
+        const count = inputFlows?.[0];
+        this._numberInputFlows = Number.isInteger(count) && count >= 0 && count <= 64 ? count : 0;
         this._lockedFlows = [...Array(this._numberInputFlows).keys()];
         this.outValues.remainingInputs = { value: [this._lockedFlows.length], type: this.getTypeIndex('int')};
     }

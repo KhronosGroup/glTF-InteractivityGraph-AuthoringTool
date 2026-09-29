@@ -17,8 +17,10 @@ export class MultiGate extends BehaveEngineNode {
 
         const { isRandom, isLoop} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
         this._numberOutputFlows = Object.keys(this.flows).length;
-        this._isRandom = isRandom[0];
-        this._isLoop = isLoop[0];
+        // spec: if any configuration value is invalid, the node uses the default configuration
+        const isValid = typeof isRandom?.[0] === "boolean" && typeof isLoop?.[0] === "boolean";
+        this._isRandom = isValid ? isRandom[0] : false;
+        this._isLoop = isValid ? isLoop[0] : false;
         this._orderedOutFlows =  Object.keys(this.flows).sort();
         this._unSeenOutIndexes = Array(this._numberOutputFlows).fill(0).map((_, index) => index);
         this._currentIndex = this._isRandom ? Math.floor(Math.random() * this._unSeenOutIndexes.length) : 0;

@@ -19,7 +19,7 @@ export class IsInfNode extends BehaveEngineNode {
 
         switch (type) {
             case "float":
-                val = !isFinite(Number(a));
+                val = Math.abs(Number(a)) === Infinity;
                 break;
             default:
                 throw Error("Invalid type")

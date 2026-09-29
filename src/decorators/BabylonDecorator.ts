@@ -23,6 +23,7 @@ import { IInteractivityFlow } from "../BasicBehaveEngine/types/InteractivityGrap
 import {glTFObjectReference} from "../objectModel/glTFReference";
 import {SUPPORTED_GLTF_EXTENSIONS} from "../diagnostics";
 import {assetExtensionEnabled, KHR_INTERACTIVITY_LIMITS, parseGltfVersion} from "../objectModel/assetCapabilities";
+import {effectiveAnimationTime} from "../objectModel/glTFAnimation";
 
 export class BabylonDecorator extends ADecorator {
     scene: Scene;
@@ -1701,27 +1702,21 @@ export class BabylonDecorator extends ADecorator {
             //no-op
         }, "float", true);
 
+        // spec: both playheads are 0 before the first start and keep their last value once the animation stops
         this.registerJsonPointer(`/animations/${maxAnimations}/extensions/KHR_interactivity/playhead`, (path) => {
             const parts: string[] = path.split("/");
             const animation: AnimationGroup = this.world.animations[Number(parts[2])];
-            const animationInstance: AnimationGroup = animation?.metadata?.instance;
-            if (animationInstance === undefined || animationInstance.animatables[0] === undefined) {return [NaN]}
-            const masterFrame = animationInstance.animatables[0].masterFrame;
-            const fps = 60;
-            return [masterFrame / fps];
+            if (animation === undefined) {return [NaN]}
+            return [effectiveAnimationTime({maxTime: animation.to / 60}, this.virtualPlayhead(animation))];
         }, (path, value) => {
             //no-op
         }, "float", true);
 
-        // TODO: virtual playhead isnt something that is really stored on animations, ask babylon js to add it if we really need it 
         this.registerJsonPointer(`/animations/${maxAnimations}/extensions/KHR_interactivity/virtualPlayhead`, (path) => {
             const parts: string[] = path.split("/");
             const animation: AnimationGroup = this.world.animations[Number(parts[2])];
-            const animationInstance: AnimationGroup = animation?.metadata?.instance;
-            if (animationInstance === undefined || animationInstance.animatables[0] === undefined) {return [NaN]}
-            const masterFrame = animationInstance.animatables[0].masterFrame;
-            const fps = 60;
-            return [masterFrame / fps];
+            if (animation === undefined) {return [NaN]}
+            return [this.virtualPlayhead(animation)];
         }, (path, value) => {
             //no-op
         }, "float", true);
@@ -1835,6 +1830,13 @@ export class BabylonDecorator extends ADecorator {
 
         const anim: AnimationGroup = this.world.animations[animation]
         anim.metadata = anim.metadata || {};
+        const timeline = { startTime, endTime, speed, startedAt: performance.now(), finishedAt: undefined as number | undefined };
+        anim.metadata.timeline = timeline;
+        const endCallback = callback;
+        callback = () => {
+            timeline.finishedAt = endTime;
+            endCallback();
+        };
 
         const loopingForever = !isFinite(endFrame);
         const forward = startFrame < endFrame;
@@ -1891,6 +1893,11 @@ export class BabylonDecorator extends ADecorator {
         const animationInstance: AnimationGroup = animation?.metadata?.instance;
         if (animationInstance === undefined) return;
 
+        if (animation.metadata.timeline !== undefined) {
+            animation.metadata.timeline.finishedAt = this.virtualPlayhead(animation);
+        }
+        // Babylon's stop() fires the end observable; animation/stop must not activate any done flow
+        animationInstance.onAnimationGroupEndObservable.clear();
         animationInstance.stop();
         animationInstance.dispose();
         animation.metadata.instance = undefined;
@@ -1903,17 +1910,26 @@ export class BabylonDecorator extends ADecorator {
 
         const forward = animationInstance.metadata.isForward;
         if (animationInstance.animatables[0] === undefined) {return}
+        const stopCallback = callback;
+        callback = () => {
+            if (animation.metadata.timeline !== undefined) {
+                animation.metadata.timeline.finishedAt = stopTime;
+            }
+            stopCallback();
+        };
         const frame = animationInstance.animatables[0].animationStarted ? animationInstance.animatables[0].masterFrame : animationInstance.animatables[0].fromFrame;
         const fps = 60;
         const stopFrame = stopTime * fps;
-        if ((forward && (stopFrame < animationInstance.animatables[0].fromFrame || stopFrame > animationInstance.animatables[0].toFrame) ||
-            (!forward && (stopFrame > animationInstance.animatables[0].fromFrame || stopFrame < animationInstance.animatables[0].toFrame)))) {
+        // spec: stop only applies within [start, end); at or past the end time the animation completes normally
+        if ((forward && (stopFrame < animationInstance.animatables[0].fromFrame || stopFrame >= animationInstance.animatables[0].toFrame) ||
+            (!forward && (stopFrame > animationInstance.animatables[0].fromFrame || stopFrame <= animationInstance.animatables[0].toFrame)))) {
             //no-op since we are outside the animation range
             return;
         }
         if ((forward && stopFrame <= frame) || (!forward && stopFrame >= frame)) {
             //snap to stop frame if we have passed it
             animationInstance.goToFrame(stopFrame);
+            animationInstance.onAnimationGroupEndObservable.clear();
             animationInstance.stop();
             animationInstance.dispose();
             callback();
@@ -1922,11 +1938,28 @@ export class BabylonDecorator extends ADecorator {
         this._animateRange(animationInstance.speedRatio, forward, false, frame, stopFrame, frame, animation, () => callback(), undefined);
     }
 
+    // requested timestamp on the infinite timeline (spec virtualPlayhead), derived from the last animation/start
+    private virtualPlayhead(animation: AnimationGroup): number {
+        const timeline = animation.metadata?.timeline;
+        if (timeline === undefined) {
+            return 0;
+        }
+        if (timeline.finishedAt !== undefined) {
+            return timeline.finishedAt;
+        }
+        const elapsed = Math.max(0, (performance.now() - timeline.startedAt) / 1000) * timeline.speed;
+        return timeline.startTime <= timeline.endTime
+            ? Math.min(timeline.startTime + elapsed, timeline.endTime)
+            : Math.max(timeline.startTime - elapsed, timeline.endTime);
+    }
+
     private _animateRange = (speed: float, isForward: boolean, isLoop: boolean, startFrame: float, endFrame: float, currentFrame: float,
                              animation: AnimationGroup, endCallback: (() => void) | undefined, loopCallback: (() => void )| undefined) => {
         if (animation.metadata.instance !== undefined) {
             //clear any previous animation
             if (animation.metadata.instance.isPlaying) {
+                // the replaced instance's done flow must not fire (spec: superseded done flows are not activated)
+                animation.metadata.instance.onAnimationGroupEndObservable.clear();
                 animation.metadata.instance.stop();
                 animation.metadata.instance.dispose();
             }

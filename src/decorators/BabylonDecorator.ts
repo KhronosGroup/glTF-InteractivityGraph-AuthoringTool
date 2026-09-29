@@ -1707,6 +1707,11 @@ export class BabylonDecorator extends ADecorator {
             const parts: string[] = path.split("/");
             const animation: AnimationGroup = this.world.animations[Number(parts[2])];
             if (animation === undefined) {return [NaN]}
+            // while playing, Babylon's own frame is the playhead
+            const animatable = animation.metadata?.instance?.isPlaying ? animation.metadata.instance.animatables[0] : undefined;
+            if (animatable !== undefined) {
+                return [animatable.masterFrame / 60];
+            }
             return [effectiveAnimationTime({maxTime: animation.to / 60}, this.virtualPlayhead(animation))];
         }, (path, value) => {
             //no-op

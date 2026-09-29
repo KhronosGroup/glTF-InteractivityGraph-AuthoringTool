@@ -1,6 +1,7 @@
 import { IInteractivityConfigurationValue, IInteractivityDeclaration, IInteractivityEvent, IInteractivityFlow, IInteractivityValue, IInteractivityValueType, IInteractivityVariable } from "./types/InteractivityGraph";
 import {BasicBehaveEngine} from "./BasicBehaveEngine";
 import { isNoOpNode } from "./nodes/experimental/noOpRegistry";
+import { parsePathTemplate, populatePathTemplate } from "./pointerTemplate";
 
 export interface IBehaviourNodeProps {
     index: number,
@@ -291,20 +292,16 @@ export class BehaveEngineNode {
     }
 
     protected populatePath(path: string, refs: Record<string, string>, indices: Record<string, string>): string {
-        for (const ref of Object.keys(refs)) {
-            const refValue = refs[ref];
-            const index = this.resolveRef(refValue);
-            if (index !== -1) {
-                path = path.replace(`{${ref}}`, index.toString());
+        return populatePathTemplate(path, ({id, kind}) => {
+            if (kind === "index") {
+                return String(indices[id]);
             }
-            else {
-                throw new Error(`Invalid reference value for ${ref}: ${refValue}`);
+            const index = this.resolveRef(refs[id]);
+            if (index === -1) {
+                throw new Error(`Invalid reference value for ${id}: ${refs[id]}`);
             }
-        }
-        for (const index of Object.keys(indices)) {
-            path = path.replace(`[${index}]`, indices[index]);
-        }
-        return path;
+            return index.toString();
+        });
     }
 
     // spec pointer/set + pointer/interpolate steps 2-4: negative index, null ref, unresolvable,
@@ -323,28 +320,19 @@ export class BehaveEngineNode {
     }
 
     protected parsePathRefVariables(path: string): string[] {
-        return this.parsePathVariables(path, '{', '}');
+        return this.parsePathTemplateSockets(path, "ref");
     }
 
     protected parsePathIndexVariables(path: string): string[] {
-        return this.parsePathVariables(path, '[', ']');
+        return this.parsePathTemplateSockets(path, "index");
     }
 
-    protected parsePathVariables(path: string, openDel: string, closeDel: string): string[] {
-        const regex = new RegExp(`\\${openDel}([^\\${closeDel}]+)\\${closeDel}`, 'g');
-        const match = path.match(regex);
-        const keys: string[] = [];
-
-        if (!match) {
-            return keys;
+    // spec: an invalid pointer template makes the node invalid and the graph must be rejected
+    private parsePathTemplateSockets(path: string, kind: "index" | "ref"): string[] {
+        const {valid, sockets} = parsePathTemplate(path);
+        if (!valid) {
+            throw new Error(`Invalid JSON pointer template: ${path}`);
         }
-
-        for (const m of match) {
-            // remove the delimiters from the match
-            const key = m.slice(openDel.length, -closeDel.length);
-            keys.push(key)
-        }
-
-        return keys;
+        return sockets.filter(socket => socket.kind === kind).map(socket => socket.id);
     }
 }

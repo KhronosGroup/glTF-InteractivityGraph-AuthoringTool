@@ -1,18 +1,8 @@
 import { IInteractivityValue } from "../BasicBehaveEngine/types/InteractivityGraph";
+import { decodeJsonPointerToken, parsePathTemplate, PathTemplateSocket, PathTemplateSocketKind } from "../BasicBehaveEngine/pointerTemplate";
 
-export type PathTemplateSocketKind = "index" | "ref";
-
-export interface PathTemplateSocket {
-    id: string;
-    kind: PathTemplateSocketKind;
-}
-
-export interface PathTemplateParseResult {
-    valid: boolean;
-    sockets: PathTemplateSocket[];
-}
-
-const decodeJsonPointerToken = (token: string): string => token.replace(/~1/g, "/").replace(/~0/g, "~");
+export { parsePathTemplate } from "../BasicBehaveEngine/pointerTemplate";
+export type { PathTemplateParseResult, PathTemplateSocket, PathTemplateSocketKind } from "../BasicBehaveEngine/pointerTemplate";
 
 const encodeJsonPointerToken = (token: string): string => token.replace(/~/g, "~0").replace(/\//g, "~1");
 
@@ -30,72 +20,6 @@ export const renamePathTemplateSlotId = (id: string, kind: PathTemplateSocketKin
         if (id === "ref") return "index";
     }
     return id;
-};
-
-const hasTemplateDelimiter = (value: string): boolean => ["[", "]", "{", "}"].some((delimiter) => value.includes(delimiter));
-
-const isValidJsonPointer = (path: string): boolean => {
-    return (path === "" || path.startsWith("/")) && !/(^|[^~])~([^01]|$)/.test(path);
-};
-
-const hasOddDelimiterRun = (segment: string, delimiter: string): boolean => {
-    const escapedDelimiter = delimiter.replace(/[[\]{}]/g, "\\$&");
-    return (segment.match(new RegExp(`${escapedDelimiter}+`, "g")) ?? []).some((run) => run.length % 2 === 1);
-};
-
-export const parsePathTemplate = (path: string): PathTemplateParseResult => {
-    const sockets: PathTemplateSocket[] = [];
-    const seenSocketIds = new Set<string>();
-
-    if (!isValidJsonPointer(path)) {
-        return {valid: false, sockets: []};
-    }
-
-    for (const segment of path.split("/")) {
-        if (segment === "[" || segment === "{") {
-            return {valid: false, sockets: []};
-        }
-
-        const first = segment[0];
-        const second = segment[1];
-        let kind: PathTemplateSocketKind | undefined;
-        let close: string | undefined;
-
-        if (first === "[" && second !== "[") {
-            kind = "index";
-            close = "]";
-        } else if (first === "{" && second !== "{") {
-            kind = "ref";
-            close = "}";
-        }
-
-        if (kind === undefined || close === undefined) {
-            if (
-                hasOddDelimiterRun(segment, "[") ||
-                hasOddDelimiterRun(segment, "]") ||
-                hasOddDelimiterRun(segment, "{") ||
-                hasOddDelimiterRun(segment, "}")
-            ) {
-                return {valid: false, sockets: []};
-            }
-            continue;
-        }
-
-        const encodedId = segment.slice(1, -1);
-        if (!segment.endsWith(close) || encodedId.length === 0 || hasTemplateDelimiter(encodedId)) {
-            return {valid: false, sockets: []};
-        }
-
-        const id = decodeJsonPointerToken(encodedId);
-        if (seenSocketIds.has(id)) {
-            return {valid: false, sockets: []};
-        }
-
-        seenSocketIds.add(id);
-        sockets.push({id, kind});
-    }
-
-    return {valid: true, sockets};
 };
 
 export const getPathTemplateSockets = (path: string): PathTemplateSocket[] => parsePathTemplate(path).sockets;

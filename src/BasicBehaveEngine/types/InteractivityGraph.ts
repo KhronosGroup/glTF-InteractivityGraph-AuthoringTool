@@ -41,7 +41,7 @@ export interface IInteractivityEvent {
     /** external identifier; events without one are internal-only (not addressable from outside the graph) */
     id?: string,
     name?: string,
-    values: Record<string, {
+    values?: Record<string, {
         type: number,
         value?: any[]
     }>

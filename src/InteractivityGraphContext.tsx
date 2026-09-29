@@ -713,7 +713,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
 
         if (newGraph.events) {
           for (const event of newGraph.events) {
-            for (const socket of Object.values(event.values)) {
+            for (const socket of Object.values(event.values ?? {})) {
               socket.type = getUpdatedTypeIndex(json.types[socket.type]);
             }
           }

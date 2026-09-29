@@ -2408,19 +2408,21 @@ const fromGraphEvents = (events: IInteractivityEvent[]): EditableEvent[] =>
 
 // project the editing model back onto the graph's IInteractivityEvent[] shape. name and id are
 // optional in the spec, so blank ones are omitted; so are value rows whose id is still blank, so
-// the committed graph never carries an empty-string key
+// the committed graph never carries an empty-string key. `values` must be non-empty when present
+// (spec: Event Object Validation), so a parameterless event omits it
 const toGraphEvents = (events: EditableEvent[]): IInteractivityEvent[] =>
     events.map((event) => {
-        const entry: IInteractivityEvent = { values: {} };
+        const entry: IInteractivityEvent = {};
         if (event.name !== "") { entry.name = event.name; }
         if (event.id !== "") { entry.id = event.id; }
-        entry.values = event.values.reduce((acc, { key, type, defaultValue }) => {
+        const values = event.values.reduce((acc, { key, type, defaultValue }) => {
             if (key === "") return acc;
             const value: { type: number; value?: any } = { type };
             if (defaultValue !== undefined) { value.value = defaultValue; }
             acc[key] = value;
             return acc;
         }, {} as Record<string, { type: number; value?: any }>);
+        if (Object.keys(values).length > 0) { entry.values = values; }
         return entry;
     });
 

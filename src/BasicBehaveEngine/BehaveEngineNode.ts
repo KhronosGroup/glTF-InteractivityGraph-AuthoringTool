@@ -190,6 +190,10 @@ export class BehaveEngineNode {
             this.graphEngine.addEntryToValueEvaluationCache(`${val.node}-${val.socket}`, {socket: val.socket!, value: valueToReturn, type: typeIndex});
             const typeName = this.getType(typeIndex);
             return this.parseType(typeName, valueToReturn);
+        } else if (val.type != null) {
+            // spec: neither value nor node -> type-default value
+            const typeName = this.getType(val.type);
+            return this.parseType(typeName, this.getDefaultValueForType(typeName));
         }
     }
 

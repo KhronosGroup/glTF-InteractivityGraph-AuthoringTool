@@ -307,17 +307,19 @@ export class BehaveEngineNode {
         return path;
     }
 
-    protected isReadOnlyPointer(pointer: string, refs: string[], indices: string[]): boolean {
-        const readOnlyTestRefs: Record<string, string> = {};
-        for (const ref of refs) {
-            readOnlyTestRefs[ref] = "0";
+    // spec pointer/set + pointer/interpolate steps 2-4: negative index, null ref, unresolvable,
+    // type mismatch or immutable property -> undefined (caller activates err)
+    protected resolveWritablePointer(pointer: string, refs: Record<string, string>, indices: Record<string, string>, typeName: string): string | undefined {
+        if (Object.values(indices).some(i => Number(i) < 0) || Object.values(refs).some(r => this.resolveRef(r) === -1)) {
+            return undefined;
         }
-        const readOnlyTestIndices: Record<string, string> = {};
-        for (const index of indices) {
-            readOnlyTestIndices[index] = "0";
+        const path = this.populatePath(pointer, refs, indices);
+        if (!this.graphEngine.isValidJsonPtr(path)
+            || this.graphEngine.getPathTypeName(path) !== typeName
+            || this.graphEngine.isReadOnly(path)) {
+            return undefined;
         }
-        const readOnlyTestPath = this.populatePath(pointer, readOnlyTestRefs, readOnlyTestIndices);
-        return this.graphEngine.isReadOnly(readOnlyTestPath);
+        return path;
     }
 
     protected parsePathRefVariables(path: string): string[] {

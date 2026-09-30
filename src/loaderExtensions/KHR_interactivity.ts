@@ -32,7 +32,8 @@ export class KHR_interactivity implements IGLTFLoaderExtension {
 
     public onLoading(): void {
         const gltf = this._loader?.gltf;
-        const graphIndex = gltf?.extensions?.KHR_interactivity?.graph;
+        // spec: only the default graph runs; an omitted `graph` property means 0
+        const graphIndex = gltf?.extensions?.KHR_interactivity?.graph ?? 0;
         const interactivityGraph = gltf?.extensions?.KHR_interactivity?.graphs?.[graphIndex];
         this._loader.babylonScene.metadata = this._loader.babylonScene.metadata || {};
         this._loader.babylonScene.metadata.behaveGraph = interactivityGraph;

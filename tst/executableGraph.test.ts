@@ -1,6 +1,10 @@
-import { getExecutableDeclarationIndex } from "../src/authoring/executableGraph";
+import { getExecutableDeclarationIndex, toExecutableValue } from "../src/authoring/executableGraph";
 
 describe("executable graph compilation", () => {
+    it("exports an untouched type-default input as type only", () => {
+        expect(toExecutableValue({ value: [undefined], type: 2, typeOptions: [2], typeDefault: true })).toEqual({ type: 2 });
+    });
+
     it("preserves declaration indices when a loaded graph has multiple declarations for the same op", () => {
         const declarations = [
             {

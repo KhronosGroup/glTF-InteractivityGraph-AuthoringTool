@@ -37,6 +37,9 @@ export interface AuthoredValue extends IInteractivityValue {
     // math/flow switch `selection`, rigid_body `nodeIndex`) — never on pure-math int operands.
     // Authoring-only; stripped at compile time (see toExecutableValue).
     objectPicker?: boolean,
+    // the file gave this input only a `type` (spec: a type-default value), so an unset value is
+    // intentional rather than missing. Editing the value replaces the socket and drops the flag.
+    typeDefault?: boolean,
 }
 
 export interface AuthoredNode extends IInteractivityNode {

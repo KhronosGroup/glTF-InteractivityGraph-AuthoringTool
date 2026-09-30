@@ -767,7 +767,9 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
 
             if (node.values !== undefined) {
                 for (const key in node.values) {
-                    if (node.values[key].value !== undefined) {
+                    // spec: a `type` without `value` or `node` is a type-default value
+                    const isTypeDefault = node.values[key].value === undefined && node.values[key].node === undefined && node.values[key].type !== undefined;
+                    if (node.values[key].value !== undefined || isTypeDefault) {
                         copyOfTemplateNode.values = copyOfTemplateNode.values || {};
                         copyOfTemplateNode.values.input = copyOfTemplateNode.values.input || {};
                         const newTypeIndex = getUpdatedTypeIndex(json.types[node.values[key].type]);
@@ -785,8 +787,11 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
                                 detail: `Socket "${key}" is set to type ${typeIndexName(newTypeIndex)}, but "${nodeOp}" expects ${specSocket.typeOptions.map(typeIndexName).join(" | ")}.`,
                             });
                         }
-                        copyOfTemplateNode.values.input[key] = {value: node.values[key].value, type: newTypeIndex, typeOptions: copyOfTemplateNode.values.input[key]?.typeOptions || [newTypeIndex]};
-                    } else if (node.values[key].socket !== undefined && node.values[key].node !== null) {
+                        const typeOptions = copyOfTemplateNode.values.input[key]?.typeOptions || [newTypeIndex];
+                        copyOfTemplateNode.values.input[key] = isTypeDefault
+                            ? {value: [undefined], type: newTypeIndex, typeOptions, typeDefault: true}
+                            : {value: node.values[key].value, type: newTypeIndex, typeOptions};
+                    } else if (node.values[key].node != null) {
                         copyOfTemplateNode.values = copyOfTemplateNode.values || {};
                         copyOfTemplateNode.values.input = copyOfTemplateNode.values.input || {};
                         if (!isNoOp && templateNode.values?.input?.[key] === undefined && !allowsDynamicSockets) {
@@ -796,7 +801,8 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
                                 detail: `"${nodeOp}" does not declare an input value socket named "${key}" in the interactivity spec.`,
                             });
                         }
-                        copyOfTemplateNode.values.input[key] = {socket: node.values[key].socket, node: uuids[node.values[key].node]};
+                        // spec: an omitted `socket` means the source's "value" output
+                        copyOfTemplateNode.values.input[key] = {socket: node.values[key].socket ?? "value", node: uuids[node.values[key].node]};
                     }
                 }
             }

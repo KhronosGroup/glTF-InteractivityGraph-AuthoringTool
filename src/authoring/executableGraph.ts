@@ -12,6 +12,11 @@ export const toExecutableValue = (authoredValue: AuthoredValue): IInteractivityV
     delete value.typeGroup;
     delete value.typeOptions;
     delete value.objectPicker;
+    // spec type-default: an input with only `type` (no value, no node)
+    if (value.typeDefault && value.node === undefined) {
+        delete value.value;
+    }
+    delete value.typeDefault;
     return value;
 };
 

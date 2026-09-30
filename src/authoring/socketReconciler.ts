@@ -262,7 +262,7 @@ export function mergeValueSockets(params: {
         if (generatedKeys.has(key) && !allowExistingToOverrideGenerated) { continue; }
 
         const existingSocket = existing[key];
-        const existingHasData = existingSocket !== undefined && (existingSocket.value?.[0] != null || existingSocket.node != null);
+        const existingHasData = existingSocket !== undefined && (existingSocket.value?.[0] != null || existingSocket.node != null || existingSocket.typeDefault === true);
         const pointerSlotType = pointerSlotTypeById?.get(key);
         const pointerSlotKindChanged = pointerSlotType !== undefined && existingSocket !== undefined && existingSocket.type !== pointerSlotType;
 

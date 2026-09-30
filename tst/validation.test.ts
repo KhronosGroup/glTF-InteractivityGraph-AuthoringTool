@@ -53,6 +53,11 @@ describe("computeNodeLiveWarnings", () => {
         expect(warnings[0].message).toContain('Missing value on socket "b"');
     });
 
+    it("does not flag a spec type-default input (type only) as missing", () => {
+        const node = makeSub("n1", staticValue(FLOAT, 1.5), { ...placeholder(), type: FLOAT, typeDefault: true });
+        expect(computeNodeLiveWarnings(node, [node], noVariables)).toHaveLength(0);
+    });
+
     it("is clean when every socket is wired or carries a static value", () => {
         const src = makeSub("src", staticValue(FLOAT, 1), staticValue(FLOAT, 2));
         const node = makeSub("n1", wiredTo("src"), staticValue(FLOAT, 3));

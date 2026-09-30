@@ -166,6 +166,7 @@ const getMissingValueWarning = (
 ): string | undefined => {
     if (node.values?.input?.[socket]?.node !== undefined) { return undefined; }
     if (resolvedType === REF_TYPE) { return undefined; }
+    if (value.typeDefault) { return undefined; }
     // ref sockets store their pointer array-wrapped, but older graphs may still carry a bare
     // string; normalize both shapes before checking.
     const raw = value.value;

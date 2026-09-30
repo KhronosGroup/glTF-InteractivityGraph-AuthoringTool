@@ -219,6 +219,17 @@
     color: #333;
 }
 
+.diagnostics-counter-impact {
+    flex-shrink: 0;
+    margin-left: auto;
+    padding: 0 6px;
+    border: 1px solid #bbb;
+    border-radius: 8px;
+    font-size: 11px;
+    color: #555;
+    white-space: nowrap;
+}
+
 /* base style lives in theme.css (.panel__toolbar-btn), shared with the engine panel's bar */
 .graph-menu-bar-btn--reload {
     background: var(--warn-100);

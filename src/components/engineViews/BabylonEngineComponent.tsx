@@ -21,7 +21,7 @@ import {GLTFFileLoader, GLTFLoaderAnimationStartMode} from "@babylonjs/loaders";
 import { InteractivityGraphContext } from "../../InteractivityGraphContext";
 import { DOMEventBus } from "../../BasicBehaveEngine/eventBuses/DOMEventBus";
 import { attachPointerEventLogging, SendCustomEventPanel } from "../../authoring/CustomEventControls";
-import { computeExtensionDiagnostics } from "../../diagnostics";
+import { computeExecutionDiagnostics, computeExtensionDiagnostics } from "../../diagnostics";
 import { buildNormalizedTemplateSet } from "../../authoring/pointerCatalogue";
 import { loadSelectedModelGraph } from "./modelGraphExecution";
 import { attachSkinLoadedMetadata, BabylonLoadedModel, buildBabylonDecoratorWorld, buildBabylonLoadedModel } from "./babylonLoadedModel";
@@ -77,6 +77,27 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
         );
         if (metadata?.gltfObjectModel) {
             setGltfObjectModel(metadata.gltfObjectModel);
+        }
+    };
+
+    // a rejected graph or a runtime error that halts the engine shows up in the diagnostics panel,
+    // not only in the console
+    const reportExecutionError = (error: unknown) => {
+        setDiagnosticsForCategory("execution", computeExecutionDiagnostics(error));
+    };
+    const attachExecutionDiagnostics = (decorator: BabylonDecorator) => {
+        setDiagnosticsForCategory("execution", []);
+        decorator.setExecutionErrorListener((error) => {
+            console.warn("KHR_interactivity graph execution stopped", error);
+            reportExecutionError(error);
+        });
+    };
+    const loadBehaveGraphReportingErrors = (graph: any) => {
+        try {
+            babylonEngineRef.current!.loadBehaveGraph(graph);
+        } catch (error) {
+            reportExecutionError(error);
+            throw error;
         }
     };
 
@@ -247,6 +268,7 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
         const runtimeTemplates = buildNormalizedTemplateSet(babylonEngineRef.current.getRegisteredJsonPointers());
         setSupportedPointerTemplates(runtimeTemplates);
         attachPointerEventLogging(babylonEngineRef.current);
+        attachExecutionDiagnostics(babylonEngineRef.current);
 
         const extractedBehaveGraph = babylonEngineRef.current.extractBehaveGraphFromScene()
         try {
@@ -255,7 +277,7 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
                 embeddedGraph: extractedBehaveGraph,
                 replaceAuthoringGraph: shouldOverride,
                 loadGraphFromJson,
-                loadBehaveGraph: (graph) => babylonEngineRef.current!.loadBehaveGraph(graph),
+                loadBehaveGraph: loadBehaveGraphReportingErrors,
             });
         } catch (error) {
             console.warn("KHR_interactivity graph execution stopped", error);
@@ -358,6 +380,7 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
             const eventBus = new DOMEventBus();
             babylonEngineRef.current = new BabylonDecorator(new BasicBehaveEngine(60, eventBus), worldInfo, sceneRef.current!);
             attachPointerEventLogging(babylonEngineRef.current);
+            attachExecutionDiagnostics(babylonEngineRef.current);
 
             const extractedBehaveGraph = babylonEngineRef.current.extractBehaveGraphFromScene();
             await loadSelectedModelGraph({
@@ -365,7 +388,7 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
                 embeddedGraph: extractedBehaveGraph,
                 replaceAuthoringGraph: true,
                 loadGraphFromJson,
-                loadBehaveGraph: (graph) => babylonEngineRef.current!.loadBehaveGraph(graph),
+                loadBehaveGraph: loadBehaveGraphReportingErrors,
             });
             // this path runs the graph just like play() does, so the toolbar (Send Custom Event)
             // has to see it as running too

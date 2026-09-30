@@ -19,7 +19,7 @@ import {buildNodeByUid, getNodeSpec, hasNodeSpecFlag, interactivityNodeSpecs, pr
 import { IInteractivityEvent, IInteractivityVariable } from '../BasicBehaveEngine/types/InteractivityGraph';
 import { AuthoredGraph, AuthoredNode, AuthoredValue, NodeSpecFlag } from '../authoring/spec/AuthoredGraph';
 import { InteractivityGraphContext, initialGraph } from '../InteractivityGraphContext';
-import { IGraphDiagnostic } from '../diagnostics';
+import { IGraphDiagnostic, impactInfo } from '../diagnostics';
 import { categoryLabel } from './DiagnosticsPanel';
 import { FLOW_COLOR, getColorForTypeIndex, getNodeCategoryColor } from '../authoring/socketColors';
 import { TypedValueInput } from '../authoring/TypedValueInput';
@@ -204,6 +204,11 @@ const DiagnosticsCounter = (props: { diagnostics: IGraphDiagnostic[], onJumpToNo
                             ) : (
                                 <span className={"diagnostics-counter-item-text"}>
                                     {categoryLabel[d.category]}: {d.title}
+                                </span>
+                            )}
+                            {d.impact !== undefined && (
+                                <span className={"diagnostics-counter-impact"} title={impactInfo[d.impact].description}>
+                                    {impactInfo[d.impact].label}
                                 </span>
                             )}
                         </li>

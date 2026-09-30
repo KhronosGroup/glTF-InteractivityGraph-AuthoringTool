@@ -8,7 +8,7 @@ import { glTFObjectReference } from "./glTFReference";
 import { createObjectModelAnimation, effectiveAnimationTime, sampleAnimationChannel } from "./glTFAnimation";
 import { SUPPORTED_GLTF_EXTENSIONS } from "../diagnostics";
 import { assetExtensionEnabled, KHR_INTERACTIVITY_LIMITS, parseGltfVersion } from "./assetCapabilities";
-export { readGlbJsonFromArrayBuffer } from "./glTFBinary";
+export { readGlbJsonFromArrayBuffer, readGltfJsonFromArrayBuffer } from "./glTFBinary";
 
 type PointerGetter = () => any;
 type PointerSetter = (value: any) => void;

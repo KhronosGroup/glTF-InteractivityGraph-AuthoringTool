@@ -3,6 +3,36 @@ const GLB_MAGIC = 0x46546c67;
 const GLB_VERSION = 2;
 const JSON_CHUNK_TYPE = 0x4e4f534a;
 
+/** True for GLB bytes; anything else is treated as glTF JSON. */
+export function isGlb(buffer: ArrayBuffer): boolean {
+    return buffer.byteLength >= 4 && new DataView(buffer).getUint32(0, true) === GLB_MAGIC;
+}
+
+/** The glTF JSON of either a .glb or a .gltf file. */
+export function readGltfJsonFromArrayBuffer(buffer: ArrayBuffer): any {
+    return isGlb(buffer) ? readGlbJsonFromArrayBuffer(buffer) : JSON.parse(new TextDecoder().decode(buffer));
+}
+
+/** Embeds the graph into a .glb or .gltf file, keeping the input's format. */
+export function embedInteractivityGraph(buffer: ArrayBuffer, graph: any): ArrayBuffer {
+    if (isGlb(buffer)) {
+        return embedInteractivityGraphInGlb(buffer, graph);
+    }
+    const gltf = JSON.parse(new TextDecoder().decode(buffer));
+    setInteractivityGraph(gltf, graph);
+    const bytes = new TextEncoder().encode(JSON.stringify(gltf, null, 2));
+    return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+}
+
+function setInteractivityGraph(gltf: any, graph: any): void {
+    gltf.extensions ??= {};
+    gltf.extensions.KHR_interactivity = { graphs: [graph], graph: 0 };
+    gltf.extensionsUsed ??= [];
+    if (!gltf.extensionsUsed.includes("KHR_interactivity")) {
+        gltf.extensionsUsed.push("KHR_interactivity");
+    }
+}
+
 export function readGlbJsonFromArrayBuffer(buffer: ArrayBuffer): any {
     const view = new DataView(buffer);
     validateGlbHeader(view);
@@ -59,12 +89,7 @@ export function embedInteractivityGraphInGlb(buffer: ArrayBuffer, graph: any): A
     }
 
     const gltf = JSON.parse(new TextDecoder().decode(chunks[jsonChunkIndex].data).trim());
-    gltf.extensions ??= {};
-    gltf.extensions.KHR_interactivity = { graphs: [graph], graph: 0 };
-    gltf.extensionsUsed ??= [];
-    if (!gltf.extensionsUsed.includes("KHR_interactivity")) {
-        gltf.extensionsUsed.push("KHR_interactivity");
-    }
+    setInteractivityGraph(gltf, graph);
 
     const encodedJson = new TextEncoder().encode(JSON.stringify(gltf));
     const paddedJson = new Uint8Array((encodedJson.length + 3) & ~3);

@@ -26,6 +26,7 @@ import { buildNormalizedTemplateSet } from "../../authoring/pointerCatalogue";
 import { loadSelectedModelGraph } from "./modelGraphExecution";
 import { attachSkinLoadedMetadata, BabylonLoadedModel, buildBabylonDecoratorWorld, buildBabylonLoadedModel } from "./babylonLoadedModel";
 import { downloadInteractivityGlb, GlbSource } from "./glbExport";
+import { findModelFile, pluginExtensionForName, pluginExtensionForUrl, registerModelFiles } from "./modelFiles";
 import { MODEL_VIEW_Z_DIRECTION } from "./cameraFraming";
 import { useDevicePixelRatio } from "../../hooks/useDevicePixelRatio";
 import { useFullscreen } from "../../hooks/useFullscreen";
@@ -229,13 +230,14 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
         sceneRef.current?.dispose();
         createScene();
 
-        let url: string;
-        if (useUploadedFile && fileInputRef.current?.files?.[0]) {
-            url = URL.createObjectURL(fileInputRef.current.files[0]);
+        const uploadedFile = findModelFile(fileInputRef.current?.files);
+        let source: string | File;
+        if (useUploadedFile && uploadedFile) {
+            source = uploadedFile;
         } else if (modelUrl) {
-            url = modelUrl;
-        } else if (fileInputRef.current?.files?.[0]) {
-            url = URL.createObjectURL(fileInputRef.current.files[0]);
+            source = modelUrl;
+        } else if (uploadedFile) {
+            source = uploadedFile;
         } else {
             console.warn("No model URL or file provided for Babylon engine");
             return { nodes: [], animations: [], materials: [], meshes: [] };
@@ -247,7 +249,14 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
                 attachSkinLoadedMetadata(loader as GLTFFileLoader);
             }
         });
-        const container = await SceneLoader.LoadAssetContainerAsync("", url, sceneRef.current, undefined, ".glb");
+        let container;
+        if (typeof source === "string") {
+            container = await SceneLoader.LoadAssetContainerAsync("", source, sceneRef.current, undefined, pluginExtensionForUrl(source));
+        } else {
+            // a .gltf resolves its .bin/textures among the other selected files
+            registerModelFiles(fileInputRef.current?.files);
+            container = await SceneLoader.LoadAssetContainerAsync("file:", source, sceneRef.current, undefined, pluginExtensionForName(source.name));
+        }
         container.addAllToScene();
         reportGlbExtensionDiagnostics();
 
@@ -288,7 +297,7 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
     // the one the graph gets embedded into. A sample loaded via modelUrl has no file input entry,
     // so resolving only from fileInputRef made the button a no-op for every sample.
     const currentGlbSource = (): GlbSource | null => {
-        const file = fileInputRef.current?.files?.[0];
+        const file = findModelFile(fileInputRef.current?.files);
         if (useUploadedFile && file) {
             return { kind: "file", file };
         }
@@ -362,7 +371,7 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
                 }
             });
             
-            const container = await SceneLoader.LoadAssetContainerAsync("", url, sceneRef.current, undefined, ".glb");
+            const container = await SceneLoader.LoadAssetContainerAsync("", url, sceneRef.current, undefined, pluginExtensionForUrl(url));
             container.addAllToScene();
             reportGlbExtensionDiagnostics();
 
@@ -413,22 +422,24 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
                 </button>
 
                 <span className={"panel__toolbar-label"}>Model</span>
-                <input className="d-none" type="file" accept=".glb" ref={fileInputRef} data-testid={"babylon-engine-file-input"} onChange={() => {
-                    if (fileInputRef.current == null || fileInputRef.current.files == null || fileInputRef.current.files.length == 0) {
+                {/* a .gltf is selected together with its .bin and texture files */}
+                <input className="d-none" type="file" multiple accept=".glb,.gltf,.bin,image/*" ref={fileInputRef} data-testid={"babylon-engine-file-input"} onChange={() => {
+                    const modelFile = findModelFile(fileInputRef.current?.files);
+                    if (modelFile === undefined) {
                         setFileUploaded(null);
                         return;
                     }
                     setUseUploadedFile(true);
-                    setFileUploaded(fileInputRef.current.files[0].name)
+                    setFileUploaded(modelFile.name)
                 }}/>
-                <button type="button" className="panel__toolbar-btn" onClick={() => fileInputRef.current!.click()}>
+                <button type="button" className="panel__toolbar-btn" onClick={() => fileInputRef.current!.click()} title={"Select a .glb, or a .gltf together with its .bin and texture files"}>
                     <IconUpload/>
-                    Upload glb
+                    Upload glb/glTF
                 </button>
 
                 <button type="button" className="panel__toolbar-btn" disabled={fileUploaded == null} onClick={() => exportKHRInteractivityGLB()}>
                     <IconDownload/>
-                    Download glb
+                    Download glb/glTF
                 </button>
 
             </div>

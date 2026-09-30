@@ -351,6 +351,25 @@ body {
     z-index: 2000;
 }
 
+/* shown while files are dragged over the page (the drop loads them as the viewport's model) */
+.model-drop-overlay {
+    position: fixed;
+    inset: 12px;
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    border: 3px dashed var(--brand-600);
+    border-radius: 12px;
+    background: rgba(239, 248, 239, 0.85);
+    color: var(--brand-900);
+    font-size: 1.25rem;
+    font-weight: 600;
+    text-align: center;
+    pointer-events: none;
+}
+
 /* fit-view / fullscreen bar, bottom-left of the viewport — deliberately the same corner, size and
    colors as reactflow's <Controls/> on the graph side (see flowNodes.css) */
 .viewport-controls {

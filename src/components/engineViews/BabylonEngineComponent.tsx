@@ -26,7 +26,7 @@ import { buildNormalizedTemplateSet } from "../../authoring/pointerCatalogue";
 import { loadSelectedModelGraph } from "./modelGraphExecution";
 import { attachSkinLoadedMetadata, BabylonLoadedModel, buildBabylonDecoratorWorld, buildBabylonLoadedModel } from "./babylonLoadedModel";
 import { downloadInteractiveModel, ModelExportFormat, ModelSource } from "./modelExport";
-import { entriesFromFileList, findModelEntry, ModelFileEntry, pluginExtensionForName, pluginExtensionForUrl, registerModelFiles } from "./modelFiles";
+import { entriesFromDataTransfer, entriesFromFileList, findModelEntry, ModelFileEntry, pluginExtensionForName, pluginExtensionForUrl, registerModelFiles } from "./modelFiles";
 import { configureModelNavigation, MODEL_VIEW_Z_DIRECTION } from "./cameraFraming";
 import { useDevicePixelRatio } from "../../hooks/useDevicePixelRatio";
 import { useFullscreen } from "../../hooks/useFullscreen";
@@ -66,6 +66,7 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
     const selectedFilesRef = useRef<ModelFileEntry[]>([]);
     // bumped per selection so re-selecting a file with the same name reloads it
     const [uploadRevision, setUploadRevision] = useState(0);
+    const [draggingFiles, setDraggingFiles] = useState(false);
     const devicePixelRatio = useDevicePixelRatio();
     const viewportFullscreen = useFullscreen(viewportRef);
 
@@ -194,6 +195,43 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
         setUploadRevision((revision) => revision + 1);
     };
 
+    // files dropped anywhere on the page load like an upload; a folder drop keeps its subfolders
+    useEffect(() => {
+        let dragDepth = 0;
+        const hasFiles = (event: DragEvent) => event.dataTransfer?.types.includes("Files") ?? false;
+        const onDragEnter = (event: DragEvent) => {
+            if (!hasFiles(event)) { return; }
+            dragDepth++;
+            setDraggingFiles(true);
+        };
+        const onDragOver = (event: DragEvent) => {
+            if (!hasFiles(event)) { return; }
+            event.preventDefault();
+            event.dataTransfer!.dropEffect = "copy";
+        };
+        const onDragLeave = (event: DragEvent) => {
+            if (!hasFiles(event)) { return; }
+            dragDepth = Math.max(0, dragDepth - 1);
+            if (dragDepth === 0) { setDraggingFiles(false); }
+        };
+        const onDrop = (event: DragEvent) => {
+            if (!hasFiles(event)) { return; }
+            event.preventDefault();
+            dragDepth = 0;
+            setDraggingFiles(false);
+            entriesFromDataTransfer(event.dataTransfer!).then(selectModelFiles, (error) => console.error("Failed to read dropped files:", error));
+        };
+        window.addEventListener("dragenter", onDragEnter);
+        window.addEventListener("dragover", onDragOver);
+        window.addEventListener("dragleave", onDragLeave);
+        window.addEventListener("drop", onDrop);
+        return () => {
+            window.removeEventListener("dragenter", onDragEnter);
+            window.removeEventListener("dragover", onDragOver);
+            window.removeEventListener("dragleave", onDragLeave);
+            window.removeEventListener("drop", onDrop);
+        };
+    }, []);
 
     const play = (shouldOverrideGraph: boolean) => {
         resetScene()
@@ -445,7 +483,7 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
                     // allow selecting the same file again
                     event.target.value = "";
                 }}/>
-                <button type="button" className="panel__toolbar-btn" onClick={() => fileInputRef.current!.click()} title={"Select a .glb, or a .gltf together with its .bin and texture files"}>
+                <button type="button" className="panel__toolbar-btn" onClick={() => fileInputRef.current!.click()} title={"Select a .glb, or a .gltf together with its .bin and texture files. You can also drop files or a folder onto the page."}>
                     <IconUpload/>
                     Upload glb/glTF
                 </button>
@@ -466,6 +504,12 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
                 </Dropdown>
 
             </div>
+
+            {draggingFiles && (
+                <div className={"model-drop-overlay"}>
+                    Drop a .glb, or a .gltf with its .bin and textures (or their folder)
+                </div>
+            )}
 
             <div
                 ref={viewportRef}

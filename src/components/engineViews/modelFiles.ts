@@ -2,7 +2,7 @@ import { FilesInputStore } from "@babylonjs/core/Misc/filesInputStore";
 
 export type ModelPluginExtension = ".glb" | ".gltf";
 
-/** A selected file with its path relative to the selection. */
+/** A selected or dropped file with its path relative to the selection (folder drops keep subfolders). */
 export interface ModelFileEntry {
     path: string;
     file: File;
@@ -23,6 +23,40 @@ export const pluginExtensionForUrl = (url: string): ModelPluginExtension => {
 
 export const entriesFromFileList = (files: FileList | null | undefined): ModelFileEntry[] =>
     Array.from(files ?? []).map((file) => ({ path: file.webkitRelativePath || file.name, file }));
+
+// FileSystemEntry API (drag and drop); readEntries returns batches until it yields an empty one
+const readEntry = async (entry: FileSystemEntry, prefix: string, out: ModelFileEntry[]): Promise<void> => {
+    if (entry.isFile) {
+        const file = await new Promise<File>((resolve, reject) => (entry as FileSystemFileEntry).file(resolve, reject));
+        out.push({ path: prefix + entry.name, file });
+        return;
+    }
+    if (entry.isDirectory) {
+        const reader = (entry as FileSystemDirectoryEntry).createReader();
+        for (;;) {
+            const batch = await new Promise<FileSystemEntry[]>((resolve, reject) => reader.readEntries(resolve, reject));
+            if (batch.length === 0) { break; }
+            for (const child of batch) {
+                await readEntry(child, `${prefix}${entry.name}/`, out);
+            }
+        }
+    }
+};
+
+/** Dropped files and folders (recursively), falling back to the flat file list. */
+export const entriesFromDataTransfer = async (dataTransfer: DataTransfer): Promise<ModelFileEntry[]> => {
+    const entries = Array.from(dataTransfer.items ?? [])
+        .map((item) => (item.kind === "file" ? item.webkitGetAsEntry?.() : null))
+        .filter((entry): entry is FileSystemEntry => entry != null);
+    if (entries.length === 0) {
+        return entriesFromFileList(dataTransfer.files);
+    }
+    const out: ModelFileEntry[] = [];
+    for (const entry of entries) {
+        await readEntry(entry, "", out);
+    }
+    return out;
+};
 
 /** The .glb/.gltf among the entries (the shallowest one); for a .gltf the others are its resources. */
 export const findModelEntry = (entries: ModelFileEntry[]): ModelFileEntry | undefined =>

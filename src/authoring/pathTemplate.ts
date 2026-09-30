@@ -2,6 +2,7 @@ import { IInteractivityValue } from "../BasicBehaveEngine/types/InteractivityGra
 import { decodeJsonPointerToken, parsePathTemplate, PathTemplateSocket, PathTemplateSocketKind } from "../BasicBehaveEngine/pointerTemplate";
 
 export { parsePathTemplate } from "../BasicBehaveEngine/pointerTemplate";
+export { getMessageTemplateSocketIds } from "../BasicBehaveEngine/messageTemplate";
 export type { PathTemplateParseResult, PathTemplateSocket, PathTemplateSocketKind } from "../BasicBehaveEngine/pointerTemplate";
 
 const encodeJsonPointerToken = (token: string): string => token.replace(/~/g, "~0").replace(/\//g, "~1");
@@ -108,39 +109,4 @@ export const setPathTemplateSlotKind = (path: string, slotId: string, kind: Path
         .join("/");
 };
 
-export const getMessageTemplateSocketIds = (message: string): string[] => {
-    const socketIds: string[] = [];
-    let state = 0;
-    let paramStart = 0;
 
-    for (let i = 0; i < message.length; i++) {
-        const char = message[i];
-        if (char === "{") {
-            if (state === 0) {
-                state = 1;
-            } else if (state === 1) {
-                state = 0;
-            } else {
-                return [];
-            }
-        } else if (char === "}") {
-            if (state === 0) {
-                state = 3;
-            } else if (state === 3) {
-                state = 0;
-            } else if (state === 2) {
-                socketIds.push(message.slice(paramStart, i));
-                state = 0;
-            } else {
-                return [];
-            }
-        } else if (state === 1) {
-            paramStart = i;
-            state = 2;
-        } else if (state === 3) {
-            return [];
-        }
-    }
-
-    return state === 0 ? socketIds : [];
-};

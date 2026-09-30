@@ -26,8 +26,10 @@ const makeSub = (uid: string, a: AuthoredValue, b: AuthoredValue): AuthoredNode 
 const staticValue = (type: number, value: any): AuthoredValue =>
     ({ value: [value], type, typeOptions: subTypeOptions, typeGroup: "T" });
 
-const placeholder = (): AuthoredValue =>
-    ({ type: INT, value: [undefined], typeOptions: subTypeOptions, typeGroup: "T" });
+// an unset grouped socket; pass the group's resolved type to model the state after type
+// propagation (an unset socket's own type still counts in the type-group check)
+const placeholder = (type = INT): AuthoredValue =>
+    ({ type, value: [undefined], typeOptions: subTypeOptions, typeGroup: "T" });
 
 const wiredTo = (node: string, socket = "value"): AuthoredValue => ({ node, socket });
 
@@ -46,7 +48,7 @@ const noVariables: IInteractivityVariable[] = [];
 
 describe("computeNodeLiveWarnings", () => {
     it("flags an unconnected socket with no value set (missing value)", () => {
-        const node = makeSub("n1", staticValue(FLOAT, 1.5), placeholder());
+        const node = makeSub("n1", staticValue(FLOAT, 1.5), placeholder(FLOAT));
         const warnings = computeNodeLiveWarnings(node, [node], noVariables);
         expect(warnings).toHaveLength(1);
         expect(warnings[0].socket).toBe("b");
@@ -134,7 +136,7 @@ describe("computeNodeLiveWarnings", () => {
 describe("computeGraphLiveWarnings", () => {
     it("returns whole-graph warnings keyed by uid, omitting clean nodes", () => {
         const clean = makeSub("clean", staticValue(FLOAT, 1), staticValue(FLOAT, 2));
-        const dirty = makeSub("dirty", staticValue(FLOAT, 1), placeholder());
+        const dirty = makeSub("dirty", staticValue(FLOAT, 1), placeholder(FLOAT));
         const result = computeGraphLiveWarnings([clean, dirty], noVariables);
         expect(result.has("clean")).toBe(false);
         expect(result.get("dirty")).toHaveLength(1);

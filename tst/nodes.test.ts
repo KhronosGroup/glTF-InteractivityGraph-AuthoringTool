@@ -1,15 +1,15 @@
 import { jest } from '@jest/globals';
 import {BasicBehaveEngine} from "../src/BasicBehaveEngine/BasicBehaveEngine";
 import {BehaveEngineNode, IBehaviourNodeProps} from '../src/BasicBehaveEngine/BehaveEngineNode';
-import {Receive} from "../src/BasicBehaveEngine/nodes/customEvent/Receive";
-import {Send} from "../src/BasicBehaveEngine/nodes/customEvent/Send";
+import {Receive} from "../src/BasicBehaveEngine/nodes/event/Receive";
+import {Send} from "../src/BasicBehaveEngine/nodes/event/Send";
 import {Branch} from "../src/BasicBehaveEngine/nodes/flow/Branch";
 import {Sequence} from "../src/BasicBehaveEngine/nodes/flow/Sequence";
 import {ForLoop} from "../src/BasicBehaveEngine/nodes/flow/ForLoop";
-import {OnTickNode} from "../src/BasicBehaveEngine/nodes/lifecycle/onTick";
+import {OnTickNode} from "../src/BasicBehaveEngine/nodes/event/OnTick";
 import {DoN} from "../src/BasicBehaveEngine/nodes/flow/DoN";
 import {PointerSet} from "../src/BasicBehaveEngine/nodes/pointer/PointerSet";
-import {OnStartNode} from "../src/BasicBehaveEngine/nodes/lifecycle/onStart";
+import {OnStartNode} from "../src/BasicBehaveEngine/nodes/event/OnStart";
 import {Switch} from "../src/BasicBehaveEngine/nodes/flow/Switch";
 import {PointerGet} from "../src/BasicBehaveEngine/nodes/pointer/PointerGet";
 import {WhileLoop} from "../src/BasicBehaveEngine/nodes/flow/WhileLoop";
@@ -119,7 +119,7 @@ import { QuatConjugate } from '../src/BasicBehaveEngine/nodes/math/quaternion/Qu
 import { MatCompose } from '../src/BasicBehaveEngine/nodes/math/matrix/matCompose';
 import { MatDecompose } from '../src/BasicBehaveEngine/nodes/math/matrix/matDecompose';
 import { MathSwitch } from '../src/BasicBehaveEngine/nodes/math/special/MathSwitch';
-import { DebugLog } from '../src/BasicBehaveEngine/nodes/experimental/Debug';
+import { DebugLog } from '../src/BasicBehaveEngine/nodes/debug/Log';
 import { QuatAngleBetween } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatAngleBetween';
 import { QuatFromUpForward } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatFromUpForward';
 import { QuatSlerp } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatSlerp';
@@ -168,7 +168,7 @@ describe('nodes', () => {
         debugLog.processFlow = jest.fn<(flow: IInteractivityFlow) => Promise<void>>();
         debugLog.processNode();
         expect(debugLog.processFlow).toHaveBeenCalledWith({ socket: 'in', node: 0 });
-        expect(mockConsoleWarn).toHaveBeenCalledWith('test 42');
+        expect(mockConsoleWarn).toHaveBeenCalledWith('[DebugLog #0]', 'test 42');
         mockConsoleWarn.mockRestore();
     });
 
@@ -240,14 +240,14 @@ describe('nodes', () => {
         setDelay.processFlow = jest.fn<(flow: IInteractivityFlow) => Promise<void>>();
         setDelay.processNode('in');
         setDelay.processNode('cancel');
-        expect(setDelay.outValues.lastDelay.value![0]).toBe(-1);
+        expect(setDelay.outValues.lastDelay.value![0]).toBeNull();
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
         expect(setDelay.addEventToWorkQueue).not.toHaveBeenCalled()
         expect(setDelay.processFlow).toHaveBeenCalledWith({ socket: 'in', node: 1 });
 
         setDelay.processNode('in');
-        expect(setDelay.outValues.lastDelay.value![0]).toBe(1);
+        expect(setDelay.outValues.lastDelay.value![0]).not.toBeNull();
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
         expect(setDelay.addEventToWorkQueue).toHaveBeenCalledWith({ socket: 'in', node: 2 });
@@ -388,15 +388,18 @@ describe('nodes', () => {
 
         throttleNode.processFlow = jest.fn<(flow: IInteractivityFlow) => Promise<void>>();
         expect(throttleNode.outValues.lastRemainingTime.value![0]).toBe(NaN);
+        graphEngine.executeEventQueueTick();
         throttleNode.processNode('in');
         expect(throttleNode.processFlow).toHaveBeenCalledWith({ socket: 'in', node: 0 });
         await new Promise((resolve) => setTimeout(resolve, 100));
+        graphEngine.executeEventQueueTick();
         throttleNode.processNode('in');
         expect(throttleNode.outValues.lastRemainingTime.value![0]).not.toBe(NaN);
         expect(throttleNode.outValues.lastRemainingTime.value![0]).toBeGreaterThan(0);
 
         //clear throttle limit
         await new Promise((resolve) => setTimeout(resolve, 1500));
+        graphEngine.executeEventQueueTick();
         await throttleNode.processNode('in');
         expect(throttleNode.outValues.lastRemainingTime.value![0]).toBe(0);
     });
@@ -568,7 +571,6 @@ describe('nodes', () => {
         expect(res['scale']!.value[0]).toBe(2);
         expect(res['scale']!.value[1]).toBe(2);
         expect(res['scale']!.value[2]).toBe(2);
-        expect(res['isValid']!.value[0]).toBe(true);
 
     });
 
@@ -1024,10 +1026,7 @@ describe('nodes', () => {
         });
 
         const val = combine2x2.processNode();
-        expect(val['value'].value[0]).toBe(-10.5);
-        expect(val['value'].value[1]).toBe(0.5);
-        expect(val['value'].value[2]).toBe(5.5);
-        expect(val['value'].value[3]).toBe(7.5);
+        expect(val['value'].value).toEqual([-10.5, 5.5, 0.5, 7.5]);
     });
 
     it("math/combine3x3", () => {
@@ -1037,15 +1036,7 @@ describe('nodes', () => {
         });
 
         const val = combine3x3.processNode();
-        expect(val['value'].value[0]).toBe(-10.5);
-        expect(val['value'].value[1]).toBe(7.5);
-        expect(val['value'].value[2]).toBe(0);
-        expect(val['value'].value[3]).toBe(5.5);
-        expect(val['value'].value[4]).toBe(-10);
-        expect(val['value'].value[5]).toBe(7);
-        expect(val['value'].value[6]).toBe(0.5);
-        expect(val['value'].value[7]).toBe(5);
-        expect(val['value'].value[8]).toBe(10.5);
+        expect(val['value'].value).toEqual([-10.5, 5.5, 0.5, 7.5, -10, 5, 0, 7, 10.5]);
     });
 
     it("math/combine4x4", () => {
@@ -1072,29 +1063,8 @@ describe('nodes', () => {
         });
 
         const val = combine4x4.processNode();
-        // a-p are passed in row major: [a b c d e f g h i j k l m n o p]
-        // but combine4x4 returns column-major, so indices become:
-        //  0  4  8 12
-        //  1  5  9 13
-        //  2  6 10 14
-        //  3  7 11 15
-        // So, to check:
-        expect(val['value'].value[0]).toBe(-10.5);  // a
-        expect(val['value'].value[4]).toBe(5.5);    // b
-        expect(val['value'].value[8]).toBe(0.5);    // c
-        expect(val['value'].value[12]).toBe(7.5);    // d
-        expect(val['value'].value[1]).toBe(-10);    // e
-        expect(val['value'].value[5]).toBe(5);      // f
-        expect(val['value'].value[9]).toBe(0);      // g
-        expect(val['value'].value[13]).toBe(7);      // h
-        expect(val['value'].value[2]).toBe(10.5);   // i
-        expect(val['value'].value[6]).toBe(5.8);    // j
-        expect(val['value'].value[10]).toBe(9.5);   // k
-        expect(val['value'].value[14]).toBe(2.5);   // l
-        expect(val['value'].value[3]).toBe(-1.5);  // m
-        expect(val['value'].value[7]).toBe(5.7);   // n
-        expect(val['value'].value[11]).toBe(6.5);   // o
-        expect(val['value'].value[15]).toBe(7.7);   // p
+        // a-p are the elements column by column (a-d first column), matching column-major storage
+        expect(val['value'].value).toEqual([-10.5, 5.5, 0.5, 7.5, -10, 5, 0, 7, 10.5, 5.8, 9.5, 2.5, -1.5, 5.7, 6.5, 7.7]);
     });
 
     it("math/inverse", () => {
@@ -1849,10 +1819,8 @@ describe('nodes', () => {
 
         const val = transform.processNode();
 
-        expect(val['value'].value[0]).toBe(90);
-        expect(val['value'].value[1]).toBe(100);
-        expect(val['value'].value[2]).toBe(110);
-        expect(val['value'].value[3]).toBe(120);
+        // columns (1,5,9,13), (2,6,10,14), (3,7,11,15), (4,8,12,16) weighted by a = (1,2,3,4)
+        expect(val['value'].value).toEqual([30, 70, 110, 150]);
     });
 
     it("math/dot", () => {

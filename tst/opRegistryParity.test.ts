@@ -8,12 +8,11 @@ import { interactivityNodeSpecs } from "../src/authoring/spec/nodes";
 // (the runtime class table lives in the engine, the socket/UI specs on the authoring side), so
 // consistency is enforced here instead.
 
-// Authorable ops with no core-engine class because a host decorator registers them:
-// ADecorator (rigid bodies) + host decorators (selection / hover).
+// Authorable ops with no core-engine class because a host decorator registers them (ADecorator's
+// rigid bodies). Selection and hover events are core engine nodes.
 const HOST_PROVIDED = new Set([
     "rigid_body/applyImpulse", "rigid_body/applyPointImpulse", "rigid_body/rayCast",
     "event/rigid_body_triggerEntered", "event/rigid_body_triggerExited",
-    "event/onSelect", "event/onHoverIn", "event/onHoverOut",
 ]);
 
 const engineOps = new Set(behaveEngineNodeRegistry.map(([op]) => op));

@@ -27,7 +27,7 @@ import { loadSelectedModelGraph } from "./modelGraphExecution";
 import { attachSkinLoadedMetadata, BabylonLoadedModel, buildBabylonDecoratorWorld, buildBabylonLoadedModel } from "./babylonLoadedModel";
 import { downloadInteractivityGlb, GlbSource } from "./glbExport";
 import { findModelFile, pluginExtensionForName, pluginExtensionForUrl, registerModelFiles } from "./modelFiles";
-import { MODEL_VIEW_Z_DIRECTION } from "./cameraFraming";
+import { configureModelNavigation, MODEL_VIEW_Z_DIRECTION } from "./cameraFraming";
 import { useDevicePixelRatio } from "../../hooks/useDevicePixelRatio";
 import { useFullscreen } from "../../hooks/useFullscreen";
 import { IconDownload, IconPlay, IconSendEvent, IconUpload } from "../toolbarIcons";
@@ -208,11 +208,7 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
         framingBehavior.framingTime = 0;
         framingBehavior.elevationReturnTime = -1;
 
-        camera.pinchPrecision = 200 / camera.radius;
-        camera.upperRadiusLimit = 5 * camera.radius;
-
-        camera.wheelDeltaPercentage = 0.01;
-        camera.pinchDeltaPercentage = 0.01;
+        configureModelNavigation(camera, camera.radius);
     }
 
     const createScene = () => {
@@ -355,6 +351,8 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
             center.z + distance * MODEL_VIEW_Z_DIRECTION,
         ));
         camera.radius = distance;
+        // loading replaces the camera (createDefaultCamera), so navigation is set up on every frame-in
+        configureModelNavigation(camera, maxDimension);
     }
 
     const loadModelFromUrl = async (url: string) => {

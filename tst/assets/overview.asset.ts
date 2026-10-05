@@ -15,7 +15,8 @@ import {
     TestEventBus,
 } from "./sampleAssetHarness";
 
-jest.setTimeout(30_000);
+// the Overview runs its tests in sequence; the harness waits for its test/onSuccess|onFailed event
+jest.setTimeout(200_000);
 
 const overviewCase = loadOverviewCase();
 const { automatic: subTests, manual: manualSubTests } = splitAssetSubTests(getAssetSubTests(overviewCase.metadata));

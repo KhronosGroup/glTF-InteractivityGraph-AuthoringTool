@@ -26,16 +26,16 @@ export const KHR_INTERACTIVITY_LIMITS: ReadonlyArray<{ name: string; value: numb
 ];
 
 /**
- * Resolve an asset extension `enabled` capability pointer (spec 4.2.1). Returns whether the named
- * extension is enabled (declared in the asset's extensionsUsed AND supported by this implementation),
- * or `undefined` if `path` is not an asset extension `enabled` pointer at all. The pointer is always
- * valid for any extension name; the boolean value conveys support, so a graph can branch on it.
+ * Resolve an asset extension `enabled` capability pointer (spec 4.2.1). Only extensions declared in
+ * the asset's extensionsUsed AND supported by this implementation get a virtual object, so the
+ * pointer resolves to `true` for those and to `undefined` (not a valid pointer, e.g. pointer/get
+ * reports isValid false) for any other extension or a path that is not such a pointer.
  */
-export function assetExtensionEnabled(path: string, extensionsUsed: readonly string[]): boolean | undefined {
+export function assetExtensionEnabled(path: string, extensionsUsed: readonly string[]): true | undefined {
     const match = ASSET_EXTENSION_ENABLED_RE.exec(path);
     if (match === null) {
         return undefined;
     }
     const extensionName = match[1];
-    return extensionsUsed.includes(extensionName) && SUPPORTED_GLTF_EXTENSIONS.has(extensionName);
+    return extensionsUsed.includes(extensionName) && SUPPORTED_GLTF_EXTENSIONS.has(extensionName) ? true : undefined;
 }

@@ -409,7 +409,7 @@ export class GlTFObjectModelDecorator extends ADecorator {
     // properties describing the glTF version presented, which used extensions the implementation
     // supports, and the implementation's runtime limits. Extensions that are BOTH listed in
     // extensionsUsed AND supported get a concrete `enabled` = true pointer (so authoring can surface
-    // them); every other asset extension `enabled` query resolves to false via assetExtensionEnabled.
+    // them); for every other extension the pointer does not exist (see assetExtensionEnabled).
     private registerAssetCapabilityPointers(): void {
         const [majorVersion, minorVersion] = parseGltfVersion(this.objectModel.asset?.version);
         this.scalarPointer("/extensions/KHR_interactivity/asset/majorVersion", "int", () => majorVersion, ignoreSet, true);

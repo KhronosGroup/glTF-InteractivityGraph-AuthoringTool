@@ -326,8 +326,8 @@ export class BabylonDecorator extends ADecorator {
         // Asset Capabilities & runtime limits (KHR_interactivity spec 4.2.1 / 4.2.2): read-only glTF
         // version, per-extension support flags, and implementation limits. Extensions that are BOTH
         // used by the asset AND supported get a concrete `enabled` = true pointer (so authoring can
-        // surface them); every other asset extension `enabled` query resolves to false via the
-        // wildcard fallback bridged in bridgeAssetCapabilityPointers().
+        // surface them); for every other extension the pointer does not exist (see
+        // assetExtensionEnabled, bridged in bridgeAssetCapabilityPointers()).
         const [assetMajorVersion, assetMinorVersion] = parseGltfVersion(this.scene.metadata?.gltfAsset?.version);
         this.registerJsonPointer(`/extensions/KHR_interactivity/asset/majorVersion`, () => {
             return [assetMajorVersion];

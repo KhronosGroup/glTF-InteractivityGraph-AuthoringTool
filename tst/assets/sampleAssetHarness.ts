@@ -282,25 +282,55 @@ export class TestEventBus implements IEventBus {
 // subtests would sample node transforms that never moved from their rest pose. Render on a real-time
 // interval for the duration of the wait so Babylon's own elapsed-time-based animation ticking lines up
 // with the engine's (also real-time-based) flow/setDelay firing.
-async function renderWhileWaiting(decorator: ADecorator, waitMs: number): Promise<void> {
+async function renderWhileWaiting(decorator: ADecorator, waitMs: number, signals?: TestRunSignals): Promise<void> {
     const scene = (decorator as unknown as { scene?: { render(): void } }).scene;
-    if (scene === undefined) {
-        await new Promise((resolve) => setTimeout(resolve, waitMs));
-        return;
-    }
-
     const frameMs = 1000 / 60;
-    const deadline = Date.now() + waitMs;
-    while (Date.now() < deadline) {
+    const start = Date.now();
+    while (Date.now() < start + testRunWaitMs(waitMs, signals) && !signals?.finished) {
         await new Promise((resolve) => setTimeout(resolve, frameMs));
-        scene.render();
+        scene?.render();
     }
 }
 
+// Assets that run their tests one after another (e.g. Overview) announce it with custom events:
+// test/onStart carries the expected duration of the whole run, test/onSuccess or test/onFailed
+// marks its end. Wait for the end, bounded by the announced duration plus a margin.
+interface TestRunSignals {
+    expectedSeconds?: number;
+    finished: boolean;
+}
+
+const testRunEventChannel = (id: string) => `KHR_INTERACTIVITY:test/${id}`;
+
+function watchTestRunSignals(decorator: ADecorator): TestRunSignals {
+    const signals: TestRunSignals = { finished: false };
+    decorator.addCustomEventListener(testRunEventChannel("onStart"), (event: CustomEvent) => {
+        const detail = event.detail?.expectedDuration;
+        const seconds = Number(Array.isArray(detail) ? detail[0] : detail);
+        if (Number.isFinite(seconds) && seconds > 0) {
+            signals.expectedSeconds = seconds;
+        }
+    });
+    const finish = () => { signals.finished = true; };
+    decorator.addCustomEventListener(testRunEventChannel("onSuccess"), finish);
+    decorator.addCustomEventListener(testRunEventChannel("onFailed"), finish);
+    return signals;
+}
+
+function testRunWaitMs(settleMs: number, signals: TestRunSignals | undefined): number {
+    if (signals?.expectedSeconds === undefined) {
+        return settleMs;
+    }
+    const maxSeconds = Number(process.env.KHR_INTERACTIVITY_ASSET_MAX_RUN_SECONDS ?? "180");
+    return Math.max(settleMs, Math.min(signals.expectedSeconds * 1.5 + 2, maxSeconds) * 1000);
+}
+
 export async function runGraphAndWait(decorator: ADecorator, graph: any): Promise<void> {
+    // registered before loading: test/onStart is sent from the first tick
+    const signals = watchTestRunSignals(decorator);
     decorator.loadBehaveGraph(structuredCloneFallback(graph));
     const waitMs = Math.max(20, Math.ceil(getGraphSettleSeconds(graph) * 1000));
-    await renderWhileWaiting(decorator, waitMs);
+    await renderWhileWaiting(decorator, waitMs, signals);
     decorator.executeEventQueueTick();
     decorator.pauseEventQueue();
     decorator.clearCustomEventListeners();

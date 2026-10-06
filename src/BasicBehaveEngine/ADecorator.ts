@@ -155,6 +155,10 @@ export abstract class ADecorator implements IBehaveEngine {
         this.behaveEngine.executeEventQueueTick();
     }
 
+    setExecutionErrorListener(listener: ((error: unknown) => void) | undefined) {
+        this.behaveEngine.setExecutionErrorListener(listener);
+    }
+
     dispatchCustomEvent(name: string, vals: any) {
         this.behaveEngine.dispatchCustomEvent(name, vals);
     }

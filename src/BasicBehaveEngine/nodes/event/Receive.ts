@@ -1,5 +1,5 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
-import {IInteractivityEvent} from "../../types/InteractivityGraph";
+import {getCustomEventChannel, IInteractivityEvent} from "../../types/InteractivityGraph";
 
 export class Receive extends BehaveEngineNode {
     REQUIRED_CONFIGURATIONS = {event: {}}
@@ -26,7 +26,7 @@ export class Receive extends BehaveEngineNode {
         const customEventDesc: IInteractivityEvent = this.events[event[0]];
 
         const defaultValues: Record<string, any> = {};
-        Object.entries(customEventDesc.values).forEach(([key, value]) => {
+        Object.entries(customEventDesc.values ?? {}).forEach(([key, value]) => {
             const typeName = this.getType(value.type);
             let defaultVal = this.getDefaultValueForType(typeName);
             if (value.value) {
@@ -42,7 +42,7 @@ export class Receive extends BehaveEngineNode {
         this._defaultValues = defaultValues;
         this.outValues = JSON.parse(JSON.stringify(defaultValues));
 
-        this.graphEngine.addCustomEventListener(`KHR_INTERACTIVITY:${customEventDesc.id}`, (e: any) => {
+        this.graphEngine.addCustomEventListener(getCustomEventChannel(customEventDesc, event[0]), (e: any) => {
             if (this.graphEngine.isEventPropagationCancelled(this._eventRefOutput.value[0])) {
                 return;
             }
@@ -53,10 +53,10 @@ export class Receive extends BehaveEngineNode {
             this.outValues = JSON.parse(JSON.stringify(this._defaultValues));
             const ce = (e as CustomEvent).detail as { [key: string]: any };
             Object.keys(ce).forEach((ceKey) => {
-                const typeIndex = Object.entries(customEventDesc.values).find(([key, _]) => key === ceKey)?.[1]?.type;
+                const typeIndex = Object.entries(customEventDesc.values ?? {}).find(([key, _]) => key === ceKey)?.[1]?.type;
                 const typeName: string = this.getType(Number(typeIndex));
                 const rawVal = ce[ceKey];
-                console.log(`[Receive: ${customEventDesc.id}] Parsing type`, typeName, rawVal);
+                console.log(`[Receive: ${customEventDesc.name ?? customEventDesc.id ?? `#${event[0]}`}] Parsing type`, typeName, rawVal);
                 const val = this.parseType(typeName, [rawVal]);
                 this.outValues[ceKey] = {
                     value: val,

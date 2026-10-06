@@ -677,8 +677,7 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
     const MAX_SOCKET_LABEL_LENGTH = 30;
     const getInputSocketFullLabel = (socket: string): string => {
         if (isVariableSetNode) {
-            const variable = graph.variables[Number(socket)] as (IInteractivityVariable & { id?: string }) | undefined;
-            const name = variable?.name ?? variable?.id;
+            const name = (graph.variables[Number(socket)] as IInteractivityVariable | undefined)?.name;
             if (name) { return name; }
         }
         return socket;
@@ -1294,13 +1293,13 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                 {/* event/send: live chronology of when this custom event fires (spam-aggregated per frame) */}
                 <RenderIf shouldShow={node?.op === "event/send" && configuredEvent !== undefined}>
                     <hr />
-                    <CustomEventSendMonitor event={configuredEvent!} />
+                    <CustomEventSendMonitor event={configuredEvent!} index={Number(configuredEventIndex)} />
                 </RenderIf>
 
                 {/* event/receive: manual trigger with per-argument inputs */}
                 <RenderIf shouldShow={node?.op === "event/receive" && configuredEvent !== undefined}>
                     <hr />
-                    <CustomEventReceiveTrigger event={configuredEvent!} />
+                    <CustomEventReceiveTrigger event={configuredEvent!} index={Number(configuredEventIndex)} />
                 </RenderIf>
 
                 {/* pointer-driven events: live fire chronology of when the watched node was selected/hovered */}

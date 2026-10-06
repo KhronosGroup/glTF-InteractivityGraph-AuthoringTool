@@ -1,4 +1,4 @@
-import { embedInteractivityGraphInGlb, readGlbJsonFromArrayBuffer } from "../src/objectModel/glTFBinary";
+import { embedInteractivityGraphInGlb, isGlb, readGlbJsonFromArrayBuffer, writeGlb } from "../src/objectModel/glTFBinary";
 import { TextDecoder as NodeTextDecoder, TextEncoder as NodeTextEncoder } from "util";
 
 Object.defineProperties(globalThis, {
@@ -35,6 +35,15 @@ describe("glTF binary helpers", () => {
 
         const output = embedInteractivityGraphInGlb(input, { nodes: [] });
         expect(readGlbJsonFromArrayBuffer(output).extensionsUsed).toEqual(["KHR_interactivity"]);
+    });
+
+    it("writes a GLB with a padded JSON and BIN chunk", () => {
+        const bin = new Uint8Array([1, 2, 3, 4, 5]);
+        const output = writeGlb({ asset: { version: "2.0" }, buffers: [{ byteLength: 5 }] }, bin);
+        expect(isGlb(output)).toBe(true);
+        expect(new DataView(output).getUint32(8, true)).toBe(output.byteLength);
+        const gltf = readGlbJsonFromArrayBuffer(output);
+        expect(new Uint8Array(gltf.__glbBuffers[0]).subarray(0, 5)).toEqual(bin);
     });
 });
 

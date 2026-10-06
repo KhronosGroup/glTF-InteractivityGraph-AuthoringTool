@@ -316,6 +316,8 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
                 if (warnings.length === 0) { return; }
                 next[graphNode.uid] = warnings.map((w) => ({
                     severity: 'warning', category: 'node',
+                    // every live check (missing value, type mismatch, group conflict, dangling reference) is a spec rejection
+                    impact: 'graphRejected', specSection: 'Nodes',
                     nodeUid: graphNode.uid, nodeIndex: nodeIndexByUid.get(graphNode.uid!), nodeOp: graphNode.op,
                     title: w.message, socket: w.socket,
                 }));
@@ -674,21 +676,28 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         };
 
         // surface any graph data types this tool does not recognise (mapped to an invalid -1 index)
-        const unsupportedTypes = new Set<string>();
+        // label -> whether it is a custom (extension-defined) type
+        const unsupportedTypes = new Map<string, boolean>();
         if (Array.isArray(json.types)) {
             for (const type of json.types) {
                 if (getUpdatedTypeIndex(type) === -1) {
-                    unsupportedTypes.add(getTypeLabel(type));
+                    unsupportedTypes.set(getTypeLabel(type), type?.signature === "custom");
                 }
             }
         }
         // collected now, committed together in the final "Checking" phase (below) so diagnostics
         // don't flicker in mid-load while nodes are still mounting
-        const typeDiagnostics: IGraphDiagnostic[] = [...unsupportedTypes].map((label) => ({
-            severity: 'warning',
+        // spec: a signature is a spec type or "custom"; custom types come from extensions, whose
+        // unsupported declarations are demoted to no-op
+        const typeDiagnostics: IGraphDiagnostic[] = [...unsupportedTypes].map(([label, isCustom]) => ({
+            severity: isCustom ? 'warning' : 'error',
             category: 'type',
+            impact: isCustom ? 'noOp' : 'graphRejected',
+            specSection: isCustom ? 'Unsupported Declarations' : 'Types',
             title: `Unsupported data type: ${label}`,
-            detail: `This graph declares the data type "${label}", which this tool does not recognise. Values using it may not display or execute correctly.`,
+            detail: isCustom
+                ? `This graph declares the custom data type "${label}", which this tool does not support. Nodes from the extension that defines it run as no-ops.`
+                : `"${label}" is neither a KHR_interactivity type signature nor "custom".`,
         }));
 
         // translate the types to be the standard types
@@ -713,7 +722,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
 
         if (newGraph.events) {
           for (const event of newGraph.events) {
-            for (const socket of Object.values(event.values)) {
+            for (const socket of Object.values(event.values ?? {})) {
               socket.type = getUpdatedTypeIndex(json.types[socket.type]);
             }
           }
@@ -723,7 +732,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         const loadedNodes: AuthoredNode[] = [];
         const uuids: string[] = [];
         // track unsupported node operations (op -> number of nodes using it) so we can surface them
-        const unsupportedOps = new Map<string, number>();
+        const unsupportedOps = new Map<string, { count: number; extension?: string }>();
         // per-node spec-validity diagnostics (unknown socket names / socket type mismatches
         // against this op's declaration in nodes.ts) - not KHR_interactivity spec compliance of
         // the file overall, but of the individual node instances within it
@@ -741,6 +750,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
                 // skip just this node with a diagnostic instead of throwing and aborting the load
                 nodeDiagnostics.push({
                     severity: 'error', category: 'node', nodeUid: uuids[i], nodeIndex: i, nodeOp: undefined,
+                    impact: 'graphRejected', specSection: 'Nodes',
                     title: 'Invalid declaration reference',
                     detail: `Node ${i} references declaration index ${node.declaration}, which does not exist in this file's declarations array. This node was skipped.`,
                 });
@@ -752,7 +762,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
             if (templateNode === undefined) {
                 templateNode = createNoOpNode(declaration);
                 isNoOp = true;
-                unsupportedOps.set(nodeOp, (unsupportedOps.get(nodeOp) ?? 0) + 1);
+                unsupportedOps.set(nodeOp, { count: (unsupportedOps.get(nodeOp)?.count ?? 0) + 1, extension: declaration.extension });
             }
             
             const copyOfTemplateNode: AuthoredNode = structuredClone(templateNode);
@@ -767,36 +777,45 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
 
             if (node.values !== undefined) {
                 for (const key in node.values) {
-                    if (node.values[key].value !== undefined) {
+                    // spec: a `type` without `value` or `node` is a type-default value
+                    const isTypeDefault = node.values[key].value === undefined && node.values[key].node === undefined && node.values[key].type !== undefined;
+                    if (node.values[key].value !== undefined || isTypeDefault) {
                         copyOfTemplateNode.values = copyOfTemplateNode.values || {};
                         copyOfTemplateNode.values.input = copyOfTemplateNode.values.input || {};
                         const newTypeIndex = getUpdatedTypeIndex(json.types[node.values[key].type]);
                         const specSocket = templateNode.values?.input?.[key];
                         if (!isNoOp && specSocket === undefined && !allowsDynamicSockets) {
                             nodeDiagnostics.push({
-                                severity: 'error', category: 'node', nodeUid: uuids[i], nodeIndex: i, nodeOp,
+                                severity: 'warning', category: 'node', nodeUid: uuids[i], nodeIndex: i, nodeOp,
+                                impact: 'ignored', specSection: 'Nodes',
                                 title: `Unknown input value socket "${key}"`,
-                                detail: `"${nodeOp}" does not declare an input value socket named "${key}" in the interactivity spec.`,
+                                detail: `"${nodeOp}" does not declare an input value socket named "${key}". Extra sockets have no effect, but their values must still be valid.`,
                             });
                         } else if (!isNoOp && specSocket?.typeOptions !== undefined && !specSocket.typeOptions.includes(newTypeIndex)) {
                             nodeDiagnostics.push({
                                 severity: 'error', category: 'node', nodeUid: uuids[i], nodeIndex: i, nodeOp,
+                                impact: 'graphRejected', specSection: 'Nodes',
                                 title: `Type mismatch on input socket "${key}"`,
                                 detail: `Socket "${key}" is set to type ${typeIndexName(newTypeIndex)}, but "${nodeOp}" expects ${specSocket.typeOptions.map(typeIndexName).join(" | ")}.`,
                             });
                         }
-                        copyOfTemplateNode.values.input[key] = {value: node.values[key].value, type: newTypeIndex, typeOptions: copyOfTemplateNode.values.input[key]?.typeOptions || [newTypeIndex]};
-                    } else if (node.values[key].socket !== undefined && node.values[key].node !== null) {
+                        const typeOptions = copyOfTemplateNode.values.input[key]?.typeOptions || [newTypeIndex];
+                        copyOfTemplateNode.values.input[key] = isTypeDefault
+                            ? {value: [undefined], type: newTypeIndex, typeOptions, typeDefault: true}
+                            : {value: node.values[key].value, type: newTypeIndex, typeOptions};
+                    } else if (node.values[key].node != null) {
                         copyOfTemplateNode.values = copyOfTemplateNode.values || {};
                         copyOfTemplateNode.values.input = copyOfTemplateNode.values.input || {};
                         if (!isNoOp && templateNode.values?.input?.[key] === undefined && !allowsDynamicSockets) {
                             nodeDiagnostics.push({
-                                severity: 'error', category: 'node', nodeUid: uuids[i], nodeIndex: i, nodeOp,
+                                severity: 'warning', category: 'node', nodeUid: uuids[i], nodeIndex: i, nodeOp,
+                                impact: 'ignored', specSection: 'Nodes',
                                 title: `Unknown input value socket "${key}"`,
-                                detail: `"${nodeOp}" does not declare an input value socket named "${key}" in the interactivity spec.`,
+                                detail: `"${nodeOp}" does not declare an input value socket named "${key}". Extra sockets have no effect, but their values must still be valid.`,
                             });
                         }
-                        copyOfTemplateNode.values.input[key] = {socket: node.values[key].socket, node: uuids[node.values[key].node]};
+                        // spec: an omitted `socket` means the source's "value" output
+                        copyOfTemplateNode.values.input[key] = {socket: node.values[key].socket ?? "value", node: uuids[node.values[key].node]};
                     }
                 }
             }
@@ -807,9 +826,10 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
                     copyOfTemplateNode.flows.output = copyOfTemplateNode.flows.output || {};
                     if (templateNode.flows?.output?.[key] === undefined && !allowsDynamicSockets) {
                         nodeDiagnostics.push({
-                            severity: 'error', category: 'node', nodeUid: uuids[i], nodeIndex: i, nodeOp,
+                            severity: 'warning', category: 'node', nodeUid: uuids[i], nodeIndex: i, nodeOp,
+                            impact: 'ignored', specSection: 'Nodes',
                             title: `Unknown output flow socket "${key}"`,
-                            detail: `"${nodeOp}" does not declare an output flow socket named "${key}" in the interactivity spec.`,
+                            detail: `"${nodeOp}" does not declare an output flow socket named "${key}". Extra flows entries have no effect.`,
                         });
                     }
                     copyOfTemplateNode.flows.output[key] = {socket: node.flows[key].socket, node: uuids[node.flows[key].node]};
@@ -883,11 +903,17 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         // hands those final phases to the component.
         setLoadingState({ active: true, step: "Checking", progress: 0.72 });
         // surface any node operations this tool does not implement (loaded as inert NoOp nodes)
-        const opDiagnostics: IGraphDiagnostic[] = [...unsupportedOps.entries()].map(([op, count]) => ({
-            severity: 'warning',
+        // spec: an op of an unsupported extension is demoted to no-op; an op that is neither in the
+        // spec nor declares an extension makes the declaration invalid
+        const opDiagnostics: IGraphDiagnostic[] = [...unsupportedOps.entries()].map(([op, { count, extension }]) => ({
+            severity: extension !== undefined ? 'warning' : 'error',
             category: 'operation',
+            impact: extension !== undefined ? 'noOp' : 'graphRejected',
+            specSection: extension !== undefined ? 'Unsupported Declarations' : 'Declarations',
             title: `Unsupported node operation: ${op}`,
-            detail: `${count} node${count > 1 ? 's' : ''} in this graph use "${op}", which this tool does not implement. ${count > 1 ? 'They are' : 'It is'} shown as a NoOp node and will not execute.`,
+            detail: extension !== undefined
+                ? `${count} node${count > 1 ? 's' : ''} use "${op}" of the extension "${extension}", which this tool does not implement. ${count > 1 ? 'They are' : 'It is'} shown as a NoOp node.`
+                : `${count} node${count > 1 ? 's' : ''} use "${op}", which is not a KHR_interactivity operation, and its declaration names no "extension".`,
         }));
         setDiagnosticsForCategory('type', typeDiagnostics);
         setDiagnosticsForCategory('operation', opDiagnostics);
@@ -956,6 +982,8 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
             queueMicrotask(() => setDiagnosticsForCategory('graph', hasCycle ? [{
                 severity: 'error',
                 category: 'graph',
+                impact: 'graphRejected',
+                specSection: 'Nodes',
                 title: 'Cycle detected in graph',
                 detail: 'The graph contains a cycle, so a valid execution/export order cannot be resolved. The affected connections must be broken before the graph can run.',
             }] : []));

@@ -2,6 +2,7 @@ import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 import { cubicBezierEase, linearFloat, slerpFloat4 } from "../../easingUtils";
 
 export class VariableInterpolate extends BehaveEngineNode {
+    INPUT_FLOWS = ["in"];
     REQUIRED_CONFIGURATIONS = {variable: {}, useSlerp: {}}
     REQUIRED_VALUES = {value: {}, duration: {}, p1: {}, p2: {}}
 
@@ -43,8 +44,9 @@ export class VariableInterpolate extends BehaveEngineNode {
                 this.addEventToWorkQueue(this.flows.done)
             }
         }
-        const initialValue = this.variables[this._variable].value![0]!;
-        const targetValue = value;
+        // variables store every type as a flat component array (float -> [x], float4 -> [x,y,z,w])
+        const initialValue: number[] = [...this.variables[this._variable].value!];
+        const targetValue: number[] = Array.isArray(value) ? [...value] : [value];
         const startTime = this.graphEngine.lastTickTime;
 
         const interpolationAction = () => {
@@ -53,27 +55,14 @@ export class VariableInterpolate extends BehaveEngineNode {
             // q is the output progress position: the easing curve evaluated at input progress t
             const q = cubicBezierEase(t, p1, p2);
 
-            if (this._valueType === "float3") {
-                const value = [linearFloat(q, initialValue[0], targetValue[0]), linearFloat(q, initialValue[1], targetValue[1]), linearFloat(q, initialValue[2], targetValue[2])]
-                this.variables[this._variable].value = value;
-            } else if (this._valueType === "float4") {
-                if (this._useSlerp) {
-                    const value = slerpFloat4(q, initialValue, targetValue);
-                    this.variables[this._variable].value = value;
-                } else {
-                    const value = [linearFloat(q, initialValue[0], targetValue[0]), linearFloat(q, initialValue[1], targetValue[1]), linearFloat(q, initialValue[2], targetValue[2]), linearFloat(q, initialValue[3], targetValue[3])]
-                    this.variables[this._variable].value = value;
-                }
-            } else if (this._valueType === "float") {
-                const value = [linearFloat(q, initialValue, targetValue)]
-                this.variables[this._variable].value = [value];
-            } else if (this._valueType == "float2") {
-                const value = [linearFloat(q, initialValue[0], targetValue[0]), linearFloat(q, initialValue[1], targetValue[1])]
-                this.variables[this._variable].value = value;
+            if (this._valueType === "float4" && this._useSlerp) {
+                this.variables[this._variable].value = slerpFloat4(q, initialValue, targetValue);
+            } else {
+                this.variables[this._variable].value = targetValue.map((target, i) => linearFloat(q, initialValue[i], target));
             }
 
             if (elapsedDuration >= duration) {
-                this.variables[this._variable].value = [targetValue];
+                this.variables[this._variable].value = targetValue;
                 this.graphEngine.clearVariableInterpolation(this._variable);
                 callback()
             }

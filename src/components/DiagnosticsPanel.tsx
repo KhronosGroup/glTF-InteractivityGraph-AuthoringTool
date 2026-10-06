@@ -1,7 +1,7 @@
 import React, { useContext, useState } from "react";
 import { Alert, Badge, Button } from "react-bootstrap";
 import { InteractivityGraphContext } from "../InteractivityGraphContext";
-import { IGraphDiagnostic } from "../diagnostics";
+import { IGraphDiagnostic, SPEC_URL, impactInfo } from "../diagnostics";
 
 export const categoryLabel: Record<IGraphDiagnostic["category"], string> = {
     extension: "Extension",
@@ -9,6 +9,20 @@ export const categoryLabel: Record<IGraphDiagnostic["category"], string> = {
     type: "Data type",
     node: "Node validation",
     graph: "Graph structure",
+    execution: "Runtime engine",
+};
+
+/** "Graph rejected" etc. with the spec rationale as tooltip; empty when the impact is unknown. */
+export const ImpactBadge: React.FC<{ diagnostic: IGraphDiagnostic }> = ({ diagnostic }) => {
+    if (diagnostic.impact === undefined) { return null; }
+    const { label, description } = impactInfo[diagnostic.impact];
+    const hard = diagnostic.impact === "assetRejected" || diagnostic.impact === "graphRejected" || diagnostic.impact === "executionStopped";
+    const title = diagnostic.specSection ? `${description} (spec: ${diagnostic.specSection})` : description;
+    return (
+        <Badge bg={hard ? "dark" : "light"} text={hard ? undefined : "dark"} style={{ marginRight: 8, border: "1px solid #999" }} title={title}>
+            {label}
+        </Badge>
+    );
 };
 
 export const DiagnosticsPanel: React.FC = () => {
@@ -62,9 +76,18 @@ export const DiagnosticsPanel: React.FC = () => {
                                         Node #{diagnostic.nodeIndex}{diagnostic.nodeOp ? `: ${diagnostic.nodeOp}` : ""}
                                     </Badge>
                                 )}
+                                <ImpactBadge diagnostic={diagnostic}/>
                                 <strong>{diagnostic.title}</strong>
                                 {diagnostic.detail && (
                                     <div style={{ fontSize: "0.9rem", marginTop: 2 }}>{diagnostic.detail}</div>
+                                )}
+                                {diagnostic.impact !== undefined && (
+                                    <div style={{ fontSize: "0.8rem", marginTop: 2, opacity: 0.8 }}>
+                                        {impactInfo[diagnostic.impact].description}
+                                        {diagnostic.specSection && (
+                                            <> See <a href={SPEC_URL} target="_blank" rel="noreferrer">spec</a>: {diagnostic.specSection}.</>
+                                        )}
+                                    </div>
                                 )}
                             </li>
                         ))}

@@ -1,3 +1,6 @@
+/**
+ * @jest-environment node
+ */
 import { reconcileNodeSockets } from "../src/authoring/socketReconciler";
 import { interactivityNodeSpecs, propagateGraphGroupTypes } from "../src/authoring/spec/nodes";
 import { AuthoredNode, AuthoredValue } from "../src/authoring/spec/AuthoredGraph";

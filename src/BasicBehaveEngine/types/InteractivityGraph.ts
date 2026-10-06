@@ -38,12 +38,22 @@ export interface IInteractivityVariable {
 }
 
 export interface IInteractivityEvent {
-    id: string,
-    values: Record<string, {
+    /** external identifier; events without one are internal-only (not addressable from outside the graph) */
+    id?: string,
+    name?: string,
+    values?: Record<string, {
         type: number,
         value?: any[]
     }>
 }
+
+/**
+ * Event-bus channel for a custom event. Events with an `id` use it (external dispatchers address
+ * them by id); id-less events are internal-only, so they get an index-keyed channel that can't
+ * collide with an id.
+ */
+export const getCustomEventChannel = (event: IInteractivityEvent | undefined, index: number): string =>
+    event?.id ? `KHR_INTERACTIVITY:${event.id}` : `KHR_INTERACTIVITY_INTERNAL:${index}`;
 
 export enum InteractivityConfigurationValueType {
     INT = "int",

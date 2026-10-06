@@ -6,7 +6,8 @@ import { InteractivityGraphContext } from "../../InteractivityGraphContext";
 import { DOMEventBus } from "../../BasicBehaveEngine/eventBuses/DOMEventBus";
 import { buildNormalizedTemplateSet } from "../../authoring/pointerCatalogue";
 import { getEventLabel } from "../../authoring/CustomEventControls";
-import { createGlTFObjectModelFromGltf, readGlbJsonFromArrayBuffer } from "../../objectModel/glTFObjectModel";
+import { getCustomEventChannel } from "../../BasicBehaveEngine/types/InteractivityGraph";
+import { createGlTFObjectModelFromGltf, readGltfJsonFromArrayBuffer } from "../../objectModel/glTFObjectModel";
 import { IconJsonFile, IconPlay, IconSendEvent } from "../toolbarIcons";
 
 enum LoggingEngineModal {
@@ -67,7 +68,7 @@ export const LoggingEngineComponent: React.FC<LoggingEngineComponentProps> = ({ 
         fetch(modelUrl)
             .then((response) => response.arrayBuffer())
             .then((arrayBuffer) => {
-                const gltf = readGlbJsonFromArrayBuffer(arrayBuffer);
+                const gltf = readGltfJsonFromArrayBuffer(arrayBuffer);
                 const objectModel = createGlTFObjectModelFromGltf(gltf);
                 if (isCancelled) {
                     return;
@@ -180,7 +181,7 @@ export const LoggingEngineComponent: React.FC<LoggingEngineComponentProps> = ({ 
                                             for (const val of Object.keys(customEvent.values)) {
                                                 payload[val] = (document.getElementById(val) as HTMLInputElement).value;
                                             }
-                                            loggingEngineRef.current?.dispatchCustomEvent(`KHR_INTERACTIVITY:${customEvent.id}`, payload)
+                                            loggingEngineRef.current?.dispatchCustomEvent(getCustomEventChannel(customEvent, index), payload)
                                             setOpenModal(LoggingEngineModal.NONE);
                                         }}>Send</Button>
                                     </Row>

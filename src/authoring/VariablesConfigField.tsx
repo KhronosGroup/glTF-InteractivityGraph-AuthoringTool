@@ -53,11 +53,9 @@ export const VariablesConfigField: React.FC<VariablesConfigFieldProps> = ({ getV
 
     const remove = (id: number) => onChange(selectedIds.filter((existing) => existing !== id));
 
-    // show the name alongside the id so variables stay identifiable even when unnamed.
-    // Loaded KHR_interactivity graphs carry the name in `id`, authored ones in `name`.
+    // show the name alongside the index so variables stay identifiable even when unnamed
     const labelFor = (id: number) => {
-        const variable = variables[id] as (IInteractivityVariable & { id?: string }) | undefined;
-        const name = variable?.name ?? variable?.id;
+        const name = (variables[id] as IInteractivityVariable | undefined)?.name;
         return name ? `${name} (#${id})` : `variable #${id}`;
     };
 

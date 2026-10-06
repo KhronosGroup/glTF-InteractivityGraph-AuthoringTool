@@ -12,7 +12,9 @@ export class MathSwitch extends BehaveEngineNode {
         this.validateValues(this.values);
         this.validateConfigurations(this.configuration);
         const {cases} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
-        this._cases = cases
+        // spec: non-int32 cases -> default configuration (no cases); duplicate cases are ignored
+        const isValid = Array.isArray(cases) && cases.every(c => c === (c | 0));
+        this._cases = isValid ? [...new Set<number>(cases)] : [];
     }
 
     override processNode(flowSocket?: string) {

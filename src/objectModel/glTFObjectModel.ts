@@ -8,7 +8,7 @@ import { glTFObjectReference } from "./glTFReference";
 import { createObjectModelAnimation, effectiveAnimationTime, sampleAnimationChannel } from "./glTFAnimation";
 import { SUPPORTED_GLTF_EXTENSIONS } from "../diagnostics";
 import { assetExtensionEnabled, KHR_INTERACTIVITY_LIMITS, parseGltfVersion } from "./assetCapabilities";
-export { readGlbJsonFromArrayBuffer } from "./glTFBinary";
+export { readGlbJsonFromArrayBuffer, readGltfJsonFromArrayBuffer } from "./glTFBinary";
 
 type PointerGetter = () => any;
 type PointerSetter = (value: any) => void;
@@ -18,6 +18,18 @@ interface PointerBinding {
     set: PointerSetter;
     typeName: string;
     readOnly: boolean;
+}
+
+interface ActiveAnimation {
+    timeout: ReturnType<typeof setTimeout> | null;
+    startTime: number;
+    endTime: number;
+    stopTime: number;
+    speed: number;
+    startedAt: number;
+    token: number;
+    endDone: () => void;
+    stopDone: (() => void) | null;
 }
 
 interface GeneratedPointerDefinition {
@@ -59,7 +71,7 @@ const KHR = "extensions/2.0/Khronos";
 export class GlTFObjectModelDecorator extends ADecorator {
     protected objectModel: GlTFObjectModel;
     private pointerBindings = new Map<string, PointerBinding>();
-    private activeAnimations = new Map<number, { timeout: ReturnType<typeof setTimeout> | null; startTime: number; endTime: number; speed: number; startedAt: number; token: number }>();
+    private activeAnimations = new Map<number, ActiveAnimation>();
     private animationToken = 0;
 
     constructor(behaveEngine: IBehaveEngine, objectModel: Partial<GlTFObjectModel> = {}) {
@@ -89,23 +101,10 @@ export class GlTFObjectModelDecorator extends ADecorator {
         animation.playhead = effectiveAnimationTime(animation, startTime);
         this.applyAnimation(animationIndex, startTime);
 
-        const duration = Math.abs(endTime - startTime) / speed;
-        const token = ++this.animationToken;
-        const timeout = Number.isFinite(duration)
-            ? setTimeout(() => {
-                if (this.activeAnimations.get(animationIndex)?.token !== token) {
-                    return;
-                }
-                animation.isPlaying = false;
-                animation.virtualPlayhead = endTime;
-                animation.playhead = effectiveAnimationTime(animation, endTime);
-                this.applyAnimation(animationIndex, endTime);
-                this.activeAnimations.delete(animationIndex);
-                callback();
-            }, Math.max(0, duration * 1000))
-            : null;
-
-        this.activeAnimations.set(animationIndex, { timeout, startTime, endTime, speed, startedAt: performance.now(), token });
+        // spec: stop time is initialized to the end time, stop completion to null
+        const entry: ActiveAnimation = { timeout: null, startTime, endTime, stopTime: endTime, speed, startedAt: performance.now(), token: 0, endDone: callback, stopDone: null };
+        this.activeAnimations.set(animationIndex, entry);
+        this.scheduleAnimationFinish(animationIndex, entry);
     };
     stopAnimation = (animationIndex: number): void => {
         const animation = this.objectModel.animations[animationIndex];
@@ -119,30 +118,13 @@ export class GlTFObjectModelDecorator extends ADecorator {
         }
     };
     stopAnimationAt = (animationIndex: number, stopTime: number, callback: () => void): void => {
-        const activeAnimation = this.activeAnimations.get(animationIndex);
-        const animation = this.objectModel.animations[animationIndex];
-        if (activeAnimation === undefined || animation === undefined) {
+        const entry = this.activeAnimations.get(animationIndex);
+        if (entry === undefined) {
             return;
         }
-
-        if (activeAnimation.timeout !== null) {
-            clearTimeout(activeAnimation.timeout);
-        }
-        const currentTime = this.currentAnimationTime(animationIndex);
-        const remainingSeconds = Math.max(0, Math.abs(stopTime - currentTime) / activeAnimation.speed);
-        const token = ++this.animationToken;
-        const timeout = setTimeout(() => {
-            if (this.activeAnimations.get(animationIndex)?.token !== token) {
-                return;
-            }
-            animation.isPlaying = false;
-            animation.virtualPlayhead = stopTime;
-            animation.playhead = effectiveAnimationTime(animation, stopTime);
-            this.applyAnimation(animationIndex, stopTime);
-            this.activeAnimations.delete(animationIndex);
-            callback();
-        }, remainingSeconds * 1000);
-        this.activeAnimations.set(animationIndex, { ...activeAnimation, timeout, token });
+        entry.stopTime = stopTime;
+        entry.stopDone = callback;
+        this.scheduleAnimationFinish(animationIndex, entry);
     };
     getWorld = (): GlTFObjectModel => this.objectModel;
     getParentNodeIndex = (nodeIndex: number): number | undefined => this.objectModel.parents[nodeIndex];
@@ -427,7 +409,7 @@ export class GlTFObjectModelDecorator extends ADecorator {
     // properties describing the glTF version presented, which used extensions the implementation
     // supports, and the implementation's runtime limits. Extensions that are BOTH listed in
     // extensionsUsed AND supported get a concrete `enabled` = true pointer (so authoring can surface
-    // them); every other asset extension `enabled` query resolves to false via assetExtensionEnabled.
+    // them); for every other extension the pointer does not exist (see assetExtensionEnabled).
     private registerAssetCapabilityPointers(): void {
         const [majorVersion, minorVersion] = parseGltfVersion(this.objectModel.asset?.version);
         this.scalarPointer("/extensions/KHR_interactivity/asset/majorVersion", "int", () => majorVersion, ignoreSet, true);
@@ -459,6 +441,42 @@ export class GlTFObjectModelDecorator extends ADecorator {
             }
             this.activeAnimations.delete(animationIndex);
         }
+    }
+
+    // spec animation update step 5: the stop time only applies if it lies in [start, end) (or (end, start] in reverse);
+    // otherwise the animation finishes at the end time with the end completion
+    private scheduleAnimationFinish(animationIndex: number, entry: ActiveAnimation): void {
+        if (entry.timeout !== null) {
+            clearTimeout(entry.timeout);
+            entry.timeout = null;
+        }
+        const { startTime, endTime, stopTime } = entry;
+        const forward = startTime < endTime;
+        const stops = entry.stopDone !== null && (forward
+            ? stopTime >= startTime && stopTime < endTime
+            : startTime > endTime && stopTime <= startTime && stopTime > endTime);
+        const finishTime = stops ? stopTime : endTime;
+        const done = (stops ? entry.stopDone : null) ?? entry.endDone;
+        const currentTime = this.currentAnimationTime(animationIndex);
+        const remaining = Math.abs(finishTime - currentTime) / entry.speed;
+        if (!Number.isFinite(remaining)) {
+            return;
+        }
+        const passed = forward ? currentTime >= finishTime : currentTime <= finishTime;
+        const token = ++this.animationToken;
+        entry.token = token;
+        entry.timeout = setTimeout(() => {
+            if (this.activeAnimations.get(animationIndex)?.token !== token) {
+                return;
+            }
+            const animation = this.objectModel.animations[animationIndex];
+            animation.isPlaying = false;
+            animation.virtualPlayhead = finishTime;
+            animation.playhead = effectiveAnimationTime(animation, finishTime);
+            this.applyAnimation(animationIndex, finishTime);
+            this.activeAnimations.delete(animationIndex);
+            done();
+        }, passed ? 0 : remaining * 1000);
     }
 
     private currentAnimationTime(animationIndex: number): number {

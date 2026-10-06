@@ -15,10 +15,8 @@ export class SmoothStep extends BehaveEngineNode {
 
     private smoothStep = (a: number, b: number, c: number): number => {
         const lo = Math.min(a, b);
-        const hi = Math.max(a, b);
-        const diff = Math.abs(b - a);
-        if (diff === 0) { return 0; }
-        const t = this.saturate((c - lo) / diff);
+        // spec: no special case for a == b; division yields +-Inf/NaN, which saturate/propagate
+        const t = this.saturate((c - lo) / Math.abs(b - a));
         return t * t * (3 - 2 * t);
     }
 

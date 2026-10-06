@@ -2,6 +2,53 @@
 const GLB_MAGIC = 0x46546c67;
 const GLB_VERSION = 2;
 const JSON_CHUNK_TYPE = 0x4e4f534a;
+const BIN_CHUNK_TYPE = 0x004e4942;
+
+/** True for GLB bytes; anything else is treated as glTF JSON. */
+export function isGlb(buffer: ArrayBuffer): boolean {
+    return buffer.byteLength >= 4 && new DataView(buffer).getUint32(0, true) === GLB_MAGIC;
+}
+
+/** The glTF JSON of either a .glb or a .gltf file. */
+export function readGltfJsonFromArrayBuffer(buffer: ArrayBuffer): any {
+    return isGlb(buffer) ? readGlbJsonFromArrayBuffer(buffer) : JSON.parse(new TextDecoder().decode(buffer));
+}
+
+/** Writes a GLB with the given JSON and optional BIN chunk. */
+export function writeGlb(gltf: any, bin?: Uint8Array): ArrayBuffer {
+    const encodedJson = new TextEncoder().encode(JSON.stringify(gltf));
+    const chunks = [{ type: JSON_CHUNK_TYPE, data: encodedJson, padding: 0x20 }];
+    if (bin !== undefined && bin.byteLength > 0) {
+        chunks.push({ type: BIN_CHUNK_TYPE, data: bin, padding: 0 });
+    }
+    const paddedLength = (length: number) => (length + 3) & ~3;
+    const outputLength = 12 + chunks.reduce((length, chunk) => length + 8 + paddedLength(chunk.data.byteLength), 0);
+    const output = new ArrayBuffer(outputLength);
+    const outputView = new DataView(output);
+    outputView.setUint32(0, GLB_MAGIC, true);
+    outputView.setUint32(4, GLB_VERSION, true);
+    outputView.setUint32(8, outputLength, true);
+    let offset = 12;
+    for (const chunk of chunks) {
+        const chunkLength = paddedLength(chunk.data.byteLength);
+        outputView.setUint32(offset, chunkLength, true);
+        outputView.setUint32(offset + 4, chunk.type, true);
+        const bytes = new Uint8Array(output, offset + 8, chunkLength);
+        bytes.fill(chunk.padding);
+        bytes.set(chunk.data);
+        offset += 8 + chunkLength;
+    }
+    return output;
+}
+
+export function setInteractivityGraph(gltf: any, graph: any): void {
+    gltf.extensions ??= {};
+    gltf.extensions.KHR_interactivity = { graphs: [graph], graph: 0 };
+    gltf.extensionsUsed ??= [];
+    if (!gltf.extensionsUsed.includes("KHR_interactivity")) {
+        gltf.extensionsUsed.push("KHR_interactivity");
+    }
+}
 
 export function readGlbJsonFromArrayBuffer(buffer: ArrayBuffer): any {
     const view = new DataView(buffer);
@@ -16,7 +63,7 @@ export function readGlbJsonFromArrayBuffer(buffer: ArrayBuffer): any {
         if (chunkType === JSON_CHUNK_TYPE) {
             const jsonBytes = new Uint8Array(buffer, offset + 8, chunkLength);
             json = JSON.parse(new TextDecoder().decode(jsonBytes).trim());
-        } else if (chunkType === 0x004e4942) {
+        } else if (chunkType === BIN_CHUNK_TYPE) {
             const chunk = buffer.slice(offset + 8, offset + 8 + chunkLength);
             buffers.push(chunk);
         }
@@ -59,12 +106,7 @@ export function embedInteractivityGraphInGlb(buffer: ArrayBuffer, graph: any): A
     }
 
     const gltf = JSON.parse(new TextDecoder().decode(chunks[jsonChunkIndex].data).trim());
-    gltf.extensions ??= {};
-    gltf.extensions.KHR_interactivity = { graphs: [graph], graph: 0 };
-    gltf.extensionsUsed ??= [];
-    if (!gltf.extensionsUsed.includes("KHR_interactivity")) {
-        gltf.extensionsUsed.push("KHR_interactivity");
-    }
+    setInteractivityGraph(gltf, graph);
 
     const encodedJson = new TextEncoder().encode(JSON.stringify(gltf));
     const paddedJson = new Uint8Array((encodedJson.length + 3) & ~3);

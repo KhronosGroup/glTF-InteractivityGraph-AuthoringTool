@@ -1,6 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class PointerInterpolate extends BehaveEngineNode {
+    INPUT_FLOWS = ["in"];
     REQUIRED_CONFIGURATIONS = {pointer: {}, type: {}}
     REQUIRED_VALUES = {value: {}, duration: {}, p1: {}, p2: {}}
 
@@ -21,10 +22,6 @@ export class PointerInterpolate extends BehaveEngineNode {
 
         this._refs = this.parsePathRefVariables(this._pointer);
         this._indices = this.parsePathIndexVariables(this._pointer);
-
-        if (this.isReadOnlyPointer(this._pointer, this._refs, this._indices)) {
-            throw new Error(`Path ${this._pointer} is read only but is included in a pointer/interpolate configuration`);
-        }
     }
 
     override processNode(flowSocket: string) {
@@ -32,48 +29,32 @@ export class PointerInterpolate extends BehaveEngineNode {
         const configVals = this.evaluateAllValues(this._refs);
         const configIndices = this.evaluateAllValues(this._indices);
         const requiredVals = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
-        const populatedPath = this.populatePath(this._pointer, configVals, configIndices);
         const {p1, p2} = this.evaluateAllValues(["p1", "p2"]);
         const targetValue = requiredVals.value;
         const duration = requiredVals.duration;
 
         this.graphEngine.processNodeStarted(this);
 
-        if (this.graphEngine.isValidJsonPtr(populatedPath)) {
-            const valueType = this.graphEngine.getPathTypeName(populatedPath);
-            const typeName = this.getType(this._typeIndex);
-            if (valueType !== typeName) {
-                if (this.flows.err) {
-                    this.processFlow(this.flows.err);
-                }
-                return;
-            }
-
-            if (!isValidInterpolationInput(duration, p1, p2)) {
-                if (this.flows.err) {
-                    this.processFlow(this.flows.err);
-                }
-                return;
-            }
-            
-            const initialValue = this.graphEngine.getPathValue(populatedPath);
-
-            this.graphEngine.animateCubicBezier(populatedPath, p1, p2, initialValue, targetValue, duration, valueType, () => {
-                if (this.flows.done) {
-                    this.addEventToWorkQueue(this.flows.done)
-                }
-            })
-
-            if (this.flows.out) {
-                this.processFlow(this.flows.out);
-            }
-        } else {
+        const valueType = this.getType(this._typeIndex);
+        const populatedPath = this.resolveWritablePointer(this._pointer, configVals, configIndices, valueType);
+        if (populatedPath === undefined || !isValidInterpolationInput(duration, p1, p2)) {
             if (this.flows.err) {
                 this.processFlow(this.flows.err);
             }
+            return;
         }
 
+        const initialValue = this.graphEngine.getPathValue(populatedPath);
 
+        this.graphEngine.animateCubicBezier(populatedPath, p1, p2, initialValue, targetValue, duration, valueType, () => {
+            if (this.flows.done) {
+                this.addEventToWorkQueue(this.flows.done)
+            }
+        })
+
+        if (this.flows.out) {
+            this.processFlow(this.flows.out);
+        }
     }
 }
 

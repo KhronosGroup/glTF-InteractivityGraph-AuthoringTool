@@ -155,6 +155,12 @@ export interface IBehaveEngine {
     executeEventQueueTick: () => void;
 
     /**
+     * Receive runtime errors that stopped the self-scheduled event loop (errors during the
+     * initial load are thrown from loadBehaveGraph instead).
+     */
+    setExecutionErrorListener: (listener: ((error: unknown) => void) | undefined) => void;
+
+    /**
      * Emit a custom event with a specified name and values.
      * @param name - The name of the custom event to emit.
      * @param params - The values to be passed to the custom event callback functions.

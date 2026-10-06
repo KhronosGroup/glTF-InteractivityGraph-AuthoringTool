@@ -1,6 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class SetDelay extends BehaveEngineNode {
+    INPUT_FLOWS = ["in", "cancel"];
     REQUIRED_VALUES = {duration: {}}
     _runningDelayIndices: number[];
 

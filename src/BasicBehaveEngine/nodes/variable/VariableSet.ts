@@ -1,6 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class VariableSet extends BehaveEngineNode {
+    INPUT_FLOWS = ["in"];
     REQUIRED_CONFIGURATIONS = {variables: {}}
     _variables: number[];
 

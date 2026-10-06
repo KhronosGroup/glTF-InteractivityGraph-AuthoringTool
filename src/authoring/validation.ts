@@ -28,8 +28,7 @@ const REF_TYPE = 9;
 // instead so the warning stays identifiable without cross-referencing the "variables" config
 const getInputSocketFullLabel = (node: AuthoredNode, socket: string, variables: IInteractivityVariable[]): string => {
     if (node.op === "variable/set") {
-        const variable = variables[Number(socket)] as (IInteractivityVariable & { id?: string }) | undefined;
-        const name = variable?.name ?? variable?.id;
+        const name = (variables[Number(socket)] as IInteractivityVariable | undefined)?.name;
         if (name) { return name; }
     }
     return socket;
@@ -167,6 +166,7 @@ const getMissingValueWarning = (
 ): string | undefined => {
     if (node.values?.input?.[socket]?.node !== undefined) { return undefined; }
     if (resolvedType === REF_TYPE) { return undefined; }
+    if (value.typeDefault) { return undefined; }
     // ref sockets store their pointer array-wrapped, but older graphs may still carry a bare
     // string; normalize both shapes before checking.
     const raw = value.value;

@@ -1,6 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class DoN extends BehaveEngineNode {
+    INPUT_FLOWS = ["in", "reset"];
     REQUIRED_VALUES = {n: {}};
 
     _currentCount: number;

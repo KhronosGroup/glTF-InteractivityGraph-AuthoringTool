@@ -1,5 +1,5 @@
 import { CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { IInteractivityEvent, IInteractivityGraph, InteractivityValueType } from "../BasicBehaveEngine/types/InteractivityGraph";
+import { getCustomEventChannel, IInteractivityEvent, IInteractivityGraph, InteractivityValueType } from "../BasicBehaveEngine/types/InteractivityGraph";
 import { standardTypes } from "./spec/nodes";
 import { RefValuePicker } from "./RefValuePicker";
 import { TypedValueInput } from "./TypedValueInput";
@@ -18,12 +18,11 @@ const refSelectButtonStyle: CSSProperties = {
     padding: "0 8px",
 };
 
-// Custom events flow through the global document as CustomEvents named `KHR_INTERACTIVITY:<id>`
-// (see DOMEventBus). Both engines (Babylon, Logging) dispatch/listen on this same
+// Custom events flow through the global document as CustomEvents on getCustomEventChannel's
+// channel (see DOMEventBus). Both engines (Babylon, Logging) dispatch/listen on this same
 // bus, so the authoring nodes can hook it directly without a reference to whichever engine is
 // currently running: event/send nodes are monitored by listening, event/receive nodes are
 // triggered by dispatching.
-const eventChannel = (id: string) => `KHR_INTERACTIVITY:${id}`;
 
 // Pointer-driven event nodes (event/onSelect, event/onHoverIn, event/onHoverOut) fire through
 // internal engine callbacks, not the custom-event bus. So the engine nodes additionally dispatch a
@@ -36,18 +35,20 @@ const getEventTypeLabel = (typeIndex: number): string =>
     standardTypes[typeIndex]?.name ?? standardTypes[typeIndex]?.signature ?? String(typeIndex);
 
 /**
- * Stand-in name for a custom event with an empty id (e.g. internal-only events). The number is the
- * event's own index in the graph — the same index shown as `(#n)` next to a named event, and the
- * one nodes reference through configuration.event — so it is 0-based, not a 1-based ordinal.
+ * Stand-in name for a custom event with neither name nor id. The number is the event's own index in
+ * the graph — the same index shown as `(#n)` next to a named event, and the one nodes reference
+ * through configuration.event — so it is 0-based, not a 1-based ordinal.
  */
 export const getUnnamedEventName = (index: number): string => `[EVENT-${String(index).padStart(2, "0")}]`;
 
 /**
- * Label a custom event for any selection UI. An event id may be empty and isn't guaranteed unique,
- * so the index is always shown. Mirrors the variable dropdown's `name (#index)` format.
+ * Label a custom event for any selection UI: its name, else its id. Both are optional and not
+ * guaranteed unique, so the index is always shown. Mirrors the variable dropdown's `name (#index)` format.
  */
-export const getEventLabel = (event: { id?: string } | undefined, index: number): string =>
-    event?.id ? `${event.id} (#${index})` : getUnnamedEventName(index);
+export const getEventLabel = (event: { id?: string; name?: string } | undefined, index: number): string => {
+    const label = event?.name || event?.id;
+    return label ? `${label} (#${index})` : getUnnamedEventName(index);
+};
 
 const formatTime = (t: number): string => {
     const d = new Date(t);
@@ -184,8 +185,8 @@ const FireLogView = (props: { log: FireLogEntry[]; total: number; clear: () => v
  * Live fire chronology for an event/send ("trigger") node. Subscribes to the configured custom
  * event on the document bus and renders when it fired.
  */
-export const CustomEventSendMonitor = (props: { event: IInteractivityEvent }) => {
-    const { log, total, clear } = useFireLog(eventChannel(props.event.id));
+export const CustomEventSendMonitor = (props: { event: IInteractivityEvent; index: number }) => {
+    const { log, total, clear } = useFireLog(getCustomEventChannel(props.event, props.index));
     return <FireLogView log={log} total={total} clear={clear} />;
 };
 
@@ -318,8 +319,8 @@ const serializeArg = (typeIndex: number, raw: any): any => {
  * Values are serialized per type into the event detail; the event/receive engine node then parses
  * each one according to its declared type.
  */
-export const CustomEventReceiveTrigger = (props: { event: IInteractivityEvent; disabled?: boolean }) => {
-    const channel = eventChannel(props.event.id);
+export const CustomEventReceiveTrigger = (props: { event: IInteractivityEvent; index: number; disabled?: boolean }) => {
+    const channel = getCustomEventChannel(props.event, props.index);
     const valueEntries = Object.entries(props.event.values || {});
     // per-argument edit state, in TypedValueInput's shape: an array of components (ref: a string)
     const [args, setArgs] = useState<Record<string, any>>({});
@@ -494,7 +495,7 @@ export const SendCustomEventPanel = (props: { graph: IInteractivityGraph }) => {
                 {selectedArgCount === 0 && (
                     <div className={"send-event-noargs"}>This event carries no arguments.</div>
                 )}
-                <CustomEventReceiveTrigger key={`${safeSelected}-${selectedEvent.id ?? ""}`} event={selectedEvent} disabled={!selectedHasReceiver} />
+                <CustomEventReceiveTrigger key={`${safeSelected}-${selectedEvent.id ?? ""}`} event={selectedEvent} index={safeSelected} disabled={!selectedHasReceiver} />
             </div>
         </div>
     );

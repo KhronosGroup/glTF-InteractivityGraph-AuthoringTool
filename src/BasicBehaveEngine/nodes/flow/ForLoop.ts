@@ -1,6 +1,7 @@
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class ForLoop extends BehaveEngineNode {
+    INPUT_FLOWS = ["in"];
     REQUIRED_CONFIGURATIONS = {initialIndex: {defaultValue: [0]}};
     REQUIRED_VALUES = {startIndex: {}, endIndex: {}};
 
@@ -19,21 +20,22 @@ export class ForLoop extends BehaveEngineNode {
 
     override processNode(flowSocket?: string) {
         this.graphEngine.clearValueEvaluationCache();
-        let {startIndex, endIndex} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const {startIndex} = this.evaluateAllValues(["startIndex"]);
         this.graphEngine.processNodeStarted(this);
-        this.outValues.index = { value: [0], type: this.getTypeIndex('int')}
-        for (let i = Number(startIndex); i < Number(endIndex); i++) {
-            this.outValues.index = { value: [i], type: this.getTypeIndex('int')}
+        // spec: index = startIndex, then re-evaluate endIndex before each iteration; index is never forced to endIndex
+        let index = Number(startIndex);
+        this.outValues.index = { value: [index], type: this.getTypeIndex('int')}
+        const evaluateEndIndex = () => {
+            this.graphEngine.clearValueEvaluationCache();
+            return Number(this.evaluateAllValues(["endIndex"]).endIndex);
+        };
+        while (index < evaluateEndIndex()) {
             if (this.flows.loopBody != null) {
                 this.processFlow(this.flows.loopBody);
             }
-
-            this.graphEngine.clearValueEvaluationCache();
-            const reEvaluatedValues: any = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
-            startIndex = reEvaluatedValues.startIndex;
-            endIndex = reEvaluatedValues.endIndex;
+            index++;
+            this.outValues.index = { value: [index], type: this.getTypeIndex('int')}
         }
-        this.outValues.index = { value: [endIndex], type: this.getTypeIndex('int')}
         if (this.flows.completed != null) {
             this.processFlow(this.flows.completed);
         }

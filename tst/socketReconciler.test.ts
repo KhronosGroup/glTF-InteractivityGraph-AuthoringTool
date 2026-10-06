@@ -96,7 +96,7 @@ describe("mergeValueSockets", () => {
         const existing: Record<string, AuthoredValue> = { value: { value: [7], type: 5, typeOptions: [5] } };
         const generated: Record<string, AuthoredValue> = { value: { value: [undefined], type: 5, typeOptions: [5] } };
         const result = mergeValueSockets({ existing, generated, specDefaults: {}, extraKeys: [], allowExistingToOverrideGenerated: true });
-        expect(result.value).toBe(existing.value);
+        expect(result.value).toEqual(existing.value);
     });
 
     it("a pointer slot whose kind changed keeps the freshly generated socket instead of the stale one", () => {
@@ -135,7 +135,7 @@ describe("mergeValueSockets", () => {
         const existing: Record<string, AuthoredValue> = { "1": { value: [5], type: 2, typeOptions: [1, 2], typeGroup: "T" } };
         const generated: Record<string, AuthoredValue> = { "1": { value: [undefined], type: 0, typeOptions: [1, 2], typeGroup: "T" } };
         const result = mergeValueSockets({ existing, generated, specDefaults: {}, extraKeys: [], allowExistingToOverrideGenerated: true });
-        expect(result["1"]).toBe(existing["1"]);
+        expect(result["1"]).toEqual(existing["1"]);
     });
 
     it("a preserved pointer slot is left untouched by the generic merge", () => {

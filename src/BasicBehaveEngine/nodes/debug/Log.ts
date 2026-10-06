@@ -1,61 +1,49 @@
 
-import { IInteractivityValue } from "../../types/InteractivityGraph";
 import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
+import {MessageTemplateParameter, parseMessageTemplate, populateMessageTemplate} from "../../messageTemplate";
 
 export class DebugLog extends BehaveEngineNode {
+    INPUT_FLOWS = ["in"];
     REQUIRED_CONFIGURATIONS = {message: {defaultValue: [""]}, severity: {defaultValue: [0]}}
 
     _message: string;
     _severity: number;
-    _templateValues: Record<string, IInteractivityValue>;
+    _parameters: MessageTemplateParameter[];
+    _socketIds: string[];
 
     constructor(props: IBehaviourNodeProps) {
         super(props);
         this.name = "DebugLog";
         this.validateConfigurations(this.configuration);
         const {message, severity} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
-        this._message = message[0];
-        this._severity = Number(severity[0]);
-
-        const valIds = this.parseTemplate(this._message);
-        const generatedVals: Record<string, IInteractivityValue> = {};
-        for (let i = 0; i < valIds.length; i++) {
-            generatedVals[valIds[i]] = {value: [undefined], type: 1};
+        const parameters = typeof message?.[0] === "string" ? parseMessageTemplate(message[0]) : undefined;
+        const severityValue = severity?.[0];
+        // spec: a non-string/invalid message or a non-int32 severity selects the default configuration
+        if (parameters === undefined || typeof severityValue !== "number" || severityValue !== (severityValue | 0)) {
+            this._message = "";
+            this._severity = 0;
+            this._parameters = [];
+        } else {
+            this._message = message[0];
+            this._severity = severityValue;
+            this._parameters = parameters;
         }
-        this._templateValues = generatedVals;
-    }
+        this._socketIds = [...new Set(this._parameters.map(parameter => parameter.id))];
 
-    parseTemplate(path: string): string[] {
-        const regex = /{([^}]+)}/g;
-        const match = path.match(regex);
-        const keys: string[] = [];
-
-        if (!match) {
-            return keys;
+        // spec: a node missing a template parameter socket is invalid and the graph must be rejected
+        const missing = this._socketIds.filter(id => this.values[id] === undefined);
+        if (missing.length > 0) {
+            throw new Error(`debug/log node ${this.index} is missing input value socket(s) ${missing.map(id => `"${id}"`).join(", ")} required by its message template`);
         }
-
-        for (const m of match) {
-            const key = m.slice(1, -1); // remove the curly braces from the match
-            keys.push(key)
-        }
-
-        return keys;
-    }
-
-    populateTemplate(template: string, vals: any): string {
-        let templateCopy = template
-        for (const val of Object.keys(vals)) {
-            const typeName = this.getType(this.values[val].type!);
-            templateCopy = templateCopy.replace(`{${val}}`, formatValue(vals[val], typeName));
-        }
-        return templateCopy;
     }
 
     override processNode(flowSocket?: string) {
         this.graphEngine.clearValueEvaluationCache();
 
-        const templateValues = this.evaluateAllValues(Object.keys(this._templateValues));
-        const populatedTemplate = this.populateTemplate(this._message, templateValues);
+        // spec: all input values are evaluated, including extra sockets not used by the template
+        const values = this.evaluateAllValues(Object.keys(this.values));
+        const populatedTemplate = populateMessageTemplate(this._message, this._parameters,
+            id => formatValue(values[id], this.getType(this.values[id].type!)));
 
         this.graphEngine.processNodeStarted(this);
 

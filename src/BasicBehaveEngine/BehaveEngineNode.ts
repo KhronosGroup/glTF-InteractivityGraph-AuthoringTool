@@ -1,6 +1,7 @@
 import { IInteractivityConfigurationValue, IInteractivityDeclaration, IInteractivityEvent, IInteractivityFlow, IInteractivityValue, IInteractivityValueType, IInteractivityVariable } from "./types/InteractivityGraph";
 import {BasicBehaveEngine} from "./BasicBehaveEngine";
 import { isNoOpNode } from "./nodes/experimental/noOpRegistry";
+import { parsePathTemplate, populatePathTemplate } from "./pointerTemplate";
 
 export interface IBehaviourNodeProps {
     index: number,
@@ -19,6 +20,8 @@ export interface IBehaviourNodeProps {
 export class BehaveEngineNode {
     REQUIRED_VALUES: Record<string, IInteractivityValue> = {};
     REQUIRED_CONFIGURATIONS: Record<string, IInteractivityConfigurationValue> = {};
+    // input flow socket ids of the operation; empty for value and event operations
+    INPUT_FLOWS: string[] = [];
     index: number;
     name: string | undefined;
     world: any;
@@ -46,7 +49,11 @@ export class BehaveEngineNode {
         this.flows = flows;
         this.configuration = configuration;
         this.outValues = {};
-        this.addEventToWorkQueue = addEventToWorkQueue;
+        this.addEventToWorkQueue = (flow: IInteractivityFlow) => {
+            const nextNode = flow?.node === undefined ? undefined : this.idToBehaviourNodeMap.get(Number(flow.node));
+            if (nextNode !== undefined && !nextNode.INPUT_FLOWS.includes(flow.socket ?? "in")) {return}
+            addEventToWorkQueue(flow);
+        };
         this.declaration = declaration;
     }
 
@@ -76,7 +83,8 @@ export class BehaveEngineNode {
     public processFlow(flow: IInteractivityFlow) {
         if (flow === undefined || flow.node === undefined) {return}
         const nextNode: BehaveEngineNode | undefined = this.idToBehaviourNodeMap.get(Number(flow.node));
-        if (nextNode === undefined) {return}
+        // spec: a flow to an input socket the target does not have is unconnected
+        if (nextNode === undefined || !nextNode.INPUT_FLOWS.includes(flow.socket ?? "in")) {return}
         this.graphEngine.processExecutingNextNode(flow);
         nextNode.processNode(flow.socket);
     }
@@ -189,6 +197,10 @@ export class BehaveEngineNode {
             this.graphEngine.addEntryToValueEvaluationCache(`${val.node}-${val.socket}`, {socket: val.socket!, value: valueToReturn, type: typeIndex});
             const typeName = this.getType(typeIndex);
             return this.parseType(typeName, valueToReturn);
+        } else if (val.type != null) {
+            // spec: neither value nor node -> type-default value
+            const typeName = this.getType(val.type);
+            return this.parseType(typeName, this.getDefaultValueForType(typeName));
         }
     }
 
@@ -271,7 +283,8 @@ export class BehaveEngineNode {
             case "float4x4":
                 return val;
             case "ref":
-                return scalarValue;
+                // spec: a ref literal that cannot be resolved is a null reference; "" is the document root, never an object
+                return scalarValue === "" ? null : scalarValue;
             default:
                 return val
         }
@@ -291,58 +304,47 @@ export class BehaveEngineNode {
     }
 
     protected populatePath(path: string, refs: Record<string, string>, indices: Record<string, string>): string {
-        for (const ref of Object.keys(refs)) {
-            const refValue = refs[ref];
-            const index = this.resolveRef(refValue);
-            if (index !== -1) {
-                path = path.replace(`{${ref}}`, index.toString());
+        return populatePathTemplate(path, ({id, kind}) => {
+            if (kind === "index") {
+                return String(indices[id]);
             }
-            else {
-                throw new Error(`Invalid reference value for ${ref}: ${refValue}`);
+            const index = this.resolveRef(refs[id]);
+            if (index === -1) {
+                throw new Error(`Invalid reference value for ${id}: ${refs[id]}`);
             }
+            return index.toString();
+        });
+    }
+
+    // spec pointer/set + pointer/interpolate steps 2-4: negative index, null ref, unresolvable,
+    // type mismatch or immutable property -> undefined (caller activates err)
+    protected resolveWritablePointer(pointer: string, refs: Record<string, string>, indices: Record<string, string>, typeName: string): string | undefined {
+        if (Object.values(indices).some(i => Number(i) < 0) || Object.values(refs).some(r => this.resolveRef(r) === -1)) {
+            return undefined;
         }
-        for (const index of Object.keys(indices)) {
-            path = path.replace(`[${index}]`, indices[index]);
+        const path = this.populatePath(pointer, refs, indices);
+        if (!this.graphEngine.isValidJsonPtr(path)
+            || this.graphEngine.getPathTypeName(path) !== typeName
+            || this.graphEngine.isReadOnly(path)) {
+            return undefined;
         }
         return path;
     }
 
-    protected isReadOnlyPointer(pointer: string, refs: string[], indices: string[]): boolean {
-        const readOnlyTestRefs: Record<string, string> = {};
-        for (const ref of refs) {
-            readOnlyTestRefs[ref] = "0";
-        }
-        const readOnlyTestIndices: Record<string, string> = {};
-        for (const index of indices) {
-            readOnlyTestIndices[index] = "0";
-        }
-        const readOnlyTestPath = this.populatePath(pointer, readOnlyTestRefs, readOnlyTestIndices);
-        return this.graphEngine.isReadOnly(readOnlyTestPath);
-    }
-
     protected parsePathRefVariables(path: string): string[] {
-        return this.parsePathVariables(path, '{', '}');
+        return this.parsePathTemplateSockets(path, "ref");
     }
 
     protected parsePathIndexVariables(path: string): string[] {
-        return this.parsePathVariables(path, '[', ']');
+        return this.parsePathTemplateSockets(path, "index");
     }
 
-    protected parsePathVariables(path: string, openDel: string, closeDel: string): string[] {
-        const regex = new RegExp(`\\${openDel}([^\\${closeDel}]+)\\${closeDel}`, 'g');
-        const match = path.match(regex);
-        const keys: string[] = [];
-
-        if (!match) {
-            return keys;
+    // spec: an invalid pointer template makes the node invalid and the graph must be rejected
+    private parsePathTemplateSockets(path: string, kind: "index" | "ref"): string[] {
+        const {valid, sockets} = parsePathTemplate(path);
+        if (!valid) {
+            throw new Error(`Invalid JSON pointer template: ${path}`);
         }
-
-        for (const m of match) {
-            // remove the delimiters from the match
-            const key = m.slice(openDel.length, -closeDel.length);
-            keys.push(key)
-        }
-
-        return keys;
+        return sockets.filter(socket => socket.kind === kind).map(socket => socket.id);
     }
 }

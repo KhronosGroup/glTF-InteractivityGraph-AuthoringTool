@@ -156,9 +156,10 @@ export interface IBehaveEngine {
 
     /**
      * Receive runtime errors that stopped the self-scheduled event loop (errors during the
-     * initial load are thrown from loadBehaveGraph instead).
+     * initial load are thrown from loadBehaveGraph instead). Optional: a viewer diagnostics hook,
+     * runtimes that drive their own loop or report errors otherwise may omit it.
      */
-    setExecutionErrorListener: (listener: ((error: unknown) => void) | undefined) => void;
+    setExecutionErrorListener?: (listener: ((error: unknown) => void) | undefined) => void;
 
     /**
      * Emit a custom event with a specified name and values.

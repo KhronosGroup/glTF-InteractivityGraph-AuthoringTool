@@ -35,6 +35,14 @@ export interface IBehaveEngine {
     processExecutingNextNode: (flow: IInteractivityFlow) => void;
 
     /**
+     * Callback function to output a debug/log message; defaults to the browser console.
+     * @param node - The debug/log node that produced the message.
+     * @param message - The populated message template.
+     * @param severity - The severity configuration value of the node.
+     */
+    processDebugLog?: (node: BehaveEngineNode, message: string, severity: number) => void;
+
+    /**
      * Register known pointers to be used within the Behave Engine.
      */
     registerKnownPointers: () => void;

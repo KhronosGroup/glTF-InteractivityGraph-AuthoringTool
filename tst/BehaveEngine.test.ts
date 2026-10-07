@@ -34,6 +34,48 @@ describe('BehaveEngine', () => {
         expect(engine.variables![0].value![0]).toEqual(true);
     });
 
+    it('routes debug/log messages to the logging decorator instead of the console', () => {
+        const behaviorGraph = {
+            types: [{name: "bool", signature: "bool"}, {name: "int", signature: "int"}],
+            declarations: [{op: "event/onStart"}, {op: "debug/log"}],
+            nodes: [
+                {declaration: 0, flows: {out: {node: 1, socket: "in"}}},
+                {declaration: 1, configuration: {message: {value: ["hello {v}"]}, severity: {value: [1]}}, values: {v: {type: 1, value: [42]}}},
+            ],
+            variables: [], events: [],
+        };
+        const consoleWarn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        let executionLog = "";
+        const engine = new BasicBehaveEngine(1, new DOMEventBus());
+        loggingBehaveEngine = new LoggingDecorator(engine, (line: string) => executionLog += line + "\n", {});
+        loggingBehaveEngine.loadBehaveGraph(behaviorGraph);
+
+        expect(executionLog).toContain("[debug/log #1 warn] hello 42");
+        expect(consoleWarn).not.toHaveBeenCalled();
+        consoleWarn.mockRestore();
+    });
+
+    it('lists select/hover targets per KHR_node_selectability/hoverability', () => {
+        const objectModel = {nodes: [
+            {name: "parent", mesh: 0, children: [1], extensions: {KHR_node_selectability: {selectable: false}}},
+            {name: "child", mesh: 0},
+            {name: "plain", mesh: 0},
+            {name: "empty"},
+            {name: "noHover", mesh: 0, extensions: {KHR_node_hoverability: {hoverable: false}}},
+        ], meshes: [{primitives: []}]};
+        loggingBehaveEngine = new LoggingDecorator(new BasicBehaveEngine(1, new DOMEventBus()), () => undefined, objectModel as any);
+        const indices = (extension: "KHR_node_selectability" | "KHR_node_hoverability") =>
+            loggingBehaveEngine.getInteractableNodes(extension).map((node) => node.index);
+
+        // false on a parent disables its subtree; a missing extension counts as true; nodes without a mesh are never hit
+        expect(indices("KHR_node_selectability")).toEqual([2, 4]);
+        expect(indices("KHR_node_hoverability")).toEqual([0, 1, 2]);
+
+        // runtime changes (pointer/set) are picked up
+        loggingBehaveEngine.setPathValue("/nodes/0/extensions/KHR_node_selectability/selectable", [true]);
+        expect(indices("KHR_node_selectability")).toEqual([0, 1, 2, 4]);
+    });
+
     it('should correctly evaluate pointer/get', async () => {
         /**
          * This test ensures that the pointer/get node evaluates correctly

@@ -746,6 +746,16 @@ export class BasicBehaveEngine implements IBehaveEngine {
         //pass
     }
 
+    public processDebugLog = (node: BehaveEngineNode, message: string, severity: number) => {
+        if (severity === 0) {
+            console.log(`[DebugLog #${node.index}]`, message);
+        } else if (severity === 1) {
+            console.warn(`[DebugLog #${node.index}]`, message);
+        } else if (severity === 2) {
+            console.error(`[DebugLog #${node.index}]`, message);
+        }
+    }
+
     public registerKnownPointers = () => {
         //pass
     }

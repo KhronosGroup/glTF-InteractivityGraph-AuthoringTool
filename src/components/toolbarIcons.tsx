@@ -104,6 +104,12 @@ export const IconSendEvent = () => (
     </svg>
 );
 
+export const IconPointer = () => (
+    <svg {...iconProps}>
+        <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/>
+    </svg>
+);
+
 /** Mouse: toggles the input legend under the graph, most of which is mouse gestures. Deliberately
  *  solid rather than stroked like the icons above — it sits in reactflow's control stack next to
  *  the built-in +/-/frame/lock glyphs, which are filled shapes, and a 1.8px stroke reads noticeably

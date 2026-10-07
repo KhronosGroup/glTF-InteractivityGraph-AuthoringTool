@@ -47,13 +47,7 @@ export class DebugLog extends BehaveEngineNode {
 
         this.graphEngine.processNodeStarted(this);
 
-        if (this._severity === 0) {
-            console.log(`[DebugLog #${this.index}]`, populatedTemplate);
-        } else if (this._severity === 1) {
-            console.warn(`[DebugLog #${this.index}]`, populatedTemplate);
-        } else if (this._severity === 2) {
-            console.error(`[DebugLog #${this.index}]`, populatedTemplate);
-        }
+        this.graphEngine.processDebugLog(this, populatedTemplate, this._severity);
 
         super.processNode(flowSocket);
     }

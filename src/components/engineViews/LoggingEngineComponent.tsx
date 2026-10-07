@@ -13,6 +13,7 @@ import { IconJsonFile, IconPlay, IconSendEvent } from "../toolbarIcons";
 enum LoggingEngineModal {
     OBJECT_MODEL = "OBJECT_MODEL",
     CUSTOM_EVENT = "CUSTOM_EVENT",
+    SELECT_HOVER = "SELECT_HOVER",
     NONE = "NONE"
 }
 
@@ -26,6 +27,11 @@ export const LoggingEngineComponent: React.FC<LoggingEngineComponentProps> = ({ 
     const [objectModelJson, setObjectModelJson] = useState("{}");
     const [activeKey, setActiveKey] = useState("1");
     const [graphRunning, setGraphRunning] = useState(false);
+    // there is no 3D view, so KHR_node_selectability/hoverability events are simulated from a dialog
+    const [selectNode, setSelectNode] = useState(0);
+    const [hoverNode, setHoverNode] = useState(0);
+    const [pointerController, setPointerController] = useState(0);
+    const [pointerTargets, setPointerTargets] = useState<PointerTargets>({select: [], hover: []});
     const objectModelInputRef = useRef<HTMLTextAreaElement | null>(null);
     const loggingEngineRef = useRef<LoggingDecorator | null>(null);
 
@@ -104,6 +110,25 @@ export const LoggingEngineComponent: React.FC<LoggingEngineComponentProps> = ({ 
         loggingEngineRef.current?.loadBehaveGraph(behaveGraph);
     }
 
+    // selectable/hoverable can change at runtime (pointer/set), so the lists are re-read on open and after each action
+    const refreshPointerTargets = () => {
+        const engine = loggingEngineRef.current;
+        const targets = {
+            select: engine?.getInteractableNodes("KHR_node_selectability") ?? [],
+            hover: engine?.getInteractableNodes("KHR_node_hoverability") ?? [],
+        };
+        setPointerTargets(targets);
+        setSelectNode((current) => targets.select.some((node) => node.index === current) ? current : targets.select[0]?.index ?? 0);
+        setHoverNode((current) => targets.hover.some((node) => node.index === current) ? current : targets.hover[0]?.index ?? 0);
+    };
+
+    const runPointerAction = (action: (engine: LoggingDecorator) => void) => {
+        if (loggingEngineRef.current !== null) {
+            action(loggingEngineRef.current);
+            refreshPointerTargets();
+        }
+    };
+
     return (
         <div className={"panel"}>
             <div className={"panel__toolbar"}>
@@ -118,6 +143,13 @@ export const LoggingEngineComponent: React.FC<LoggingEngineComponentProps> = ({ 
                 <button type="button" className="panel__toolbar-btn" onClick={() => setOpenModal(LoggingEngineModal.CUSTOM_EVENT)} disabled={!graphRunning}>
                     <IconSendEvent/>
                     Send Custom Event
+                </button>
+                <button type="button" className="panel__toolbar-btn" onClick={() => {
+                    refreshPointerTargets();
+                    setOpenModal(LoggingEngineModal.SELECT_HOVER);
+                }} disabled={!graphRunning}>
+                    <IconPointer/>
+                    Select / Hover
                 </button>
             </div>
             {/* fills the panel instead of a fixed 700px, so the log ends level with the graph
@@ -199,6 +231,67 @@ export const LoggingEngineComponent: React.FC<LoggingEngineComponentProps> = ({ 
                     </Row>
                 </Container>
             </Modal>
+
+            <Modal show={openModal === LoggingEngineModal.SELECT_HOVER} onHide={() => setOpenModal(LoggingEngineModal.NONE)}>
+                <Container style={{padding: 16}}>
+                    <h3>Select / Hover</h3>
+                    <p style={{textAlign: "left"}}>Only nodes with a mesh that are currently selectable / hoverable are listed (KHR_node_selectability / KHR_node_hoverability, including parent nodes).</p>
+                    <Row style={{textAlign: "left"}}>
+                        <Col md={4}>
+                            <Form.Group>
+                                <Form.Label>Controller</Form.Label>
+                                <Form.Control type="number" min={0} step={1} value={pointerController} onChange={(e) => setPointerController(Math.max(0, Math.trunc(Number(e.target.value)) || 0))}/>
+                            </Form.Group>
+                        </Col>
+                    </Row>
+                    <hr style={{ borderTop: '1px solid #777', margin: '16px 0' }} />
+                    <Row style={{textAlign: "left", alignItems: "flex-end"}}>
+                        <Col md={8}>
+                            <Form.Group>
+                                <Form.Label>Selectable node</Form.Label>
+                                <Form.Select value={selectNode} disabled={pointerTargets.select.length === 0} onChange={(e) => setSelectNode(Number(e.target.value))}>
+                                    {pointerTargets.select.length === 0 && <option>No selectable nodes</option>}
+                                    {pointerTargets.select.map((node) => <option key={node.index} value={node.index}>{formatNodeOption(node)}</option>)}
+                                </Form.Select>
+                            </Form.Group>
+                        </Col>
+                        <Col md={4}>
+                            <Button variant={"outline-primary"} style={{width: "100%"}} disabled={pointerTargets.select.length === 0} onClick={() => runPointerAction((engine) => engine.select(selectNode, pointerController, undefined, undefined))}>Select</Button>
+                        </Col>
+                    </Row>
+                    <Row style={{textAlign: "left", alignItems: "flex-end", marginTop: 16}}>
+                        <Col md={8}>
+                            <Form.Group>
+                                <Form.Label>Hoverable node</Form.Label>
+                                <Form.Select value={hoverNode} disabled={pointerTargets.hover.length === 0} onChange={(e) => setHoverNode(Number(e.target.value))}>
+                                    {pointerTargets.hover.length === 0 && <option>No hoverable nodes</option>}
+                                    {pointerTargets.hover.map((node) => <option key={node.index} value={node.index}>{formatNodeOption(node)}</option>)}
+                                </Form.Select>
+                            </Form.Group>
+                        </Col>
+                        <Col md={4}>
+                            <Button variant={"outline-primary"} style={{width: "100%"}} disabled={pointerTargets.hover.length === 0} onClick={() => runPointerAction((engine) => engine.hoverOn(hoverNode, pointerController))}>Hover</Button>
+                        </Col>
+                    </Row>
+                    <Row style={{ marginTop: 16 }}>
+                        <Col xs={12} md={6}>
+                            <Button variant={"outline-primary"} style={{width: "100%"}} onClick={() => runPointerAction((engine) => engine.hoverOn(undefined, pointerController))}>Hover nothing</Button>
+                        </Col>
+                        <Col xs={12} md={6}>
+                            <Button variant={"outline-secondary"} style={{width: "100%"}} onClick={() => setOpenModal(LoggingEngineModal.NONE)}>
+                                Close
+                            </Button>
+                        </Col>
+                    </Row>
+                </Container>
+            </Modal>
         </div>
     )
 }
+
+interface PointerTargets {
+    select: {index: number, name?: string}[];
+    hover: {index: number, name?: string}[];
+}
+
+const formatNodeOption = (node: {index: number, name?: string}): string => `#${node.index}${node.name ? ` ${node.name}` : ""}`;

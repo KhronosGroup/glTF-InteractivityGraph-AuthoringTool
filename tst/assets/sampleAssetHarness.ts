@@ -190,7 +190,8 @@ function findTestJsonFiles(root: string): string[] {
 function createDiscoveredAssetEntry(root: string, metadataPath: string): AssetIndexEntry {
     const metadata = JSON.parse(fs.readFileSync(metadataPath, "utf8")) as AssetTestMetadata;
     const assetDir = path.dirname(path.dirname(metadataPath));
-    const name = path.relative(root, assetDir);
+    // index names use "/" on every platform
+    const name = path.relative(root, assetDir).split(path.sep).join("/");
     return {
         label: metadata.name || name,
         name,

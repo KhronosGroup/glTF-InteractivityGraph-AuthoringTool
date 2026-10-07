@@ -4,6 +4,7 @@ import {EngineType} from "./components/engineViews/EngineType";
 import {RenderIf} from "./components/RenderIf";
 import {LoggingEngineComponent} from "./components/engineViews/LoggingEngineComponent";
 import {BabylonEngineComponent} from "./components/engineViews/BabylonEngineComponent";
+import {BabylonNativeEngineComponent} from "./components/engineViews/BabylonNativeEngineComponent";
 import { InteractivityGraphProvider } from './InteractivityGraphContext';
 import { SampleSidebar } from './components/SampleSidebar';
 import { DiagnosticsPanel } from './components/DiagnosticsPanel';
@@ -80,6 +81,9 @@ export const App = () => {
         case 'babylon':
           setEngineType(EngineType.BABYLON);
           break;
+        case 'babylon-native':
+          setEngineType(EngineType.BABYLON_NATIVE);
+          break;
         default:
           // Load from localStorage if URL param is invalid
           const storedEngineType = localStorage.getItem(ENGINE_TYPE_STORAGE_KEY);
@@ -139,6 +143,9 @@ export const App = () => {
             break;
           case 'babylon':
             setEngineType(EngineType.BABYLON);
+            break;
+          case 'babylon-native':
+            setEngineType(EngineType.BABYLON_NATIVE);
             break;
         }
       }
@@ -219,6 +226,9 @@ export const App = () => {
                 <RenderIf shouldShow={engineType === EngineType.BABYLON}>
                     <BabylonEngineComponent modelUrl={modelUrl} />
                 </RenderIf>
+                <RenderIf shouldShow={engineType === EngineType.BABYLON_NATIVE}>
+                    <BabylonNativeEngineComponent modelUrl={modelUrl} />
+                </RenderIf>
             </div>
             <RenderIf shouldShow={viewMode === "both"}>
                 <div
@@ -255,11 +265,13 @@ interface EngineSelectorProps {
     currentEngineType: EngineType;
 }
 
-// the engine tabs, kept in the order Babylon-then-Logging. Rendered as a plain <ul>/<li>
+// the engine tabs, kept in the order Babylon-then-Logging (Babylon Native runs graphs with
+// Babylon.js' own KHR_interactivity runtime instead of BasicBehaveEngine). Rendered as a plain <ul>/<li>
 // segmented control rather than react-bootstrap's <Tabs> so it can carry the app's own styling
 // (and so a tab is still an <li>, which the e2e spec clicks).
 const ENGINE_TABS: ReadonlyArray<{ engine: EngineType; label: string }> = [
     { engine: EngineType.BABYLON, label: "Babylon Engine" },
+    { engine: EngineType.BABYLON_NATIVE, label: "Babylon Native" },
     { engine: EngineType.LOGGING, label: "Logging Engine" },
 ];
 

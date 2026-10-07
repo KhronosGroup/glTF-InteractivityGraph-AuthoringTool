@@ -1,7 +1,7 @@
 import { jest } from "@jest/globals";
 import { BasicBehaveEngine } from "../../src/BasicBehaveEngine/BasicBehaveEngine";
 import { BabylonDecorator } from "../../src/decorators/BabylonDecorator";
-import { BabylonScene, loadBabylonWorldFromGlb, NullEngine } from "./babylonAssetHarness";
+import { BabylonScene, loadBabylonWorldFromGlb, NullEngine, disposeBabylonScene } from "./babylonAssetHarness";
 import {
     assertInterGlbPairSubTests,
     createInterGlbRunState,
@@ -33,8 +33,7 @@ describeIfEnabled("KHR_interactivity InterGlb paired assets - Babylon engine", (
             await runInterGlbPair(state, engines, decorators);
             decorators.forEach((decorator) => decorator.dispose());
         } finally {
-            scene.dispose();
-            nullEngine.dispose();
+            await disposeBabylonScene(scene, nullEngine);
         }
     });
 

@@ -1465,7 +1465,7 @@ export class BabylonDecorator extends ADecorator {
             const node = this.world.glTFNodes[Number(parts[2])];
             // Skinned meshes are parented as a sibling of the skeleton root rather than as a child of
             // the node's own placeholder TransformNode, so the skeleton must be recovered via the
-            // `metadata.skinnedMesh` link stashed by attachSkinLoadedMetadata() during model load.
+            // `metadata.skinnedMesh` link stashed by storeSkinnedMeshMetadata() during model load.
             const skinnedMesh = (node as any)?.metadata?.skinnedMesh ?? (node as AbstractMesh);
             const skeleton = (skinnedMesh as AbstractMesh)?.skeleton;
             const skinIndex = skeleton === undefined || skeleton === null ? undefined : getSkinIndexForSkeleton(skeleton);

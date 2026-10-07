@@ -285,18 +285,23 @@ export class TestEventBus implements IEventBus {
 // with the engine's (also real-time-based) flow/setDelay firing.
 async function renderWhileWaiting(decorator: ADecorator, waitMs: number, signals?: TestRunSignals): Promise<void> {
     const scene = (decorator as unknown as { scene?: { render(): void } }).scene;
+    await renderFramesWhileWaiting(() => scene?.render(), waitMs, signals);
+}
+
+/** Calls renderFrame at ~60 fps until the settle time (or an announced test run) is over. */
+export async function renderFramesWhileWaiting(renderFrame: () => void, waitMs: number, signals?: TestRunSignals): Promise<void> {
     const frameMs = 1000 / 60;
     const start = Date.now();
     while (Date.now() < start + testRunWaitMs(waitMs, signals) && !signals?.finished) {
         await new Promise((resolve) => setTimeout(resolve, frameMs));
-        scene?.render();
+        renderFrame();
     }
 }
 
 // Assets that run their tests one after another (e.g. Overview) announce it with custom events:
 // test/onStart carries the expected duration of the whole run, test/onSuccess or test/onFailed
 // marks its end. Wait for the end, bounded by the announced duration plus a margin.
-interface TestRunSignals {
+export interface TestRunSignals {
     expectedSeconds?: number;
     finished: boolean;
 }

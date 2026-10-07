@@ -256,6 +256,9 @@ function getEngine(testFilePath, ancestorTitles) {
     if (haystack.includes("three")) {
         return "Three";
     }
+    if (haystack.includes("babylonnative") || haystack.includes("babylon native")) {
+        return "Babylon Native";
+    }
     if (haystack.includes("babylon") || path.basename(testFilePath) === "engines.asset.ts") {
         return "Babylon";
     }

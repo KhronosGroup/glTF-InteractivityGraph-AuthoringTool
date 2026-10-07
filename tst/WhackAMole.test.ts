@@ -5,7 +5,7 @@ import { jest } from "@jest/globals";
 import { BasicBehaveEngine } from "../src/BasicBehaveEngine/BasicBehaveEngine";
 import { IBehaveEngine } from "../src/BasicBehaveEngine/IBehaveEngine";
 import { BabylonDecorator } from "../src/decorators/BabylonDecorator";
-import { BabylonScene, loadBabylonWorldFromGlb, NullEngine } from "./assets/babylonAssetHarness";
+import { BabylonScene, loadBabylonWorldFromGlb, NullEngine, disposeBabylonScene } from "./assets/babylonAssetHarness";
 import { getSampleAssetsRoot, readGlbJson, runGraphAndWait, TestEventBus } from "./assets/sampleAssetHarness";
 
 jest.setTimeout(30_000);
@@ -46,8 +46,7 @@ describeIfAvailable("KHR_interactivity WhackAMole sample - Babylon engine", () =
                 expect(Number.isFinite(decorator.getPathValue(`/animations/${animationIndex}/extensions/KHR_interactivity/maxTime`)?.[0])).toBe(true);
             }
         } finally {
-            scene.dispose();
-            nullEngine.dispose();
+            await disposeBabylonScene(scene, nullEngine);
         }
     });
 
@@ -67,8 +66,7 @@ describeIfAvailable("KHR_interactivity WhackAMole sample - Babylon engine", () =
 
             await runGraphAndWait(decorator, graph);
         } finally {
-            scene.dispose();
-            nullEngine.dispose();
+            await disposeBabylonScene(scene, nullEngine);
         }
     });
 
@@ -105,8 +103,7 @@ describeIfAvailable("KHR_interactivity WhackAMole sample - Babylon engine", () =
             decorator?.dispose();
             jest.useRealTimers();
             random.mockRestore();
-            scene.dispose();
-            nullEngine.dispose();
+            await disposeBabylonScene(scene, nullEngine);
         }
     });
 });

@@ -1,7 +1,7 @@
 import { jest } from "@jest/globals";
 import { BasicBehaveEngine } from "../../src/BasicBehaveEngine/BasicBehaveEngine";
 import { BabylonDecorator } from "../../src/decorators/BabylonDecorator";
-import { BabylonScene, loadBabylonWorldFromGlb, NullEngine } from "./babylonAssetHarness";
+import { BabylonScene, loadBabylonWorldFromGlb, NullEngine, disposeBabylonScene } from "./babylonAssetHarness";
 import {
     assertAssetSubTest,
     formatError,
@@ -46,8 +46,7 @@ describe("KHR_interactivity sample assets - Babylon engine", () => {
             } catch (error) {
                 runError = error instanceof Error ? error : new Error(String(error));
             } finally {
-                scene.dispose();
-                nullEngine.dispose();
+                await disposeBabylonScene(scene, nullEngine);
             }
         });
 

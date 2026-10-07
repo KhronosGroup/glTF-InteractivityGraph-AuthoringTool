@@ -2,8 +2,8 @@ import {Scene} from "@babylonjs/core/scene";
 import {GLTFLoader, IGLTF, INode} from "@babylonjs/loaders/glTF/2.0";
 import {NullEngine, TransformNode} from "@babylonjs/core";
 import {IScene} from "@babylonjs/loaders/glTF/2.0/glTFLoaderInterfaces";
-import {KHR_interactivity} from "../src/loaderExtensions/KHR_interactivity";
-import {GLTFFileLoader} from "@babylonjs/loaders";
+import {InteractivityAuthoringMetadata} from "../src/loaderExtensions/KHR_interactivity";
+import {GLTFFileLoader} from "@babylonjs/loaders/glTF/glTFFileLoader";
 
 const engine = new NullEngine();
 const scene: any = new Scene(engine);
@@ -73,10 +73,10 @@ class MockBehaviorLoader extends MockLoader {
 }
 
 describe('Extensions', () => {
-    let khrInteractivity: KHR_interactivity;
+    let khrInteractivity: InteractivityAuthoringMetadata;
 
     beforeAll(() => {
-        khrInteractivity = new KHR_interactivity(new MockBehaviorLoader(new GLTFFileLoader()));
+        khrInteractivity = new InteractivityAuthoringMetadata(new MockBehaviorLoader(new GLTFFileLoader()));
     });
 
 

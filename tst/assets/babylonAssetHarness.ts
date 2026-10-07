@@ -1,41 +1,43 @@
 import fs from "fs";
 import path from "path";
-import { NullEngine, Scene as BabylonScene, SceneLoader } from "@babylonjs/core";
-import "@babylonjs/loaders/glTF";
-import { GLTFFileLoader, GLTFLoaderAnimationStartMode } from "@babylonjs/loaders";
-import { attachSkinLoadedMetadata, buildBabylonDecoratorWorld, buildBabylonLoadedModel } from "../../src/components/engineViews/babylonLoadedModel";
-import { registerKHRInteractivityExtension } from "../../src/loaderExtensions/KHR_interactivity";
+import { AssetContainer, NullEngine, Scene as BabylonScene } from "@babylonjs/core";
+import { buildBabylonDecoratorWorld, buildBabylonLoadedModel } from "../../src/components/engineViews/babylonLoadedModel";
+import { GltfContainerLoadOptions, loadGltfAssetContainer } from "../../src/components/engineViews/babylonLoader";
 
 export { NullEngine, BabylonScene };
 
-let loaderConfigured = false;
-
 export async function loadBabylonWorldFromGlb(glbPath: string, scene: BabylonScene): Promise<any> {
-    configureBabylonLoader();
+    return buildBabylonDecoratorWorld(buildBabylonLoadedModel(await loadGlbIntoScene(glbPath, scene)));
+}
 
-    const container = await SceneLoader.LoadAssetContainerAsync("", createGlbDataUrl(glbPath), scene, undefined, ".glb", path.basename(glbPath));
+/** Loads a glb for Babylon's own KHR_interactivity runtime; its graph is built but not started. */
+export async function loadGlbForNativeInteractivity(glbPath: string, scene: BabylonScene): Promise<void> {
+    await loadGlbIntoScene(glbPath, scene, { nativeInteractivity: true });
+}
+
+async function loadGlbIntoScene(glbPath: string, scene: BabylonScene, options: Partial<GltfContainerLoadOptions> = {}): Promise<AssetContainer> {
+    const container = await loadGltfAssetContainer(createGlbDataUrl(glbPath), scene, { ...options, pluginExtension: ".glb", name: path.basename(glbPath) });
     container.addAllToScene();
 
-    // Mirrors BabylonEngineComponent's setup: scene.render() throws "No camera defined" otherwise,
+    // Mirrors the Babylon views' setup: scene.render() throws "No camera defined" otherwise,
     // and assets under test don't necessarily author their own camera.
     if (!scene.activeCamera) {
         scene.createDefaultCamera(true, true, true);
     }
-
-    return buildBabylonDecoratorWorld(buildBabylonLoadedModel(container));
+    return container;
 }
 
-function configureBabylonLoader(): void {
-    if (!loaderConfigured) {
-        registerKHRInteractivityExtension();
-        SceneLoader.OnPluginActivatedObservable.add((loader) => {
-            if (loader.name === "gltf") {
-                (loader as GLTFFileLoader).animationStartMode = GLTFLoaderAnimationStartMode.NONE;
-                attachSkinLoadedMetadata(loader as GLTFFileLoader);
-            }
-        });
-        loaderConfigured = true;
-    }
+/**
+ * Babylon 9 loads shader code with lazy import()s while materials compile. Wait for them before
+ * disposing, otherwise one resolving after the Jest environment is torn down crashes the run.
+ */
+export async function disposeBabylonScene(scene: BabylonScene, engine: NullEngine): Promise<void> {
+    await Promise.race([
+        scene.whenReadyAsync().catch(() => undefined),
+        new Promise((resolve) => setTimeout(resolve, 2000)),
+    ]);
+    scene.dispose();
+    engine.dispose();
 }
 
 function createGlbDataUrl(glbPath: string): string {

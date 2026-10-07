@@ -2,7 +2,7 @@ import {BehaveEngineNode, IBehaviourNodeProps} from "../../BehaveEngineNode";
 
 export class Switch extends BehaveEngineNode {
     INPUT_FLOWS = ["in"];
-    REQUIRED_CONFIGURATIONS = {cases: {defaultValue: [[]]}};
+    REQUIRED_CONFIGURATIONS = {cases: {defaultValue: []}};
     REQUIRED_VALUES = {selection: {}};
 
     _cases: number[];
@@ -14,21 +14,19 @@ export class Switch extends BehaveEngineNode {
         this.validateConfigurations(this.configuration);
 
         const {cases} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
-        this._cases = cases;
+        // spec: non-int32 cases -> default configuration (no cases); duplicate cases are ignored
+        const isValid = Array.isArray(cases) && cases.every(c => c === (c | 0));
+        this._cases = isValid ? [...new Set<number>(cases)] : [];
     }
 
     override processNode(flowSocket?: string) {
         this.graphEngine.processNodeStarted(this);
         this.graphEngine.clearValueEvaluationCache();
         const {selection} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
-        const selected = this.flows[selection]
-
-        if (selected === undefined) {
-            if (this.flows.default != null) {
-                this.processFlow(this.flows.default);
-            }
-        } else {
-            this.processFlow(this.flows[selection])
+        // spec: only configured cases route to their flow; anything else takes the default flow
+        const selected = this._cases.includes(Number(selection)) ? this.flows[String(selection)] : this.flows.default;
+        if (selected != null) {
+            this.processFlow(selected);
         }
     }
 }

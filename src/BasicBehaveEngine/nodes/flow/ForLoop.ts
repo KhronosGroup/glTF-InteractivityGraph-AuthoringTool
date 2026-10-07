@@ -14,7 +14,9 @@ export class ForLoop extends BehaveEngineNode {
         this.validateConfigurations(this.configuration);
 
         const {initialIndex} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
-        this._initialIndex = initialIndex[0];
+        // spec: initialIndex must be an int32, otherwise the default configuration (0) is used
+        const init = initialIndex?.[0];
+        this._initialIndex = init === (init | 0) ? init : 0;
         this.outValues.index = { value: [this._initialIndex], type: this.getTypeIndex('int')};
     }
 

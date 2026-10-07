@@ -2,14 +2,24 @@ import {BehaveEngineNode, IBehaviourNodeProps} from "../../../BehaveEngineNode";
 
 type Quat = [number, number, number, number];
 
+const VALID_ORDERS = ["xyz", "xzy", "yxz", "yzx", "zxy", "zyx"];
+
 export class QuatFromAngles extends BehaveEngineNode {
     REQUIRED_CONFIGURATIONS = {order: {defaultValue: ["yxz"]}}
     REQUIRED_VALUES = {x: {}, y: {}, z: {}}
+
+    _order: string;
 
     constructor(props: IBehaviourNodeProps) {
         super(props);
         this.name = "QuatFromAnglesNode";
         this.validateValues(this.values);
+        this.validateConfigurations(this.configuration);
+
+        const {order} = this.evaluateAllConfigurations(Object.keys(this.REQUIRED_CONFIGURATIONS));
+        // spec: order must be exactly one of the six axis permutations, otherwise the default configuration ("yxz") is used
+        const o = order?.[0];
+        this._order = typeof o === "string" && VALID_ORDERS.includes(o) ? o : "yxz";
     }
 
     private multiplyQuaternions(q1: Quat, q2: Quat): Quat {
@@ -39,8 +49,8 @@ export class QuatFromAngles extends BehaveEngineNode {
             throw Error(`Angles must be of type float.`);
         }
 
-        // 1. Get the rotation order from configurations (defaulting to "yxz")
-        const order: string = (this.configuration?.order?.value?.[0] || "yxz");
+        // 1. Get the validated rotation order
+        const order = this._order;
 
         // 2. Generate elemental quaternions for each axis rotation
         const cx = Math.cos(Number(x) / 2);
@@ -56,10 +66,6 @@ export class QuatFromAngles extends BehaveEngineNode {
 
         // Map characters to their respective quaternions
         const quatMap: Record<string, Quat> = { x: qX, y: qY, z: qZ };
-
-        if (!quatMap[order[0]] || !quatMap[order[1]] || !quatMap[order[2]]) {
-            throw Error(`Invalid rotation order: ${order}. Must contain x, y, and z.`);
-        }
 
         // 3. Multiply quaternions in the sequence of the specified intrinsic order (e.g., Y * X * Z)
         const qFirst = quatMap[order[0]];

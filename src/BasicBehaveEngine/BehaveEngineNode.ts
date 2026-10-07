@@ -119,7 +119,6 @@ export class BehaveEngineNode {
                     console.error(err);
                     throw new Error(err);
                 } else {
-                    //todo: if one is missing or invalid?? we need to default to the default value for all
                     configurations[key] = {value: value.defaultValue};
                     isMissingConfigs = true;
                 }
@@ -131,7 +130,7 @@ export class BehaveEngineNode {
             });
         }
 
-        //TODO: validation of the domain of the config (probably need to do in each node)
+        // spec: value validation (type, range, allowed values) is done by each node, which falls back to its default configuration
     }
 
     /**

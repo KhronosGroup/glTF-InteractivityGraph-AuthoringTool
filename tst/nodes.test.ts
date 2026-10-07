@@ -123,6 +123,7 @@ import { DebugLog } from '../src/BasicBehaveEngine/nodes/debug/Log';
 import { QuatAngleBetween } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatAngleBetween';
 import { QuatFromUpForward } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatFromUpForward';
 import { QuatSlerp } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatSlerp';
+import { QuatFromAngles } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatFromAngles';
 import { RefEquality } from '../src/BasicBehaveEngine/nodes/ref/RefEquality';
 import * as glMatrix from 'gl-matrix';
 
@@ -310,6 +311,23 @@ describe('nodes', () => {
         expect(forLoop.processFlow).toHaveBeenCalledTimes(6);
     });
 
+    it('flow/for invalid initialIndex uses the default configuration', () => {
+        for (const initialIndex of [1.5, 2147483648, "3", true]) {
+            const forLoop: ForLoop = new ForLoop({
+                ...defaultProps,
+                configuration: {initialIndex: { value: [initialIndex as any] }},
+                values: {startIndex: { value: [0], type: 1 }, endIndex: { value: [5], type: 1 }},
+            });
+            expect(forLoop.outValues.index.value![0]).toBe(0);
+        }
+        const valid: ForLoop = new ForLoop({
+            ...defaultProps,
+            configuration: {initialIndex: { value: [-7] }},
+            values: {startIndex: { value: [0], type: 1 }, endIndex: { value: [5], type: 1 }},
+        });
+        expect(valid.outValues.index.value![0]).toBe(-7);
+    });
+
     it('flow/doN', async () => {
         const doN: DoN = new DoN({
             ...defaultProps,
@@ -377,6 +395,35 @@ describe('nodes', () => {
         await defaultSwitchNode.processNode('in');
 
         expect(defaultSwitchNode.processFlow).toHaveBeenCalledWith({ socket: 'in', node: 4 });
+    });
+
+    it('flow/switch invalid cases use the default configuration', async () => {
+        // [0.5, 1] is not all int32 -> no cases, so selection 1 must take default even though flow "1" is wired
+        for (const cases of [[0.5, 1], [-2147483649, 1], "1"]) {
+            const node: Switch = new Switch({
+                ...defaultProps,
+                configuration: {cases: { value: cases as any }},
+                values: {selection: { value: [1], type: 1 }},
+                flows: {1: { node: 1, socket: 'in' }, default: { node: 4, socket: 'in' }},
+            });
+            node.processFlow = jest.fn<(flow: IInteractivityFlow) => Promise<void>>();
+            await node.processNode('in');
+            expect(node.processFlow).toHaveBeenCalledTimes(1);
+            expect(node.processFlow).toHaveBeenCalledWith({ socket: 'in', node: 4 });
+        }
+    });
+
+    it('flow/switch selection not in cases takes default even if a matching flow exists', async () => {
+        const node: Switch = new Switch({
+            ...defaultProps,
+            configuration: {cases: { value: [1] }},
+            values: {selection: { value: [2], type: 1 }},
+            flows: {1: { node: 1, socket: 'in' }, 2: { node: 2, socket: 'in' }, default: { node: 4, socket: 'in' }},
+        });
+        node.processFlow = jest.fn<(flow: IInteractivityFlow) => Promise<void>>();
+        await node.processNode('in');
+        expect(node.processFlow).toHaveBeenCalledTimes(1);
+        expect(node.processFlow).toHaveBeenCalledWith({ socket: 'in', node: 4 });
     });
 
     it('flow/throttle', async () => {
@@ -675,6 +722,19 @@ describe('nodes', () => {
 
         const val = pi.processNode();
         expect(val['value'].value[0]).toBe(Math.PI);
+    });
+
+    it("math/quatFromAngles invalid order uses the default configuration (yxz)", () => {
+        const makeNode = (order: any) => new QuatFromAngles({
+            ...defaultProps,
+            configuration: order === undefined ? {} : {order: { value: [order] }},
+            values: {x: { value: [0.3], type: 2 }, y: { value: [0.5], type: 2 }, z: { value: [0.7], type: 2 }},
+        });
+        const expected = makeNode("yxz").processNode()['value']!.value;
+        expect(makeNode("xyz").processNode()['value']!.value).not.toEqual(expected);
+        for (const order of ["XYZ", "xxy", "xy", "xyzx", 1, undefined]) {
+            expect(makeNode(order).processNode()['value']!.value).toEqual(expected);
+        }
     });
 
     it("math/quatFromUpForward identity", () => {

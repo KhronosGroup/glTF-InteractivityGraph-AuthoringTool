@@ -302,16 +302,17 @@ interface TestRunSignals {
 
 const testRunEventChannel = (id: string) => `KHR_INTERACTIVITY:test/${id}`;
 
-function watchTestRunSignals(decorator: ADecorator): TestRunSignals {
+function watchTestRunSignals(decorator: ADecorator, runs = 1): TestRunSignals {
     const signals: TestRunSignals = { finished: false };
     decorator.addCustomEventListener(testRunEventChannel("onStart"), (event: CustomEvent) => {
         const detail = event.detail?.expectedDuration;
         const seconds = Number(Array.isArray(detail) ? detail[0] : detail);
         if (Number.isFinite(seconds) && seconds > 0) {
-            signals.expectedSeconds = seconds;
+            signals.expectedSeconds = Math.max(signals.expectedSeconds ?? 0, seconds);
         }
     });
-    const finish = () => { signals.finished = true; };
+    let finishedRuns = 0;
+    const finish = () => { signals.finished = ++finishedRuns >= runs; };
     decorator.addCustomEventListener(testRunEventChannel("onSuccess"), finish);
     decorator.addCustomEventListener(testRunEventChannel("onFailed"), finish);
     return signals;
@@ -337,11 +338,13 @@ export async function runGraphAndWait(decorator: ADecorator, graph: any): Promis
 }
 
 export async function runGraphsAndWait(decorators: ADecorator[], graphs: any[]): Promise<void> {
+    // the decorators share one event bus: register once, before loading, and wait for every graph
+    const signals = watchTestRunSignals(decorators[0], graphs.length);
     graphs.forEach((graph, index) => decorators[index].loadBehaveGraph(structuredCloneFallback(graph), false));
     decorators[0].playEventQueue();
     const waitSeconds = Math.max(...graphs.map(getGraphSettleSeconds));
     const waitMs = Math.max(20, Math.ceil(waitSeconds * 1000));
-    await Promise.all(decorators.map((decorator) => renderWhileWaiting(decorator, waitMs)));
+    await Promise.all(decorators.map((decorator) => renderWhileWaiting(decorator, waitMs, signals)));
     decorators[0].executeEventQueueTick();
     decorators.forEach((decorator) => decorator.pauseEventQueue());
     decorators[0].clearCustomEventListeners();

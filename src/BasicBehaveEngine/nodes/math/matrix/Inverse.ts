@@ -20,13 +20,14 @@ export class Inverse extends BehaveEngineNode {
     }
 
     static invert4x4(matrix: number[]): inverseResults {
-        const colMajor = new Float32Array(matrix);
+        // plain number arrays: gl-matrix defaults to Float32Array, but spec floats are doubles
+        const colMajor = matrix as glMatrix.mat4;
         const determinant = glMatrix.mat4.determinant(colMajor);
         if (!Number.isFinite(determinant) || determinant === 0) {
             return {value: this.createZeroMatrix(4), isValid: false};
         }
 
-        const result = glMatrix.mat4.create();
+        const result = Array(16).fill(0) as glMatrix.mat4;
         const success = glMatrix.mat4.invert(result, colMajor);
 
         if (!success) {
@@ -37,13 +38,13 @@ export class Inverse extends BehaveEngineNode {
     }
 
     static invert3x3(matrix: number[]): inverseResults {
-        const colMajor = new Float32Array(matrix);
+        const colMajor = matrix as glMatrix.mat3;
         const determinant = glMatrix.mat3.determinant(colMajor);
         if (!Number.isFinite(determinant) || determinant === 0) {
             return {value: this.createZeroMatrix(3), isValid: false};
         }
 
-        const result = glMatrix.mat3.create();
+        const result = Array(9).fill(0) as glMatrix.mat3;
         const success = glMatrix.mat3.invert(result, colMajor);
         if (!success) {
             return {value: this.createZeroMatrix(3), isValid: false};
@@ -53,13 +54,13 @@ export class Inverse extends BehaveEngineNode {
     }
 
     static invert2x2(matrix: number[]): inverseResults {
-        const colMajor = new Float32Array(matrix);
+        const colMajor = matrix as glMatrix.mat2;
         const determinant = glMatrix.mat2.determinant(colMajor);
         if (!Number.isFinite(determinant) || determinant === 0) {
             return {value: this.createZeroMatrix(2), isValid: false};
         }
 
-        const result = glMatrix.mat2.create();
+        const result = Array(4).fill(0) as glMatrix.mat2;
         const success = glMatrix.mat2.invert(result, colMajor);
         if (!success) {
             return {value: this.createZeroMatrix(2), isValid: false};

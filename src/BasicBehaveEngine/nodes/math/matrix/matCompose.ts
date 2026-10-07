@@ -27,9 +27,10 @@ export class MatCompose extends BehaveEngineNode {
         }
 
         // Create matrices for translation, rotation and scale
-        const rotationMatrix = new Float32Array(16);
-        const scaleMatrix = new Float32Array(16);
-        const resultMatrix = new Float32Array(16);
+        // plain number arrays: gl-matrix defaults to Float32Array, but spec floats are doubles
+        const rotationMatrix = Array(16).fill(0) as glMatrix.mat4;
+        const scaleMatrix = Array(16).fill(0) as glMatrix.mat4;
+        const resultMatrix = Array(16).fill(0) as glMatrix.mat4;
 
         // Set up individual transformation matrices
         glMatrix.mat4.fromQuat(rotationMatrix, rotation); // rotation is in xyzw

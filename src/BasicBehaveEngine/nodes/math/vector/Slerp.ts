@@ -93,9 +93,10 @@ export class Slerp extends BehaveEngineNode {
                 const s = Math.sin(angle / 2);
                 const qx = rx * s, qy = ry * s, qz = rz * s, qw = Math.cos(angle / 2);
                 // Rotate â by quaternion q
-                const q = glMatrix.quat.fromValues(qx, qy, qz, qw);
-                const aVec = glMatrix.vec3.fromValues(ax, ay, az);
-                const rotated = glMatrix.vec3.create();
+                // plain number arrays: gl-matrix defaults to Float32Array, but spec floats are doubles
+                const q: glMatrix.quat = [qx, qy, qz, qw];
+                const aVec: glMatrix.vec3 = [ax, ay, az];
+                const rotated = Array(3).fill(0) as glMatrix.vec3;
                 glMatrix.vec3.transformQuat(rotated, aVec, q);
                 val = [rotated[0] * L, rotated[1] * L, rotated[2] * L];
                 break;

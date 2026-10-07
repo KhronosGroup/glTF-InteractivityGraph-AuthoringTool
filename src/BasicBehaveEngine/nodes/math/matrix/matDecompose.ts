@@ -70,8 +70,9 @@ export class MatDecompose extends BehaveEngineNode {
         }
 
         // get rotation from B matrix and turn it into a quaternion
-        const B_matrix = glMatrix.mat3.fromValues(B[0][0], B[0][1], B[0][2], B[1][0], B[1][1], B[1][2], B[2][0], B[2][1], B[2][2]);
-        const rotation = glMatrix.quat.create();
+        // plain number arrays: gl-matrix defaults to Float32Array, but spec floats are doubles
+        const B_matrix: glMatrix.mat3 = [B[0][0], B[0][1], B[0][2], B[1][0], B[1][1], B[1][2], B[2][0], B[2][1], B[2][2]];
+        const rotation = Array(4).fill(0) as glMatrix.quat;
         glMatrix.quat.fromMat3(rotation, B_matrix);
         result.rotation.value = [rotation[0], rotation[1], rotation[2], rotation[3]];
 

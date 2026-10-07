@@ -25,12 +25,13 @@ export class QuatMul extends BehaveEngineNode {
             throw Error(`b should be of type float4, got ${typeB}`)
         }
 
-        const quatA = glMatrix.quat.create();
+        // plain number arrays: gl-matrix defaults to Float32Array, but spec floats are doubles
+        const quatA = Array(4).fill(0) as glMatrix.quat;
         glMatrix.quat.set(quatA, a[0], a[1], a[2], a[3]);
-        const quatB = glMatrix.quat.create();
+        const quatB = Array(4).fill(0) as glMatrix.quat;
         glMatrix.quat.set(quatB, b[0], b[1], b[2], b[3]);
 
-        const result = glMatrix.quat.create();
+        const result = Array(4).fill(0) as glMatrix.quat;
         glMatrix.quat.mul(result, quatA, quatB);
 
         const val = [result[0], result[1], result[2], result[3]]

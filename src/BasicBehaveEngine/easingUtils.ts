@@ -97,10 +97,11 @@ export const easeFloat4 = (t: number, easingParameters: IEasingParameters<number
 }
 
 export const slerpFloat4 = (t: number, initialVal: number[], targetVal: number[]): number[] => {
-    const q1 = glMatrix.quat.fromValues(initialVal[1], initialVal[2], initialVal[3], initialVal[0]);
-    const q2 = glMatrix.quat.fromValues(targetVal[1], targetVal[2], targetVal[3], targetVal[0]);
+    // plain number arrays: gl-matrix defaults to Float32Array, but spec floats are doubles
+    const q1: glMatrix.quat = [initialVal[1], initialVal[2], initialVal[3], initialVal[0]];
+    const q2: glMatrix.quat = [targetVal[1], targetVal[2], targetVal[3], targetVal[0]];
 
-    const outQuat = glMatrix.quat.create();
+    const outQuat = Array(4).fill(0) as glMatrix.quat;
     glMatrix.quat.slerp(outQuat, q1, q2, t);
     return [outQuat[3], outQuat[0], outQuat[1], outQuat[2]];
 }

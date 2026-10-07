@@ -31,12 +31,13 @@ export class QuatSlerp extends BehaveEngineNode {
             throw Error(`c should be of type float, got ${typeC}`);
         }
 
-        const quatA = glMatrix.quat.create();
+        // plain number arrays: gl-matrix defaults to Float32Array, but spec floats are doubles
+        const quatA = Array(4).fill(0) as glMatrix.quat;
         glMatrix.quat.set(quatA, a[0], a[1], a[2], a[3]);
-        const quatB = glMatrix.quat.create();
+        const quatB = Array(4).fill(0) as glMatrix.quat;
         glMatrix.quat.set(quatB, b[0], b[1], b[2], b[3]);
 
-        const result = glMatrix.quat.create();
+        const result = Array(4).fill(0) as glMatrix.quat;
         const t = Number(c);
         glMatrix.quat.slerp(result, quatA, quatB, t);
 

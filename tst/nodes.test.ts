@@ -123,6 +123,8 @@ import { DebugLog } from '../src/BasicBehaveEngine/nodes/debug/Log';
 import { QuatAngleBetween } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatAngleBetween';
 import { QuatFromUpForward } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatFromUpForward';
 import { QuatSlerp } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatSlerp';
+import { Slerp } from '../src/BasicBehaveEngine/nodes/math/vector/Slerp';
+import { slerpFloat4 } from '../src/BasicBehaveEngine/easingUtils';
 import { QuatFromAngles } from '../src/BasicBehaveEngine/nodes/math/quaternion/QuatFromAngles';
 import { RefEquality } from '../src/BasicBehaveEngine/nodes/ref/RefEquality';
 import * as glMatrix from 'gl-matrix';
@@ -1138,6 +1140,87 @@ describe('nodes', () => {
         expect(val['value'].value[5]).toBe(1);
         expect(val['value'].value[10]).toBe(1);
         expect(val['value'].value[15]).toBe(1);
+    });
+
+    // spec: float is IEEE-754 double; these values are not representable as float32
+    describe("double precision of gl-matrix backed ops", () => {
+        const big = 16777217; // 2^24 + 1
+        const tiny = 1 + 2 ** -52;
+        const expectDouble = (actual: number, expected: number) => expect(Math.abs(actual - expected)).toBeLessThan(1e-14);
+
+        it("math/inverse", () => {
+            const inv2 = new Inverse({...defaultProps, values: {a: { value: [big, 0, 0, 1], type: 6 }}}).processNode();
+            expect(inv2['value'].value[0]).toBe(1 / big);
+            const inv4 = new Inverse({...defaultProps, values: {a: { value: [big, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], type: 8 }}}).processNode();
+            expect(inv4['value'].value[0]).toBe(1 / big);
+        });
+
+        it("math/matMul", () => {
+            const id = (n: number): number[] => Array.from({length: n * n}, (_, i) => i % (n + 1) === 0 ? 1 : 0);
+            for (const [n, type] of [[2, 6], [3, 7], [4, 8]]) {
+                const a = id(n);
+                a[0] = big;
+                const val = new MatMul({...defaultProps, values: {a: { value: a, type }, b: { value: id(n), type }}}).processNode();
+                expect(val['value'].value).toEqual(a);
+            }
+        });
+
+        it("math/matCompose", () => {
+            const val = new MatCompose({...defaultProps, values: {
+                translation: { value: [big, 0, 0], type: 4 },
+                rotation: { value: [0, 0, 0, 1], type: 5 },
+                scale: { value: [tiny, 1, 1], type: 4 },
+            }}).processNode();
+            expect(val['value'].value[0]).toBe(tiny);
+            expect(val['value'].value[12]).toBe(big);
+        });
+
+        it("math/matDecompose", () => {
+            const c = Math.cos(1), s = Math.sin(1);
+            const val = new MatDecompose({...defaultProps, values: {a: { value: [c, s, 0, 0, -s, c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], type: 8 }}}).processNode();
+            const q = val['rotation'].value as number[];
+            expectDouble(q[2], Math.sin(0.5));
+            expectDouble(q[3], Math.cos(0.5));
+        });
+
+        it("math/quatMul", () => {
+            const val = new QuatMul({...defaultProps, values: {a: { value: [0.6, 0, 0, 0.8], type: 5 }, b: { value: [0, 0, 0, 1], type: 5 }}}).processNode();
+            expect(val['value'].value).toEqual([0.6, 0, 0, 0.8]);
+        });
+
+        it("math/quatSlerp", () => {
+            const val = new QuatSlerp({...defaultProps, values: {
+                a: { value: [0.6, 0, 0, 0.8], type: 5 },
+                b: { value: [0, 0.6, 0, 0.8], type: 5 },
+                c: { value: [0], type: 2 },
+            }}).processNode();
+            expect(val['value'].value).toEqual([0.6, 0, 0, 0.8]);
+        });
+
+        it("math/quatFromUpForward", () => {
+            const val = new QuatFromUpForward({...defaultProps, values: {
+                up: { value: [0, 1, 0], type: 4 },
+                forward: { value: [Math.sin(1), 0, Math.cos(1)], type: 4 },
+            }}).processNode();
+            const q = val['value']!.value as number[];
+            expectDouble(q[1], Math.sin(0.5));
+            expectDouble(q[3], Math.cos(0.5));
+        });
+
+        it("math/slerp float3", () => {
+            const val = new Slerp({...defaultProps, values: {
+                a: { value: [1, 0, 0], type: 4 },
+                b: { value: [0, 1, 0], type: 4 },
+                c: { value: [1 / 3], type: 2 },
+            }}).processNode();
+            const v = val['value'].value as number[];
+            expectDouble(v[0], Math.cos(Math.PI / 6));
+            expectDouble(v[1], Math.sin(Math.PI / 6));
+        });
+
+        it("interpolate slerpFloat4", () => {
+            expect(slerpFloat4(0, [0.8, 0.6, 0, 0], [0.8, 0, 0.6, 0])).toEqual([0.8, 0.6, 0, 0]);
+        });
     });
 
     it("math/select", () => {

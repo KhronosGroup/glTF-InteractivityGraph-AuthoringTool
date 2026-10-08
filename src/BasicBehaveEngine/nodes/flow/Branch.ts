@@ -15,7 +15,7 @@ export class Branch extends BehaveEngineNode {
         const {condition} = this.evaluateRequiredValues();
         this.graphEngine.processNodeStarted(this);
 
-        if (JSON.parse(condition)) {
+        if (typeof condition === "boolean" ? condition : JSON.parse(condition)) {
             if (this.flows.true != null) {
                 this.processFlow(this.flows.true);
             }

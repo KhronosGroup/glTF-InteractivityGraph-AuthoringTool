@@ -8,7 +8,7 @@ import { buildNormalizedTemplateSet } from "../../authoring/pointerCatalogue";
 import { getEventLabel } from "../../authoring/CustomEventControls";
 import { getCustomEventChannel } from "../../BasicBehaveEngine/types/InteractivityGraph";
 import { createGlTFObjectModelFromGltf, readGltfJsonFromArrayBuffer } from "../../objectModel/glTFObjectModel";
-import { IconJsonFile, IconPlay, IconSendEvent } from "../toolbarIcons";
+import { IconJsonFile, IconPlay, IconPointer, IconSendEvent } from "../toolbarIcons";
 
 enum LoggingEngineModal {
     OBJECT_MODEL = "OBJECT_MODEL",

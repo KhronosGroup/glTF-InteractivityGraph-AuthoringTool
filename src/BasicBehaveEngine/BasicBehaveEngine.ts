@@ -884,16 +884,16 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.propagationCancelled.clear();
         this.propagationCancelledPending.clear();
 
-        const eventQueueCopy = [...this.eventBus.getEventList()];
+        // events queued while processing run on the next tick
+        const eventQueue = this.eventBus.getEventList().slice();
         this.eventBus.clearEventList();
-        while (eventQueueCopy.length > 0) {
-            const eventToStart = eventQueueCopy[0];
+        for (let i = 0; i < eventQueue.length; i++) {
+            const eventToStart = eventQueue[i];
             if (eventToStart.behaveNode) {
                 eventToStart.behaveNode.processNode(eventToStart.inSocketId);
             } else if (eventToStart.func) {
                 eventToStart.func();
             }
-            eventQueueCopy.splice(0, 1);
         }
 
         // process interpolations

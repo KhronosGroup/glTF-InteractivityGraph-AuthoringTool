@@ -4,6 +4,7 @@ export class Send extends BehaveEngineNode {
     INPUT_FLOWS = ["in"];
     REQUIRED_CONFIGURATIONS = {event: {}}
     _event: number;
+    _valueKeys: string[] | undefined;
 
     constructor(props: IBehaviourNodeProps) {
         super(props);
@@ -18,7 +19,10 @@ export class Send extends BehaveEngineNode {
     override processNode(flowSocket?: string) {
         const customEventDesc: IInteractivityEvent = this.events[this._event];
         this.graphEngine.clearValueEvaluationCache();
-        const vals = this.evaluateAllValues(Object.keys(customEventDesc.values ?? {}));
+        if (this._valueKeys === undefined) {
+            this._valueKeys = Object.keys(customEventDesc.values ?? {});
+        }
+        const vals = this.evaluateAllValues(this._valueKeys);
         this.graphEngine.processNodeStarted(this);
 
         this.graphEngine.dispatchCustomEvent(getCustomEventChannel(customEventDesc, this._event), vals);

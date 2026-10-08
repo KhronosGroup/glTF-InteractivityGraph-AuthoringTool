@@ -54,6 +54,7 @@
     "test:assets:core": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config jest.assets.config.json --runInBand tst/assets/validation.asset.ts tst/assets/core.asset.ts tst/assets/overview.asset.ts tst/assets/interglb.asset.ts",
     "pretest:assets:e2e": "npm run schema:generate",
     "test:assets:e2e": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config jest.assets.config.json --runInBand tst/assets/validation.asset.ts tst/assets/engines.asset.ts tst/assets/interglb.babylon.asset.ts",
+    "test:perf": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config jest.perf.config.json --runInBand",
     "cy:open": "cypress open",
     "cy:run": "cypress run",
     "posttest": "generate-coverage-data",

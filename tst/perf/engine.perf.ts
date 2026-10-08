@@ -35,13 +35,7 @@ const benchGraph = (name: string, make: () => PerfGraph) => {
 };
 
 describe("BasicBehaveEngine performance", () => {
-    let consoleLog: ReturnType<typeof jest.spyOn>;
-    // event/receive logs every received value; jest's console would dominate the timings
-    beforeAll(() => { consoleLog = jest.spyOn(console, "log").mockImplementation(() => undefined); });
-    afterAll(() => {
-        consoleLog.mockRestore();
-        reportResults(results);
-    });
+    afterAll(() => reportResults(results));
 
     benchGraph("idle tick", idleTick);
 

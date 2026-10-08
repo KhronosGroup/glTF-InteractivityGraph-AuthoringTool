@@ -67,7 +67,7 @@ describe("BasicBehaveEngine performance", () => {
             const set = b.incrementVariable(b.variable(T.int, [0]), lit(T.int, 1));
             if (i === 0) b.flow(tick, "out", set);
         }
-        const graphs = Array.from({length: 7}, () => b.build());
+        const graphs = Array.from({length: 18}, () => b.build());
         results.push(runOnce("load graph (~2000 nodes)", "node", b.nodeCount, () => {
             const engine = new BasicBehaveEngine(60, new DOMEventBus());
             engine.loadBehaveGraph(graphs.pop(), false);

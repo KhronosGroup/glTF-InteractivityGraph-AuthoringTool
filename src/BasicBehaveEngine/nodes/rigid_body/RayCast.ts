@@ -16,7 +16,7 @@ export class RayCast extends BehaveEngineNode {
 
     override processNode(flowSocket?: string): void {
         this.graphEngine.clearValueEvaluationCache();
-        const {rayStart, rayEnd, collisionFilterIndex} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const {rayStart, rayEnd, collisionFilterIndex} = this.evaluateRequiredValues();
 
         this.graphEngine.processNodeStarted(this);
 

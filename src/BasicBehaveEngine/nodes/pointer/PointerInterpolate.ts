@@ -28,7 +28,7 @@ export class PointerInterpolate extends BehaveEngineNode {
         this.graphEngine.clearValueEvaluationCache();
         const configVals = this.evaluateAllValues(this._refs);
         const configIndices = this.evaluateAllValues(this._indices);
-        const requiredVals = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const requiredVals = this.evaluateRequiredValues();
         const {p1, p2} = this.evaluateAllValues(["p1", "p2"]);
         const targetValue = requiredVals.value;
         const duration = requiredVals.duration;

@@ -11,7 +11,7 @@ export class QuatSlerp extends BehaveEngineNode {
     }
 
     override processNode(flowSocket?: string) {
-        const { a, b, c } = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const { a, b, c } = this.evaluateRequiredValues();
         this.graphEngine.processNodeStarted(this);
 
         const typeIndexA = this.values['a'].type!;

@@ -28,7 +28,7 @@ export class PointerSet extends BehaveEngineNode {
         this.graphEngine.clearValueEvaluationCache();
         const configValues = this.evaluateAllValues(this._refs);
         const configIndices = this.evaluateAllValues(this._indices);
-        const requiredValues = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const requiredValues = this.evaluateRequiredValues();
         const targetValue = requiredValues.value;
         this.graphEngine.processNodeStarted(this);
 

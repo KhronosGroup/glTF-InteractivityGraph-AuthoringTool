@@ -12,7 +12,7 @@ export class ApplyImpulse extends BehaveEngineNode {
 
     override processNode(flowSocket?: string): void {
         this.graphEngine.clearValueEvaluationCache();
-        const {nodeIndex, linearImpulse, angularImpulse} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const {nodeIndex, linearImpulse, angularImpulse} = this.evaluateRequiredValues();
 
         this.graphEngine.processNodeStarted(this);
 

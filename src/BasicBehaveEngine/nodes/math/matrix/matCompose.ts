@@ -11,7 +11,7 @@ export class MatCompose extends BehaveEngineNode {
     }
 
     override processNode(flowSocket?: string) {
-        const {translation, rotation, scale} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const {translation, rotation, scale} = this.evaluateRequiredValues();
         this.graphEngine.processNodeStarted(this);
         const typeIndexTranslation = this.values['translation'].type!
         const typeTranslation: string = this.getType(typeIndexTranslation);

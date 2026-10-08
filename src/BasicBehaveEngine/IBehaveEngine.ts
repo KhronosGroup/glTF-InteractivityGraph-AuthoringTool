@@ -1,4 +1,4 @@
-import { IInteractivityFlow, IInteractivityValue } from "./types/InteractivityGraph";
+import { IInteractivityFlow } from "./types/InteractivityGraph";
 import {BehaveEngineNode} from "./BehaveEngineNode";
 
 export interface IHoverInformation {
@@ -203,22 +203,6 @@ export interface IBehaveEngine {
      * Clears the cache used for value evaluations.
      */
     clearValueEvaluationCache: () => void;
-
-    /**
-     * Adds an entry to the value evaluation cache.
-     *
-     * @param {string} key - The cache key for the entry.
-     * @param {IValue} val - The value to be cached.
-     */
-    addEntryToValueEvaluationCache: (key: string, val: IInteractivityValue) => void;
-
-    /**
-     * Retrieves the cached value associated with a specific key from the value evaluation cache.
-     *
-     * @param {string} key - The cache key for the desired value.
-     * @returns {IValue | undefined} The cached value or undefined if not found.
-     */
-    getValueEvaluationCacheValue: (key: string) => IInteractivityValue | undefined;
 
     setPointerInterpolationCallback: (path: string, action: IInterpolateAction) => void;
     clearPointerInterpolation: (path: string) => void;

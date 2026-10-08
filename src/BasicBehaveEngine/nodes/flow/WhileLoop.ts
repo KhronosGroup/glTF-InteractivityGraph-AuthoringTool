@@ -14,13 +14,13 @@ export class WhileLoop extends BehaveEngineNode {
     override processNode(flowSocket?: string) {
         this.graphEngine.processNodeStarted(this);
         this.graphEngine.clearValueEvaluationCache();
-        let condition = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES)).condition;
+        let condition = this.evaluateRequiredValues().condition;
         while (condition) {
             if (this.flows.loopBody != null) {
                 this.processFlow(this.flows.loopBody);
             }
             this.graphEngine.clearValueEvaluationCache();
-            condition = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES)).condition;
+            condition = this.evaluateRequiredValues().condition;
         }
 
         if (this.flows.completed != null) {

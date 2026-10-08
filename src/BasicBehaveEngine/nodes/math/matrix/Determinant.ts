@@ -11,7 +11,7 @@ export class Determinant extends BehaveEngineNode {
     }
 
     override processNode(flowSocket?: string) {
-        const {a} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const {a} = this.evaluateRequiredValues();
         this.graphEngine.processNodeStarted(this);
         const typeIndexA = this.values['a'].type!
         const typeA: string = this.getType(typeIndexA);

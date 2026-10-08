@@ -12,7 +12,7 @@ export class AnimationStart extends BehaveEngineNode {
 
     override processNode(flowSocket?: string): void {
         this.graphEngine.clearValueEvaluationCache();
-        const {animation, startTime, endTime, speed} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const {animation, startTime, endTime, speed} = this.evaluateRequiredValues();
 
         this.graphEngine.processNodeStarted(this);
         

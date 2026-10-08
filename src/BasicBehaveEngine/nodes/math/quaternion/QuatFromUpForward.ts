@@ -11,7 +11,7 @@ export class QuatFromUpForward extends BehaveEngineNode {
     }
 
     override processNode(flowSocket?: string) {
-        const {up, forward} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const {up, forward} = this.evaluateRequiredValues();
         this.graphEngine.processNodeStarted(this);
         const typeIndexUp = this.values['up'].type!
         const typeUp: string = this.getType(typeIndexUp);

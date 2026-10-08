@@ -23,7 +23,7 @@ export class VariableInterpolate extends BehaveEngineNode {
 
     override processNode(flowSocket?:string) {
         this.graphEngine.clearValueEvaluationCache();
-        const {value, duration, p1, p2} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const {value, duration, p1, p2} = this.evaluateRequiredValues();
         this.graphEngine.processNodeStarted(this);
         
         

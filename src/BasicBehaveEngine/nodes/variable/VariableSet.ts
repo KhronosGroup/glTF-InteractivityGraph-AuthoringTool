@@ -4,6 +4,7 @@ export class VariableSet extends BehaveEngineNode {
     INPUT_FLOWS = ["in"];
     REQUIRED_CONFIGURATIONS = {variables: {}}
     _variables: number[];
+    _variableKeys: string[];
 
     constructor(props: IBehaviourNodeProps) {
         super(props);
@@ -21,11 +22,12 @@ export class VariableSet extends BehaveEngineNode {
         if (!Array.isArray(this._variables)) {
             this._variables = [this._variables];
         }
+        this._variableKeys = this._variables.map(variable => variable.toString());
     }
 
     override processNode(flowSocket?:string) {
         this.graphEngine.clearValueEvaluationCache();
-        const vals = this.evaluateAllValues(this._variables.map(variable => variable.toString()));
+        const vals = this.evaluateAllValues(this._variableKeys);
         
         this.graphEngine.processNodeStarted(this);
         for (const variableId of this._variables) {

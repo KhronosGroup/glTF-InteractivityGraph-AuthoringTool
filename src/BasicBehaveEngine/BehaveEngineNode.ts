@@ -17,6 +17,37 @@ export interface IBehaviourNodeProps {
     addEventToWorkQueue: any,
 }
 
+// type names per graph `types` array, shared by all nodes of a graph
+const typeNameCache = new WeakMap<IInteractivityValueType[], string[]>();
+
+const typeSignatureName = (type: IInteractivityValueType): string =>
+    type?.signature === "custom" && type?.extensions ? Object.keys(type.extensions)[0] : type.signature;
+
+const LITERAL_INPUT = 0;
+const CONNECTED_INPUT = 1;
+const DEFAULT_INPUT = 2;
+
+// an input socket resolved on first evaluation; reused while the node still holds the same socket object
+interface PreparedInput {
+    source: IInteractivityValue;
+    kind: number;
+    // literal: the socket value/type the parsed value was made from
+    rawValue: any[] | undefined;
+    rawType: number | undefined;
+    parsed: any;
+    // type name of typeIndex; for connected inputs typeIndex follows the source output's type
+    typeIndex: number | undefined;
+    typeName: string;
+    node: BehaveEngineNode | undefined;
+    socket: string;
+}
+
+const warnIfSingleElementArray = (val: any) => {
+    if (Array.isArray(val) && val.length === 1) {
+        console.error("This should not happen – an array with a single value was returned");
+    }
+};
+
 export class BehaveEngineNode {
     REQUIRED_VALUES: Record<string, IInteractivityValue> = {};
     REQUIRED_CONFIGURATIONS: Record<string, IInteractivityConfigurationValue> = {};
@@ -36,6 +67,14 @@ export class BehaveEngineNode {
     events: IInteractivityEvent[];
     configuration: Record<string, IInteractivityConfigurationValue>;
     addEventToWorkQueue: any;
+    // all outputs of the last processNode() pull, valid while the engine's evaluation epoch is unchanged
+    private outputCache: Record<string, IInteractivityValue> | undefined;
+    private outputCacheEpoch = -1;
+    private typeNameList: string[] | undefined;
+    private typeNameSource: IInteractivityValueType[] | undefined;
+    private preparedInputs: Map<string, PreparedInput> | undefined;
+    private requiredValueKeys: string[] | undefined;
+    private requiredValueKeysSource: Record<string, IInteractivityValue> | undefined;
 
     constructor(props: IBehaviourNodeProps) {
         const {index, flows, values, idToBehaviourNodeMap, graphEngine, variables, events, types, configuration, addEventToWorkQueue, declaration} = props;
@@ -141,13 +180,18 @@ export class BehaveEngineNode {
     protected evaluateAllValues(vals: string[]): Record<string, any> {
         const res: Record<string, any> = {};
         for (let i = 0; i < vals.length; i++) {
-            const val = this.evaluateValue(vals[i], this.values[vals[i]]);
-            if (Array.isArray(val) && val.length === 1) {
-                console.error("This should not happen – an array with a single value was returned");
-            }
-            res[vals[i]] = val;
+            res[vals[i]] = this.evaluateValue(vals[i], this.values[vals[i]]);
         }
         return res;
+    }
+
+    /** evaluateAllValues over the keys of REQUIRED_VALUES. */
+    protected evaluateRequiredValues(): Record<string, any> {
+        if (this.requiredValueKeysSource !== this.REQUIRED_VALUES) {
+            this.requiredValueKeys = Object.keys(this.REQUIRED_VALUES);
+            this.requiredValueKeysSource = this.REQUIRED_VALUES;
+        }
+        return this.evaluateAllValues(this.requiredValueKeys!);
     }
 
     private evaluateValue(key: string, val: IInteractivityValue): any {
@@ -155,52 +199,84 @@ export class BehaveEngineNode {
             throw new Error(`Value ${key} is missing for ${this.name}`);
         }
 
+        let input = this.preparedInputs === undefined ? undefined : this.preparedInputs.get(key);
+        if (input === undefined || input.source !== val
+            || (input.kind === LITERAL_INPUT && (val.value !== input.rawValue || val.type !== input.rawType))) {
+            input = this.prepareInput(key, val);
+            if (input === undefined) {
+                return undefined;
+            }
+        }
+
+        if (input.kind === LITERAL_INPUT) {
+            return input.parsed;
+        }
+        if (input.kind === CONNECTED_INPUT) {
+            const output = this.pullOutput(input.node!, input.socket);
+            const type = output.type;
+            input.source.type = type;
+            if (type !== input.typeIndex) {
+                input.typeIndex = type;
+                input.typeName = this.getType(type!);
+                const result = this.parseType(input.typeName, output.value);
+                warnIfSingleElementArray(result);
+                return result;
+            }
+            return this.parseType(input.typeName, output.value);
+        }
+        // spec: neither value nor node -> type-default value
+        return this.parseType(input.typeName, this.getDefaultValueForType(input.typeName));
+    }
+
+    private prepareInput(key: string, val: IInteractivityValue): PreparedInput | undefined {
+        let input: PreparedInput;
         if (val.value != null) {
             const typeName = this.getType(val.type!);
-            return this.parseType(typeName, val.value);
+            const parsed = this.parseType(typeName, val.value);
+            warnIfSingleElementArray(parsed);
+            input = {source: val, kind: LITERAL_INPUT, rawValue: val.value, rawType: val.type, parsed, typeIndex: val.type, typeName, node: undefined, socket: ""};
         } else if (val.node != null) {
-
-            // short circuit if we have evaluated this node's socket already
-            const cachedValue = this.graphEngine.getValueEvaluationCacheValue(`${val.node}-${val.socket}`);
-            if (cachedValue !== undefined) {
-                this.values[key] = {...this.values[key], type: cachedValue.type};
-                const typeName = this.getType(cachedValue.type!);
-                return this.parseType(typeName, cachedValue.value);
-            }
-
-            // the value depends on the output of another node's socket, so we need to go and determine that
-            const dependentNode: BehaveEngineNode = this.idToBehaviourNodeMap.get(Number(val.node))!;
-
-            let valueToReturn: any;
-            let typeIndex: number;
-            if (dependentNode.outValues !== undefined && dependentNode.outValues[val.socket!] !== undefined) {
-                //socket has already been evaluated so return it
-                valueToReturn = dependentNode.outValues[val.socket!].value;
-                typeIndex = dependentNode.outValues[val.socket!].type!;
-                this.values[key] = {...this.values[key], type: typeIndex};
-            } else {
-                //this node has not been evaluated yet, so we need to process it in order to get the output
-                const dependentNodeValues = dependentNode.processNode();
-                if (dependentNodeValues === undefined || dependentNodeValues[val.socket!] === undefined) {
-                    if (isNoOpNode(dependentNode)) {
-                        throw new Error(`"${this.name}" depends on output socket "${val.socket}" of "${dependentNode.name}", which does not execute or produce output because this tool does not implement its operation.`);
-                    }
-                    throw new Error(`Output socket ${val.socket} is missing on ${dependentNode.name}`);
-                }
-                const dependentValue = dependentNodeValues[val.socket!];
-
-                typeIndex = dependentValue.type
-                valueToReturn = dependentValue.value
-                this.values[key] = {...this.values[key], type: dependentValue.type};
-            }
-            this.graphEngine.addEntryToValueEvaluationCache(`${val.node}-${val.socket}`, {socket: val.socket!, value: valueToReturn, type: typeIndex});
-            const typeName = this.getType(typeIndex);
-            return this.parseType(typeName, valueToReturn);
+            // evaluation writes the resolved type into the socket; write into a copy, not the caller's object
+            const source = {...val};
+            this.values[key] = source;
+            const node = this.idToBehaviourNodeMap.get(Number(val.node))!;
+            input = {source, kind: CONNECTED_INPUT, rawValue: undefined, rawType: undefined, parsed: undefined, typeIndex: undefined, typeName: "", node, socket: val.socket!};
         } else if (val.type != null) {
-            // spec: neither value nor node -> type-default value
-            const typeName = this.getType(val.type);
-            return this.parseType(typeName, this.getDefaultValueForType(typeName));
+            input = {source: val, kind: DEFAULT_INPUT, rawValue: undefined, rawType: undefined, parsed: undefined, typeIndex: val.type, typeName: this.getType(val.type), node: undefined, socket: ""};
+        } else {
+            return undefined;
         }
+        if (this.preparedInputs === undefined) {
+            this.preparedInputs = new Map();
+        }
+        this.preparedInputs.set(key, input);
+        return input;
+    }
+
+    // output of another node's socket: this epoch's cached result, then its stored outValues, else process it
+    private pullOutput(dependentNode: BehaveEngineNode, socket: string): IInteractivityValue {
+        if (dependentNode.outputCacheEpoch === this.graphEngine.valueEvaluationEpoch) {
+            const cached = dependentNode.outputCache![socket];
+            if (cached !== undefined) {
+                return cached;
+            }
+        }
+
+        const stored = dependentNode.outValues === undefined ? undefined : dependentNode.outValues[socket];
+        if (stored !== undefined) {
+            return stored;
+        }
+
+        const outputs = dependentNode.processNode();
+        if (outputs === undefined || outputs[socket] === undefined) {
+            if (isNoOpNode(dependentNode)) {
+                throw new Error(`"${this.name}" depends on output socket "${socket}" of "${dependentNode.name}", which does not execute or produce output because this tool does not implement its operation.`);
+            }
+            throw new Error(`Output socket ${socket} is missing on ${dependentNode.name}`);
+        }
+        dependentNode.outputCache = outputs;
+        dependentNode.outputCacheEpoch = this.graphEngine.valueEvaluationEpoch;
+        return outputs[socket];
     }
 
     /**
@@ -216,25 +292,32 @@ export class BehaveEngineNode {
         return res;
     }
 
+    private typeNames(): string[] {
+        let names = this.typeNameList;
+        if (names === undefined || this.typeNameSource !== this.types || names.length !== this.types.length) {
+            names = typeNameCache.get(this.types);
+            if (names === undefined || names.length !== this.types.length) {
+                names = this.types.map(typeSignatureName);
+                typeNameCache.set(this.types, names);
+            }
+            this.typeNameList = names;
+            this.typeNameSource = this.types;
+        }
+        return names;
+    }
+
     protected getType(id: number): string {
-        const type = this.types[id];
-        if (type === undefined) {
+        const name = this.typeNames()[id];
+        if (name === undefined) {
             console.log(id)
             console.log(this.types)
+            return typeSignatureName(this.types[id]);
         }
-        let typeName: string;
-        if (type?.signature === "custom" && type?.extensions) {
-            typeName = Object.keys(type.extensions)[0]
-        } else {
-            typeName = type.signature;
-        }
-
-        return typeName;
+        return name;
     }
 
     protected getTypeIndex(name: string): number {
-        const typeNames = this.types.map((type, index) => this.getType(index));
-        return typeNames.indexOf(name);
+        return this.typeNames().indexOf(name);
     }
 
     protected getDefaultValueForType(type: string): any {

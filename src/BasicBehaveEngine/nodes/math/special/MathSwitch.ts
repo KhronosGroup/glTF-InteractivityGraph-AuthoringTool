@@ -18,7 +18,7 @@ export class MathSwitch extends BehaveEngineNode {
     }
 
     override processNode(flowSocket?: string) {
-        const evaluatedValues = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const evaluatedValues = this.evaluateRequiredValues();
         const defaultSelection = evaluatedValues.default;
         const selection = evaluatedValues.selection;
 

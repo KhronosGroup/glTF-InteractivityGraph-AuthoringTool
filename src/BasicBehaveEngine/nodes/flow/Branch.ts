@@ -12,7 +12,7 @@ export class Branch extends BehaveEngineNode {
 
     override processNode(flowSocket?: string) {
         this.graphEngine.clearValueEvaluationCache();
-        const {condition} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const {condition} = this.evaluateRequiredValues();
         this.graphEngine.processNodeStarted(this);
 
         if (JSON.parse(condition)) {

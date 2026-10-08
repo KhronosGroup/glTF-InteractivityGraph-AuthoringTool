@@ -114,7 +114,7 @@ import { InverseHyperbolicTangent } from "./nodes/math/hyperbolic/InverseHyperbo
 import { Exponential } from "./nodes/math/exponential/Exponential";
 import { HyperbolicCosine } from "./nodes/math/hyperbolic/HyperbolicCosine";
 import { HyperbolicTangent } from "./nodes/math/hyperbolic/HyperbolicTangent";
-import { IInteractivityVariable, IInteractivityEvent, IInteractivityValue, IInteractivityFlow, IInteractivityNode, IInteractivityValueType, IInteractivityDeclaration } from "./types/InteractivityGraph";
+import { IInteractivityVariable, IInteractivityEvent, IInteractivityFlow, IInteractivityNode, IInteractivityValueType, IInteractivityDeclaration } from "./types/InteractivityGraph";
 import { VariableInterpolate } from "./nodes/variable/VariableInterpolate";
 import { NoOpNode } from "./nodes/experimental/NoOp";
 import { MatDecompose } from "./nodes/math/matrix/matDecompose";
@@ -312,7 +312,8 @@ export class BasicBehaveEngine implements IBehaveEngine {
     protected types: IInteractivityValueType[];
     private jsonPtrTrie: JsonPtrTrie;
     private _fps: number;
-    private valueEvaluationCache: Map<string, IInteractivityValue>;
+    // bumped by clearValueEvaluationCache; node output caches from an older epoch are stale
+    public valueEvaluationEpoch = 0;
     private _timerID: NodeJS.Timeout | null;
     public hoverableNodesIndices: Map<number, IHoverInformation>;
     public selectableNodesIndices: Map<number, (selectedNode: string, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined, event: string) => void>;
@@ -328,7 +329,6 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.idToBehaviourNodeMap = new Map<number, BehaveEngineNode>();
         this.jsonPtrTrie = new JsonPtrTrie();
         this._fps = fps;
-        this.valueEvaluationCache = new Map<string, IInteractivityValue>();
         this.onTickNodeIndices = [];
         this._lastTickTime = NaN;
         this._pauseTickTime = NaN;
@@ -560,15 +560,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
     }
 
     public clearValueEvaluationCache = (): void => {
-        this.valueEvaluationCache.clear();
-    }
-
-    public addEntryToValueEvaluationCache = (key: string, val: IInteractivityValue): void => {
-        this.valueEvaluationCache.set(key, val)
-    };
-
-    public getValueEvaluationCacheValue = (key: string): IInteractivityValue | undefined => {
-        return this.valueEvaluationCache.get(key);
+        this.valueEvaluationEpoch++;
     }
 
     public registerJsonPointer = (jsonPtr: string, getterCallback: (path: string) => any, setterCallback: (path: string, value: any) => void, typeName: string, readOnly: boolean): void => {

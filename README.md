@@ -62,7 +62,7 @@ Schema metadata is committed to the repo. `npm start`, `npm run build`, and the 
 
 3. Use the app's interface to create or load your glTF asset. (There is a menu bar for adding custom events and variables on the right hand side, right-click the authoring view panel to bring up the add node modal)
 
-4. Pick your engine (Logging, Babylon or Babylon Native) and press play to see your graph in action. NOTE: if using a Babylon engine you will need to upload a glb first. Babylon Native runs the graph with Babylon.js' own KHR_interactivity implementation instead of this tool's engine (`?engine=babylon-native`), which is useful to compare runtimes.
+4. Pick your engine (Babylon glTF Interactivity Engine, Babylon Native Graph Engine or Logging Engine) and press play to see your graph in action. NOTE: if using a Babylon engine you will need to upload a glb first. The Babylon Native Graph Engine runs the graph with Babylon.js' own KHR_interactivity implementation instead of this tool's engine (`?engine=babylon-native`), which is useful to compare runtimes.
 
 5. Use the Send Custom Event button to trigger custom events specified in your graph.
 

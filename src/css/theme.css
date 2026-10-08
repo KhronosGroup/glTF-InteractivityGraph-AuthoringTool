@@ -181,6 +181,12 @@ body {
 }
 
 .app-tab > button {
+    /* stacks a two-line label inside the same control height */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.15;
     border: none;
     background: transparent;
     border-radius: var(--radius-pill);
@@ -192,6 +198,12 @@ body {
     white-space: nowrap;
     cursor: pointer;
     transition: background var(--transition), color var(--transition);
+}
+
+/* second line of a two-line label ("Babylon" over the engine name) */
+.app-tab__line--sub {
+    font-size: var(--fs-xs);
+    font-weight: 500;
 }
 
 .app-tab > button:hover {

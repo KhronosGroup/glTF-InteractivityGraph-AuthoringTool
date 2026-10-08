@@ -265,15 +265,18 @@ interface EngineSelectorProps {
     currentEngineType: EngineType;
 }
 
-// the engine tabs, kept in the order Babylon-then-Logging (Babylon Native runs graphs with
+// the engine tabs, kept in the order Babylon-then-Logging (the Native Graph Engine runs graphs with
 // Babylon.js' own KHR_interactivity runtime instead of BasicBehaveEngine). Rendered as a plain <ul>/<li>
 // segmented control rather than react-bootstrap's <Tabs> so it can carry the app's own styling
-// (and so a tab is still an <li>, which the e2e spec clicks).
+// (and so a tab is still an <li>, which the e2e spec clicks). A "\n" in a label is a line break on
+// the tab only; everywhere else the label reads as one line (see engineTabLabel).
 const ENGINE_TABS: ReadonlyArray<{ engine: EngineType; label: string }> = [
-    { engine: EngineType.BABYLON, label: "Babylon Engine" },
-    { engine: EngineType.BABYLON_NATIVE, label: "Babylon Native" },
+    { engine: EngineType.BABYLON, label: "Babylon\nglTF Interactivity Engine" },
+    { engine: EngineType.BABYLON_NATIVE, label: "Babylon\nNative Graph Engine" },
     { engine: EngineType.LOGGING, label: "Logging Engine" },
 ];
+
+export const engineTabLabel = (label: string): string => label.replace(/\n/g, " ");
 
 export const EngineSelector: React.FC<EngineSelectorProps> = ({ setEngineType, currentEngineType }) => (
     <div data-testid={"engine-selector"}>
@@ -287,7 +290,11 @@ export const EngineSelector: React.FC<EngineSelectorProps> = ({ setEngineType, c
                         className={`app-tab${isActive ? " is-active" : ""}`}
                         onClick={() => setEngineType(engine)}
                     >
-                        <button type={"button"} role={"tab"} aria-selected={isActive}>{label}</button>
+                        <button type={"button"} role={"tab"} aria-selected={isActive} aria-label={engineTabLabel(label)}>
+                            {label.split("\n").map((line, index) => (
+                                <span key={index} className={index === 0 ? "app-tab__line" : "app-tab__line app-tab__line--sub"}>{line}</span>
+                            ))}
+                        </button>
                     </li>
                 );
             })}

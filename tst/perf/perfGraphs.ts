@@ -1,5 +1,6 @@
 import {BasicBehaveEngine} from "../../src/BasicBehaveEngine/BasicBehaveEngine";
 import {DOMEventBus} from "../../src/BasicBehaveEngine/eventBuses/DOMEventBus";
+import {GlTFObjectModelDecorator} from "../../src/objectModel/glTFObjectModel";
 
 export const T = {bool: 0, int: 1, float: 2, float2: 3, float3: 4, float4: 5, float4x4: 6, ref: 7} as const;
 const TYPE_SIGNATURES = ["bool", "int", "float", "float2", "float3", "float4", "float4x4", "ref"];
@@ -227,23 +228,32 @@ export const variableMultiSet = (count: number): PerfGraph => {
     };
 };
 
-const translationWorld = (count: number) => {
+/** /nodes/i/translation for `count` objects: a bare pointer trie registration, or the glTF object model decorator. */
+const translationWorld = (count: number, objectModel: boolean) => {
     const world: number[][] = Array.from({length: count}, () => [0, 0, 0]);
     const registerPointers = (engine: BasicBehaveEngine) => {
+        if (objectModel) {
+            new GlTFObjectModelDecorator(engine, {nodes: world.map(translation => ({translation}))});
+            return;
+        }
         // index segment `count` makes /nodes/0..count-1/translation valid
         engine.registerJsonPointer(`/nodes/${count}/translation`,
             (path) => world[Number(path.split("/")[2])],
             (path, value) => { world[Number(path.split("/")[2])] = value; },
             "float3", false);
     };
-    const verify = (ticks: number) => world.forEach((t, i) => expectEqual(`/nodes/${i}/translation[0]`, t[0], ticks));
+    const verify = (engine: BasicBehaveEngine, ticks: number) => {
+        for (let i = 0; i < count; i++) {
+            expectEqual(`/nodes/${i}/translation[0]`, engine.getPathValue(`/nodes/${i}/translation`)[0], ticks);
+        }
+    };
     return {registerPointers, verify};
 };
 
 /** `count` chained pointer/set(/nodes/i/translation, pointer/get(same) + [1,0,0]) with literal pointers. */
-export const pointerConstChain = (count: number): PerfGraph => {
+export const pointerConstChain = (count: number, objectModel = false): PerfGraph => {
     const b = new GraphBuilder();
-    const world = translationWorld(count);
+    const world = translationWorld(count, objectModel);
     const tick = b.node("event/onTick");
     let prevSet = -1;
     for (let i = 0; i < count; i++) {
@@ -257,14 +267,14 @@ export const pointerConstChain = (count: number): PerfGraph => {
     return {
         graph: b.build(), unit: "ptr get+set", unitsPerTick: count,
         registerPointers: world.registerPointers,
-        verify: (_, ticks) => world.verify(ticks),
+        verify: world.verify,
     };
 };
 
 /** flow/for over `count` objects: pointer/set(/nodes/[i]/translation, pointer/get(same) + [1,0,0]). */
-export const pointerTemplatedLoop = (count: number): PerfGraph => {
+export const pointerTemplatedLoop = (count: number, objectModel = false): PerfGraph => {
     const b = new GraphBuilder();
-    const world = translationWorld(count);
+    const world = translationWorld(count, objectModel);
     const tick = b.node("event/onTick");
     const loop = b.node("flow/for", {startIndex: lit(T.int, 0), endIndex: lit(T.int, count)});
     const pointer = ["/nodes/[i]/translation"];
@@ -276,7 +286,7 @@ export const pointerTemplatedLoop = (count: number): PerfGraph => {
     return {
         graph: b.build(), unit: "ptr get+set", unitsPerTick: count,
         registerPointers: world.registerPointers,
-        verify: (_, ticks) => world.verify(ticks),
+        verify: world.verify,
     };
 };
 

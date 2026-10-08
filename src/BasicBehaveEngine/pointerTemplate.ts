@@ -75,16 +75,40 @@ export const parsePathTemplate = (path: string): PathTemplateParseResult => {
     return {valid: true, sockets};
 };
 
+/** Literal text (doubled brackets already collapsed) alternating with parameter sockets. */
+export type CompiledPathTemplate = (string | PathTemplateSocket)[];
+
+/** Splits a valid template once so effective pointers can be generated without re-parsing it. */
+export const compilePathTemplate = (path: string): CompiledPathTemplate => {
+    const parts: CompiledPathTemplate = [];
+    let literal = "";
+    path.split("/").forEach((segment, i) => {
+        if (i > 0) {
+            literal += "/";
+        }
+        const kind = segmentParameterKind(segment);
+        if (kind === undefined) {
+            literal += segment.replace(/\[\[/g, "[").replace(/]]/g, "]").replace(/{{/g, "{").replace(/}}/g, "}");
+            return;
+        }
+        parts.push(literal, {id: decodeJsonPointerToken(segment.slice(1, -1)), kind});
+        literal = "";
+    });
+    parts.push(literal);
+    return parts;
+};
+
+export const fillPathTemplate = (template: CompiledPathTemplate, resolve: (socket: PathTemplateSocket) => string): string => {
+    let path = "";
+    for (const part of template) {
+        path += typeof part === "string" ? part : resolve(part);
+    }
+    return path;
+};
+
 /**
  * Effective JSON Pointer generation: replaces parameter segments with the string value returned by
  * `resolve`, then collapses doubled brackets in literal segments. Assumes a valid template.
  */
-export const populatePathTemplate = (path: string, resolve: (socket: PathTemplateSocket) => string): string => {
-    return path.split("/").map((segment) => {
-        const kind = segmentParameterKind(segment);
-        if (kind !== undefined) {
-            return resolve({id: decodeJsonPointerToken(segment.slice(1, -1)), kind});
-        }
-        return segment.replace(/\[\[/g, "[").replace(/]]/g, "]").replace(/{{/g, "{").replace(/}}/g, "}");
-    }).join("/");
-};
+export const populatePathTemplate = (path: string, resolve: (socket: PathTemplateSocket) => string): string =>
+    fillPathTemplate(compilePathTemplate(path), resolve);

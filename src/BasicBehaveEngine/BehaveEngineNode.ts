@@ -1,7 +1,8 @@
 import { IInteractivityConfigurationValue, IInteractivityDeclaration, IInteractivityEvent, IInteractivityFlow, IInteractivityValue, IInteractivityValueType, IInteractivityVariable } from "./types/InteractivityGraph";
 import {BasicBehaveEngine} from "./BasicBehaveEngine";
 import { isNoOpNode } from "./nodes/experimental/noOpRegistry";
-import { parsePathTemplate, populatePathTemplate } from "./pointerTemplate";
+import { CompiledPathTemplate, compilePathTemplate, fillPathTemplate, parsePathTemplate } from "./pointerTemplate";
+import { IJsonPtrEntry } from "./IBehaveEngine";
 
 export interface IBehaviourNodeProps {
     index: number,
@@ -75,6 +76,8 @@ export class BehaveEngineNode {
     private preparedInputs: Map<string, PreparedInput> | undefined;
     private requiredValueKeys: string[] | undefined;
     private requiredValueKeysSource: Record<string, IInteractivityValue> | undefined;
+    private compiledPointer: CompiledPathTemplate | undefined;
+    private compiledPointerSource: string | undefined;
 
     constructor(props: IBehaviourNodeProps) {
         const {index, flows, values, idToBehaviourNodeMap, graphEngine, variables, events, types, configuration, addEventToWorkQueue, declaration} = props;
@@ -381,12 +384,25 @@ export class BehaveEngineNode {
         if (ref == null || ref === "") {
             return -1;
         }
-        const parts = String(ref).split("/").filter(Boolean);
-        return parts.length === 0 ? -1 : Number(parts[parts.length - 1]);
+        // last non-empty "/" segment
+        const str = String(ref);
+        let end = str.length;
+        while (end > 0 && str.charCodeAt(end - 1) === 47) {
+            end--;
+        }
+        return end === 0 ? -1 : Number(str.slice(str.lastIndexOf("/", end - 1) + 1, end));
     }
 
     protected populatePath(path: string, refs: Record<string, string>, indices: Record<string, string>): string {
-        return populatePathTemplate(path, ({id, kind}) => {
+        if (this.compiledPointerSource !== path) {
+            this.compiledPointer = compilePathTemplate(path);
+            this.compiledPointerSource = path;
+        }
+        const template = this.compiledPointer!;
+        if (template.length === 1) {
+            return template[0] as string;
+        }
+        return fillPathTemplate(template, ({id, kind}) => {
             if (kind === "index") {
                 return String(indices[id]);
             }
@@ -400,17 +416,23 @@ export class BehaveEngineNode {
 
     // spec pointer/set + pointer/interpolate steps 2-4: negative index, null ref, unresolvable,
     // type mismatch or immutable property -> undefined (caller activates err)
-    protected resolveWritablePointer(pointer: string, refs: Record<string, string>, indices: Record<string, string>, typeName: string): string | undefined {
-        if (Object.values(indices).some(i => Number(i) < 0) || Object.values(refs).some(r => this.resolveRef(r) === -1)) {
-            return undefined;
+    protected resolveWritablePointer(pointer: string, refs: Record<string, string>, indices: Record<string, string>, typeName: string): {path: string, entry: IJsonPtrEntry} | undefined {
+        for (const id in indices) {
+            if (Number(indices[id]) < 0) {
+                return undefined;
+            }
+        }
+        for (const id in refs) {
+            if (this.resolveRef(refs[id]) === -1) {
+                return undefined;
+            }
         }
         const path = this.populatePath(pointer, refs, indices);
-        if (!this.graphEngine.isValidJsonPtr(path)
-            || this.graphEngine.getPathTypeName(path) !== typeName
-            || this.graphEngine.isReadOnly(path)) {
+        const entry = this.graphEngine.resolveJsonPtr(path);
+        if (entry === undefined || entry.typeName !== typeName || entry.readOnly) {
             return undefined;
         }
-        return path;
+        return {path, entry};
     }
 
     protected parsePathRefVariables(path: string): string[] {

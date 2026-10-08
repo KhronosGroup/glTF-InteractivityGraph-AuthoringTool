@@ -1,4 +1,4 @@
-import {IBehaveEngine, IEventQueueItem, IInterpolateAction} from "./IBehaveEngine";
+import {IBehaveEngine, IEventQueueItem, IInterpolateAction, IJsonPtrEntry} from "./IBehaveEngine";
 import {BehaveEngineNode} from "./BehaveEngineNode";
 import {IInteractivityFlow} from "./types/InteractivityGraph";
 import { ApplyImpulse } from "./nodes/rigid_body/ApplyImpulse";
@@ -117,6 +117,10 @@ export abstract class ADecorator implements IBehaveEngine {
 
     getRegisteredJsonPointers(): string[] {
         return this.behaveEngine.getRegisteredJsonPointers();
+    }
+
+    resolveJsonPtr(path: string): IJsonPtrEntry | undefined {
+        return this.behaveEngine.resolveJsonPtr(path);
     }
 
     isValidJsonPtr(path: string): boolean {

@@ -54,6 +54,8 @@ describe("BasicBehaveEngine performance", () => {
 
     benchGraph("pointer get/set const chain (100)", () => pointerConstChain(100));
     benchGraph("pointer get/set templated for (100)", () => pointerTemplatedLoop(100));
+    benchGraph("object model pointer const chain (100)", () => pointerConstChain(100, true));
+    benchGraph("object model pointer templated for (100)", () => pointerTemplatedLoop(100, true));
 
     benchGraph("custom events (50 sends x 2 receivers)", () => customEvents(50, 2));
 

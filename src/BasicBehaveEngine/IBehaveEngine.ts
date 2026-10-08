@@ -14,6 +14,14 @@ export interface IRigidBodyTriggerInformation {
 /**
  * Interface representing the Behave Engine, which provides methods for interacting with a behavioral graph engine.
  */
+/** A resolved JSON pointer: its type, mutability and accessors. */
+export interface IJsonPtrEntry {
+    typeName: string | undefined;
+    readOnly: boolean;
+    getValue: (path: string) => any;
+    setValue: (path: string, value: any) => void;
+}
+
 export interface IBehaveEngine {
     get fps():number;
     /**
@@ -91,6 +99,12 @@ export interface IBehaveEngine {
      * Returns the full list of registered JSON pointer paths.
      */
     getRegisteredJsonPointers: () => string[];
+
+    /**
+     * Resolves a JSON pointer once; the other pointer accessors are shorthands for it.
+     * Object models override this single lookup.
+     */
+    resolveJsonPtr: (jsonPtr: string) => IJsonPtrEntry | undefined;
 
     /**
      * Checks whether a JSON pointer can be resolved by the active object model.

@@ -22,7 +22,7 @@ import {Nullable} from "@babylonjs/core/types.js";
 import { IInteractivityFlow } from "../BasicBehaveEngine/types/InteractivityGraph";
 import {glTFObjectReference} from "../objectModel/glTFReference";
 import {SUPPORTED_GLTF_EXTENSIONS} from "../diagnostics";
-import {assetExtensionEnabled, KHR_INTERACTIVITY_LIMITS, parseGltfVersion} from "../objectModel/assetCapabilities";
+import {ASSET_EXTENSION_ENABLED_POINTER, assetExtensionEnabled, KHR_INTERACTIVITY_LIMITS, parseGltfVersion} from "../objectModel/assetCapabilities";
 import {effectiveAnimationTime} from "../objectModel/glTFAnimation";
 
 export class BabylonDecorator extends ADecorator {
@@ -98,17 +98,9 @@ export class BabylonDecorator extends ADecorator {
     // before falling back to the trie. Mirrors the concrete pointers registered above.
     private bridgeAssetCapabilityPointers(extensionsUsed: readonly string[]): void {
         const engine = this.behaveEngine;
-        const baseIsValidJsonPtr = engine.isValidJsonPtr;
-        const baseIsReadOnly = engine.isReadOnly;
-        const baseGetPathValue = engine.getPathValue;
-        const baseGetPathTypeName = engine.getPathTypeName;
-        engine.isValidJsonPtr = (path: string) => assetExtensionEnabled(path, extensionsUsed) !== undefined || baseIsValidJsonPtr(path);
-        engine.isReadOnly = (path: string) => assetExtensionEnabled(path, extensionsUsed) !== undefined ? true : baseIsReadOnly(path);
-        engine.getPathValue = (path: string) => {
-            const enabled = assetExtensionEnabled(path, extensionsUsed);
-            return enabled !== undefined ? [enabled] : baseGetPathValue(path);
-        };
-        engine.getPathTypeName = (path: string) => assetExtensionEnabled(path, extensionsUsed) !== undefined ? "bool" : baseGetPathTypeName(path);
+        const baseResolveJsonPtr = engine.resolveJsonPtr;
+        engine.resolveJsonPtr = (path: string) =>
+            assetExtensionEnabled(path, extensionsUsed) !== undefined ? ASSET_EXTENSION_ENABLED_POINTER : baseResolveJsonPtr(path);
     }
 
     // Undoes the left-handed conversion Babylon's glTF loader bakes into its __root__ node

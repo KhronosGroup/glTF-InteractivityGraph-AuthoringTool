@@ -1,10 +1,12 @@
+import {IJsonPtrEntry} from "./IBehaveEngine";
+
 enum TrieNodeType {
     ROOT,
     STRING,
     INDEX
 }
 
-class TrieNode {
+class TrieNode implements IJsonPtrEntry {
     children: Map<string, TrieNode>;
     isEndOfPath: boolean;
     trieNodeType: TrieNodeType;
@@ -12,13 +14,25 @@ class TrieNode {
     getterCallback: ((path: string) => any) | undefined;
     typeName: string | undefined;
     readOnly: boolean;
-
+    // the single numeric child; its key is the exclusive upper bound of the indices it matches
+    indexKey: string | undefined;
+    indexBound: number;
 
     constructor(type: TrieNodeType) {
         this.children = new Map<string, TrieNode>();
         this.isEndOfPath = false;
         this.trieNodeType = type;
         this.readOnly = false;
+        this.indexKey = undefined;
+        this.indexBound = 0;
+    }
+
+    getValue(path: string) {
+        return this.getterCallback?.(path);
+    }
+
+    setValue(path: string, value: any) {
+        this.setterCallback?.(path, value);
     }
 }
 
@@ -43,22 +57,20 @@ export class JsonPtrTrie {
             const pathPiece = pathPieces[i];
 
             if (!currentNode.children.has(pathPiece)) {
-                const type: TrieNodeType = isNaN(Number(pathPiece)) ? TrieNodeType.STRING : TrieNodeType.INDEX;
                 let nodeToSet: TrieNode;
-                if (type === TrieNodeType.INDEX) {
-                    const indexNodeKey: string | undefined = Array.from(currentNode.children.keys()).find(key => currentNode.children.get(key)!.trieNodeType === TrieNodeType.INDEX);
-                    if (indexNodeKey === undefined) {
+                if (isNaN(Number(pathPiece))) {
+                    nodeToSet = new TrieNode(TrieNodeType.STRING);
+                } else {
+                    // a numeric segment re-keys the existing index child instead of adding a second one
+                    if (currentNode.indexKey === undefined) {
                         nodeToSet = new TrieNode(TrieNodeType.INDEX);
                     } else {
-                        nodeToSet = currentNode.children.get(indexNodeKey)!;
-                        currentNode.children.delete(indexNodeKey);
+                        nodeToSet = currentNode.children.get(currentNode.indexKey)!;
+                        currentNode.children.delete(currentNode.indexKey);
                     }
-                } else if (type === TrieNodeType.STRING) {
-                    nodeToSet = new TrieNode(type);
-                } else {
-                    throw Error("Invalid Node Type");
+                    currentNode.indexKey = pathPiece;
+                    currentNode.indexBound = Number(pathPiece);
                 }
-
                 currentNode.children.set(pathPiece, nodeToSet);
             }
 
@@ -85,7 +97,18 @@ export class JsonPtrTrie {
             currentNode = child;
         }
 
-        currentNode.children.delete(pathPieces[pathPieces.length - 1]);
+        const lastPiece = pathPieces[pathPieces.length - 1];
+        currentNode.children.delete(lastPiece);
+        if (currentNode.indexKey === lastPiece) {
+            currentNode.indexKey = undefined;
+            currentNode.indexBound = 0;
+        }
+    }
+
+    /** The registered entry for a JSON pointer, or undefined if the path is not a registered pointer. */
+    public resolve(path: string): IJsonPtrEntry | undefined {
+        const node = this.traversePath(path);
+        return node !== undefined && node.isEndOfPath ? node : undefined;
     }
 
     /**
@@ -94,13 +117,11 @@ export class JsonPtrTrie {
      * @returns `true` if the path is valid, `false` otherwise.
      */
     public isPathValid(path: string): boolean {
-        const leafNode: TrieNode | undefined = this.traversePath(path);
-        return leafNode === undefined ? false : leafNode.isEndOfPath;
+        return this.resolve(path) !== undefined;
     }
 
     public isReadOnly(path: string): boolean {
-        const node: TrieNode | undefined = this.traversePath(path);
-        return node === undefined ? false : node.readOnly
+        return this.resolve(path)?.readOnly ?? false;
     }
 
     /**
@@ -109,17 +130,11 @@ export class JsonPtrTrie {
      * @returns The value at the specified path.
      */
     public getPathValue(path: string) {
-        const node: TrieNode | undefined = this.traversePath(path);
-        if (node !== undefined && node.getterCallback !== undefined) {
-            return node.getterCallback(path);
-        }
+        return this.resolve(path)?.getValue(path);
     }
 
     public getPathTypeName(path:string) {
-        const node: TrieNode | undefined = this.traversePath(path);
-        if (node !== undefined && node.typeName !== undefined) {
-            return node.typeName;
-        }
+        return this.resolve(path)?.typeName;
     }
 
     /**
@@ -128,10 +143,7 @@ export class JsonPtrTrie {
      * @param value - The value to set at the specified path.
      */
     public setPathValue(path: string, value: any) {
-        const node: TrieNode | undefined = this.traversePath(path);
-        if (node !== undefined && node.setterCallback !== undefined) {
-            return node.setterCallback(path, value);
-        }
+        return this.resolve(path)?.setValue(path, value);
     }
 
     /**
@@ -154,26 +166,21 @@ export class JsonPtrTrie {
     }
 
     private traversePath(path: string): TrieNode | undefined {
-        // while (path.endsWith('/')) {
-        //     path = path.slice(0, -1);
-        // }
-
         const pathPieces = path.split('/');
         let currentNode = this.root;
 
         for (let i = 0; i < pathPieces.length; i++) {
             const pathPiece = pathPieces[i];
-
-            if (!currentNode.children.has(pathPiece)) {
-                if (isNaN(Number(pathPiece))) {return undefined}
-                // if it is a number, first the path is valid if the path piece is < the key
-                const numericalKey = [...currentNode.children.keys()].find(key => currentNode.children.get(key)!.trieNodeType === TrieNodeType.INDEX);
-                if (numericalKey === undefined) {return undefined}
-                if (Number(pathPiece) >= Number(numericalKey) || Number(pathPiece) < 0) {return undefined}
-                currentNode = currentNode.children.get(numericalKey)!
-            } else {
-                currentNode = currentNode.children.get(pathPiece)!;
+            let child = currentNode.children.get(pathPiece);
+            if (child === undefined) {
+                // a numeric piece matches the index child when 0 <= piece < its key
+                const index = Number(pathPiece);
+                if (isNaN(index) || currentNode.indexKey === undefined || index >= currentNode.indexBound || index < 0) {
+                    return undefined;
+                }
+                child = currentNode.children.get(currentNode.indexKey)!;
             }
+            currentNode = child;
         }
 
         return currentNode;

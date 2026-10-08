@@ -36,17 +36,17 @@ export class PointerInterpolate extends BehaveEngineNode {
         this.graphEngine.processNodeStarted(this);
 
         const valueType = this.getType(this._typeIndex);
-        const populatedPath = this.resolveWritablePointer(this._pointer, configVals, configIndices, valueType);
-        if (populatedPath === undefined || !isValidInterpolationInput(duration, p1, p2)) {
+        const pointer = this.resolveWritablePointer(this._pointer, configVals, configIndices, valueType);
+        if (pointer === undefined || !isValidInterpolationInput(duration, p1, p2)) {
             if (this.flows.err) {
                 this.processFlow(this.flows.err);
             }
             return;
         }
 
-        const initialValue = this.graphEngine.getPathValue(populatedPath);
+        const initialValue = pointer.entry.getValue(pointer.path);
 
-        this.graphEngine.animateCubicBezier(populatedPath, p1, p2, initialValue, targetValue, duration, valueType, () => {
+        this.graphEngine.animateCubicBezier(pointer.path, p1, p2, initialValue, targetValue, duration, valueType, () => {
             if (this.flows.done) {
                 this.addEventToWorkQueue(this.flows.done)
             }

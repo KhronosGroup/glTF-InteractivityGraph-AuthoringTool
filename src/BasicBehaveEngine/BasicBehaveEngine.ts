@@ -1,4 +1,4 @@
-import {IBehaveEngine, IEventBus, IEventQueueItem, IHoverInformation, IInterpolateAction, IRigidBodyTriggerInformation} from "./IBehaveEngine";
+import {IBehaveEngine, IEventBus, IEventQueueItem, IHoverInformation, IInterpolateAction, IJsonPtrEntry, IRigidBodyTriggerInformation} from "./IBehaveEngine";
 import {JsonPtrTrie} from "./JsonPtrTrie";
 import {BehaveEngineNode, IBehaviourNodeProps} from "./BehaveEngineNode";
 import {OnStartNode} from "./nodes/event/OnStart";
@@ -571,24 +571,29 @@ export class BasicBehaveEngine implements IBehaveEngine {
         return this.jsonPtrTrie.getRegisteredPaths();
     }
 
+    // object models replace this one lookup; the accessors below all go through it
+    public resolveJsonPtr = (jsonPtr: string): IJsonPtrEntry | undefined => {
+        return this.jsonPtrTrie.resolve(jsonPtr);
+    }
+
     public isValidJsonPtr = (jsonPtr: string): boolean => {
-        return this.jsonPtrTrie.isPathValid(jsonPtr);
+        return this.resolveJsonPtr(jsonPtr) !== undefined;
     }
 
     public isReadOnly = (jsonPtr: string): boolean => {
-        return this.jsonPtrTrie.isReadOnly(jsonPtr);
+        return this.resolveJsonPtr(jsonPtr)?.readOnly ?? false;
     }
 
     public getPathValue = (path: string) => {
-        return this.jsonPtrTrie.getPathValue(path);
+        return this.resolveJsonPtr(path)?.getValue(path);
     }
 
     public getPathTypeName = (path: string) => {
-        return this.jsonPtrTrie.getPathTypeName(path);
+        return this.resolveJsonPtr(path)?.typeName;
     }
 
     public setPathValue = (path: string, value: any) => {
-        this.jsonPtrTrie.setPathValue(path, value);
+        this.resolveJsonPtr(path)?.setValue(path, value);
     }
 
     public addCustomEventListener = (name: string, func: (event: CustomEvent) => void) => {

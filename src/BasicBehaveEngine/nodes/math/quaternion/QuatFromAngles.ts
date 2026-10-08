@@ -35,7 +35,7 @@ export class QuatFromAngles extends BehaveEngineNode {
     }
 
     override processNode(flowSocket?: string) {
-        const {x, y, z} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const {x, y, z} = this.evaluateRequiredValues();
         this.graphEngine.processNodeStarted(this);
 
         const typeIndexAngleX = this.values['x'].type!

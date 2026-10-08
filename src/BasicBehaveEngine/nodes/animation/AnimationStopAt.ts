@@ -12,7 +12,7 @@ export class AnimationStopAt extends BehaveEngineNode {
 
     override processNode(flowSocket?: string): void {
         this.graphEngine.clearValueEvaluationCache();
-        const {animation, stopTime} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const {animation, stopTime} = this.evaluateRequiredValues();
         this.graphEngine.processNodeStarted(this);
 
         const animationIndex = this.resolveRef(animation);

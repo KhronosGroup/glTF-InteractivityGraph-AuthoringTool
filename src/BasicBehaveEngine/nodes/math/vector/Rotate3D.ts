@@ -10,7 +10,7 @@ export class Rotate3D extends BehaveEngineNode {
     }
 
     override processNode(flowSocket?: string) {
-        const {a, rotation} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const {a, rotation} = this.evaluateRequiredValues();
         this.graphEngine.processNodeStarted(this);
         const typeIndexA = this.values['a'].type!
         const typeA: string = this.getType(typeIndexA);

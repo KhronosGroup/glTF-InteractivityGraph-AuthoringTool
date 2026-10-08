@@ -1,4 +1,5 @@
 import { SUPPORTED_GLTF_EXTENSIONS } from "../diagnostics";
+import { IJsonPtrEntry } from "../BasicBehaveEngine/IBehaveEngine";
 
 /**
  * Asset Capabilities and Implementation-Specific Runtime Limits (KHR_interactivity spec 4.2.1 / 4.2.2).
@@ -31,6 +32,14 @@ export const KHR_INTERACTIVITY_LIMITS: ReadonlyArray<{ name: string; value: numb
  * pointer resolves to `true` for those and to `undefined` (not a valid pointer, e.g. pointer/get
  * reports isValid false) for any other extension or a path that is not such a pointer.
  */
+/** The read-only bool entry every resolvable asset extension `enabled` pointer resolves to. */
+export const ASSET_EXTENSION_ENABLED_POINTER: IJsonPtrEntry = {
+    typeName: "bool",
+    readOnly: true,
+    getValue: () => [true],
+    setValue: () => undefined,
+};
+
 export function assetExtensionEnabled(path: string, extensionsUsed: readonly string[]): true | undefined {
     const match = ASSET_EXTENSION_ENABLED_RE.exec(path);
     if (match === null) {

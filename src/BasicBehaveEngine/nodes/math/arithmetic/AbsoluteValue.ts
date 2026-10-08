@@ -11,7 +11,7 @@ export class AbsoluteValue extends BehaveEngineNode {
     }
 
     override processNode(flowSocket?: string) {
-        const {a} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const {a} = this.evaluateRequiredValues();
         this.graphEngine.processNodeStarted(this);
 
         const typeIndex = this.values['a'].type!

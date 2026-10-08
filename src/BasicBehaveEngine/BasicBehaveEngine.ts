@@ -1,4 +1,4 @@
-import {IBehaveEngine, IEventBus, IEventQueueItem, IHoverInformation, IInterpolateAction, IRigidBodyTriggerInformation} from "./IBehaveEngine";
+import {IBehaveEngine, IEventBus, IEventQueueItem, IHoverInformation, IInterpolateAction, IJsonPtrEntry, IRigidBodyTriggerInformation} from "./IBehaveEngine";
 import {JsonPtrTrie} from "./JsonPtrTrie";
 import {BehaveEngineNode, IBehaviourNodeProps} from "./BehaveEngineNode";
 import {OnStartNode} from "./nodes/event/OnStart";
@@ -114,7 +114,7 @@ import { InverseHyperbolicTangent } from "./nodes/math/hyperbolic/InverseHyperbo
 import { Exponential } from "./nodes/math/exponential/Exponential";
 import { HyperbolicCosine } from "./nodes/math/hyperbolic/HyperbolicCosine";
 import { HyperbolicTangent } from "./nodes/math/hyperbolic/HyperbolicTangent";
-import { IInteractivityVariable, IInteractivityEvent, IInteractivityValue, IInteractivityFlow, IInteractivityNode, IInteractivityValueType, IInteractivityDeclaration } from "./types/InteractivityGraph";
+import { IInteractivityVariable, IInteractivityEvent, IInteractivityFlow, IInteractivityNode, IInteractivityValueType, IInteractivityDeclaration } from "./types/InteractivityGraph";
 import { VariableInterpolate } from "./nodes/variable/VariableInterpolate";
 import { NoOpNode } from "./nodes/experimental/NoOp";
 import { MatDecompose } from "./nodes/math/matrix/matDecompose";
@@ -312,7 +312,8 @@ export class BasicBehaveEngine implements IBehaveEngine {
     protected types: IInteractivityValueType[];
     private jsonPtrTrie: JsonPtrTrie;
     private _fps: number;
-    private valueEvaluationCache: Map<string, IInteractivityValue>;
+    // bumped by clearValueEvaluationCache; node output caches from an older epoch are stale
+    public valueEvaluationEpoch = 0;
     private _timerID: NodeJS.Timeout | null;
     public hoverableNodesIndices: Map<number, IHoverInformation>;
     public selectableNodesIndices: Map<number, (selectedNode: string, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined, event: string) => void>;
@@ -328,7 +329,6 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.idToBehaviourNodeMap = new Map<number, BehaveEngineNode>();
         this.jsonPtrTrie = new JsonPtrTrie();
         this._fps = fps;
-        this.valueEvaluationCache = new Map<string, IInteractivityValue>();
         this.onTickNodeIndices = [];
         this._lastTickTime = NaN;
         this._pauseTickTime = NaN;
@@ -560,15 +560,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
     }
 
     public clearValueEvaluationCache = (): void => {
-        this.valueEvaluationCache.clear();
-    }
-
-    public addEntryToValueEvaluationCache = (key: string, val: IInteractivityValue): void => {
-        this.valueEvaluationCache.set(key, val)
-    };
-
-    public getValueEvaluationCacheValue = (key: string): IInteractivityValue | undefined => {
-        return this.valueEvaluationCache.get(key);
+        this.valueEvaluationEpoch++;
     }
 
     public registerJsonPointer = (jsonPtr: string, getterCallback: (path: string) => any, setterCallback: (path: string, value: any) => void, typeName: string, readOnly: boolean): void => {
@@ -579,24 +571,29 @@ export class BasicBehaveEngine implements IBehaveEngine {
         return this.jsonPtrTrie.getRegisteredPaths();
     }
 
+    // object models replace this one lookup; the accessors below all go through it
+    public resolveJsonPtr = (jsonPtr: string): IJsonPtrEntry | undefined => {
+        return this.jsonPtrTrie.resolve(jsonPtr);
+    }
+
     public isValidJsonPtr = (jsonPtr: string): boolean => {
-        return this.jsonPtrTrie.isPathValid(jsonPtr);
+        return this.resolveJsonPtr(jsonPtr) !== undefined;
     }
 
     public isReadOnly = (jsonPtr: string): boolean => {
-        return this.jsonPtrTrie.isReadOnly(jsonPtr);
+        return this.resolveJsonPtr(jsonPtr)?.readOnly ?? false;
     }
 
     public getPathValue = (path: string) => {
-        return this.jsonPtrTrie.getPathValue(path);
+        return this.resolveJsonPtr(path)?.getValue(path);
     }
 
     public getPathTypeName = (path: string) => {
-        return this.jsonPtrTrie.getPathTypeName(path);
+        return this.resolveJsonPtr(path)?.typeName;
     }
 
     public setPathValue = (path: string, value: any) => {
-        this.jsonPtrTrie.setPathValue(path, value);
+        this.resolveJsonPtr(path)?.setValue(path, value);
     }
 
     public addCustomEventListener = (name: string, func: (event: CustomEvent) => void) => {
@@ -887,16 +884,16 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.propagationCancelled.clear();
         this.propagationCancelledPending.clear();
 
-        const eventQueueCopy = [...this.eventBus.getEventList()];
+        // events queued while processing run on the next tick
+        const eventQueue = this.eventBus.getEventList().slice();
         this.eventBus.clearEventList();
-        while (eventQueueCopy.length > 0) {
-            const eventToStart = eventQueueCopy[0];
+        for (let i = 0; i < eventQueue.length; i++) {
+            const eventToStart = eventQueue[i];
             if (eventToStart.behaveNode) {
                 eventToStart.behaveNode.processNode(eventToStart.inSocketId);
             } else if (eventToStart.func) {
                 eventToStart.func();
             }
-            eventQueueCopy.splice(0, 1);
         }
 
         // process interpolations

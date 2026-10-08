@@ -66,7 +66,9 @@ export class DOMEventBus implements IEventBus {
     }
 
     public clearVariableInterpolation = (variable: number): void => {
-        delete this.variableInterpolationCallbacks[variable];
+        if (this.variableInterpolationCallbacks[variable] !== undefined) {
+            delete this.variableInterpolationCallbacks[variable];
+        }
     }
 
     public getVariableInterpolationCallbacks = (): Record<number, IInterpolateAction> => {
@@ -78,7 +80,9 @@ export class DOMEventBus implements IEventBus {
     }
 
     public clearPointerInterpolation = (pointer: string): void => {
-        delete this.pointerInterpolationCallbacks[pointer];
+        if (this.pointerInterpolationCallbacks[pointer] !== undefined) {
+            delete this.pointerInterpolationCallbacks[pointer];
+        }
     }
 
     public getPointerInterpolationCallbacks = (): Record<string, IInterpolateAction> => {

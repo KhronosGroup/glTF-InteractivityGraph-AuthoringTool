@@ -1,24 +1,46 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import { ADecorator } from "../BasicBehaveEngine/ADecorator";
 import { BehaveEngineNode } from "../BasicBehaveEngine/BehaveEngineNode";
-import { IBehaveEngine, IInterpolateAction } from "../BasicBehaveEngine/IBehaveEngine";
+import { IBehaveEngine, IInterpolateAction, IJsonPtrEntry } from "../BasicBehaveEngine/IBehaveEngine";
 import { IInteractivityFlow } from "../BasicBehaveEngine/types/InteractivityGraph";
 import { glTFSchemaMetadata } from "./generated/glTFSchemaMetadata";
 import { glTFObjectReference } from "./glTFReference";
 import { createObjectModelAnimation, effectiveAnimationTime, sampleAnimationChannel } from "./glTFAnimation";
 import { SUPPORTED_GLTF_EXTENSIONS } from "../diagnostics";
-import { assetExtensionEnabled, KHR_INTERACTIVITY_LIMITS, parseGltfVersion } from "./assetCapabilities";
+import { ASSET_EXTENSION_ENABLED_POINTER, assetExtensionEnabled, KHR_INTERACTIVITY_LIMITS, parseGltfVersion } from "./assetCapabilities";
 export { readGlbJsonFromArrayBuffer, readGltfJsonFromArrayBuffer } from "./glTFBinary";
 
 type PointerGetter = () => any;
 type PointerSetter = (value: any) => void;
 
-interface PointerBinding {
-    get: PointerGetter;
-    set: PointerSetter;
-    typeName: string;
-    readOnly: boolean;
+class PointerBinding implements IJsonPtrEntry {
+    constructor(
+        readonly get: PointerGetter,
+        readonly set: PointerSetter,
+        readonly typeName: string,
+        readonly readOnly: boolean,
+        // shared by all bindings of a decorator: brings animation state up to date before a read
+        private readonly beforeGet: () => void,
+    ) {}
+
+    getValue() {
+        this.beforeGet();
+        return this.get();
+    }
+
+    setValue(_path: string, value: any) {
+        if (!this.readOnly) {
+            this.set(value);
+        }
+    }
 }
+
+const DELAY_REF_POINTER: IJsonPtrEntry = {
+    typeName: "ref",
+    readOnly: true,
+    getValue: (path) => [path],
+    setValue: () => undefined,
+};
 
 interface ActiveAnimation {
     timeout: ReturnType<typeof setTimeout> | null;
@@ -71,6 +93,7 @@ const KHR = "extensions/2.0/Khronos";
 export class GlTFObjectModelDecorator extends ADecorator {
     protected objectModel: GlTFObjectModel;
     private pointerBindings = new Map<string, PointerBinding>();
+    private syncAnimations = () => this.updateActiveAnimations();
     private activeAnimations = new Map<number, ActiveAnimation>();
     private animationToken = 0;
 
@@ -143,51 +166,20 @@ export class GlTFObjectModelDecorator extends ADecorator {
     };
 
     private bridgeObjectModelHooks(): void {
-        this.behaveEngine.isValidJsonPtr = this.isValidJsonPtr;
-        this.behaveEngine.isReadOnly = this.isReadOnly;
-        this.behaveEngine.getPathValue = this.getPathValue;
-        this.behaveEngine.getPathTypeName = this.getPathTypeName;
-        this.behaveEngine.setPathValue = this.setPathValue;
+        this.behaveEngine.resolveJsonPtr = this.resolveJsonPtr;
         this.behaveEngine.getRegisteredJsonPointers = this.getRegisteredJsonPointers;
     }
 
-    isValidJsonPtr = (path: string): boolean => this.pointerBindings.has(path) || this.assetExtensionEnabled(path) !== undefined || this.isActiveDelayRef(path);
-    isReadOnly = (path: string): boolean => {
+    // asset extension `enabled` capability pointers and active delay refs are virtual, read-only pointers
+    resolveJsonPtr = (path: string): IJsonPtrEntry | undefined => {
         const binding = this.pointerBindings.get(path);
         if (binding !== undefined) {
-            return binding.readOnly;
+            return binding;
         }
-        // asset extension `enabled` capability pointers and delay refs are all read-only
-        return this.assetExtensionEnabled(path) !== undefined || this.isActiveDelayRef(path);
-    };
-    getPathValue = (path: string): any => {
-        this.updateActiveAnimations();
-        const binding = this.pointerBindings.get(path);
-        if (binding !== undefined) {
-            return binding.get();
+        if (assetExtensionEnabled(path, this.objectModel.extensionsUsed) !== undefined) {
+            return ASSET_EXTENSION_ENABLED_POINTER;
         }
-        const enabled = this.assetExtensionEnabled(path);
-        if (enabled !== undefined) {
-            return [enabled];
-        }
-        return this.isActiveDelayRef(path) ? [path] : undefined;
-    };
-    getPathTypeName = (path: string): string | undefined => {
-        const binding = this.pointerBindings.get(path);
-        if (binding !== undefined) {
-            return binding.typeName;
-        }
-        if (this.assetExtensionEnabled(path) !== undefined) {
-            return "bool";
-        }
-        return this.isActiveDelayRef(path) ? "ref" : undefined;
-    };
-    private assetExtensionEnabled = (path: string): boolean | undefined => assetExtensionEnabled(path, this.objectModel.extensionsUsed);
-    setPathValue = (path: string, value: any): void => {
-        const binding = this.pointerBindings.get(path);
-        if (binding && !binding.readOnly) {
-            binding.set(value);
-        }
+        return this.isActiveDelayRef(path) ? DELAY_REF_POINTER : undefined;
     };
     getRegisteredJsonPointers = (): string[] => [...this.pointerBindings.keys()].sort();
 
@@ -200,8 +192,8 @@ export class GlTFObjectModelDecorator extends ADecorator {
     }
 
     private pointer(path: string, typeName: string, get: PointerGetter, set: PointerSetter = ignoreSet, readOnly = false): void {
-        this.pointerBindings.set(path, { get, set, typeName, readOnly });
-        this.registerJsonPointer(path, () => this.getPathValue(path), (_path, value) => this.setPathValue(path, value), typeName, readOnly);
+        // pointers live only here: the engine resolves them through resolveJsonPtr, never its own trie
+        this.pointerBindings.set(path, new PointerBinding(get, set, typeName, readOnly, this.syncAnimations));
     }
 
     private scalarPointer(path: string, typeName: string, get: PointerGetter, set: PointerSetter = ignoreSet, readOnly = false): void {

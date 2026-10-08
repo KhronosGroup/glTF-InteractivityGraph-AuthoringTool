@@ -28,20 +28,20 @@ export class PointerSet extends BehaveEngineNode {
         this.graphEngine.clearValueEvaluationCache();
         const configValues = this.evaluateAllValues(this._refs);
         const configIndices = this.evaluateAllValues(this._indices);
-        const requiredValues = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const requiredValues = this.evaluateRequiredValues();
         const targetValue = requiredValues.value;
         this.graphEngine.processNodeStarted(this);
 
-        const populatedPath = this.resolveWritablePointer(this._pointer, configValues, configIndices, this.getType(this._typeIndex));
-        if (populatedPath === undefined) {
+        const pointer = this.resolveWritablePointer(this._pointer, configValues, configIndices, this.getType(this._typeIndex));
+        if (pointer === undefined) {
             if (this.flows.err) {
                 this.processFlow(this.flows.err);
             }
             return;
         }
 
-        this.graphEngine.clearPointerInterpolation(populatedPath);
-        this.graphEngine.setPathValue(populatedPath, targetValue);
+        this.graphEngine.clearPointerInterpolation(pointer.path);
+        pointer.entry.setValue(pointer.path, targetValue);
         super.processNode(flowSocket);
     }
 }

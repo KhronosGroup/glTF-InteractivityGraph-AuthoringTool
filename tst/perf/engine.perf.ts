@@ -6,6 +6,7 @@
 import {jest} from "@jest/globals";
 import {BasicBehaveEngine} from "../../src/BasicBehaveEngine/BasicBehaveEngine";
 import {DOMEventBus} from "../../src/BasicBehaveEngine/eventBuses/DOMEventBus";
+import {GlTFObjectModelDecorator} from "../../src/objectModel/glTFObjectModel";
 import {BenchResult, reportResults, runBench, runOnce} from "./perfHarness";
 import {
     createEngine, customEvents, flowLoopBranch, GraphBuilder, idleTick, lit, mathChainFloat, mixedVectorMath, out, PerfGraph,
@@ -73,5 +74,21 @@ describe("BasicBehaveEngine performance", () => {
             engine.loadBehaveGraph(graphs.pop(), false);
             engine.dispose();
         }));
+    });
+
+    it("object model setup (2000 nodes, 200 materials)", () => {
+        const objectModel = () => ({
+            nodes: Array.from({length: 2000}, (_, i) => ({translation: [i, 0, 0], mesh: i % 50})),
+            meshes: Array.from({length: 50}, () => ({primitives: [{material: 0}]})),
+            materials: Array.from({length: 200}, () => ({})),
+        });
+        let pointers = 0;
+        results.push(runOnce("object model setup (2000 nodes, 200 materials)", "pointer", 1, () => {
+            const engine = new BasicBehaveEngine(60, new DOMEventBus());
+            pointers = new GlTFObjectModelDecorator(engine, objectModel()).getRegisteredJsonPointers().length;
+            engine.dispose();
+        }, 7, 2));
+        results[results.length - 1].unitsPerTick = pointers;
+        results[results.length - 1].nsPerUnit = results[results.length - 1].medianMsPerTick * 1e6 / pointers;
     });
 });

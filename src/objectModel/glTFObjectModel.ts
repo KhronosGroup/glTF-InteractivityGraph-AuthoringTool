@@ -192,8 +192,8 @@ export class GlTFObjectModelDecorator extends ADecorator {
     }
 
     private pointer(path: string, typeName: string, get: PointerGetter, set: PointerSetter = ignoreSet, readOnly = false): void {
+        // pointers live only here: the engine resolves them through resolveJsonPtr, never its own trie
         this.pointerBindings.set(path, new PointerBinding(get, set, typeName, readOnly, this.syncAnimations));
-        this.registerJsonPointer(path, () => this.getPathValue(path), (_path, value) => this.setPathValue(path, value), typeName, readOnly);
     }
 
     private scalarPointer(path: string, typeName: string, get: PointerGetter, set: PointerSetter = ignoreSet, readOnly = false): void {

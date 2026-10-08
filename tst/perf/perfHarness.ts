@@ -55,8 +55,10 @@ export const runBench = (name: string, c: BenchCase): BenchResult => {
 };
 
 /** One-shot timing for things that cannot be repeated cheaply in a tight loop (e.g. graph load). */
-export const runOnce = (name: string, unit: string, units: number, fn: () => void, repeats = 5): BenchResult => {
-    fn();
+export const runOnce = (name: string, unit: string, units: number, fn: () => void, repeats = 15, warmup = 3): BenchResult => {
+    for (let i = 0; i < warmup; i++) {
+        fn();
+    }
     const samples: number[] = [];
     for (let i = 0; i < repeats; i++) {
         const start = now();

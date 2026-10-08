@@ -32,8 +32,10 @@ const DEFAULT_INPUT = 2;
 interface PreparedInput {
     source: IInteractivityValue;
     kind: number;
-    // literal: the socket value/type the parsed value was made from
+    // literal: the socket value/type the parsed value was made from; scalars parse from the first
+    // element, so it is compared too (vector values are returned as the socket array itself)
     rawValue: any[] | undefined;
+    rawFirst: any;
     rawType: number | undefined;
     parsed: any;
     // type name of typeIndex; for connected inputs typeIndex follows the source output's type
@@ -204,7 +206,7 @@ export class BehaveEngineNode {
 
         let input = this.preparedInputs === undefined ? undefined : this.preparedInputs.get(key);
         if (input === undefined || input.source !== val
-            || (input.kind === LITERAL_INPUT && (val.value !== input.rawValue || val.type !== input.rawType))) {
+            || (input.kind === LITERAL_INPUT && (val.value !== input.rawValue || !Object.is(val.value![0], input.rawFirst) || val.type !== input.rawType))) {
             input = this.prepareInput(key, val);
             if (input === undefined) {
                 return undefined;
@@ -237,15 +239,15 @@ export class BehaveEngineNode {
             const typeName = this.getType(val.type!);
             const parsed = this.parseType(typeName, val.value);
             warnIfSingleElementArray(parsed);
-            input = {source: val, kind: LITERAL_INPUT, rawValue: val.value, rawType: val.type, parsed, typeIndex: val.type, typeName, node: undefined, socket: ""};
+            input = {source: val, kind: LITERAL_INPUT, rawValue: val.value, rawFirst: val.value[0], rawType: val.type, parsed, typeIndex: val.type, typeName, node: undefined, socket: ""};
         } else if (val.node != null) {
             // evaluation writes the resolved type into the socket; write into a copy, not the caller's object
             const source = {...val};
             this.values[key] = source;
             const node = this.idToBehaviourNodeMap.get(Number(val.node))!;
-            input = {source, kind: CONNECTED_INPUT, rawValue: undefined, rawType: undefined, parsed: undefined, typeIndex: undefined, typeName: "", node, socket: val.socket!};
+            input = {source, kind: CONNECTED_INPUT, rawValue: undefined, rawFirst: undefined, rawType: undefined, parsed: undefined, typeIndex: undefined, typeName: "", node, socket: val.socket!};
         } else if (val.type != null) {
-            input = {source: val, kind: DEFAULT_INPUT, rawValue: undefined, rawType: undefined, parsed: undefined, typeIndex: val.type, typeName: this.getType(val.type), node: undefined, socket: ""};
+            input = {source: val, kind: DEFAULT_INPUT, rawValue: undefined, rawFirst: undefined, rawType: undefined, parsed: undefined, typeIndex: val.type, typeName: this.getType(val.type), node: undefined, socket: ""};
         } else {
             return undefined;
         }

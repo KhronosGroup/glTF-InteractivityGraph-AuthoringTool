@@ -8,6 +8,7 @@ import { buildNormalizedTemplateSet } from "../../authoring/pointerCatalogue";
 import { getEventLabel } from "../../authoring/CustomEventControls";
 import { getCustomEventChannel } from "../../BasicBehaveEngine/types/InteractivityGraph";
 import { createGlTFObjectModelFromGltf, readGltfJsonFromArrayBuffer } from "../../objectModel/glTFObjectModel";
+import { buildGltfObjectModel } from "../../authoring/gltfObjectModel";
 import { IconJsonFile, IconPlay, IconPointer, IconSendEvent } from "../toolbarIcons";
 
 enum LoggingEngineModal {
@@ -35,7 +36,7 @@ export const LoggingEngineComponent: React.FC<LoggingEngineComponentProps> = ({ 
     const objectModelInputRef = useRef<HTMLTextAreaElement | null>(null);
     const loggingEngineRef = useRef<LoggingDecorator | null>(null);
 
-    const {getExecutableGraph, setSupportedPointerTemplates, clearGraphDirty, registerPlayHandler} = useContext(InteractivityGraphContext);
+    const {getExecutableGraph, setGltfObjectModel, setSupportedPointerTemplates, clearGraphDirty, registerPlayHandler} = useContext(InteractivityGraphContext);
 
     useEffect(() => {
         return () => {
@@ -81,6 +82,7 @@ export const LoggingEngineComponent: React.FC<LoggingEngineComponentProps> = ({ 
                 }
 
                 setObjectModelJson(JSON.stringify(objectModel, null, 2));
+                setGltfObjectModel(buildGltfObjectModel(objectModel));
                 setExecutionLog("");
                 runGraph(getExecutableGraph(), setExecutionLog, objectModel);
                 setGraphRunning(true);
@@ -173,7 +175,14 @@ export const LoggingEngineComponent: React.FC<LoggingEngineComponentProps> = ({ 
                     <Row style={{ marginTop: 16 }}>
                         <Col xs={12} md={6}>
                             <Button variant={"outline-primary"} id={"upload-graph-btn"} style={{width: "100%"}} onClick={() => {
-                                setObjectModelJson(objectModelInputRef.current?.value ?? "{}");
+                                const json = objectModelInputRef.current?.value ?? "{}";
+                                setObjectModelJson(json);
+                                // publish the uploaded objects to the ref-value picker, as the Babylon view does for a loaded glb
+                                try {
+                                    setGltfObjectModel(buildGltfObjectModel(JSON.parse(json)));
+                                } catch (error) {
+                                    setExecutionLog(`Invalid object model JSON: ${error instanceof Error ? error.message : String(error)}`);
+                                }
                                 setOpenModal(LoggingEngineModal.NONE);
                             }}>Save</Button>
                         </Col>

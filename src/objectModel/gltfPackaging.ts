@@ -49,9 +49,10 @@ const readModel = (bytes: ArrayBuffer): { gltf: any; bin?: Uint8Array } => {
 
 /**
  * A single .glb holding the graph and every buffer and image of the source: external/data-uri
- * buffers are concatenated into the BIN chunk and uri images become bufferView images.
+ * buffers are concatenated into the BIN chunk and uri images become bufferView images. Without a
+ * graph the source's own KHR_interactivity extension is kept as is.
  */
-export async function packageAsGlb(source: ArrayBuffer, graph: any, resolve: ResourceResolver): Promise<ArrayBuffer> {
+export async function packageAsGlb(source: ArrayBuffer, graph: any | undefined, resolve: ResourceResolver): Promise<ArrayBuffer> {
     const { gltf, bin } = readModel(source);
     const parts: { offset: number; data: Uint8Array }[] = [];
     let length = 0;
@@ -97,7 +98,9 @@ export async function packageAsGlb(source: ArrayBuffer, graph: any, resolve: Res
     } else {
         delete gltf.buffers;
     }
-    setInteractivityGraph(gltf, graph);
+    if (graph !== undefined) {
+        setInteractivityGraph(gltf, graph);
+    }
     return writeGlb(gltf, packed);
 }
 

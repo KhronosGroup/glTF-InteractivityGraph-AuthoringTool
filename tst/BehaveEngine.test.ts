@@ -95,6 +95,18 @@ describe('BehaveEngine', () => {
         expect(engine.variables![0].value![0]).toEqual(true);
     });
 
+    it('keeps source graph defaults unchanged while executing', () => {
+        const behaviorGraph = JSON.parse(fs.readFileSync("./tst/testGraphs/pointerGetSet.json", "utf8"));
+        const sourceGraph = JSON.parse(JSON.stringify(behaviorGraph));
+        const engine = new BasicBehaveEngine(1, new DOMEventBus());
+        loggingBehaveEngine = new LoggingDecorator(engine, () => undefined, {nodes: [{translation: [1, 1, 1]}]});
+
+        loggingBehaveEngine.loadBehaveGraph(behaviorGraph);
+
+        expect(engine.variables![0].value![0]).toEqual(true);
+        expect(behaviorGraph).toEqual(sourceGraph);
+    });
+
     it('should correctly evaluate pointer/interpolate', async () => {
         jest.useFakeTimers();
         try {

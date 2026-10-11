@@ -1,24 +1,29 @@
 {
   "name": "@khronosgroup/gltf-interactivity-engine",
   "version": "1.1.0",
-  "main": "build/index.ts",
-  "browser": "build/index.js",
-  "types": "build/index.d.ts",
+  "main": "./build/index.js",
+  "browser": "./build/index.js",
+  "types": "./build/index.d.ts",
   "type": "module",
   "files": [
-    "build/**/*.js",
-    "build/**/*d.ts"
+    "build",
+    "LICENSE",
+    "README.md",
+    "CHANGELOG.md"
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/KhronosGroup/glTF-InteractivityGraph-AuthoringTool.git"
+    "url": "git+https://github.com/KhronosGroup/glTF-InteractivityGraph-AuthoringTool.git",
+    "directory": "src/BasicBehaveEngine"
   },
   "author": "Khronos Group Inc.",
   "license": "Apache-2.0",
   "description": "Engine of the Khronos Interactivity Graph Authoring Tool",
   "scripts": {
-    "build": "tsc",
-    "prepublishOnly": "npm run build"
+    "build": "node build.mjs",
+    "prepack": "npm run build",
+    "prepublishOnly": "npm run build",
+    "test:package": "node test/package.mjs"
   },
   "dependencies": {
     "gl-matrix": "^3.4.3"
@@ -28,6 +33,21 @@
   },
   "devDependencies": {
     "@types/node": "^24.1.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "rollup": "^2.79.1",
+    "@rollup/plugin-babel": "^5.3.1",
+    "@rollup/plugin-node-resolve": "^11.2.1",
+    "@babel/core": "^7.22.17",
+    "@babel/preset-typescript": "^7.23.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./build/index.d.ts",
+      "import": "./build/index.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   }
 }

@@ -35,7 +35,7 @@ The KHR_interactivity extension allows you to add interactive features and behav
 1. Add this project as a npm package to your project via
    
    ```bash
-      npm i @khronosgroup/khr-interactivity-authoring-engine
+      npm i @khronosgroup/gltf-interactivity-engine
    ```
 
 ## Integration
@@ -172,7 +172,7 @@ this.behaveEngine.processExecutingNextNode = (flow: IInteractivityFlow) => void 
 
 ### Important Notes About Tool Execution
 1. The tool passes around JSON for the execution graph. Be aware that the engine does not necessarily create deep copies of arrays or objects. Modifying these from outside the engine might create undefined/unexpected behavior. Make sure to not modify passed values or create deep copies.
-2. The engine expects matrices in 2D structure e.g. `[[1.0, 0.0],[0.0, 1.0]]`. This needs to be considered for e.g. registering worldMatrix or matrix
+2. Matrix values are flat arrays in column-major order. Object-model pointer getters and setters must use the same representation.
 
 ## Development
 
@@ -196,7 +196,13 @@ this.behaveEngine.processExecutingNextNode = (flow: IInteractivityFlow) => void 
    npm run build
    ```
 
-All files are build into the build folder. Source maps are generated but not published via npm.
+The build emits one ESM entry point, source map and declarations into `build/`. `npm pack` rebuilds first. Runtime validation is exported as `validateInteractivityExtension` and `validateInteractivityGraph`; the glTF loader integration invokes it before loading model dependencies. Non-default graphs are deliberately not validated until selected.
+
+## Release verification
+
+From `src/BasicBehaveEngine`, run `npm ci` and `npm run test:package`. The check builds and packs the package, installs the exact tarball in an isolated consumer, imports the public API in Node, executes a graph, checks declarations with NodeNext resolution, and runs `npm publish --dry-run`. It prints the retained artifact path and checksum.
+
+The package contains the renderer-independent engine. Three.js and Needle adapters use `three-gltf-interactivity` (including its `/needle` import) and depend on this package. Publish the core package before publishing an adapter version that requires it.
 
 ## Adding Nodes to BasicBehaveEngine
 The provided Basic BehaveEngine uses a decorator approach, so you behave nodes will be defined only once and the Logging and Babylon decorators will decorate certain touch points in the execution logic with their specific functionality. To create a new node...
@@ -211,8 +217,7 @@ The provided Basic BehaveEngine uses a decorator approach, so you behave nodes w
 ## TODO
 - customEvent default values for event values
 - configuration default values and validation
-- decleration validation
-- read through validation steps in spec and add any missing
+- expand semantic validation beyond the current valid/invalid test corpus
 - handle graphs with different types in authoring system => do not override types array or assume it is always the standard one
 - unit test to ensure graph values are not overwritten when loaded into authoring view for all nodes (especially ones with configurations)
 

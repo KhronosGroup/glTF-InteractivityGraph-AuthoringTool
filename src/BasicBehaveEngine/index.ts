@@ -9,3 +9,7 @@ export { AnimationStop } from "./nodes/animation/AnimationStop";
 export { AnimationStopAt } from "./nodes/animation/AnimationStopAt";
 export { OnHoverIn } from "./nodes/event/OnHoverIn";
 export { OnHoverOut } from "./nodes/event/OnHoverOut";
+export { GraphRejectedError } from "./BasicBehaveEngine";
+export { validateInteractivityExtension, validateInteractivityGraph } from "./validateInteractivity";
+export * from "./IBehaveEngine";
+export * from "./types/InteractivityGraph";

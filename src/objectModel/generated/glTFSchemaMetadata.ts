@@ -5,14 +5,16 @@ export const glTFSchemaMetadata = {
   "source": {
     "defaultRepoPath": "../glTF",
     "env": "KHR_INTERACTIVITY_GLTF_REPO",
-    "branch": "detached",
-    "commit": "5e87b48cecf6a3776dc3dfce65e76bb074fe7ae1",
+    "branch": "main",
+    "commit": "b43260ee1291134a94b3098d415f54f479a59508",
     "ratifiedRef": "origin/main",
-    "ratifiedCommit": "77b44be7bef26e01fb0b140e3d5bb1716421c5e9"
+    "ratifiedCommit": "b43260ee1291134a94b3098d415f54f479a59508"
   },
   "ratifiedKhronosExtensions": [
     "KHR_animation_pointer",
     "KHR_draco_mesh_compression",
+    "KHR_gaussian_splatting",
+    "KHR_interactivity",
     "KHR_lights_punctual",
     "KHR_materials_anisotropy",
     "KHR_materials_clearcoat",
@@ -27,6 +29,8 @@ export const glTFSchemaMetadata = {
     "KHR_materials_variants",
     "KHR_materials_volume",
     "KHR_mesh_quantization",
+    "KHR_node_hoverability",
+    "KHR_node_selectability",
     "KHR_node_visibility",
     "KHR_texture_basisu",
     "KHR_texture_transform",
@@ -196,11 +200,11 @@ export const glTFSchemaMetadata = {
     },
     {
       "kind": "core",
-      "path": "specification/2.0/schema/extension.schema.json",
+      "path": "specification/2.0/schema/extensions.schema.json",
       "ref": "origin/main",
-      "schemaName": "extension.schema.json",
-      "id": "extension.schema.json",
-      "title": "Extension",
+      "schemaName": "extensions.schema.json",
+      "id": "extensions.schema.json",
+      "title": "Extensions",
       "defaults": []
     },
     {
@@ -327,12 +331,8 @@ export const glTFSchemaMetadata = {
       "defaults": [
         {
           "sourceId": "specification/2.0/schema/material.schema.json",
-          "pointer": "#/properties/emissiveFactor",
-          "value": [
-            0,
-            0,
-            0
-          ]
+          "pointer": "#/properties/alphaCutoff",
+          "value": 0.5
         },
         {
           "sourceId": "specification/2.0/schema/material.schema.json",
@@ -341,13 +341,17 @@ export const glTFSchemaMetadata = {
         },
         {
           "sourceId": "specification/2.0/schema/material.schema.json",
-          "pointer": "#/properties/alphaCutoff",
-          "value": 0.5
+          "pointer": "#/properties/doubleSided",
+          "value": false
         },
         {
           "sourceId": "specification/2.0/schema/material.schema.json",
-          "pointer": "#/properties/doubleSided",
-          "value": false
+          "pointer": "#/properties/emissiveFactor",
+          "value": [
+            0,
+            0,
+            0
+          ]
         }
       ]
     },
@@ -513,6 +517,112 @@ export const glTFSchemaMetadata = {
       "ref": "origin/main",
       "schemaName": "mesh.primitive.KHR_draco_mesh_compression.schema.json",
       "title": "KHR_draco_mesh_compression glTF Mesh Primitive Extension",
+      "defaults": []
+    },
+    {
+      "kind": "ratified-extension",
+      "extension": "KHR_gaussian_splatting",
+      "path": "extensions/2.0/Khronos/KHR_gaussian_splatting/schema/mesh.primitive.KHR_gaussian_splatting.schema.json",
+      "ref": "origin/main",
+      "schemaName": "mesh.primitive.KHR_gaussian_splatting.schema.json",
+      "title": "KHR_gaussian_splatting glTF Mesh Primitive Extension",
+      "defaults": [
+        {
+          "sourceId": "extensions/2.0/Khronos/KHR_gaussian_splatting/schema/mesh.primitive.KHR_gaussian_splatting.schema.json",
+          "pointer": "#/properties/projection",
+          "value": "perspective"
+        },
+        {
+          "sourceId": "extensions/2.0/Khronos/KHR_gaussian_splatting/schema/mesh.primitive.KHR_gaussian_splatting.schema.json",
+          "pointer": "#/properties/sortingMethod",
+          "value": "cameraDistance"
+        }
+      ]
+    },
+    {
+      "kind": "ratified-extension",
+      "extension": "KHR_interactivity",
+      "path": "extensions/2.0/Khronos/KHR_interactivity/schema/declaration.KHR_interactivity.schema.json",
+      "ref": "origin/main",
+      "schemaName": "declaration.KHR_interactivity.schema.json",
+      "id": "declaration.KHR_interactivity.schema.json",
+      "title": "Behavior graph declaration",
+      "defaults": []
+    },
+    {
+      "kind": "ratified-extension",
+      "extension": "KHR_interactivity",
+      "path": "extensions/2.0/Khronos/KHR_interactivity/schema/event.KHR_interactivity.schema.json",
+      "ref": "origin/main",
+      "schemaName": "event.KHR_interactivity.schema.json",
+      "id": "event.KHR_interactivity.schema.json",
+      "title": "Behavior graph event",
+      "defaults": []
+    },
+    {
+      "kind": "ratified-extension",
+      "extension": "KHR_interactivity",
+      "path": "extensions/2.0/Khronos/KHR_interactivity/schema/glTF.KHR_interactivity.schema.json",
+      "ref": "origin/main",
+      "schemaName": "glTF.KHR_interactivity.schema.json",
+      "id": "glTF.KHR_interactivity.schema.json",
+      "title": "KHR_interactivity glTF extension",
+      "defaults": [
+        {
+          "sourceId": "extensions/2.0/Khronos/KHR_interactivity/schema/glTF.KHR_interactivity.schema.json",
+          "pointer": "#/properties/graph",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "kind": "ratified-extension",
+      "extension": "KHR_interactivity",
+      "path": "extensions/2.0/Khronos/KHR_interactivity/schema/graph.KHR_interactivity.schema.json",
+      "ref": "origin/main",
+      "schemaName": "graph.KHR_interactivity.schema.json",
+      "id": "graph.KHR_interactivity.schema.json",
+      "title": "Behavior graph",
+      "defaults": []
+    },
+    {
+      "kind": "ratified-extension",
+      "extension": "KHR_interactivity",
+      "path": "extensions/2.0/Khronos/KHR_interactivity/schema/nameableProperty.KHR_interactivity.schema.json",
+      "ref": "origin/main",
+      "schemaName": "nameableProperty.KHR_interactivity.schema.json",
+      "id": "nameableProperty.KHR_interactivity.schema.json",
+      "title": "KHR_interactivity Nameable Property",
+      "defaults": []
+    },
+    {
+      "kind": "ratified-extension",
+      "extension": "KHR_interactivity",
+      "path": "extensions/2.0/Khronos/KHR_interactivity/schema/node.KHR_interactivity.schema.json",
+      "ref": "origin/main",
+      "schemaName": "node.KHR_interactivity.schema.json",
+      "id": "node.KHR_interactivity.schema.json",
+      "title": "Behavior graph interactivity node",
+      "defaults": []
+    },
+    {
+      "kind": "ratified-extension",
+      "extension": "KHR_interactivity",
+      "path": "extensions/2.0/Khronos/KHR_interactivity/schema/type.KHR_interactivity.schema.json",
+      "ref": "origin/main",
+      "schemaName": "type.KHR_interactivity.schema.json",
+      "id": "type.KHR_interactivity.schema.json",
+      "title": "Behavior graph type",
+      "defaults": []
+    },
+    {
+      "kind": "ratified-extension",
+      "extension": "KHR_interactivity",
+      "path": "extensions/2.0/Khronos/KHR_interactivity/schema/variable.KHR_interactivity.schema.json",
+      "ref": "origin/main",
+      "schemaName": "variable.KHR_interactivity.schema.json",
+      "id": "variable.KHR_interactivity.schema.json",
+      "title": "Behavior graph variable",
       "defaults": []
     },
     {
@@ -808,6 +918,36 @@ export const glTFSchemaMetadata = {
     },
     {
       "kind": "ratified-extension",
+      "extension": "KHR_node_hoverability",
+      "path": "extensions/2.0/Khronos/KHR_node_hoverability/schema/node.KHR_node_hoverability.schema.json",
+      "ref": "origin/main",
+      "schemaName": "node.KHR_node_hoverability.schema.json",
+      "title": "KHR_node_hoverability glTF Node Extension",
+      "defaults": [
+        {
+          "sourceId": "extensions/2.0/Khronos/KHR_node_hoverability/schema/node.KHR_node_hoverability.schema.json",
+          "pointer": "#/properties/hoverable",
+          "value": true
+        }
+      ]
+    },
+    {
+      "kind": "ratified-extension",
+      "extension": "KHR_node_selectability",
+      "path": "extensions/2.0/Khronos/KHR_node_selectability/schema/node.KHR_node_selectability.schema.json",
+      "ref": "origin/main",
+      "schemaName": "node.KHR_node_selectability.schema.json",
+      "title": "KHR_node_selectability glTF Node Extension",
+      "defaults": [
+        {
+          "sourceId": "extensions/2.0/Khronos/KHR_node_selectability/schema/node.KHR_node_selectability.schema.json",
+          "pointer": "#/properties/selectable",
+          "value": true
+        }
+      ]
+    },
+    {
+      "kind": "ratified-extension",
       "extension": "KHR_node_visibility",
       "path": "extensions/2.0/Khronos/KHR_node_visibility/schema/node.KHR_node_visibility.schema.json",
       "ref": "origin/main",
@@ -924,6 +1064,15 @@ export const glTFSchemaMetadata = {
     {
       "kind": "interactivity-pr",
       "extension": "KHR_interactivity",
+      "path": "extensions/2.0/Khronos/KHR_interactivity/schema/nameableProperty.KHR_interactivity.schema.json",
+      "schemaName": "nameableProperty.KHR_interactivity.schema.json",
+      "id": "nameableProperty.KHR_interactivity.schema.json",
+      "title": "KHR_interactivity Nameable Property",
+      "defaults": []
+    },
+    {
+      "kind": "interactivity-pr",
+      "extension": "KHR_interactivity",
       "path": "extensions/2.0/Khronos/KHR_interactivity/schema/node.KHR_interactivity.schema.json",
       "schemaName": "node.KHR_interactivity.schema.json",
       "id": "node.KHR_interactivity.schema.json",
@@ -996,14 +1145,14 @@ export const glTFSchemaMetadata = {
     ],
     "specification/2.0/schema/material.pbrMetallicRoughness.schema.json#/properties/metallicFactor": 1,
     "specification/2.0/schema/material.pbrMetallicRoughness.schema.json#/properties/roughnessFactor": 1,
+    "specification/2.0/schema/material.schema.json#/properties/alphaCutoff": 0.5,
+    "specification/2.0/schema/material.schema.json#/properties/alphaMode": "OPAQUE",
+    "specification/2.0/schema/material.schema.json#/properties/doubleSided": false,
     "specification/2.0/schema/material.schema.json#/properties/emissiveFactor": [
       0,
       0,
       0
     ],
-    "specification/2.0/schema/material.schema.json#/properties/alphaMode": "OPAQUE",
-    "specification/2.0/schema/material.schema.json#/properties/alphaCutoff": 0.5,
-    "specification/2.0/schema/material.schema.json#/properties/doubleSided": false,
     "specification/2.0/schema/mesh.primitive.schema.json#/properties/mode": 4,
     "specification/2.0/schema/node.schema.json#/properties/matrix": [
       1,
@@ -1042,6 +1191,9 @@ export const glTFSchemaMetadata = {
     "specification/2.0/schema/sampler.schema.json#/properties/wrapS": 10497,
     "specification/2.0/schema/sampler.schema.json#/properties/wrapT": 10497,
     "specification/2.0/schema/textureInfo.schema.json#/properties/texCoord": 0,
+    "extensions/2.0/Khronos/KHR_gaussian_splatting/schema/mesh.primitive.KHR_gaussian_splatting.schema.json#/properties/projection": "perspective",
+    "extensions/2.0/Khronos/KHR_gaussian_splatting/schema/mesh.primitive.KHR_gaussian_splatting.schema.json#/properties/sortingMethod": "cameraDistance",
+    "extensions/2.0/Khronos/KHR_interactivity/schema/glTF.KHR_interactivity.schema.json#/properties/graph": 0,
     "extensions/2.0/Khronos/KHR_lights_punctual/schema/light.schema.json#/properties/color": [
       1,
       1,
@@ -1080,6 +1232,8 @@ export const glTFSchemaMetadata = {
       1,
       1
     ],
+    "extensions/2.0/Khronos/KHR_node_hoverability/schema/node.KHR_node_hoverability.schema.json#/properties/hoverable": true,
+    "extensions/2.0/Khronos/KHR_node_selectability/schema/node.KHR_node_selectability.schema.json#/properties/selectable": true,
     "extensions/2.0/Khronos/KHR_node_visibility/schema/node.KHR_node_visibility.schema.json#/properties/visible": true,
     "extensions/2.0/Khronos/KHR_texture_transform/schema/textureInfo.KHR_texture_transform.schema.json#/properties/offset": [
       0,
@@ -1089,10 +1243,7 @@ export const glTFSchemaMetadata = {
     "extensions/2.0/Khronos/KHR_texture_transform/schema/textureInfo.KHR_texture_transform.schema.json#/properties/scale": [
       1,
       1
-    ],
-    "extensions/2.0/Khronos/KHR_interactivity/schema/glTF.KHR_interactivity.schema.json#/properties/graph": 0,
-    "extensions/2.0/Khronos/KHR_node_selectability/schema/node.KHR_node_selectability.schema.json#/properties/selectable": true,
-    "extensions/2.0/Khronos/KHR_node_hoverability/schema/node.KHR_node_hoverability.schema.json#/properties/hoverable": true
+    ]
   },
   "materialPointers": [
     {
@@ -1788,6 +1939,32 @@ export const glTFSchemaMetadata = {
       "schemaPointer": "extensions/2.0/Khronos/KHR_node_hoverability/schema/node.KHR_node_hoverability.schema.json#/properties/hoverable",
       "defaultValue": true,
       "extension": "KHR_node_hoverability"
+    },
+    {
+      "template": "/nodes/{}/extensions/KHR_node_hoverability/hoverable",
+      "segments": [
+        "extensions",
+        "KHR_node_hoverability",
+        "hoverable"
+      ],
+      "typeName": "bool",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_node_hoverability/schema/node.KHR_node_hoverability.schema.json#/properties/hoverable",
+      "defaultValue": true,
+      "extension": "KHR_node_hoverability"
+    },
+    {
+      "template": "/nodes/{}/extensions/KHR_node_selectability/selectable",
+      "segments": [
+        "extensions",
+        "KHR_node_selectability",
+        "selectable"
+      ],
+      "typeName": "bool",
+      "readOnly": false,
+      "schemaPointer": "extensions/2.0/Khronos/KHR_node_selectability/schema/node.KHR_node_selectability.schema.json#/properties/selectable",
+      "defaultValue": true,
+      "extension": "KHR_node_selectability"
     },
     {
       "template": "/nodes/{}/extensions/KHR_node_selectability/selectable",

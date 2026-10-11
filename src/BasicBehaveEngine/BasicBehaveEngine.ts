@@ -304,7 +304,8 @@ export class BasicBehaveEngine implements IBehaveEngine {
     private _lastTickTime: number;
     private _pauseTickTime: number;
     private _pauseDuration : number;
-    private _scheduledDelays: Array<NodeJS.Timeout | undefined>;
+    private _scheduledDelays: Array<ReturnType<typeof setTimeout> | undefined>;
+    private readonly scheduledDelayOwners = new Map<number, () => void>();
     protected nodes: IInteractivityNode[];
     protected _variables: IInteractivityVariable[];
     protected events: IInteractivityEvent[];
@@ -314,7 +315,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
     private _fps: number;
     // bumped by clearValueEvaluationCache; node output caches from an older epoch are stale
     public valueEvaluationEpoch = 0;
-    private _timerID: NodeJS.Timeout | null;
+    private _timerID: ReturnType<typeof setTimeout> | null;
     public hoverableNodesIndices: Map<number, IHoverInformation>;
     public selectableNodesIndices: Map<number, (selectedNode: string, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined, event: string) => void>;
     public selectNodes: Array<OnSelect>;
@@ -496,12 +497,15 @@ export class BasicBehaveEngine implements IBehaveEngine {
     public clearScheduledDelays() {
         // actually cancel the pending flow/setDelay timers - dropping the references alone leaves
         // them queued, so their callbacks keep firing after the graph is torn down
-        for (const delay of this._scheduledDelays) {
+        for (let index = 0; index < this._scheduledDelays.length; index++) {
+            const delay = this._scheduledDelays[index];
             if (delay !== undefined) {
                 clearTimeout(delay);
             }
+            this.removeScheduledDelay(index);
         }
         this._scheduledDelays = [];
+        this.scheduledDelayOwners.clear();
     }
 
     public dispose = () => {
@@ -514,16 +518,17 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.clearCustomEventListeners();
     }
 
-    public get scheduledDelays() {
+    public get scheduledDelays(): Array<ReturnType<typeof setTimeout> | undefined> {
         return this._scheduledDelays;
     }
 
-    public pushScheduledDelay = (delay: NodeJS.Timeout): void => {
+    public pushScheduledDelay = (delay: ReturnType<typeof setTimeout>, removeOwner?: () => void): void => {
+        if (removeOwner) this.scheduledDelayOwners.set(this._scheduledDelays.length, removeOwner);
         this.jsonPtrTrie.addPath(`/extensions/KHR_interactivity/delays/${this._scheduledDelays.length}`, () => [delay], () => undefined, "ref", true);
         this._scheduledDelays.push(delay);
     }
 
-    public getScheduledDelay = (index: number): NodeJS.Timeout | undefined => {
+    public getScheduledDelay = (index: number): ReturnType<typeof setTimeout> | undefined => {
         if (index >= this._scheduledDelays.length || index < 0) {
             return undefined;
         }
@@ -534,13 +539,14 @@ export class BasicBehaveEngine implements IBehaveEngine {
     public cancelScheduledDelay = (index: number): void => {
         const delay = this.getScheduledDelay(index);
         if (delay !== undefined) {
-            this.jsonPtrTrie.removePath(`/extensions/KHR_interactivity/delays/${index}`);
             clearTimeout(delay);
-            this._scheduledDelays[index] = undefined;
+            this.removeScheduledDelay(index);
         }
     }
 
     public removeScheduledDelay = (index: number): void => {
+        this.scheduledDelayOwners.get(index)?.();
+        this.scheduledDelayOwners.delete(index);
         if (index >= 0 && index < this._scheduledDelays.length) {
             this.jsonPtrTrie.removePath(`/extensions/KHR_interactivity/delays/${index}`);
             this._scheduledDelays[index] = undefined;

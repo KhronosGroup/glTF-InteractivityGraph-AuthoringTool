@@ -29,7 +29,9 @@ export class SetDelay extends BehaveEngineNode {
         this.graphEngine.clearValueEvaluationCache();
         const {duration} = this.evaluateRequiredValues();
 
-        if (isNaN(duration) || !isFinite(duration) || duration < 0) {
+        // Browser and Node timers use signed 32-bit millisecond delays. Larger values
+        // otherwise wrap or clamp to a near-immediate activation, contrary to the spec.
+        if (isNaN(duration) || !isFinite(duration) || duration < 0 || duration * 1000 > 2147483647) {
             if (this.flows.err) {
                 this.processFlow(this.flows.err);
             }
@@ -39,7 +41,9 @@ export class SetDelay extends BehaveEngineNode {
                 this.graphEngine.removeScheduledDelay(delayIndex);
                 this.addEventToWorkQueue(this.flows.done);
             }, duration * 1000);
-            this.graphEngine.pushScheduledDelay(delayId);
+            this.graphEngine.pushScheduledDelay(delayId, () => {
+                this._runningDelayIndices = this._runningDelayIndices.filter(index => index !== delayIndex);
+            });
             this._runningDelayIndices.push(delayIndex);
             this.outValues.lastDelay = { value: [`/extensions/KHR_interactivity/delays/${delayIndex}`], type: this.getTypeIndex('ref')}
 

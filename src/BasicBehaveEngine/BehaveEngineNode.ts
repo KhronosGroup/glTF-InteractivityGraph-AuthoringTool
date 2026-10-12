@@ -217,6 +217,8 @@ export class BehaveEngineNode {
             return input.parsed;
         }
         if (input.kind === CONNECTED_INPUT) {
+            const compiled=this.graphEngine.getCompiledOutput(input.node!.index,input.socket);
+            if(compiled!==undefined){input.source.type=compiled.type;return compiled.value;}
             const output = this.pullOutput(input.node!, input.socket);
             const type = output.type;
             input.source.type = type;

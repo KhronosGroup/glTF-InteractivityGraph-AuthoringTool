@@ -1,3 +1,4 @@
+import {compileControlNodes,compileValueOutputs,CompiledOutput} from './compiledEvaluation';
 import {IBehaveEngine, IEventBus, IEventQueueItem, IHoverInformation, IInterpolateAction, IJsonPtrEntry, IRigidBodyTriggerInformation} from "./IBehaveEngine";
 import {JsonPtrTrie} from "./JsonPtrTrie";
 import {BehaveEngineNode, IBehaviourNodeProps} from "./BehaveEngineNode";
@@ -295,6 +296,9 @@ export class GraphRejectedError extends Error {
     }
 }
 
+const defaultNodeHook = (_node: BehaveEngineNode): void => {};
+const defaultFlowHook = (_flow: IInteractivityFlow): void => {};
+
 export class BasicBehaveEngine implements IBehaveEngine {
     protected registry: Map<string, any>;
     private executionErrorListener: ((error: unknown) => void) | undefined;
@@ -315,6 +319,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
     private _fps: number;
     // bumped by clearValueEvaluationCache; node output caches from an older epoch are stale
     public valueEvaluationEpoch = 0;
+    private compiledOutputs: Array<Record<string,CompiledOutput>> = [];
     private _timerID: ReturnType<typeof setTimeout> | null;
     public hoverableNodesIndices: Map<number, IHoverInformation>;
     public selectableNodesIndices: Map<number, (selectedNode: string, controllerIndex: number, selectionPoint: [number, number, number] | undefined, selectionRayOrigin: [number, number, number] | undefined, event: string) => void>;
@@ -569,6 +574,12 @@ export class BasicBehaveEngine implements IBehaveEngine {
         this.valueEvaluationEpoch++;
     }
 
+    public getCompiledOutput = (node:number,socket:string):CompiledOutput|undefined => {
+        const output=this.compiledOutputs[node]?.[socket];
+        if(output && output.version!==this.valueEvaluationEpoch){output.value=output.evaluate();output.version=this.valueEvaluationEpoch;}
+        return output;
+    };
+
     public registerJsonPointer = (jsonPtr: string, getterCallback: (path: string) => any, setterCallback: (path: string, value: any) => void, typeName: string, readOnly: boolean): void => {
         this.jsonPtrTrie.addPath(jsonPtr, getterCallback, setterCallback, typeName, readOnly);
     }
@@ -631,6 +642,8 @@ export class BasicBehaveEngine implements IBehaveEngine {
 
     public loadBehaveGraph = (behaveGraph: any, runGraph = true) => {
         const runtimeGraph = cloneGraphData(behaveGraph);
+        this.compiledOutputs = [];
+        this.clearValueEvaluationCache();
         this.hoverableNodesIndices.clear();
         this.selectableNodesIndices.clear();
         this.lastHoveredNodeIndices.clear();
@@ -703,6 +716,9 @@ export class BasicBehaveEngine implements IBehaveEngine {
             index++;
         });
 
+        this.compiledOutputs = compileValueOutputs(this, this.idToBehaviourNodeMap, new Map(behaveEngineNodeRegistry), this.types);
+        compileControlNodes(this, this.idToBehaviourNodeMap, new Map(behaveEngineNodeRegistry), this.compiledOutputs, this.types);
+
         this.onTickNodeIndices = this.nodes
             .map((node, idx) => runtimeGraph.declarations[node.declaration].op === "event/onTick" ? idx : -1)
             .filter(idx => idx !== -1);
@@ -738,17 +754,15 @@ export class BasicBehaveEngine implements IBehaveEngine {
         }
     }
 
-    public processNodeStarted = (behaveEngineNode: BehaveEngineNode) => {
-        //pass
-    }
+    public processNodeStarted = defaultNodeHook;
 
     public processAddingNodeToQueue = (flowBeingAdded: IInteractivityFlow) => {
         //pass
     }
 
-    public processExecutingNextNode = (flowBeingExecuted: IInteractivityFlow) => {
-        //pass
-    }
+    public processExecutingNextNode = defaultFlowHook;
+
+    public hasExecutionHooks = (): boolean => this.processNodeStarted !== defaultNodeHook || this.processExecutingNextNode !== defaultFlowHook;
 
     public processDebugLog = (node: BehaveEngineNode, message: string, severity: number) => {
         if (severity === 0) {

@@ -204,6 +204,10 @@ From `src/BasicBehaveEngine`, run `npm ci` and `npm run test:package`. The check
 
 The package contains the renderer-independent engine. Three.js and Needle adapters use `three-gltf-interactivity` (including its `/needle` import) and depend on this package. Publish the core package before publishing an adapter version that requires it.
 
+## Evaluation
+
+Graph loading pre-resolves standard scalar/vector/matrix value edges and common synchronous control nodes into cached closures. It uses no generated source or `eval`. Custom operation registrations retain their normal processors. Constant branch trees can use direct decision tables; attaching execution/debug hooks restores the per-node control path. Value caches invalidate between flow activations, and `clearValueEvaluationCache()` also invalidates the compiled cells after external state changes.
+
 ## Adding Nodes to BasicBehaveEngine
 The provided Basic BehaveEngine uses a decorator approach, so you behave nodes will be defined only once and the Logging and Babylon decorators will decorate certain touch points in the execution logic with their specific functionality. To create a new node...
 1. add a new class in the [nodes directory](./nodes) which extends BehaveEngineNode.

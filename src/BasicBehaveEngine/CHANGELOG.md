@@ -21,6 +21,7 @@ All notable changes to `@khronosgroup/gltf-interactivity-engine` are documented 
 - Top-level graph arrays are optional.
 - gl-matrix backed math ops are computed in double precision.
 - Faster value evaluation, JSON pointer resolution, custom event delivery and flow node iteration (2–5x overall).
+- Prebound standard data edges and synchronous control paths, including branch decision tables, retain custom operation overrides, debug hooks, and live literal edits.
 
 ### Fixed
 - Spec conformance for `flow/for`, `flow/multiGate`, `flow/throttle`, `flow/switch`, `math/isInf`, `math/smoothStep`, `math/switch`, `math/quatFromAngles`, `animation/stopAt` and `ref/eq`.

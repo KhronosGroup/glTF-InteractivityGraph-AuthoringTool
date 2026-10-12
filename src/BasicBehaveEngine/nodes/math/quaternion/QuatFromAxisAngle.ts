@@ -10,7 +10,7 @@ export class QuatFromAxisAngle extends BehaveEngineNode {
     }
 
     override processNode(flowSocket?: string) {
-        const {axis, angle} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const {axis, angle} = this.evaluateRequiredValues();
         this.graphEngine.processNodeStarted(this);
         const typeIndexAxis = this.values['axis'].type!
         const typeAxis: string = this.getType(typeIndexAxis);

@@ -10,7 +10,7 @@ export class Combine3x3 extends BehaveEngineNode {
     }
 
     override processNode(flowSocket?: string) {
-        const {a, b, c, d, e, f, g, h, i} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const {a, b, c, d, e, f, g, h, i} = this.evaluateRequiredValues();
         this.graphEngine.processNodeStarted(this);
         const characters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'];
         for (let i = 0; i < characters.length; i++) {

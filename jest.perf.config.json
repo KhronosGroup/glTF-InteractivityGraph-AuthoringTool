@@ -1,0 +1,23 @@
+{
+    "preset": "ts-jest/presets/default-esm",
+    "testEnvironment": "jsdom",
+    "moduleDirectories": [
+        "node_modules",
+        "src"
+    ],
+    "transform": {
+        "^.+\\.tsx?$": [
+            "ts-jest",
+            {
+                "useESM": true
+            }
+        ]
+    },
+    "testMatch": [
+        "**/*.perf.ts"
+    ],
+    "collectCoverage": false,
+    "moduleNameMapper": {
+        "^uuid$": "uuid"
+    }
+}

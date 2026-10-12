@@ -26,7 +26,8 @@ export class ForLoop extends BehaveEngineNode {
         this.graphEngine.processNodeStarted(this);
         // spec: index = startIndex, then re-evaluate endIndex before each iteration; index is never forced to endIndex
         let index = Number(startIndex);
-        this.outValues.index = { value: [index], type: this.getTypeIndex('int')}
+        const intType = this.getTypeIndex('int');
+        this.outValues.index = { value: [index], type: intType}
         const evaluateEndIndex = () => {
             this.graphEngine.clearValueEvaluationCache();
             return Number(this.evaluateAllValues(["endIndex"]).endIndex);
@@ -36,7 +37,7 @@ export class ForLoop extends BehaveEngineNode {
                 this.processFlow(this.flows.loopBody);
             }
             index++;
-            this.outValues.index = { value: [index], type: this.getTypeIndex('int')}
+            this.outValues.index = { value: [index], type: intType}
         }
         if (this.flows.completed != null) {
             this.processFlow(this.flows.completed);

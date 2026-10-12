@@ -1,4 +1,4 @@
-import { IInteractivityFlow, IInteractivityValue } from "./types/InteractivityGraph";
+import { IInteractivityFlow } from "./types/InteractivityGraph";
 import {BehaveEngineNode} from "./BehaveEngineNode";
 
 export interface IHoverInformation {
@@ -14,6 +14,14 @@ export interface IRigidBodyTriggerInformation {
 /**
  * Interface representing the Behave Engine, which provides methods for interacting with a behavioral graph engine.
  */
+/** A resolved JSON pointer: its type, mutability and accessors. */
+export interface IJsonPtrEntry {
+    typeName: string | undefined;
+    readOnly: boolean;
+    getValue: (path: string) => any;
+    setValue: (path: string, value: any) => void;
+}
+
 export interface IBehaveEngine {
     get fps():number;
     /**
@@ -91,6 +99,12 @@ export interface IBehaveEngine {
      * Returns the full list of registered JSON pointer paths.
      */
     getRegisteredJsonPointers: () => string[];
+
+    /**
+     * Resolves a JSON pointer once; the other pointer accessors are shorthands for it.
+     * Object models override this single lookup.
+     */
+    resolveJsonPtr: (jsonPtr: string) => IJsonPtrEntry | undefined;
 
     /**
      * Checks whether a JSON pointer can be resolved by the active object model.
@@ -203,22 +217,6 @@ export interface IBehaveEngine {
      * Clears the cache used for value evaluations.
      */
     clearValueEvaluationCache: () => void;
-
-    /**
-     * Adds an entry to the value evaluation cache.
-     *
-     * @param {string} key - The cache key for the entry.
-     * @param {IValue} val - The value to be cached.
-     */
-    addEntryToValueEvaluationCache: (key: string, val: IInteractivityValue) => void;
-
-    /**
-     * Retrieves the cached value associated with a specific key from the value evaluation cache.
-     *
-     * @param {string} key - The cache key for the desired value.
-     * @returns {IValue | undefined} The cached value or undefined if not found.
-     */
-    getValueEvaluationCacheValue: (key: string) => IInteractivityValue | undefined;
 
     setPointerInterpolationCallback: (path: string, action: IInterpolateAction) => void;
     clearPointerInterpolation: (path: string) => void;

@@ -1,6 +1,6 @@
-import {IBehaveEngine, IEventQueueItem, IInterpolateAction} from "./IBehaveEngine";
+import {IBehaveEngine, IEventQueueItem, IInterpolateAction, IJsonPtrEntry} from "./IBehaveEngine";
 import {BehaveEngineNode} from "./BehaveEngineNode";
-import {IInteractivityFlow, IInteractivityValue} from "./types/InteractivityGraph";
+import {IInteractivityFlow} from "./types/InteractivityGraph";
 import { ApplyImpulse } from "./nodes/rigid_body/ApplyImpulse";
 import { ApplyPointImpulse } from "./nodes/rigid_body/ApplyPointImpulse";
 import { RayCast } from "./nodes/rigid_body/RayCast";
@@ -119,6 +119,10 @@ export abstract class ADecorator implements IBehaveEngine {
         return this.behaveEngine.getRegisteredJsonPointers();
     }
 
+    resolveJsonPtr(path: string): IJsonPtrEntry | undefined {
+        return this.behaveEngine.resolveJsonPtr(path);
+    }
+
     isValidJsonPtr(path: string): boolean {
         return this.behaveEngine.isValidJsonPtr(path);
     }
@@ -175,16 +179,8 @@ export abstract class ADecorator implements IBehaveEngine {
         return this.behaveEngine.getPathTypeName(path);
     }
 
-    addEntryToValueEvaluationCache(key: string, val: IInteractivityValue): void {
-        this.behaveEngine.addEntryToValueEvaluationCache(key, val);
-    }
-
     clearValueEvaluationCache(): void {
         this.behaveEngine.clearValueEvaluationCache();
-    }
-
-    getValueEvaluationCacheValue(key: string): IInteractivityValue | undefined {
-        return this.behaveEngine.getValueEvaluationCacheValue(key);
     }
 
     setPointerInterpolationCallback(path: string, action: IInterpolateAction) {

@@ -22,7 +22,7 @@ export class Switch extends BehaveEngineNode {
     override processNode(flowSocket?: string) {
         this.graphEngine.processNodeStarted(this);
         this.graphEngine.clearValueEvaluationCache();
-        const {selection} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const {selection} = this.evaluateRequiredValues();
         // spec: only configured cases route to their flow; anything else takes the default flow
         const selected = this._cases.includes(Number(selection)) ? this.flows[String(selection)] : this.flows.default;
         if (selected != null) {

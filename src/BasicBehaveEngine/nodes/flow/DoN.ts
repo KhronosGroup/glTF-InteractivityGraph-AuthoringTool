@@ -17,7 +17,7 @@ export class DoN extends BehaveEngineNode {
 
     override processNode(flowSocket?: string) {
         this.graphEngine.clearValueEvaluationCache();
-        const {n} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const {n} = this.evaluateRequiredValues();
         this.graphEngine.processNodeStarted(this);
 
         if (flowSocket === "reset") {

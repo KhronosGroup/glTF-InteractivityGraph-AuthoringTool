@@ -25,7 +25,7 @@ export class RgbFromOkLCh extends BehaveEngineNode {
     }
 
     override processNode(flowSocket?: string) {
-        const {l, c, h} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const {l, c, h} = this.evaluateRequiredValues();
         this.graphEngine.processNodeStarted(this);
 
         const typeIndexFloat = this.getTypeIndex("float");

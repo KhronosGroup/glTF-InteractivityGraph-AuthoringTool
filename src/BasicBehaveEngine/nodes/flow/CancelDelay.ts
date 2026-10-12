@@ -12,7 +12,7 @@ export class CancelDelay extends BehaveEngineNode {
 
     override processNode(flowSocket?: string) {
         this.graphEngine.clearValueEvaluationCache();
-        const {delay} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const {delay} = this.evaluateRequiredValues();
         this.graphEngine.processNodeStarted(this);
         const delayIndex = this.resolveRef(delay);
         this.graphEngine.cancelScheduledDelay(delayIndex);

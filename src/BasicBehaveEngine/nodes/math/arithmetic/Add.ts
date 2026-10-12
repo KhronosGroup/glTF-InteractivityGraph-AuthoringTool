@@ -10,7 +10,7 @@ export class Add extends BehaveEngineNode {
     }
 
     override processNode(flowSocket?: string) {
-        const {a, b} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const {a, b} = this.evaluateRequiredValues();
         this.graphEngine.processNodeStarted(this);
         const typeIndexA = this.values['a'].type!
         const typeA: string = this.getType(typeIndexA);

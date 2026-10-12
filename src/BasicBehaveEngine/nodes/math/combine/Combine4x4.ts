@@ -10,7 +10,7 @@ export class Combine4x4 extends BehaveEngineNode {
     }
 
     override processNode(flowSocket?: string) {
-        const {a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const {a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p} = this.evaluateRequiredValues();
         this.graphEngine.processNodeStarted(this);
         const characters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p'];
         for (let i = 0; i < characters.length; i++) {

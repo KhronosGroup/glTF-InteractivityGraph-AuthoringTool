@@ -25,7 +25,7 @@ export class Throttle extends BehaveEngineNode {
         }
 
         this.graphEngine.clearValueEvaluationCache();
-        const {duration} = this.evaluateAllValues(Object.keys(this.REQUIRED_VALUES));
+        const {duration} = this.evaluateRequiredValues();
         this.graphEngine.processNodeStarted(this);
         if (isNaN(duration) || !isFinite(duration) || duration < 0) {
             if (this.flows.err) {

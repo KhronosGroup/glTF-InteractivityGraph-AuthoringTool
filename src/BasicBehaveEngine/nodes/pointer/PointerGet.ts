@@ -28,18 +28,18 @@ export class PointerGet extends BehaveEngineNode {
         const populatedPath = this.populatePath(this._pointer, configValues, configIndices);
         this.graphEngine.processNodeStarted(this);
 
-        if (this.graphEngine.isValidJsonPtr(populatedPath)) {
-            const typeName = this.graphEngine.getPathTypeName(populatedPath);
+        const pointer = this.graphEngine.resolveJsonPtr(populatedPath);
+        if (pointer !== undefined) {
             const configuredTypeName = this.getType(this._typeIndex);
 
-            if (typeName !== configuredTypeName) {
+            if (pointer.typeName !== configuredTypeName) {
                 return {
                     'value': {value: this.getDefaultValueForType(configuredTypeName), type: this._typeIndex},
                     'isValid': {value: [false], type: this.getTypeIndex('bool')}
                 };
             }
 
-            const value = this.graphEngine.getPathValue(populatedPath);
+            const value = pointer.getValue(populatedPath);
             if (value !== undefined) {
                 return {
                     'value': {value, type: this._typeIndex},

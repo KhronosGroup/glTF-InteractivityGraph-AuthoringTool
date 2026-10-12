@@ -1118,7 +1118,7 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
             input: {
                 condition: {
                     typeOptions: [0],
-                    description: "Selects b when true, a when false",
+                    description: "Selects a when true, b when false",
                     type: 0,
                     value: [false]
                 },

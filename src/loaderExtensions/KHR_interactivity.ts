@@ -42,6 +42,7 @@ export class KHR_interactivity implements IGLTFLoaderExtension {
         this._loader.babylonScene.metadata.gltfExtensionsRequired = gltf?.extensionsRequired ?? [];
         // asset version feeds the KHR_interactivity Asset Capabilities pointers (spec 4.2.1)
         this._loader.babylonScene.metadata.gltfAsset = gltf?.asset ?? {};
+        this._loader.babylonScene.metadata.gltfCameraDefinitions = gltf?.cameras ?? [];
         // snapshot the addressable objects (nodes/meshes/materials/...) for the ref-value picker
         this._loader.babylonScene.metadata.gltfObjectModel = buildGltfObjectModel(gltf);
         // Build a map from glTF node index -> KHR_lights_punctual light index so BabylonDecorator can

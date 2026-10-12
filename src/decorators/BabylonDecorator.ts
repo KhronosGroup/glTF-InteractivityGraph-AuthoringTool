@@ -1,6 +1,6 @@
 import {ADecorator} from "../BasicBehaveEngine/ADecorator";
 import {BehaveEngineNode} from "../BasicBehaveEngine/BehaveEngineNode";
-import {IBehaveEngine} from "../BasicBehaveEngine/IBehaveEngine";
+import {IBehaveEngine, IJsonPtrEntry} from "../BasicBehaveEngine/IBehaveEngine";
 import {
     AbstractMesh,
     AnimationGroup, Camera, Color3,
@@ -24,6 +24,7 @@ import {glTFObjectReference} from "../objectModel/glTFReference";
 import {SUPPORTED_GLTF_EXTENSIONS} from "../diagnostics";
 import {ASSET_EXTENSION_ENABLED_POINTER, assetExtensionEnabled, KHR_INTERACTIVITY_LIMITS, parseGltfVersion} from "../objectModel/assetCapabilities";
 import {effectiveAnimationTime} from "../objectModel/glTFAnimation";
+import {registerBabylonCameraPointers} from "./babylonCameraPointers";
 
 export class BabylonDecorator extends ADecorator {
     scene: Scene;
@@ -101,6 +102,20 @@ export class BabylonDecorator extends ADecorator {
         const baseResolveJsonPtr = engine.resolveJsonPtr;
         engine.resolveJsonPtr = (path: string) =>
             assetExtensionEnabled(path, extensionsUsed) !== undefined ? ASSET_EXTENSION_ENABLED_POINTER : baseResolveJsonPtr(path);
+    }
+
+    private bridgeCameraPointers(): void {
+        const bindings = new Map<string, IJsonPtrEntry>();
+        registerBabylonCameraPointers(this.scene, (path, type, get, set, readOnly = false) => {
+            bindings.set(path, { typeName: type, readOnly, getValue: get, setValue: (_path, value) => set?.(value) });
+            this.registerJsonPointer(path, get, (_path, value) => set?.(value), type, readOnly);
+        });
+        const engine = this.behaveEngine;
+        const baseResolveJsonPtr = engine.resolveJsonPtr;
+        // JsonPtrTrie treats numeric segments as wildcards. Concrete camera
+        // bindings must remain isolated and absent optional fields stay absent.
+        engine.resolveJsonPtr = (path: string) =>
+            path.startsWith("/cameras/") || path.startsWith("/extensions/KHR_interactivity/activeCamera/") ? bindings.get(path) : baseResolveJsonPtr(path);
     }
 
     // Undoes the left-handed conversion Babylon's glTF loader bakes into its __root__ node
@@ -288,32 +303,7 @@ export class BabylonDecorator extends ADecorator {
             (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).rotationQuaternion = new Quaternion(value[0], value[1], value[2], value[3]);
         }, "float4", false);
 
-        this.registerJsonPointer(`/extensions/KHR_interactivity/activeCamera/rotation`, (path) => {
-            const activeCamera: Nullable<Camera> = this.scene.activeCamera;
-            if (activeCamera === null || !(activeCamera instanceof TargetCamera)) {
-                return [NaN, NaN, NaN, NaN]
-            }
-
-            let rotation = new Quaternion(activeCamera.absoluteRotation.x, activeCamera.absoluteRotation.y, activeCamera.absoluteRotation.z, activeCamera.absoluteRotation.w);
-            // Quaternion representing a 180-degree rotation around Y: (x=0, y=1, z=0, w=0)
-            const rot180Y = new Quaternion(0, 1, 0, 0);
-            rotation = rot180Y.multiply(rotation);
-            return [rotation.x, -1 * rotation.y, rotation.z, rotation.w]
-        }, (path, value) => {
-            //no-op
-        }, "float4", true)
-
-        this.registerJsonPointer(`/extensions/KHR_interactivity/activeCamera/position`, (path) => {
-            const activeCamera: Nullable<Camera> = this.scene.activeCamera;
-            if (activeCamera === null) {
-                return [NaN, NaN, NaN]
-            }
-
-            console.log(`Camera position: ${activeCamera.position.x}, ${activeCamera.position.y}, ${activeCamera.position.z}`)
-            return BabylonDecorator.toRightHandedXYZ(activeCamera.position.x, activeCamera.position.y, activeCamera.position.z)
-        }, (path, value) => {
-            //no-op
-        }, "float3", true)
+        this.bridgeCameraPointers();
 
         // Asset Capabilities & runtime limits (KHR_interactivity spec 4.2.1 / 4.2.2): read-only glTF
         // version, per-extension support flags, and implementation limits. Extensions that are BOTH
@@ -1420,7 +1410,7 @@ export class BabylonDecorator extends ADecorator {
         }, "int", true);
 
         this.registerJsonPointer('/cameras.length', (path) => {
-            return [glTFCameras.length];
+            return [this.scene.metadata?.gltfCameraDefinitions?.length ?? glTFCameras.length];
         }, (path, value) => {
             //no-op
         }, "int", true);

@@ -5,6 +5,7 @@ import { BasicBehaveEngine } from "../../src/BasicBehaveEngine/BasicBehaveEngine
 import { createGlTFObjectModelFromGltf, GlTFObjectModelDecorator } from "../../src/objectModel/glTFObjectModel";
 import {
     assertAssetSubTest,
+    attachHeadlessActiveCamera,
     AssetTestMetadata,
     formatError,
     getAssetSubTests,
@@ -36,6 +37,7 @@ describeIfEnabled("KHR_interactivity Overview asset - core engine", () => {
             const eventBus = new TestEventBus();
             const engine = new BasicBehaveEngine(60, eventBus);
             const decorator = new GlTFObjectModelDecorator(engine, createGlTFObjectModelFromGltf(overviewCase.gltf));
+            attachHeadlessActiveCamera(decorator);
 
             await runGraphAndWait(decorator, overviewCase.graph);
             variables = engine.variables;

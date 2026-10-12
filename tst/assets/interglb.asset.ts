@@ -9,6 +9,7 @@ import {
     shouldRunInterGlbSuite,
 } from "./interglbHarness";
 import {
+    attachHeadlessActiveCamera,
     TestEventBus,
 } from "./sampleAssetHarness";
 
@@ -25,6 +26,7 @@ describeIfEnabled("KHR_interactivity InterGlb paired assets - core engine", () =
         const decorators = interGlbPairCases.map((assetCase, index) => (
             new GlTFObjectModelDecorator(engines[index], createGlTFObjectModelFromGltf(assetCase.gltf))
         ));
+        decorators.forEach(attachHeadlessActiveCamera);
 
         await runInterGlbPair(state, engines, decorators);
     });

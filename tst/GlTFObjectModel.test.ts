@@ -104,6 +104,28 @@ describe("GlTFObjectModelDecorator", () => {
         decorator.setPathValue("/materials/0/extensions/KHR_materials_dispersion/dispersion", [0.25]);
         expect(decorator.getPathValue("/materials/0/extensions/KHR_materials_dispersion/dispersion")).toEqual([0.25]);
     });
+
+    it("exposes read-only activeCamera pointers, NaN without a provided camera", () => {
+        const decorator = createDecorator({
+            scene: 0,
+            scenes: [{ nodes: [0] }],
+            cameras: [{ type: "perspective", perspective: { yfov: 1, znear: 0.1 } }],
+            nodes: [{ translation: [0, 0, 4], children: [1] }, { camera: 0, translation: [1, 2, 0], rotation: [0, Math.SQRT1_2, 0, Math.SQRT1_2], scale: [2, 2, 2] }],
+        });
+        const prefix = "/extensions/KHR_interactivity/activeCamera/";
+
+        expect(decorator.isValidJsonPtr(prefix + "position")).toBe(true);
+        expect(decorator.isValidJsonPtr(prefix + "orthographic/xmag")).toBe(true);
+        expect(decorator.getPathValue(prefix + "rotation")).toEqual([NaN, NaN, NaN, NaN]);
+        expect(decorator.getPathValue(prefix + "perspective/yfov")).toEqual([NaN]);
+
+        decorator.setActiveCamera(() => decorator.activeCameraFromNode(1, 2));
+        expect(decorator.getPathValue(prefix + "position")).toEqual([1, 2, 4]);
+        decorator.getPathValue(prefix + "rotation").forEach((component: number, index: number) => expect(component).toBeCloseTo([0, Math.SQRT1_2, 0, Math.SQRT1_2][index]));
+        expect(decorator.getPathValue(prefix + "perspective/aspectRatio")).toEqual([2]);
+        expect(decorator.getPathValue(prefix + "perspective/zfar")).toEqual([Infinity]);
+        expect(decorator.getPathValue(prefix + "orthographic/znear")).toEqual([NaN]);
+    });
 });
 
 function createDecorator(gltf: any): GlTFObjectModelDecorator {

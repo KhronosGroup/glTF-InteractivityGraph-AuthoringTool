@@ -2,6 +2,7 @@ import { jest } from "@jest/globals";
 import { BasicBehaveEngine } from "../../src/BasicBehaveEngine/BasicBehaveEngine";
 import { createGlTFObjectModelFromGltf, GlTFObjectModelDecorator } from "../../src/objectModel/glTFObjectModel";
 import {
+    attachHeadlessActiveCamera,
     assertAssetSubTest,
     formatError,
     getAssetSubTests,
@@ -36,6 +37,7 @@ describe("KHR_interactivity sample assets - core engine", () => {
                 const eventBus = new TestEventBus();
                 const engine = new BasicBehaveEngine(60, eventBus);
                 const decorator = new GlTFObjectModelDecorator(engine, createGlTFObjectModelFromGltf(assetCase.gltf));
+                attachHeadlessActiveCamera(decorator);
 
                 await runGraphAndWait(decorator, assetCase.graph);
                 variables = engine.variables;

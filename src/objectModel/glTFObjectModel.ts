@@ -42,6 +42,20 @@ const DELAY_REF_POINTER: IJsonPtrEntry = {
     setValue: () => undefined,
 };
 
+// Viewer camera state behind the activeCamera pointers; absent fields read as NaN (spec "Active Camera State")
+export interface ActiveCameraState {
+    position?: number[];
+    rotation?: number[];
+    perspective?: { aspectRatio: number; yfov: number; znear: number; zfar: number };
+    orthographic?: { xmag: number; ymag: number; znear: number; zfar: number };
+}
+export type ActiveCameraProvider = () => ActiveCameraState | undefined;
+
+const ACTIVE_CAMERA_PROJECTIONS = {
+    perspective: ["aspectRatio", "yfov", "znear", "zfar"],
+    orthographic: ["xmag", "ymag", "znear", "zfar"],
+} as const;
+
 interface ActiveAnimation {
     timeout: ReturnType<typeof setTimeout> | null;
     startTime: number;
@@ -96,6 +110,8 @@ export class GlTFObjectModelDecorator extends ADecorator {
     private syncAnimations = () => this.updateActiveAnimations();
     private activeAnimations = new Map<number, ActiveAnimation>();
     private animationToken = 0;
+    // headless has no view, so no active camera unless the host provides one
+    private activeCamera: ActiveCameraProvider = () => undefined;
 
     constructor(behaveEngine: IBehaveEngine, objectModel: Partial<GlTFObjectModel> = {}) {
         super(behaveEngine);
@@ -149,6 +165,25 @@ export class GlTFObjectModelDecorator extends ADecorator {
         entry.stopDone = callback;
         this.scheduleAnimationFinish(animationIndex, entry);
     };
+    setActiveCamera = (provider: ActiveCameraProvider | undefined): void => {
+        this.activeCamera = provider ?? (() => undefined);
+    };
+    // Active camera state of a glTF camera node, read live from its global transform
+    activeCameraFromNode = (nodeIndex: number, viewportAspectRatio = 1): ActiveCameraState | undefined => {
+        const camera = this.objectModel.cameras[this.objectModel.nodes[nodeIndex]?.camera];
+        if (camera === undefined) {
+            return undefined;
+        }
+        const matrix = this.globalMatrix(nodeIndex);
+        const state: ActiveCameraState = { position: [matrix[12], matrix[13], matrix[14]], rotation: matrixRotation(matrix) };
+        if (camera.perspective) {
+            const { aspectRatio = viewportAspectRatio, yfov, znear, zfar = Infinity } = camera.perspective;
+            state.perspective = { aspectRatio, yfov, znear, zfar };
+        } else if (camera.orthographic) {
+            state.orthographic = { ...camera.orthographic };
+        }
+        return state;
+    };
     getWorld = (): GlTFObjectModel => this.objectModel;
     getParentNodeIndex = (nodeIndex: number): number | undefined => this.objectModel.parents[nodeIndex];
 
@@ -158,6 +193,7 @@ export class GlTFObjectModelDecorator extends ADecorator {
         this.registerMeshPointers();
         this.registerMaterialPointers();
         this.registerCameraPointers();
+        this.registerActiveCameraPointers();
         this.registerSkinPointers();
         this.registerLightPointers();
         this.registerAnimationPointers();
@@ -347,6 +383,17 @@ export class GlTFObjectModelDecorator extends ADecorator {
                 }
             }
         });
+    }
+
+    private registerActiveCameraPointers(): void {
+        const prefix = "/extensions/KHR_interactivity/activeCamera/";
+        this.pointer(prefix + "position", "float3", () => [...(this.activeCamera()?.position ?? [NaN, NaN, NaN])], ignoreSet, true);
+        this.pointer(prefix + "rotation", "float4", () => [...(this.activeCamera()?.rotation ?? [NaN, NaN, NaN, NaN])], ignoreSet, true);
+        for (const [projection, fields] of Object.entries(ACTIVE_CAMERA_PROJECTIONS)) {
+            for (const field of fields) {
+                this.scalarPointer(`${prefix}${projection}/${field}`, "float", () => (this.activeCamera()?.[projection as keyof typeof ACTIVE_CAMERA_PROJECTIONS] as any)?.[field] ?? NaN, ignoreSet, true);
+            }
+        }
     }
 
     private registerSkinPointers(): void {
@@ -739,6 +786,33 @@ function composeTrsMatrix(translation: number[], rotation: number[], scale: numb
         translation[2],
         1,
     ];
+}
+
+// Unit rotation quaternion (XYZW) of a column-major TRS matrix, with scale removed
+function matrixRotation(m: number[]): number[] {
+    const sx = Math.hypot(m[0], m[1], m[2]);
+    const sy = Math.hypot(m[4], m[5], m[6]);
+    const sz = Math.hypot(m[8], m[9], m[10]);
+    const [m00, m10, m20] = [m[0] / sx, m[1] / sx, m[2] / sx];
+    const [m01, m11, m21] = [m[4] / sy, m[5] / sy, m[6] / sy];
+    const [m02, m12, m22] = [m[8] / sz, m[9] / sz, m[10] / sz];
+    const trace = m00 + m11 + m22;
+    let q: number[];
+    if (trace > 0) {
+        const s = 2 * Math.sqrt(trace + 1);
+        q = [(m21 - m12) / s, (m02 - m20) / s, (m10 - m01) / s, s / 4];
+    } else if (m00 > m11 && m00 > m22) {
+        const s = 2 * Math.sqrt(1 + m00 - m11 - m22);
+        q = [s / 4, (m01 + m10) / s, (m02 + m20) / s, (m21 - m12) / s];
+    } else if (m11 > m22) {
+        const s = 2 * Math.sqrt(1 + m11 - m00 - m22);
+        q = [(m01 + m10) / s, s / 4, (m12 + m21) / s, (m02 - m20) / s];
+    } else {
+        const s = 2 * Math.sqrt(1 + m22 - m00 - m11);
+        q = [(m02 + m20) / s, (m12 + m21) / s, s / 4, (m10 - m01) / s];
+    }
+    const length = Math.hypot(q[0], q[1], q[2], q[3]);
+    return q.map((component) => component / length);
 }
 
 function multiplyMatrices(a: number[], b: number[]): number[] {

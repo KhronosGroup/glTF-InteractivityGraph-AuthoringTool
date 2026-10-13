@@ -100,8 +100,17 @@ export class BabylonDecorator extends ADecorator {
     private bridgeAssetCapabilityPointers(extensionsUsed: readonly string[]): void {
         const engine = this.behaveEngine;
         const baseResolveJsonPtr = engine.resolveJsonPtr;
-        engine.resolveJsonPtr = (path: string) =>
-            assetExtensionEnabled(path, extensionsUsed) !== undefined ? ASSET_EXTENSION_ENABLED_POINTER : baseResolveJsonPtr(path);
+        engine.resolveJsonPtr = (path: string) => {
+            // /nodes/{}/camera only exists on nodes that reference a camera
+            const match = path.endsWith("/camera") ? /^\/nodes\/(\d+)\/camera$/.exec(path) : null;
+            if (match) {
+                const indices = this.scene.metadata?.gltfNodeCameraIndices;
+                const node = this.world.glTFNodes[Number(match[1])] as Node | undefined;
+                const hasCamera = indices ? indices[Number(match[1])] !== undefined : node?.getChildren().some((child: Node) => child instanceof Camera) ?? false;
+                if (!hasCamera) return undefined;
+            }
+            return assetExtensionEnabled(path, extensionsUsed) !== undefined ? ASSET_EXTENSION_ENABLED_POINTER : baseResolveJsonPtr(path);
+        };
     }
 
     private bridgeCameraPointers(): void {
@@ -1669,10 +1678,12 @@ export class BabylonDecorator extends ADecorator {
 
         this.registerJsonPointer(`/nodes/${maxGltfNode}/camera`, (path) => {
             const parts: string[] = path.split("/");
-            const node = this.world.glTFNodes[Number(parts[2])] as Node;
-            const cameraChild = node.getChildren().find((child: Node) => child instanceof Camera) as any;
+            const sourceIndex = this.scene.metadata?.gltfNodeCameraIndices?.[Number(parts[2])];
+            if (sourceIndex !== undefined) return [glTFObjectReference("cameras", sourceIndex)];
+            const node = this.world.glTFNodes[Number(parts[2])] as Node | undefined;
+            const cameraChild = node?.getChildren().find((child: Node) => child instanceof Camera) as any;
             const pointer = cameraChild?._internalMetadata?.gltf?.pointers?.find((p: string) => cameraPointerRegex.test(p));
-            return [pointer ?? null];
+            return pointer === undefined ? undefined : [pointer];
         }, (path, value) => {
             //no-op
         }, "ref", true);

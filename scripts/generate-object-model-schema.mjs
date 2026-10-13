@@ -400,6 +400,8 @@ const objectModelPointers = dedupePointers([
     pointer("/nodes/{}/children.length", "int", true),
     pointer("/nodes/{}/children/[]", "ref", true),
     pointer("/nodes/{}/mesh", "ref", true),
+    // Interactivity object links return refs.
+    // https://github.com/KhronosGroup/glTF/pull/2293#issuecomment-4296795565
     pointer("/nodes/{}/camera", "ref", true),
     pointer("/nodes/{}/skin", "ref", true),
     pointer("/nodes/{}/parent", "ref", true),

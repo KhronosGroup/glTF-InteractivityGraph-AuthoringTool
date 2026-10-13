@@ -4,7 +4,7 @@ import { ADecorator } from "../../src/BasicBehaveEngine/ADecorator";
 import { BasicBehaveEngine } from "../../src/BasicBehaveEngine/BasicBehaveEngine";
 import { IEventBus, IEventQueueItem, IInterpolateAction } from "../../src/BasicBehaveEngine/IBehaveEngine";
 import { IInteractivityVariable } from "../../src/BasicBehaveEngine/types/InteractivityGraph";
-import { createGlTFObjectModelFromGltf, GlTFObjectModelDecorator, readGlbJsonFromArrayBuffer } from "../../src/objectModel/glTFObjectModel";
+import { ActiveCameraState, createGlTFObjectModelFromGltf, GlTFObjectModelDecorator, readGlbJsonFromArrayBuffer } from "../../src/objectModel/glTFObjectModel";
 
 export interface AssetIndexEntry {
     label: string;
@@ -350,6 +350,33 @@ export async function runGraphsAndWait(decorators: ADecorator[], graphs: any[]):
     decorators[0].executeEventQueueTick();
     decorators.forEach((decorator) => decorator.pauseEventQueue());
     decorators[0].clearCustomEventListeners();
+}
+
+// Headless stand-in for the viewer camera (Babylon's harness uses createDefaultCamera): the first
+// camera node of the default scene, else a fixed perspective camera on +Z looking at the origin.
+const HEADLESS_ASPECT_RATIO = 16 / 9;
+const HEADLESS_VIEWER_CAMERA: ActiveCameraState = {
+    position: [0, 0, 5],
+    rotation: [0, 0, 0, 1],
+    perspective: { aspectRatio: HEADLESS_ASPECT_RATIO, yfov: Math.PI / 4, znear: 0.1, zfar: 1000 },
+};
+
+export function attachHeadlessActiveCamera(decorator: GlTFObjectModelDecorator): void {
+    const world = decorator.getWorld();
+    const findCameraNode = (nodeIndexes: number[]): number | undefined => {
+        for (const nodeIndex of nodeIndexes) {
+            const node = world.nodes[nodeIndex];
+            const found = node?.camera !== undefined ? nodeIndex : findCameraNode(node?.children ?? []);
+            if (found !== undefined) {
+                return found;
+            }
+        }
+        return undefined;
+    };
+    const cameraNode = findCameraNode(world.scenes[world.scene]?.nodes ?? []);
+    decorator.setActiveCamera(cameraNode === undefined
+        ? () => HEADLESS_VIEWER_CAMERA
+        : () => decorator.activeCameraFromNode(cameraNode, HEADLESS_ASPECT_RATIO));
 }
 
 export function validateGraphLoad(assetCase: AssetCase): void {

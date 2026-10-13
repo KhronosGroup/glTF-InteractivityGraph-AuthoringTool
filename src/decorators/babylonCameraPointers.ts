@@ -1,4 +1,4 @@
-import { Camera, Quaternion, TargetCamera } from "@babylonjs/core";
+import { Camera, Quaternion, TargetCamera, Vector3 } from "@babylonjs/core";
 import type { Scene } from "@babylonjs/core";
 
 type Bind = (path: string, type: string, get: () => number[], set?: (value: number[]) => void, readOnly?: boolean) => void;
@@ -21,10 +21,14 @@ export function registerBabylonCameraPointers(scene: Scene, bind: Bind): void {
         const camera = scene.activeCamera;
         if (!(camera instanceof TargetCamera)) return [NaN, NaN, NaN, NaN];
         camera.getViewMatrix(true);
-        const rotation = camera.absoluteRotation;
-        if (scene.useRightHandedSystem) return rotation.asArray();
-        const q = new Quaternion(0, 1, 0, 0).multiply(rotation);
-        return [q.x, -q.y, q.z, q.w];
+        // Rebuild from view direction instead of decomposing: glTF cameras in a left-handed
+        // scene have a mirrored world matrix, which decompose() resolves by flipping an axis.
+        const rh = scene.useRightHandedSystem;
+        const world = camera.getWorldMatrix();
+        const toGltf = (v: Vector3): Vector3 => (rh ? v : new Vector3(-v.x, v.y, v.z));
+        const back = toGltf(Vector3.TransformNormal(new Vector3(0, 0, rh ? 1 : -1), world)).normalize();
+        const right = Vector3.Cross(toGltf(Vector3.TransformNormal(Vector3.Up(), world)), back).normalize();
+        return Quaternion.RotationQuaternionFromAxis(right, Vector3.Cross(back, right), back).normalize().asArray();
     }, undefined, true);
     for (const mode of ["perspective", "orthographic"] as const) {
         const fields = mode === "perspective" ? ["aspectRatio", "yfov", "znear", "zfar"] : ["xmag", "ymag", "znear", "zfar"];

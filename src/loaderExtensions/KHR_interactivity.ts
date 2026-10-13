@@ -46,12 +46,22 @@ export class KHR_interactivity implements IGLTFLoaderExtension {
         this._loader.babylonScene.metadata.gltfCameraDefinitions = gltf?.cameras ?? [];
         // snapshot the addressable objects (nodes/meshes/materials/...) for the ref-value picker
         this._loader.babylonScene.metadata.gltfObjectModel = buildGltfObjectModel(gltf);
+        const rawNodes: any[] = Array.isArray(gltf?.nodes) ? gltf.nodes : [];
+        this._loader.babylonScene.metadata.gltfStructure = {
+            scene: gltf?.scene,
+            nodes: rawNodes.map(node => ({ camera: node.camera, mesh: node.mesh, skin: node.skin, children: node.children?.slice() })),
+            meshes: (gltf?.meshes ?? []).map((mesh: { primitives: { material?: number }[] }) => ({
+                primitives: mesh.primitives.map(primitive => ({ material: primitive.material })),
+            })),
+            skins: (gltf?.skins ?? []).map((skin: { joints: number[]; skeleton?: number }) => ({
+                joints: skin.joints.slice(), skeleton: skin.skeleton,
+            })),
+            scenes: (gltf?.scenes ?? []).map((scene: { nodes?: number[] }) => ({ nodes: scene.nodes?.slice() })),
+        };
         // Build a map from glTF node index -> KHR_lights_punctual light index so BabylonDecorator can
         // correctly order scene.lights after loading (Babylon 7.x stores the pointer on the light as
         // /nodes/{nodeIndex}/extensions/KHR_lights_punctual, not /extensions/KHR_lights_punctual/lights/{N}).
         const khrLightsNodeToLightIndex: {[nodeIndex: number]: number} = {};
-        const rawNodes: any[] = Array.isArray(gltf?.nodes) ? gltf.nodes : [];
-        this._loader.babylonScene.metadata.gltfNodeCameraIndices = rawNodes.map(node => node.camera);
         for (let i = 0; i < rawNodes.length; i++) {
             const lightIdx = rawNodes[i]?.extensions?.KHR_lights_punctual?.light;
             if (typeof lightIdx === 'number') {

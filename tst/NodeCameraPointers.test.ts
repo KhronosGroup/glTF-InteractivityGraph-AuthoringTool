@@ -36,7 +36,7 @@ describe("node camera reference contract", () => {
                 const nodes = gltf.nodes.map((_, index) => new TransformNode(`node-${index}`, scene));
                 scene.metadata = { gltfCameraDefinitions: gltf.cameras };
                 if (adapter === "Babylon source metadata") {
-                    scene.metadata.gltfNodeCameraIndices = gltf.nodes.map(node => node.camera);
+                    scene.metadata.gltfStructure = gltf;
                 }
                 for (const [nodeIndex, cameraIndex] of [[0, 1], [2, 0]]) {
                     const camera = new FreeCamera(`camera-${cameraIndex}`, Vector3.Zero(), scene);

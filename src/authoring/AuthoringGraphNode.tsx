@@ -13,6 +13,7 @@ import { resolveInputSocketType } from "./validation";
 import { IGraphDiagnostic } from "../diagnostics";
 import { PointerConfigField } from "./PointerConfigField";
 import { getStandardTypeIndexForSignature } from "./pointerCatalogue";
+import { getExecutableDeclarationIndex } from "./executableGraph";
 import { FLOW_COLOR, getColorForTypeIndex, getNodeCategoryColor, getTypeLabel } from "./socketColors";
 import { RefValuePicker } from "./RefValuePicker";
 import { ObjectMenuDropdown } from "./ObjectMenuDropdown";
@@ -701,6 +702,12 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
         !isNoOp && !allowsDynamicSockets && nodeSpec?.values?.input?.[socket] === undefined;
     const isUnknownOutputFlowSocket = (socket: string): boolean =>
         !isNoOp && !allowsDynamicSockets && nodeSpec?.flows?.output?.[socket] === undefined;
+    // spec: an extension op has only the output value sockets its declaration (the one export uses) lists
+    const extensionDeclaration = !isNoOp && nodeSpec?.extension !== undefined && node
+        ? graph.declarations?.[getExecutableDeclarationIndex(node, graph.declarations ?? [])]
+        : undefined;
+    const isUndeclaredOutputValueSocket = (socket: string): boolean =>
+        extensionDeclaration !== undefined && extensionDeclaration.outputValueSockets?.[socket] === undefined;
 
     // interpolate nodes expose p1/p2 as the cubic-bezier easing control points; show a curve
     // preview + preset picker when both are present as inline (unwired) float2 values.
@@ -1266,11 +1273,15 @@ export const AuthoringGraphNode = (props: IAuthoringGraphNodeProps) => {
                                 // "value" tracks whatever concrete type a/b have resolved to)
                                 const outputGroup = _value.typeGroup ?? nodeSpec?.values?.output?.[socket]?.typeGroup;
                                 const outputType = outputGroup !== undefined ? (getGroupType(outputGroup) ?? _value.type) : _value.type;
+                                const isUndeclared = isUndeclaredOutputValueSocket(socket);
+                                const socketTitle = isUndeclared
+                                    ? `Not declared: the "${node?.op}" declaration does not list "${socket}" in its outputValueSockets, so this socket does not exist in the file`
+                                    : _value.description;
                                 return (
-                                    <div key={socket} className={"flow-node-socket"}>
-                                        <div className={"flow-node-socket-head"} title={_value.description}>
+                                    <div key={socket} className={`flow-node-socket${isUndeclared ? " flow-node-socket--unknown" : ""}`}>
+                                        <div className={"flow-node-socket-head"} title={socketTitle}>
                                             <span className={"flow-node-type-badge"} style={{ background: getColorForTypeIndex(outputType) }}>{getTypeLabel(outputType)}</span>
-                                            <label htmlFor={socket} title={_value.description}>{socket}</label>
+                                            <label htmlFor={socket} title={socketTitle}>{socket}</label>
                                         </div>
                                         <Handle type="source" position={Position.Right} id={socket} style={handleStyle(getColorForTypeIndex(outputType), "right")} />
                                     </div>

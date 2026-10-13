@@ -253,18 +253,18 @@ export function validateInteractivityGraph(graph: any): void {
                 index(node.declaration, declarations.length, "declaration")
             ];
         const op = declaration.op;
-        const known = OPERATION_SCHEMAS[op];
-        const spec =
-            known && (known.extension ?? "") === (declaration.extension ?? "")
-                ? known
-                : undefined;
+        // Extension operations have exactly the value sockets their declaration defines.
+        const spec = declaration.extension ? undefined : OPERATION_SCHEMAS[op];
         const inputs: Record<string, string> = {};
         for (const [id, source] of Object.entries<any>(node.values ?? {})) {
             if (source.node !== undefined) {
                 const ref = index(source.node, nodeIndex, "input node");
-                const type = outputs[ref][source.socket ?? "value"];
+                const socket = source.socket ?? "value";
+                const type = outputs[ref][socket];
                 if (!type)
-                    fail(`missing output socket ${source.socket ?? "value"}`);
+                    fail(
+                        `node ${nodeIndex} input ${id} references output socket ${socket} not defined by node ${ref}`,
+                    );
                 if (
                     source.type !== undefined &&
                     signature(source.type) !== type
@@ -295,6 +295,11 @@ export function validateInteractivityGraph(graph: any): void {
                 groups[socket.group] = type;
             }
         }
+        if (!spec)
+            for (const [key, socket] of Object.entries<any>(
+                declaration.inputValueSockets ?? {},
+            ))
+                requireType(key, [signature(socket.type)]);
         const output: Record<string, string> = {};
         for (const [key, socket] of Object.entries(spec?.outputs ?? {}))
             output[key] = socket.group

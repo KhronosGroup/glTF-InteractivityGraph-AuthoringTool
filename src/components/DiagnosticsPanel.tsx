@@ -7,6 +7,7 @@ export const categoryLabel: Record<IGraphDiagnostic["category"], string> = {
     extension: "Extension",
     operation: "Node operation",
     type: "Data type",
+    declaration: "Declaration",
     node: "Node validation",
     graph: "Graph structure",
     execution: "Runtime engine",

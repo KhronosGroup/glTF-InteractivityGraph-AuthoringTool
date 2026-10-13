@@ -1,7 +1,7 @@
 import { GraphRejectedError } from './BasicBehaveEngine/BasicBehaveEngine';
 
 export type DiagnosticSeverity = 'error' | 'warning';
-export type DiagnosticCategory = 'extension' | 'operation' | 'type' | 'node' | 'graph' | 'execution';
+export type DiagnosticCategory = 'extension' | 'operation' | 'type' | 'declaration' | 'node' | 'graph' | 'execution';
 
 /**
  * What the issue means for running the graph, ordered from hardest to softest. Where the

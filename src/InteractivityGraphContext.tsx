@@ -10,7 +10,7 @@ import { DiagnosticCategory, IGraphDiagnostic } from './diagnostics';
 import { FLOW_COLOR, UNKNOWN_COLOR, getColorForTypeIndex } from './authoring/socketColors';
 import { GltfObjectModel } from './authoring/gltfObjectModel';
 import { runChunked, isAbortError } from './utils/frameBudget';
-import { ensureInteractivityDeclaration } from './authoring/declarations';
+import { computeDeclarationDiagnostics, ensureInteractivityDeclaration, repairExtensionDeclarations } from './authoring/declarations';
 import { getExecutableDeclarationIndex, toExecutableConfigurationValue, toExecutableValue } from './authoring/executableGraph';
 
 const edgeStyle = (color: string) => ({ stroke: color, strokeWidth: 2 });
@@ -213,11 +213,15 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         validationDebounceRef.current = null;
     }, []);
     useEffect(() => cancelScheduledLiveValidation, [cancelScheduledLiveValidation]);
+    // mirrors graphDirty for getExecutableGraph, which play handlers may call through a stale closure
+    const graphDirtyRef = useRef(false);
     const markGraphDirty = useCallback(() => {
+        graphDirtyRef.current = true;
         setGraphDirty(true);
         scheduleLiveValidation();
     }, [scheduleLiveValidation]);
     const clearGraphDirty = useCallback(() => {
+        graphDirtyRef.current = false;
         setGraphDirty(false);
         // Reload/Play applies the edited graph, so this pass advances the applied snapshot too. It
         // runs now, so drop the pending debounced one rather than repeating it.
@@ -364,7 +368,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
     const diagnosticsByNodeUid = useMemo(() => {
         const byUid = new Map<string, IGraphDiagnostic[]>();
         for (const diagnostic of diagnostics) {
-            if (diagnostic.category !== 'node' || diagnostic.nodeUid === undefined) { continue; }
+            if ((diagnostic.category !== 'node' && diagnostic.category !== 'declaration') || diagnostic.nodeUid === undefined) { continue; }
             const existing = byUid.get(diagnostic.nodeUid);
             if (existing === undefined) { byUid.set(diagnostic.nodeUid, [diagnostic]); } else { existing.push(diagnostic); }
         }
@@ -820,6 +824,19 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
                 }
             }
 
+            if (declaration.extension !== undefined) {
+                for (const key of Object.keys(declaration.inputValueSockets ?? {})) {
+                    if (node.values?.[key] === undefined) {
+                        nodeDiagnostics.push({
+                            severity: 'error', category: 'node', nodeUid: uuids[i], nodeIndex: i, nodeOp,
+                            impact: 'graphRejected', specSection: 'Nodes',
+                            title: `Missing input value socket "${key}"`,
+                            detail: `The declaration of "${nodeOp}" defines the input value socket "${key}" in its inputValueSockets, but node ${i} provides no value for it.`,
+                        });
+                    }
+                }
+            }
+
             if (node.flows !== undefined && !isNoOp) {
                 for (const key in node.flows) {
                     copyOfTemplateNode.flows = copyOfTemplateNode.flows || {};
@@ -918,6 +935,7 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         setDiagnosticsForCategory('type', typeDiagnostics);
         setDiagnosticsForCategory('operation', opDiagnostics);
         setDiagnosticsForCategory('node', nodeDiagnostics);
+        setDiagnosticsForCategory('declaration', computeDeclarationDiagnostics(newGraph));
 
         // hand off to the canvas: replace the graph's identity — the single load signal the authoring
         // canvas watches to rebuild itself (see the rebuild effect in AuthoringComponent), which owns
@@ -937,6 +955,15 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
 
     const getExecutableGraph = () => {
         const executable: any = { declarations: [], nodes: [], variables: [], events: [], types: standardTypes};
+
+        // applying a changed graph rewrites declarations of supported extension ops from their definitions
+        if (graphDirtyRef.current) {
+            const repaired = repairExtensionDeclarations(graph);
+            if (repaired !== undefined) {
+                graph.declarations = repaired;
+                queueMicrotask(() => setDiagnosticsForCategory('declaration', computeDeclarationDiagnostics(graph)));
+            }
+        }
 
         executable.events = [...graph.events || []];
         executable.variables = [...graph.variables || []];

@@ -19,13 +19,13 @@ export const toInteractivityDeclaration = (spec: AuthoredNode): IInteractivityDe
     if (spec.values?.input) {
         declaration.inputValueSockets = {};
         for (const [key, socket] of Object.entries(spec.values.input)) {
-            declaration.inputValueSockets[key] = { type: socket.type!, value: socket.value };
+            declaration.inputValueSockets[key] = { type: socket.type! };
         }
     }
     if (spec.values?.output) {
         declaration.outputValueSockets = {};
         for (const [key, socket] of Object.entries(spec.values.output)) {
-            declaration.outputValueSockets[key] = { type: socket.type!, value: socket.value };
+            declaration.outputValueSockets[key] = { type: socket.type! };
         }
     }
     return declaration;

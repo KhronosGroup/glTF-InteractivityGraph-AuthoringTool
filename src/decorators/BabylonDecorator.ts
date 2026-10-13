@@ -101,7 +101,6 @@ export class BabylonDecorator extends ADecorator {
         const engine = this.behaveEngine;
         const baseResolveJsonPtr = engine.resolveJsonPtr;
         engine.resolveJsonPtr = (path: string) => {
-            // /nodes/{}/camera only exists on nodes that reference a camera
             const match = path.endsWith("/camera") ? /^\/nodes\/(\d+)\/camera$/.exec(path) : null;
             if (match) {
                 const indices = this.scene.metadata?.gltfNodeCameraIndices;

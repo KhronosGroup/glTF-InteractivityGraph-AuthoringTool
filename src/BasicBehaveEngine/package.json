@@ -32,13 +32,13 @@
     "url": "https://github.com/KhronosGroup/glTF-InteractivityGraph-AuthoringTool/issues"
   },
   "devDependencies": {
-    "@types/node": "^24.1.0",
-    "typescript": "^5.8.3",
-    "rollup": "^2.79.1",
+    "@babel/core": "^7.22.17",
+    "@babel/preset-typescript": "^7.23.0",
     "@rollup/plugin-babel": "^5.3.1",
     "@rollup/plugin-node-resolve": "^11.2.1",
-    "@babel/core": "^7.22.17",
-    "@babel/preset-typescript": "^7.23.0"
+    "@types/node": "^24.1.0",
+    "rollup": "^2.79.1",
+    "typescript": "^5.8.3"
   },
   "exports": {
     ".": {

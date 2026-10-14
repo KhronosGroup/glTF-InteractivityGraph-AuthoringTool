@@ -296,8 +296,8 @@ export class GraphRejectedError extends Error {
     }
 }
 
-const defaultNodeHook = (_node: BehaveEngineNode): void => {};
-const defaultFlowHook = (_flow: IInteractivityFlow): void => {};
+const defaultNodeHook = (_node: BehaveEngineNode): void => {/*no-op*/};
+const defaultFlowHook = (_flow: IInteractivityFlow): void => {/*no-op*/};
 
 export class BasicBehaveEngine implements IBehaveEngine {
     protected registry: Map<string, any>;

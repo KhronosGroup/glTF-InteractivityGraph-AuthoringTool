@@ -353,7 +353,7 @@ export function compileControlNodes(
       const edge = node.flows[socket],
         target = edge ? nodes.get(Number(edge.node)) : undefined;
       if (!edge || !target || !target.INPUT_FLOWS.includes(edge.socket ?? "in"))
-        return () => {};
+        return () => {/*no-op*/};
       return () => {
         engine.processExecutingNextNode(edge);
         target.processNode(edge.socket);
@@ -444,7 +444,8 @@ export function compileControlNodes(
         c.constructor !== standard.get(c.declaration.op) ||
         !["math/lt", "math/eq"].includes(c.declaration.op) ||
         !equal(c.values.a) ||
-        types[c.values.b?.type!]?.signature !== "int" ||
+        c.values.b?.type === undefined ||
+        types[c.values.b.type]?.signature !== "int" ||
         c.values.b.node !== undefined ||
         c.values.b.value?.length !== 1
       )
@@ -455,7 +456,7 @@ export function compileControlNodes(
         const f = n.flows[socket],
           target = f ? nodes.get(Number(f.node)) : undefined;
         if (!f || !target || !target.INPUT_FLOWS.includes(f.socket ?? "in"))
-          return () => {};
+          return () => {/*no-op*/};
         return (
           build(target) ??
           (() => {

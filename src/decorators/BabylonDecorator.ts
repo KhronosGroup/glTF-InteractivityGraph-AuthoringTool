@@ -7,8 +7,7 @@ import {
     float,
     Matrix, PBRMaterial,
     PointerEventTypes,
-    Quaternion,
-    TargetCamera, Node,
+    Node,
     TransformNode,
     Material,
     Observer,
@@ -25,22 +24,28 @@ import {SUPPORTED_GLTF_EXTENSIONS} from "../diagnostics";
 import {ASSET_EXTENSION_ENABLED_POINTER, assetExtensionEnabled, KHR_INTERACTIVITY_LIMITS, parseGltfVersion} from "../objectModel/assetCapabilities";
 import {effectiveAnimationTime} from "../objectModel/glTFAnimation";
 import {registerBabylonCameraPointers} from "./babylonCameraPointers";
+import {createBabylonAssetNodePointers} from "./babylonAssetPointers";
+import {BabylonAssetModel} from "../components/engineViews/babylonAssetModel";
+import {createBabylonRuntimeAssetModel} from "../components/engineViews/babylonLoadedModel";
 
 export class BabylonDecorator extends ADecorator {
     scene: Scene;
     world: any;
     hoveredNode: any;
     hoveredNodeIndex: number;
+    private readonly nodeModel: BabylonAssetModel;
     private beforeRenderObserver: Observer<Scene> | null = null;
     private pointerObserver: Observer<PointerInfo> | null = null;
 
     constructor(behaveEngine: IBehaveEngine, world: any, scene: Scene) {
         super(behaveEngine);
         this.world = world;
+        this.nodeModel = world.assetModel ?? createBabylonRuntimeAssetModel(world.glTFNodes, scene);
         this.scene = scene;
         this.bridgeEngineHooks();
         this.registerKnownPointers();
         this.bridgeReferencePointers();
+        this.bridgeAssetNodePointers();
         // dealing with hoverability refactor this once/if babylon has an api for hoverability
         this.hoveredNodeIndex = -1;
         this.beforeRenderObserver = this.scene.onBeforeRenderObservable.add(() => {
@@ -85,7 +90,7 @@ export class BabylonDecorator extends ADecorator {
 
         // setting all nodes to inherit visibility (defualt in KHR_interactivity's opinion)
         for (const node of this.world.glTFNodes) {
-            node.inheritVisibility = true;
+            if (node) node.inheritVisibility = true;
         }
     }
 
@@ -119,7 +124,7 @@ export class BabylonDecorator extends ADecorator {
         registerBabylonCameraPointers(this.scene, (path, type, get, set, readOnly = false) => {
             bindings.set(path, { typeName: type, readOnly, getValue: get, setValue: (_path, value) => set?.(value) });
             this.registerJsonPointer(path, get, (_path, value) => set?.(value), type, readOnly);
-        });
+        }, this.world.assetModel);
         const engine = this.behaveEngine;
         const baseResolveJsonPtr = engine.resolveJsonPtr;
         // JsonPtrTrie treats numeric segments as wildcards. Concrete camera
@@ -128,17 +133,13 @@ export class BabylonDecorator extends ADecorator {
             path.startsWith("/cameras/") || path.startsWith("/extensions/KHR_interactivity/activeCamera/") ? bindings.get(path) : baseResolveJsonPtr(path);
     }
 
-    // Undoes the left-handed conversion Babylon's glTF loader bakes into its __root__ node
-    // (Y-180° + scale(1,1,-1) == net negate-X). Left-multiplying the world matrix by diag(-1,1,1)
-    // inverts it; in Babylon's column-major array that negates the X-output row (indices 0,4,8,12).
-    // Assumes a left-handed scene (scene.useRightHandedSystem === false), which is how it's created here.
-    private static toRightHandedMatrixArray(m: ArrayLike<number>): number[] {
-        return [
-            -m[0], m[1], m[2], m[3],
-            -m[4], m[5], m[6], m[7],
-            -m[8], m[9], m[10], m[11],
-            -m[12], m[13], m[14], m[15]
-        ];
+    private bridgeAssetNodePointers(): void {
+        const bindings = createBabylonAssetNodePointers(this.nodeModel);
+        const engine = this.behaveEngine;
+        const resolve = engine.resolveJsonPtr;
+        const registered = engine.getRegisteredJsonPointers;
+        engine.resolveJsonPtr = path => path.startsWith("/nodes/") || path === "/nodes.length" ? bindings.get(path) : resolve(path);
+        engine.getRegisteredJsonPointers = () => [...registered(), ...bindings.keys()].sort();
     }
 
     // KHR_texture_transform rotation is negated by Babylon's glTF loader/exporter convention, see
@@ -256,23 +257,18 @@ export class BabylonDecorator extends ADecorator {
     }
 
     getParentNodeIndex = (nodeIndex: number) => {
-        const node = this.world.glTFNodes[nodeIndex];
-        if (!node || !node.parent) {
-            return undefined;
-        }
-        const parentNodeIndex = this.world.glTFNodes.findIndex((value: { uniqueId: number; }) => value.uniqueId === node.parent.uniqueId);
-        return parentNodeIndex !== -1 ? parentNodeIndex : undefined;
+        return this.nodeModel.nodes[nodeIndex]?.parent;
     }
 
     private getGlTFNodeIndexForBabylonNode(node: Node | null | undefined): number | undefined {
         let currentNode: Node | null | undefined = node;
         while (currentNode != null) {
             const metadataNodeIndex = currentNode.metadata?.nodeIndex;
-            if (Number.isInteger(metadataNodeIndex)) {
+            if (Number.isInteger(metadataNodeIndex) && (!this.world.assetModel || this.world.glTFNodes[metadataNodeIndex] === currentNode || this.world.assetModel.nodes[metadataNodeIndex]?.meshes.includes(currentNode))) {
                 return metadataNodeIndex;
             }
 
-            const nodeIndex = this.world.glTFNodes.findIndex((value: { uniqueId: number; }) => value.uniqueId === currentNode!.uniqueId);
+            const nodeIndex = this.world.glTFNodes.findIndex((value: { uniqueId: number; }) => value?.uniqueId === currentNode!.uniqueId);
             if (nodeIndex !== -1) {
                 return nodeIndex;
             }
@@ -293,15 +289,9 @@ export class BabylonDecorator extends ADecorator {
     }
 
     registerKnownPointers = () => {
-        const gltf = this.scene.metadata?.gltfStructure;
+        const gltf = this.world.assetModel?.structure ?? this.scene.metadata?.gltfStructure;
         const reference = (category: string, index: number | undefined): string[] | undefined =>
             index === undefined || index < 0 ? undefined : [glTFObjectReference(category, index)];
-        const getChildNodeIndices = (nodeIndex: number): number[] => gltf !== undefined
-            ? gltf.nodes?.[nodeIndex]?.children ?? []
-            : (this.world.glTFNodes[nodeIndex]?.getChildren() ?? [])
-                .map((child: Node) => this.world.glTFNodes.indexOf(child))
-                .filter((index: number) => index !== -1);
-        const maxGltfNode:number = this.world.glTFNodes.length-1;
         const maxGlTFMaterials: number = this.world.materials.length-1;
         const maxAnimations: number = this.world.animations.length-1;
 
@@ -363,38 +353,6 @@ export class BabylonDecorator extends ADecorator {
             .map((_: any, idx: number) => idx)
             .filter((idx: number) => this.getParentNodeIndex(idx) === undefined);
 
-        this.registerJsonPointer(`/nodes/${maxGltfNode}/scale`, (path) => {
-            const parts: string[] = path.split("/");
-            return [(this.world.glTFNodes[Number(parts[2])] as AbstractMesh).scaling.x,
-                (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).scaling.y,
-                (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).scaling.z];
-        }, (path, value) => {
-            const parts: string[] = path.split("/");
-            (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).scaling = new Vector3(value[0], value[1], value[2]);
-        }, "float3", false);
-
-        this.registerJsonPointer(`/nodes/${maxGltfNode}/translation`, (path) => {
-            const parts: string[] = path.split("/");
-            return [(this.world.glTFNodes[Number(parts[2])] as AbstractMesh).position.x,
-                (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).position.y,
-                (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).position.z];
-        }, (path, value) => {
-            const parts: string[] = path.split("/");
-            (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).position= new Vector3(value[0], value[1], value[2]);
-        }, "float3", false);
-
-        this.registerJsonPointer(`/nodes/${maxGltfNode}/rotation`, (path) => {
-            const parts: string[] = path.split("/");
-            return [
-                (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).rotationQuaternion?.x,
-                (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).rotationQuaternion?.y,
-                (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).rotationQuaternion?.z,
-                (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).rotationQuaternion?.w];
-        }, (path, value) => {
-            const parts: string[] = path.split("/");
-            (this.world.glTFNodes[Number(parts[2])] as AbstractMesh).rotationQuaternion = new Quaternion(value[0], value[1], value[2], value[3]);
-        }, "float4", false);
-
         this.bridgeCameraPointers();
 
         // Asset Capabilities & runtime limits (KHR_interactivity spec 4.2.1 / 4.2.2): read-only glTF
@@ -402,14 +360,14 @@ export class BabylonDecorator extends ADecorator {
         // used by the asset AND supported get a concrete `enabled` = true pointer (so authoring can
         // surface them); for every other extension the pointer does not exist (see
         // assetExtensionEnabled, bridged in bridgeAssetCapabilityPointers()).
-        const [assetMajorVersion, assetMinorVersion] = parseGltfVersion(this.scene.metadata?.gltfAsset?.version);
+        const [assetMajorVersion, assetMinorVersion] = parseGltfVersion(this.world.assetModel?.asset.version ?? this.scene.metadata?.gltfAsset?.version);
         this.registerJsonPointer(`/extensions/KHR_interactivity/asset/majorVersion`, () => {
             return [assetMajorVersion];
         }, () => {/*no-op*/}, "int", true);
         this.registerJsonPointer(`/extensions/KHR_interactivity/asset/minorVersion`, () => {
             return [assetMinorVersion];
         }, () => {/*no-op*/}, "int", true);
-        const extensionsUsed: string[] = this.scene.metadata?.gltfExtensionsUsed ?? [];
+        const extensionsUsed: string[] = this.world.assetModel?.extensionsUsed ?? this.scene.metadata?.gltfExtensionsUsed ?? [];
         for (const extensionName of extensionsUsed) {
             if (!SUPPORTED_GLTF_EXTENSIONS.has(extensionName)) {
                 continue;
@@ -427,7 +385,7 @@ export class BabylonDecorator extends ADecorator {
 
         //TODO: update to match what object model has once that is published
         this.registerJsonPointer(`/KHR_materials_variants/variant`, (path) => {
-            let root = this.world.glTFNodes[0];
+            let root = this.world.glTFNodes.find((node: Node | undefined) => node !== undefined);
             while (root.parent) {
                 root = root.parent;
             }
@@ -435,7 +393,7 @@ export class BabylonDecorator extends ADecorator {
             const selectedVariant = KHR_materials_variants.GetLastSelectedVariant(root);
             return [variants.indexOf(selectedVariant as string)];
         }, (path, value) => {
-            let root = this.world.glTFNodes[0];
+            let root = this.world.glTFNodes.find((node: Node | undefined) => node !== undefined);
             while (root.parent) {
                 root = root.parent;
             }
@@ -1411,82 +1369,6 @@ export class BabylonDecorator extends ADecorator {
         this.registerMaterialTextureCoordinatePointers(maxGlTFMaterials);
         this.registerClearcoatNormalTexturePointers(maxGlTFMaterials);
 
-        this.registerJsonPointer(`/nodes/${maxGltfNode}/extensions/KHR_node_selectability/selectable`, (path) => {
-            const parts: string[] = path.split("/");
-            const metadata = this.world.glTFNodes[Number(parts[2])].metadata;
-            if (metadata == undefined) {return true}
-            return [metadata.selectable];
-        }, (path, value) => {
-            const parts: string[] = path.split("/");
-            this.world.glTFNodes[Number(parts[2])].metadata = this.world.glTFNodes[Number(parts[2])].metadata || {};
-            this.world.glTFNodes[Number(parts[2])].metadata.selectable = value;
-            if (this.world.glTFNodes[Number(parts[2])] instanceof AbstractMesh) {
-                //swim up
-                let curNode = this.world.glTFNodes[Number(parts[2])];
-                let pickability: boolean = curNode.metadata.selectable;
-                while (curNode.parent != null && pickability) {
-                    curNode = curNode.parent;
-                    pickability = pickability && (curNode.metadata?.selectable ?? true)
-                }
-                this.world.glTFNodes[Number(parts[2])].isPickable = pickability;
-            }
-            for (const child of this.world.glTFNodes[Number(parts[2])].getChildren()) {
-                //swim down
-                this.swimDownSelectability(child, value)
-            }
-        }, "bool", false);
-
-        this.registerJsonPointer(`/nodes/${maxGltfNode}/extensions/KHR_node_visibility/visible`, (path) => {
-            const parts: string[] = path.split("/");
-            const node = this.world.glTFNodes[Number(parts[2])];
-            if (node instanceof AbstractMesh) {
-                return [(node as AbstractMesh).isVisible];
-            }
-            return [true];
-        }, (path, value) => {
-            const parts: string[] = path.split("/");
-            const node = this.world.glTFNodes[Number(parts[2])];
-
-            node.isVisible = value;
-            node.getChildMeshes().forEach((child: AbstractMesh) => {
-                if (child.metadata?.pointer === undefined) {
-                    // if the child does not have a pointer, that means it is a primitive
-                    child.isVisible = value;
-                }
-            });
-        }, "bool", false);
-
-        this.registerJsonPointer(`/nodes/${maxGltfNode}/extensions/KHR_node_hoverability/hoverable`, (path) => {
-            const parts: string[] = path.split("/");
-            const metadata = this.world.glTFNodes[Number(parts[2])].metadata;
-            if (metadata == undefined) {return [true]}
-            return [metadata.hoverable];
-        }, (path, value) => {
-            const parts: string[] = path.split("/");
-            this.world.glTFNodes[Number(parts[2])].metadata = this.world.glTFNodes[Number(parts[2])].metadata || {};
-            this.world.glTFNodes[Number(parts[2])].metadata.hoverable = value;
-            if (this.world.glTFNodes[Number(parts[2])] instanceof AbstractMesh) {
-                //swim up
-                let curNode = this.world.glTFNodes[Number(parts[2])];
-                let hoverability: boolean = curNode.metadata.hoverable;
-                while (curNode.parent != null && hoverability) {
-                    curNode = curNode.parent;
-                    hoverability = hoverability && (curNode.metadata.hoverable ?? true)
-                }
-                this.world.glTFNodes[Number(parts[2])].metadata.compositeHoverability = hoverability;
-            }
-            for (const child of this.world.glTFNodes[Number(parts[2])].getChildren()) {
-                //swim down
-                this.swimDownHoverability(child, value)
-            }
-        }, "bool", false);
-
-        this.registerJsonPointer('/nodes.length', (path) => {
-            return [this.world.glTFNodes.length];
-        }, (path, value) => {
-            //no-op
-        }, "int", true);
-
         this.registerJsonPointer('/meshes.length', (path) => {
             return [gltf !== undefined ? gltf.meshes?.length ?? 0 : glTFMeshPrimitives.length === 0 ? 0 : maxGlTFMeshIndex + 1];
         }, (path, value) => {
@@ -1501,7 +1383,7 @@ export class BabylonDecorator extends ADecorator {
         }, "int", true);
 
         this.registerJsonPointer('/cameras.length', (path) => {
-            return [this.scene.metadata?.gltfCameraDefinitions?.length ?? glTFCameras.length];
+            return [this.world.assetModel?.cameras.length ?? this.scene.metadata?.gltfCameraDefinitions?.length ?? glTFCameras.length];
         }, (path, value) => {
             //no-op
         }, "int", true);
@@ -1535,21 +1417,6 @@ export class BabylonDecorator extends ADecorator {
             const parts: string[] = path.split("/");
             const nodeIndex = getSceneNodeIndices(Number(parts[2]))[Number(parts[4])];
             return reference("nodes", nodeIndex);
-        }, (path, value) => {
-            //no-op
-        }, "ref", true);
-
-        this.registerJsonPointer(`/nodes/${maxGltfNode}/skin`, (path) => {
-            const parts: string[] = path.split("/");
-            if (gltf !== undefined) return reference("skins", gltf.nodes?.[Number(parts[2])]?.skin);
-            const node = this.world.glTFNodes[Number(parts[2])];
-            // Skinned meshes are parented as a sibling of the skeleton root rather than as a child of
-            // the node's own placeholder TransformNode, so the skeleton must be recovered via the
-            // `metadata.skinnedMesh` link stashed by attachSkinLoadedMetadata() during model load.
-            const skinnedMesh = (node as any)?.metadata?.skinnedMesh ?? (node as AbstractMesh);
-            const skeleton = (skinnedMesh as AbstractMesh)?.skeleton;
-            const skinIndex = skeleton === undefined || skeleton === null ? undefined : getSkinIndexForSkeleton(skeleton);
-            return reference("skins", skinIndex);
         }, (path, value) => {
             //no-op
         }, "ref", true);
@@ -1609,71 +1476,6 @@ export class BabylonDecorator extends ADecorator {
             //no-op
         }, "ref", true);
 
-        this.registerJsonPointer(`/nodes/${maxGltfNode}/matrix`, (path) => {
-            const parts: string[] = path.split("/");
-            const node = this.world.glTFNodes[Number(parts[2])];
-            
-            const scaleMatrix = Matrix.Scaling(node.scaling.x, node.scaling.y, node.scaling.z);
-            const rotationMatrix = Matrix.FromQuaternionToRef(node.rotationQuaternion, Matrix.Identity());
-       
-            const matrix: Matrix = scaleMatrix.multiply(rotationMatrix);
-            matrix.setTranslation(new Vector3(node.position.x, node.position.y, node.position.z));
-            
-            return [
-                matrix.m[0], matrix.m[1], matrix.m[2], matrix.m[3],
-                matrix.m[4], matrix.m[5], matrix.m[6], matrix.m[7], 
-                matrix.m[8], matrix.m[9], matrix.m[10], matrix.m[11],
-                matrix.m[12], matrix.m[13], matrix.m[14], matrix.m[15]
-            ];
-        }, (path, value) => {
-            //no-op
-        }, "float4x4", true);
-
-        this.registerJsonPointer(`/nodes/${maxGltfNode}/globalMatrix`, (path) => {
-            const parts: string[] = path.split("/");
-            const node = this.world.glTFNodes[Number(parts[2])];
-
-            (node as AbstractMesh).computeWorldMatrix(true);
-            const globalMatrix = (node as AbstractMesh).getWorldMatrix().asArray();
-            return BabylonDecorator.toRightHandedMatrixArray(globalMatrix);
-        }, (path, value) => {
-            //no-op
-        }, "float4x4", true);
-
-        this.registerJsonPointer(`/nodes/${maxGltfNode}/mesh`, (path) => {
-            const parts: string[] = path.split("/");
-            if (gltf !== undefined) return reference("meshes", gltf.nodes?.[Number(parts[2])]?.mesh);
-            const node = this.world.glTFNodes[Number(parts[2])];
-            const candidates = this.world.meshes.includes(node) ? [node] : (node?.getChildMeshes?.(true) ?? [])
-                .filter((child: Node) => !this.world.glTFNodes.includes(child));
-            let meshIndex: number | undefined = undefined;
-            for (const candidate of candidates) {
-                const pointer = candidate._internalMetadata?.gltf?.pointers?.find((p: string) => meshPrimitivePointerRegex.test(p));
-                if (pointer !== undefined) {
-                    meshIndex = Number(pointer.match(meshPrimitivePointerRegex)![1]);
-                    break;
-                }
-            }
-            return reference("meshes", meshIndex);
-        }, (path, value) => {
-            //no-op
-        }, "ref", true);
-
-        this.registerJsonPointer(`/nodes/${maxGltfNode}/children/${maxGltfNode}`, (path) => {
-            const parts: string[] = path.split("/");
-            const childIndex = getChildNodeIndices(Number(parts[2]))[Number(parts[4])];
-            return reference("nodes", childIndex);
-        }, (path, value) => {
-            //no-op
-        }, "ref", true);
-
-        this.registerJsonPointer(`/nodes/${maxGltfNode}/children.length`, (path) => {
-            const parts: string[] = path.split("/");
-            return [getChildNodeIndices(Number(parts[2])).length];
-        }, (path, value) => {
-            //no-op
-        }, "int", true);
-
         this.registerJsonPointer(`/meshes/${maxGlTFMeshIndex}/primitives/${maxMeshPrimitiveIndex}/material`, (path) => {
             const parts: string[] = path.split("/");
             if (gltf !== undefined) return reference("materials", gltf.meshes?.[Number(parts[2])]?.primitives?.[Number(parts[4])]?.material);
@@ -1694,52 +1496,6 @@ export class BabylonDecorator extends ADecorator {
                 : Number(value);
             primitive.babylonMesh.material = this.world.materials[materialIndex];
         }, "ref", true);
-
-        this.registerJsonPointer(`/nodes/${maxGltfNode}/camera`, (path) => {
-            const parts: string[] = path.split("/");
-            if (gltf !== undefined) return reference("cameras", gltf.nodes?.[Number(parts[2])]?.camera);
-            const node = this.world.glTFNodes[Number(parts[2])] as Node | undefined;
-            const cameraChild = node?.getChildren().find((child: Node) => child instanceof Camera) as any;
-            const pointer = cameraChild?._internalMetadata?.gltf?.pointers?.find((p: string) => cameraPointerRegex.test(p));
-            return pointer === undefined ? undefined : [pointer];
-        }, (path, value) => {
-            //no-op
-        }, "ref", true);
-
-        this.registerJsonPointer(`/nodes/${maxGltfNode}/parent`, (path) => {
-            const parts: string[] = path.split("/");
-            const nodeIndex = Number(parts[2]);
-            const parentIndex = gltf !== undefined
-                ? gltf.nodes?.findIndex((node: { children?: number[] }) => node.children?.includes(nodeIndex))
-                : this.getParentNodeIndex(nodeIndex);
-            return reference("nodes", parentIndex);
-        }, (path, value) => {
-            //no-op
-        }, "ref", true);
-
-        const maxNodeWeight: number = Math.max(0, ...this.world.glTFNodes.map((n: any) => (n.morphTargetManager?.numTargets ?? 0) - 1));
-        this.registerJsonPointer(`/nodes/${maxGltfNode}/weights/${maxNodeWeight}`, (path) => {
-            const parts: string[] = path.split("/");
-            const node = this.world.glTFNodes[Number(parts[2])] as any;
-            const target = node.morphTargetManager?.getTarget(Number(parts[4]));
-            return target !== undefined ? [target.influence] : undefined;
-        }, (path, value) => {
-            const parts: string[] = path.split("/");
-            const node = this.world.glTFNodes[Number(parts[2])] as any;
-            const target = node.morphTargetManager?.getTarget(Number(parts[4]));
-            if (target !== undefined) target.influence = value;
-        }, "float", false);
-
-        this.registerJsonPointer(`/nodes/${maxGltfNode}/weights.length`, (path) => {
-            const parts: string[] = path.split("/");
-            const node = this.world.glTFNodes[Number(parts[2])] as any;
-            if (node.morphTargetManager === undefined) {
-                return undefined;
-            }
-            return [node.morphTargetManager?.numTargets ?? 0];
-        }, (path, value) => {
-            //no-op
-        }, "int", true);
 
         const maxMeshWeight: number = Math.max(0, ...glTFMeshPrimitives.map(p => (p.babylonMesh.morphTargetManager?.numTargets ?? 0) - 1));
         this.registerJsonPointer(`/meshes/${maxGlTFMeshIndex}/weights/${maxMeshWeight}`, (path) => {
@@ -1882,26 +1638,6 @@ export class BabylonDecorator extends ADecorator {
             const light = glTFLights[Number(parts[4])];
             if (light instanceof SpotLight) light.angle = value * 2;
         }, "float", false);
-    }
-
-    private swimDownSelectability(node: Node, parentSelctability: boolean) {
-        const curNodeSelectability = node.metadata.selectable ?? true;
-        const propagatedSelectability = curNodeSelectability && parentSelctability;
-        if (node instanceof AbstractMesh) {
-            (node as AbstractMesh).isPickable = propagatedSelectability;
-        }
-        for (const child of node.getChildren()) {
-            this.swimDownSelectability(child, propagatedSelectability);
-        }
-    }
-
-    private swimDownHoverability(node: Node, parentHoverability: boolean) {
-        const curNodeHoverability = node.metadata.hoverable ?? true;
-        const propagatedHoverability = curNodeHoverability && parentHoverability;
-        node.metadata.compositeHoverability = propagatedHoverability;
-        for (const child of node.getChildren()) {
-            this.swimDownHoverability(child, propagatedHoverability);
-        }
     }
 
     public extractBehaveGraphFromScene = (): any => {

@@ -1,6 +1,8 @@
 import { Camera, Quaternion, TargetCamera, Vector3 } from "@babylonjs/core";
 import type { Scene } from "@babylonjs/core";
 
+import { BabylonAssetModel } from "../components/engineViews/babylonAssetModel";
+
 type Bind = (path: string, type: string, get: () => number[], set?: (value: number[]) => void, readOnly?: boolean) => void;
 interface Definition {
     perspective?: { aspectRatio?: number; yfov: number; znear: number; zfar?: number };
@@ -8,7 +10,7 @@ interface Definition {
 }
 type TaggedCamera = Camera & { _internalMetadata?: { gltf?: { pointers?: string[] } } };
 
-export function registerBabylonCameraPointers(scene: Scene, bind: Bind): void {
+export function registerBabylonCameraPointers(scene: Scene, bind: Bind, assetModel?: BabylonAssetModel): void {
     const prefix = "/extensions/KHR_interactivity/activeCamera/";
     bind(prefix + "position", "float3", () => {
         const camera = scene.activeCamera;
@@ -44,10 +46,9 @@ export function registerBabylonCameraPointers(scene: Scene, bind: Bind): void {
         }, undefined, true);
     }
 
-    const definitions: Definition[] = scene.metadata?.gltfCameraDefinitions ?? [];
+    const definitions: Definition[] = assetModel?.cameras ?? scene.metadata?.gltfCameraDefinitions ?? [];
     definitions.forEach((definition, index) => {
-        const cameras = scene.cameras.filter(camera => (camera as TaggedCamera)._internalMetadata?.gltf?.pointers?.includes(`/cameras/${index}`));
-        if (!cameras.length) return;
+        const cameras = (assetModel?.nativeCameras ?? scene.cameras).filter(camera => (camera as TaggedCamera)._internalMetadata?.gltf?.pointers?.includes(`/cameras/${index}`));
         const mode = definition.perspective ? "perspective" : "orthographic";
         const source = definition.perspective ?? definition.orthographic;
         if (!source) return;
@@ -67,15 +68,17 @@ export function registerBabylonCameraPointers(scene: Scene, bind: Bind): void {
             const path = `/cameras/${index}/${mode}/${field}`;
             const camera = cameras[0];
             bind(path, "float", () => {
+                if (!camera) return [(source as unknown as Record<string, number>)[field]];
                 if (field === "aspectRatio") return [aspect!];
                 if (field === "yfov") return [camera.fov];
                 if (field === "znear") return [camera.minZ];
                 if (field === "zfar") return [camera.maxZ === 0 ? Infinity : camera.maxZ];
                 return [field === "xmag" ? ((camera.orthoRight ?? 0) - (camera.orthoLeft ?? 0)) / 2 : ((camera.orthoTop ?? 0) - (camera.orthoBottom ?? 0)) / 2];
             }, value => {
+                (source as unknown as Record<string, number>)[field] = value[0];
+                if (field === "aspectRatio") aspect = value[0];
                 cameras.forEach(c => {
-                    if (field === "aspectRatio") aspect = value[0];
-                    else if (field === "yfov") c.fov = value[0];
+                    if (field === "yfov") c.fov = value[0];
                     else if (field === "znear") c.minZ = value[0];
                     else if (field === "zfar") c.maxZ = value[0] === Infinity ? 0 : value[0];
                     else if (field === "xmag") { c.orthoLeft = -value[0]; c.orthoRight = value[0]; }

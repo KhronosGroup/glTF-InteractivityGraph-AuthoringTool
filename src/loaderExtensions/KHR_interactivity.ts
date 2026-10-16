@@ -1,6 +1,10 @@
 import { GLTFLoader, IGLTFLoaderExtension } from '@babylonjs/loaders/glTF/2.0';
 import { registerGLTFExtension, unregisterGLTFExtension } from '@babylonjs/loaders/glTF/2.0/glTFLoaderExtensionRegistry';
-import { Material, PBRMaterial } from '@babylonjs/core';
+import { Animation, Material, PBRMaterial } from '@babylonjs/core';
+import type { IAnimation, IAnimationChannel } from '@babylonjs/loaders/glTF/2.0/glTFLoaderInterfaces';
+import type { IAnimatable } from '@babylonjs/core/Animations/animatable.interface';
+import { loadBabylonAssetAnimationChannel } from './babylonAssetAnimations';
+import { BabylonAssetModel, attachBabylonAssetModel } from '../components/engineViews/babylonAssetModel';
 import { buildGltfObjectModel } from '../authoring/gltfObjectModel';
 
 export const KHR_INTERACTIVITY_EXTENSION_NAME = 'KHR_interactivity';
@@ -8,7 +12,7 @@ export const KHR_NODE_VISIBILITY_EXTENSION_NAME = 'KHR_node_visibility';
 
 export function registerKHRInteractivityExtension(): void {
     // Babylon ships its own KHR_interactivity executor. This application executes the graph
-    // through BasicBehaveEngine, so replace Babylon's extension with the metadata-only loader.
+    // through BasicBehaveEngine, so replace Babylon's executor with our asset loader.
     unregisterGLTFExtension(KHR_INTERACTIVITY_EXTENSION_NAME);
     registerGLTFExtension(KHR_INTERACTIVITY_EXTENSION_NAME, false, (loader) => new KHR_interactivity(loader));
 }
@@ -18,6 +22,7 @@ export class KHR_interactivity implements IGLTFLoaderExtension {
     name: string = KHR_INTERACTIVITY_EXTENSION_NAME;
     enabled: boolean;
     private _loader: any;
+    private assetModel?: BabylonAssetModel;
 
     constructor(loader: GLTFLoader) {
         this._loader = loader;
@@ -47,17 +52,11 @@ export class KHR_interactivity implements IGLTFLoaderExtension {
         // snapshot the addressable objects (nodes/meshes/materials/...) for the ref-value picker
         this._loader.babylonScene.metadata.gltfObjectModel = buildGltfObjectModel(gltf);
         const rawNodes: any[] = Array.isArray(gltf?.nodes) ? gltf.nodes : [];
-        this._loader.babylonScene.metadata.gltfStructure = {
-            scene: gltf?.scene,
-            nodes: rawNodes.map(node => ({ camera: node.camera, mesh: node.mesh, skin: node.skin, children: node.children?.slice() })),
-            meshes: (gltf?.meshes ?? []).map((mesh: { primitives: { material?: number }[] }) => ({
-                primitives: mesh.primitives.map(primitive => ({ material: primitive.material })),
-            })),
-            skins: (gltf?.skins ?? []).map((skin: { joints: number[]; skeleton?: number }) => ({
-                joints: skin.joints.slice(), skeleton: skin.skeleton,
-            })),
-            scenes: (gltf?.scenes ?? []).map((scene: { nodes?: number[] }) => ({ nodes: scene.nodes?.slice() })),
-        };
+        const assetModel = new BabylonAssetModel(gltf);
+        this.assetModel = assetModel;
+        this._loader.babylonScene.metadata.gltfStructure = assetModel.structure;
+        const root = this._loader.rootBabylonMesh;
+        if (root) attachBabylonAssetModel(root, assetModel);
         // Build a map from glTF node index -> KHR_lights_punctual light index so BabylonDecorator can
         // correctly order scene.lights after loading (Babylon 7.x stores the pointer on the light as
         // /nodes/{nodeIndex}/extensions/KHR_lights_punctual, not /extensions/KHR_lights_punctual/lights/{N}).
@@ -69,6 +68,11 @@ export class KHR_interactivity implements IGLTFLoaderExtension {
             }
         }
         this._loader.babylonScene.metadata.khrLightsNodeToLightIndex = khrLightsNodeToLightIndex;
+    }
+
+    public _loadAnimationChannelAsync(context: string, animationContext: string, animation: IAnimation, channel: IAnimationChannel,
+        onLoad: (target: IAnimatable, animation: Animation) => void): Promise<void> | null {
+        return loadBabylonAssetAnimationChannel(this._loader, this.assetModel, context, animationContext, animation, channel, onLoad);
     }
 
     public async loadMaterialPropertiesAsync(context: string, material: any, babylonMaterial: Material): Promise<void> {

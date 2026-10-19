@@ -2,20 +2,20 @@
 	"declarations": [
 		{
 			"op": "fake/getNode",
-            "extension": "KHR_fakity_fake_fake",
-            "outputValueSockets": {
-                "value": {
-                    "type": 1
-                }
-            },
-            "inputValueSockets": {
-                "a": {
-                    "type": 1
-                },
-                "b": {
-                    "type": 1
-                }
-            }
+			"extension": "KHR_fakity_fake_fake",
+			"outputValueSockets": {
+				"value": {
+					"type": 1
+				}
+			},
+			"inputValueSockets": {
+				"a": {
+					"type": 1
+				},
+				"b": {
+					"type": 1
+				}
+			}
 		},
 		{
 			"op": "event/onStart"
@@ -25,12 +25,12 @@
 		},
 		{
 			"op": "fake/flowNode",
-            "extension": "KHR_fakity_fake_fake",
-            "inputValueSockets": {
-                "condition": {
-                    "type": 0
-                }
-            }
+			"extension": "KHR_fakity_fake_fake",
+			"inputValueSockets": {
+				"condition": {
+					"type": 0
+				}
+			}
 		},
 		{
 			"op": "math/eq"
@@ -42,8 +42,6 @@
 	"nodes": [
 		{
 			"declaration": 1,
-			"values": {},
-			"configuration": {},
 			"flows": {
 				"out": {
 					"node": 1,
@@ -57,8 +55,6 @@
 		},
 		{
 			"declaration": 2,
-			"values": {},
-			"configuration": {},
 			"flows": {
 				"0": {
 					"node": 2,
@@ -81,16 +77,8 @@
 					"value": [
 						true
 					],
-					"typeOptions": [
-						0
-					],
 					"type": 0
 				}
-			},
-			"configuration": {},
-			"flows": {
-				"true": {},
-				"false": {}
 			},
 			"metadata": {
 				"positionX": 1582.566280224163,
@@ -104,35 +92,15 @@
 					"value": [
 						1
 					],
-					"typeOptions": [
-						1,
-						2,
-						3,
-						4,
-						5,
-						6,
-						8
-					],
 					"type": 1
 				},
 				"b": {
 					"value": [
 						2
 					],
-					"typeOptions": [
-						1,
-						2,
-						3,
-						4,
-						5,
-						6,
-						8
-					],
 					"type": 1
 				}
 			},
-			"configuration": {},
-			"flows": {},
 			"metadata": {
 				"positionX": 592.0305479349048,
 				"positionY": -189.50016572760333
@@ -149,21 +117,9 @@
 					"value": [
 						0
 					],
-					"typeOptions": [
-						0,
-						1,
-						2,
-						3,
-						4,
-						5,
-						6,
-						8
-					],
-					"type": "1"
+					"type": 1
 				}
 			},
-			"configuration": {},
-			"flows": {},
 			"metadata": {
 				"positionX": 1034.0980190975092,
 				"positionY": -144.37164523509404
@@ -184,9 +140,6 @@
 					]
 				}
 			},
-			"flows": {
-				"out": {}
-			},
 			"metadata": {
 				"positionX": 2268.6935713173875,
 				"positionY": 285.94831458166783
@@ -202,7 +155,6 @@
 			"type": 0
 		}
 	],
-	"events": [],
 	"types": [
 		{
 			"name": "bool",
@@ -239,5 +191,6 @@
 		{
 			"name": "float4x4",
 			"signature": "float4x4"
-		}]
+		}
+	]
 }

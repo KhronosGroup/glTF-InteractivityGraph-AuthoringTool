@@ -19,8 +19,6 @@
 	"nodes": [
 		{
 			"declaration": 4,
-			"values": {},
-			"configuration": {},
 			"flows": {
 				"out": {
 					"node": 1,
@@ -30,8 +28,6 @@
 		},
 		{
 			"declaration": 3,
-			"values": {},
-			"configuration": {},
 			"flows": {
 				"0": {
 					"node": 4,
@@ -54,16 +50,10 @@
 					"value": [
 						1
 					],
-					"typeOptions": [
-						2
-					],
 					"type": 2
 				}
 			},
-			"configuration": {},
 			"flows": {
-				"out": {},
-				"err": {},
 				"done": {
 					"node": 3,
 					"socket": "in"
@@ -81,9 +71,6 @@
 					"value": [
 						true
 					],
-					"typeOptions": [
-						0
-					],
 					"type": 0
 				}
 			},
@@ -93,9 +80,6 @@
 						1
 					]
 				}
-			},
-			"flows": {
-				"out": {}
 			},
 			"metadata": {
 				"positionX": 1025.0953225580981,
@@ -109,19 +93,14 @@
 					"value": [
 						1
 					],
-					"typeOptions": [
-						2
-					],
 					"type": 2
 				}
 			},
-			"configuration": {},
 			"flows": {
 				"out": {
 					"node": 6,
 					"socket": "in"
 				},
-				"err": {},
 				"done": {
 					"node": 5,
 					"socket": "in"
@@ -139,9 +118,6 @@
 					"value": [
 						true
 					],
-					"typeOptions": [
-						0
-					],
 					"type": 0
 				}
 			},
@@ -151,9 +127,6 @@
 						0
 					]
 				}
-			},
-			"flows": {
-				"out": {}
 			},
 			"metadata": {
 				"positionX": 1080.9338444821883,
@@ -167,10 +140,6 @@
 					"node": 4,
 					"socket": "lastDelay"
 				}
-			},
-			"configuration": {},
-			"flows": {
-				"out": {}
 			},
 			"metadata": {
 				"positionX": 1072.650264296718,
@@ -194,7 +163,6 @@
 			"type": 0
 		}
 	],
-	"events": [],
 	"types": [
 		{
 			"name": "bool",
@@ -227,5 +195,6 @@
 		{
 			"name": "ref",
 			"signature": "ref"
-		}]
+		}
+	]
 }

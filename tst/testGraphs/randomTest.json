@@ -22,8 +22,6 @@
 	"nodes": [
 		{
 			"declaration": 5,
-			"values": {},
-			"configuration": {},
 			"flows": {
 				"out": {
 					"node": 7,
@@ -37,9 +35,6 @@
 		},
 		{
 			"declaration": 0,
-			"values": {},
-			"configuration": {},
-			"flows": {},
 			"metadata": {
 				"positionX": 479.7326592278114,
 				"positionY": 391.0389733650747
@@ -57,8 +52,6 @@
 					"socket": "value"
 				}
 			},
-			"configuration": {},
-			"flows": {},
 			"metadata": {
 				"positionX": 1205.2590748467221,
 				"positionY": 371.7070193162524
@@ -66,9 +59,6 @@
 		},
 		{
 			"declaration": 0,
-			"values": {},
-			"configuration": {},
-			"flows": {},
 			"metadata": {
 				"positionX": 525.09375,
 				"positionY": 44.109375
@@ -86,8 +76,6 @@
 					"socket": "value"
 				}
 			},
-			"configuration": {},
-			"flows": {},
 			"metadata": {
 				"positionX": 940.140625,
 				"positionY": 109.6640625
@@ -101,8 +89,6 @@
 					"socket": "value"
 				}
 			},
-			"configuration": {},
-			"flows": {},
 			"metadata": {
 				"positionX": 1197.762079838278,
 				"positionY": 108.24119473378539
@@ -120,8 +106,6 @@
 					"socket": "value"
 				}
 			},
-			"configuration": {},
-			"flows": {},
 			"metadata": {
 				"positionX": 1546.907847374393,
 				"positionY": 204.63113055663922
@@ -142,9 +126,6 @@
 					]
 				}
 			},
-			"flows": {
-				"out": {}
-			},
 			"metadata": {
 				"positionX": 2213.0694038390047,
 				"positionY": 347.07403571707874
@@ -160,7 +141,6 @@
 			"type": 0
 		}
 	],
-	"events": [],
 	"types": [
 		{
 			"name": "bool",
@@ -189,5 +169,6 @@
 		{
 			"name": "float4x4",
 			"signature": "float4x4"
-		}]
+		}
+	]
 }

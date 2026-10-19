@@ -1,4 +1,4 @@
-import {BasicBehaveEngine} from "../src/BasicBehaveEngine/BasicBehaveEngine";
+import {BasicBehaveEngine, GraphRejectedError} from "../src/BasicBehaveEngine/BasicBehaveEngine";
 import {LoggingDecorator} from "../src/decorators/LoggingDecorator";
 import { DOMEventBus } from "../src/BasicBehaveEngine/eventBuses/DOMEventBus";
 import fs from "fs";
@@ -42,7 +42,6 @@ describe('BehaveEngine', () => {
                 {declaration: 0, flows: {out: {node: 1, socket: "in"}}},
                 {declaration: 1, configuration: {message: {value: ["hello {v}"]}, severity: {value: [1]}}, values: {v: {type: 1, value: [42]}}},
             ],
-            variables: [], events: [],
         };
         const consoleWarn = jest.spyOn(console, 'warn').mockImplementation(() => {});
         let executionLog = "";
@@ -254,6 +253,8 @@ describe('BehaveEngine', () => {
     const engine = new BasicBehaveEngine(1, eventBus);
     loggingBehaveEngine = new LoggingDecorator(engine, () => undefined, {});
 
-    expect(() => loggingBehaveEngine.loadBehaveGraph(behaviorGraph as any)).toThrow(/Unrecognized node declaration/);
+    expect(() => loggingBehaveEngine.loadBehaveGraph(behaviorGraph as any)).toThrow(GraphRejectedError);
+    // nodes without a declaration index fail the Khronos schema before any engine lookup
+    expect(() => loggingBehaveEngine.loadBehaveGraph(behaviorGraph as any)).toThrow(/does not match the Khronos JSON schema/);
    });
 });

@@ -9,6 +9,7 @@ import { getEventLabel } from "../../authoring/CustomEventControls";
 import { getCustomEventChannel } from "../../BasicBehaveEngine/types/InteractivityGraph";
 import { createGlTFObjectModelFromGltf, readGltfJsonFromArrayBuffer } from "../../objectModel/glTFObjectModel";
 import { buildGltfObjectModel } from "../../authoring/gltfObjectModel";
+import { omitEmptyGraphArrays } from "../../authoring/executableGraph";
 import { IconJsonFile, IconPlay, IconPointer, IconSendEvent } from "../toolbarIcons";
 
 enum LoggingEngineModal {
@@ -109,7 +110,7 @@ export const LoggingEngineComponent: React.FC<LoggingEngineComponentProps> = ({ 
         loggingEngineRef.current = new LoggingDecorator(new BasicBehaveEngine(1, eventBus), (line: string) => setExecutionLog((prev: string) => prev + "\n" + line), objectModel)
         const runtimeTemplates = buildNormalizedTemplateSet(loggingEngineRef.current.getRegisteredJsonPointers());
         setSupportedPointerTemplates(runtimeTemplates);
-        loggingEngineRef.current?.loadBehaveGraph(behaveGraph);
+        loggingEngineRef.current?.loadBehaveGraph(omitEmptyGraphArrays(behaveGraph));
     }
 
     // selectable/hoverable can change at runtime (pointer/set), so the lists are re-read on open and after each action

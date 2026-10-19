@@ -29,15 +29,11 @@
 		},
 		{
 			"op": "variable/set"
-		},
-		{
-			"op": "flow/setDelay"
 		}
 	],
 	"nodes": [
 		{
 			"declaration": 3,
-			"values": {},
 			"configuration": {
 				"pointer": {
 					"value": [
@@ -46,11 +42,10 @@
 				},
 				"type": {
 					"value": [
-						"4"
+						4
 					]
 				}
 			},
-			"flows": {},
 			"metadata": {
 				"positionX": 909.3675147116091,
 				"positionY": -375.0814889850158
@@ -64,8 +59,6 @@
 					"node": 0
 				}
 			},
-			"configuration": {},
-			"flows": {},
 			"metadata": {
 				"positionX": 1912.072622698372,
 				"positionY": -244.92265285211877
@@ -82,19 +75,9 @@
 					"value": [
 						0.5
 					],
-					"type": "2",
-					"typeOptions": [
-						1,
-						2,
-						3,
-						4,
-						5,
-						6
-					]
+					"type": 2
 				}
 			},
-			"configuration": {},
-			"flows": {},
 			"metadata": {
 				"positionX": 2319.4215728179947,
 				"positionY": -177.43288596839432
@@ -108,8 +91,6 @@
 					"node": 2
 				}
 			},
-			"configuration": {},
-			"flows": {},
 			"metadata": {
 				"positionX": 2720.7446508944277,
 				"positionY": -109.9431190846699
@@ -126,19 +107,9 @@
 					"value": [
 						0.01
 					],
-					"type": "2",
-					"typeOptions": [
-						1,
-						2,
-						3,
-						4,
-						5,
-						6
-					]
+					"type": 2
 				}
 			},
-			"configuration": {},
-			"flows": {},
 			"metadata": {
 				"positionX": 3042.526218000756,
 				"positionY": -67.7620147823421
@@ -146,8 +117,6 @@
 		},
 		{
 			"declaration": 8,
-			"values": {},
-			"configuration": {},
 			"flows": {
 				"out": {
 					"node": 6,
@@ -168,46 +137,27 @@
 						0,
 						0
 					],
-					"type": 4,
-					"typeOptions": [
-						0,
-						1,
-						2,
-						3,
-						4,
-						5,
-						6,
-						7
-					]
+					"type": 4
 				},
 				"duration": {
 					"value": [
 						2
 					],
-					"type": 2,
-					"typeOptions": [
-						2
-					]
+					"type": 2
 				},
 				"p1": {
 					"value": [
 						0,
 						0
 					],
-					"type": 3,
-					"typeOptions": [
-						3
-					]
+					"type": 3
 				},
 				"p2": {
 					"value": [
 						1,
 						1
 					],
-					"type": 3,
-					"typeOptions": [
-						3
-					]
+					"type": 3
 				}
 			},
 			"configuration": {
@@ -218,7 +168,7 @@
 				},
 				"type": {
 					"value": [
-						"4"
+						4
 					]
 				}
 			},
@@ -226,9 +176,7 @@
 				"out": {
 					"node": 7,
 					"socket": "in"
-				},
-				"err": {},
-				"done": {}
+				}
 			},
 			"metadata": {
 				"positionX": 381.7802291499188,
@@ -242,16 +190,10 @@
 					"value": [
 						1
 					],
-					"type": 2,
-					"typeOptions": [
-						2
-					]
+					"type": 2
 				}
 			},
-			"configuration": {},
 			"flows": {
-				"out": {},
-				"err": {},
 				"done": {
 					"node": 8,
 					"socket": "in"
@@ -278,7 +220,7 @@
 				},
 				"type": {
 					"value": [
-						"4"
+						4
 					]
 				}
 			},
@@ -286,8 +228,7 @@
 				"out": {
 					"node": 9,
 					"socket": "in"
-				},
-				"err": {}
+				}
 			},
 			"metadata": {
 				"positionX": 2608.1891415647997,
@@ -301,16 +242,10 @@
 					"value": [
 						1
 					],
-					"type": 2,
-					"typeOptions": [
-						2
-					]
+					"type": 2
 				}
 			},
-			"configuration": {},
 			"flows": {
-				"out": {},
-				"err": {},
 				"done": {
 					"node": 10,
 					"socket": "in"
@@ -336,9 +271,6 @@
 					]
 				}
 			},
-			"flows": {
-				"out": {}
-			},
 			"metadata": {
 				"positionX": 3724.5087159747663,
 				"positionY": 152.1093868213565
@@ -354,7 +286,6 @@
 			"type": 0
 		}
 	],
-	"events": [],
 	"types": [
 		{
 			"name": "bool",
@@ -383,5 +314,6 @@
 		{
 			"name": "float4x4",
 			"signature": "float4x4"
-		}]
+		}
+	]
 }

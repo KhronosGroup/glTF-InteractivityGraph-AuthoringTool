@@ -97,12 +97,23 @@ export const SUPPORTED_GLTF_EXTENSIONS: ReadonlySet<string> = new Set<string>([
 export const computeExtensionDiagnostics = (
     extensionsUsed: string[] = [],
     extensionsRequired: string[] = [],
+    interactivityExtensionError?: string,
 ): IGraphDiagnostic[] => {
     const required = new Set(extensionsRequired);
     // union of both lists so a required extension missing from extensionsUsed is still caught
     const allExtensions = new Set<string>([...(extensionsUsed || []), ...(extensionsRequired || [])]);
 
     const diagnostics: IGraphDiagnostic[] = [];
+    if (interactivityExtensionError) {
+        diagnostics.push({
+            severity: 'error',
+            category: 'extension',
+            impact: 'graphRejected',
+            title: 'The KHR_interactivity extension object is invalid',
+            detail: interactivityExtensionError,
+            specSection: 'Validation › Extension Object Validation',
+        });
+    }
     for (const ext of allExtensions) {
         if (SUPPORTED_GLTF_EXTENSIONS.has(ext)) {
             continue;

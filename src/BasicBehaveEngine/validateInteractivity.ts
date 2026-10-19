@@ -223,9 +223,16 @@ export function validateInteractivityGraph(graph: any): void {
             if (id === "event") fail("reserved event socket id");
             literal(value);
         }
+    // spec: equal = same op, extension and input socket ids/types; output sockets are not compared
     unique(
         declarations.map((declaration) =>
-            JSON.stringify([declaration.op, declaration.extension ?? ""]),
+            JSON.stringify([
+                declaration.op,
+                declaration.extension ?? "",
+                Object.entries<any>(declaration.inputValueSockets ?? {})
+                    .map(([id, socket]) => [id, socket?.type])
+                    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
+            ]),
         ),
         "declarations",
     );

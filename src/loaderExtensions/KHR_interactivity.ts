@@ -6,6 +6,7 @@ import type { IAnimatable } from '@babylonjs/core/Animations/animatable.interfac
 import { loadBabylonAssetAnimationChannel } from './babylonAssetAnimations';
 import { BabylonAssetModel, attachBabylonAssetModel } from '../components/engineViews/babylonAssetModel';
 import { buildGltfObjectModel } from '../authoring/gltfObjectModel';
+import { getDefaultInteractivityGraph } from '../BasicBehaveEngine/validateInteractivity';
 
 export const KHR_INTERACTIVITY_EXTENSION_NAME = 'KHR_interactivity';
 export const KHR_NODE_VISIBILITY_EXTENSION_NAME = 'KHR_node_visibility';
@@ -38,11 +39,20 @@ export class KHR_interactivity implements IGLTFLoaderExtension {
 
     public onLoading(): void {
         const gltf = this._loader?.gltf;
-        // spec: only the default graph runs; an omitted `graph` property means 0
-        const graphIndex = gltf?.extensions?.KHR_interactivity?.graph ?? 0;
-        const interactivityGraph = gltf?.extensions?.KHR_interactivity?.graphs?.[graphIndex];
         this._loader.babylonScene.metadata = this._loader.babylonScene.metadata || {};
+        // spec: only the default graph runs; an invalid extension object runs no graph at all
+        const extension = gltf?.extensions?.KHR_interactivity;
+        let interactivityGraph: any;
+        let interactivityError: string | undefined;
+        if (extension !== undefined) {
+            try {
+                interactivityGraph = getDefaultInteractivityGraph(extension);
+            } catch (error) {
+                interactivityError = error instanceof Error ? error.message : String(error);
+            }
+        }
         this._loader.babylonScene.metadata.behaveGraph = interactivityGraph;
+        this._loader.babylonScene.metadata.interactivityExtensionError = interactivityError;
         // record the glb's declared extensions so the UI can warn about unsupported ones
         this._loader.babylonScene.metadata.gltfExtensionsUsed = gltf?.extensionsUsed ?? [];
         this._loader.babylonScene.metadata.gltfExtensionsRequired = gltf?.extensionsRequired ?? [];

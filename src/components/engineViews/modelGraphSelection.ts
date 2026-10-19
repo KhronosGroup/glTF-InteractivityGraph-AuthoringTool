@@ -5,13 +5,8 @@ export interface ModelGraphSelection {
     replaceAuthoringGraph: boolean;
 }
 
-const createEmptyInteractivityGraph = (): IInteractivityGraph => ({
-    declarations: [],
-    nodes: [],
-    events: [],
-    variables: [],
-    types: [],
-});
+// spec: every graph-level array is optional and must not be empty, so "no graph" is {}
+const createEmptyInteractivityGraph = (): IInteractivityGraph => ({}) as IInteractivityGraph;
 
 /** Select the graph after loading a model, explicitly replacing stale authoring state when needed. */
 export const selectModelGraph = (

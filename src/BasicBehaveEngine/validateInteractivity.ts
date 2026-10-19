@@ -121,6 +121,11 @@ function matches(value: any, schema: any, root: any = schema): boolean {
 }
 
 export function validateInteractivityExtension(extension: unknown): void {
+    validateInteractivityGraph(getDefaultInteractivityGraph(extension));
+}
+
+/** The graph that runs; throws when the extension object itself is invalid. */
+export function getDefaultInteractivityGraph(extension: unknown): any {
     // Non-default graphs may be invalid without invalidating the default graph.
     if (
         !object(extension) ||
@@ -135,7 +140,7 @@ export function validateInteractivityExtension(extension: unknown): void {
         index >= extension.graphs.length
     )
         fail("default graph index is out of range");
-    validateInteractivityGraph(extension.graphs[index]);
+    return extension.graphs[index];
 }
 
 export function validateInteractivityGraph(graph: any): void {
@@ -223,9 +228,16 @@ export function validateInteractivityGraph(graph: any): void {
             if (id === "event") fail("reserved event socket id");
             literal(value);
         }
+    // spec: equal = same op, extension and input socket ids/types; output sockets are not compared
     unique(
         declarations.map((declaration) =>
-            JSON.stringify([declaration.op, declaration.extension ?? ""]),
+            JSON.stringify([
+                declaration.op,
+                declaration.extension ?? "",
+                Object.entries<any>(declaration.inputValueSockets ?? {})
+                    .map(([id, socket]) => [id, socket?.type])
+                    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
+            ]),
         ),
         "declarations",
     );

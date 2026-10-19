@@ -28,21 +28,32 @@ function fixture() {
   ) => {
     let declaration = graph.declarations.findIndex((d: any) => d.op === op);
     if (declaration < 0) declaration = graph.declarations.push({ op }) - 1;
+    const configuration = Object.fromEntries(
+      Object.entries(config).map(([k, v]) => [
+        k,
+        { value: Array.isArray(v) ? v : [v] },
+      ]),
+    );
+    // spec schema: empty values/configuration/flows are omitted
+    const nonEmpty = (entries: Record<string, object>) =>
+      Object.fromEntries(
+        Object.entries(entries).filter(([, v]) => Object.keys(v).length > 0),
+      );
     return (
       graph.nodes.push({
         declaration,
-        values,
-        configuration: Object.fromEntries(
-          Object.entries(config).map(([k, v]) => [
-            k,
-            { value: Array.isArray(v) ? v : [v] },
-          ]),
-        ),
-        flows,
+        ...nonEmpty({ values, configuration, flows }),
       }) - 1
     );
   };
-  const load = () => engine.loadBehaveGraph(graph, false);
+  // spec schema: empty top-level arrays are omitted
+  const load = () =>
+    engine.loadBehaveGraph(
+      Object.fromEntries(
+        Object.entries(graph).filter(([, v]) => (v as any[]).length > 0),
+      ),
+      false,
+    );
   const run = (id: number) => engine.run(id);
   return { engine, graph, variable, node, load, run };
 }
@@ -173,14 +184,13 @@ test("compiled decision tables route like branches and keep the per-node path wi
       );
     const mid = (lo + hi) >> 1,
       condition = f.node("math/lt", { a: wire(read), b: literal(1, mid) });
-    const yes = tree(lo, mid),
-      no = tree(mid, hi);
-    return f.node(
-      "flow/branch",
-      { condition: wire(condition) },
-      {},
-      { true: { node: yes, socket: "in" }, false: { node: no, socket: "in" } },
-    );
+    // spec: output flows point to later nodes, so the targets are added after the branch
+    const branch = f.node("flow/branch", { condition: wire(condition) });
+    f.graph.nodes[branch].flows = {
+      true: { node: tree(lo, mid), socket: "in" },
+      false: { node: tree(mid, hi), socket: "in" },
+    };
+    return branch;
   };
   const root = tree(0, 8);
   try {

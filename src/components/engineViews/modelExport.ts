@@ -1,6 +1,7 @@
 import { IInteractivityGraph, IInteractivityValue } from "../../BasicBehaveEngine/types/InteractivityGraph";
 import { packageAsGlb, packageAsGltfFiles, ResourceResolver } from "../../objectModel/gltfPackaging";
 import { createZip } from "../../utils/zip";
+import { omitEmptyGraphArrays } from "../../authoring/executableGraph";
 import { ModelFileEntry, resolveModelResource } from "./modelFiles";
 
 /** The model the viewport is currently showing: local files (a .gltf with its resources) or a URL. */
@@ -96,7 +97,7 @@ export async function downloadInteractiveModel(source: ModelSource, graph: IInte
     const input = await readSource(source);
     const resolve = resourceResolverFor(source);
     const baseName = baseNameFor(source);
-    const exportedGraph = pruneUnusedTypes(graph);
+    const exportedGraph = omitEmptyGraphArrays(pruneUnusedTypes(graph));
     if (format === "glb") {
         const glb = await packageAsGlb(input, exportedGraph, resolve);
         saveBlob(new Blob([glb], { type: "model/gltf-binary" }), `${baseName}.glb`);

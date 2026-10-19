@@ -1801,7 +1801,8 @@ const rawNodeSpecs: Array<Omit<AuthoredNode, "declaration">> = [
             useSlerp: {
                 type: InteractivityConfigurationValueType.BOOLEAN,
                 description: "Whether to use spherical linear interpolation (slerp), typically for quaternion variables",
-                value: [undefined]
+                // spec: must be a boolean literal, so an untouched node exports false
+                value: [false]
             }
         },
         flows: {

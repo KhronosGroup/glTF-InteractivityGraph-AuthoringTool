@@ -22,6 +22,7 @@ import { InteractivityGraphContext } from "../../InteractivityGraphContext";
 import { DOMEventBus } from "../../BasicBehaveEngine/eventBuses/DOMEventBus";
 import { attachPointerEventLogging, SendCustomEventPanel } from "../../authoring/CustomEventControls";
 import { computeExecutionDiagnostics, computeExtensionDiagnostics } from "../../diagnostics";
+import { omitEmptyGraphArrays } from "../../authoring/executableGraph";
 import { buildNormalizedTemplateSet } from "../../authoring/pointerCatalogue";
 import { loadSelectedModelGraph } from "./modelGraphExecution";
 import { attachSkinLoadedMetadata, BabylonLoadedModel, buildBabylonDecoratorWorld, buildBabylonLoadedModel } from "./babylonLoadedModel";
@@ -79,7 +80,7 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
         const metadata = sceneRef.current?.metadata;
         setDiagnosticsForCategory(
             "extension",
-            computeExtensionDiagnostics(metadata?.gltfExtensionsUsed, metadata?.gltfExtensionsRequired)
+            computeExtensionDiagnostics(metadata?.gltfExtensionsUsed, metadata?.gltfExtensionsRequired, metadata?.interactivityExtensionError)
         );
         if (metadata?.gltfObjectModel) {
             setGltfObjectModel(metadata.gltfObjectModel);
@@ -236,7 +237,7 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
     const play = (shouldOverrideGraph: boolean) => {
         resetScene()
             .then(async (res: BabylonLoadedModel) => {
-                await runGraph(babylonEngineRef, getExecutableGraph(), sceneRef.current, res, shouldOverrideGraph);
+                await runGraph(babylonEngineRef, omitEmptyGraphArrays(getExecutableGraph()), sceneRef.current, res, shouldOverrideGraph);
                 setGraphRunning(true);
                 clearGraphDirty();
             })
@@ -448,7 +449,7 @@ export const BabylonEngineComponent: React.FC<BabylonEngineComponentProps> = ({ 
 
             const extractedBehaveGraph = babylonEngineRef.current.extractBehaveGraphFromScene();
             await loadSelectedModelGraph({
-                authoredGraph: getExecutableGraph(),
+                authoredGraph: omitEmptyGraphArrays(getExecutableGraph()),
                 embeddedGraph: extractedBehaveGraph,
                 replaceAuthoringGraph: true,
                 loadGraphFromJson,

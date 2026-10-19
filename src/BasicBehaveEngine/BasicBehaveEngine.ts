@@ -143,6 +143,7 @@ import { AnimationStop } from "./nodes/animation/AnimationStop";
 import { AnimationStopAt } from "./nodes/animation/AnimationStopAt";
 import { OnHoverIn } from "./nodes/event/OnHoverIn";
 import { OnHoverOut } from "./nodes/event/OnHoverOut";
+import { validateInteractivityGraph } from "./validateInteractivity";
 
 
 // Single source of truth for op -> runtime BehaveEngineNode class. registerKnownBehaviorNodes
@@ -871,6 +872,7 @@ export class BasicBehaveEngine implements IBehaveEngine {
 
             index++;
         }
+        validateInteractivityGraph(behaviorGraph);
     }
 
     public registerBehaveEngineNode = (type: string, behaviorNode: typeof BehaveEngineNode) => {

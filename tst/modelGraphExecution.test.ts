@@ -58,6 +58,22 @@ describe("Model graph execution selection", () => {
         expect(result.replaceAuthoringGraph).toBe(false);
     });
 
+    it("runs the spec-valid empty graph for a model without KHR_interactivity", async () => {
+        let runtimeGraph: IInteractivityGraph | undefined;
+        await loadSelectedModelGraph({
+            authoredGraph: createGraph("authored"),
+            embeddedGraph: undefined,
+            replaceAuthoringGraph: true,
+            loadGraphFromJson: () => undefined,
+            loadBehaveGraph: (graph) => {
+                runtimeGraph = graph;
+            },
+        });
+
+        // spec: graph-level arrays must not be empty, so nothing at all is the valid "no graph"
+        expect(runtimeGraph).toEqual({});
+    });
+
     it("uses the embedded graph for first Play when authoring state is empty", async () => {
         const embeddedGraph = createGraph("embedded");
         const emptyAuthoredGraph: IInteractivityGraph = {

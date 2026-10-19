@@ -19,6 +19,7 @@ import {buildNodeByUid, getNodeSpec, hasNodeSpecFlag, interactivityNodeSpecs, pr
 import { IInteractivityEvent, IInteractivityVariable } from '../BasicBehaveEngine/types/InteractivityGraph';
 import { AuthoredGraph, AuthoredNode, AuthoredValue, NodeSpecFlag } from '../authoring/spec/AuthoredGraph';
 import { InteractivityGraphContext, initialGraph } from '../InteractivityGraphContext';
+import { omitEmptyGraphArrays } from '../authoring/executableGraph';
 import { IGraphDiagnostic, impactInfo } from '../diagnostics';
 import { categoryLabel } from './DiagnosticsPanel';
 import { FLOW_COLOR, getColorForTypeIndex, getNodeCategoryColor } from '../authoring/socketColors';
@@ -1895,9 +1896,10 @@ const JSONViewComponent = (props: {closeModal: any}) => {
     const [showPasteFallback, setShowPasteFallback] = useState(false);
     const pasteRef = useRef<HTMLTextAreaElement>(null);
     const {getExecutableGraph, loadGraphFromJson, markGraphDirty} = useContext(InteractivityGraphContext);
-    const graph = getExecutableGraph();
+    // shown and copied exactly as exported (spec: no empty graph-level arrays)
+    const graph = omitEmptyGraphArrays(getExecutableGraph());
     const copyToClipboard = async () => {
-        const jsonString = JSON.stringify(getExecutableGraph(), undefined, '\t');
+        const jsonString = JSON.stringify(graph, undefined, '\t');
         await navigator.clipboard.writeText(jsonString);
 
         setCopied(true)

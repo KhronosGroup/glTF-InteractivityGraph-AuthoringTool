@@ -1,6 +1,6 @@
 import { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { IInteractivityDeclaration, IInteractivityEvent, IInteractivityGraph, IInteractivityVariable } from './BasicBehaveEngine/types/InteractivityGraph';
-import { AuthoredGraph, AuthoredNode, AuthoredValue, NodeSpecFlag } from './authoring/spec/AuthoredGraph';
+import { AuthoredGraph, AuthoredNode, NodeSpecFlag } from './authoring/spec/AuthoredGraph';
 import { buildNodeByUid, createNoOpNode, getNodeSpec, hasNodeSpecFlag, resolveOutputSocketType, standardTypes } from './authoring/spec/nodes';
 import { reconcileNodeSockets } from './authoring/socketReconciler';
 import { buildNodeByUidMap, computeNodeLiveWarnings } from './authoring/validation';
@@ -11,7 +11,7 @@ import { FLOW_COLOR, UNKNOWN_COLOR, getColorForTypeIndex } from './authoring/soc
 import { GltfObjectModel } from './authoring/gltfObjectModel';
 import { runChunked, isAbortError } from './utils/frameBudget';
 import { computeDeclarationDiagnostics, ensureInteractivityDeclaration, repairExtensionDeclarations } from './authoring/declarations';
-import { getExecutableDeclarationIndex, toExecutableConfigurationValue, toExecutableValue } from './authoring/executableGraph';
+import { getExecutableDeclarationIndex, isUnsetConfigurationValue, toExecutableConfigurationValue, toExecutableFlows, toExecutableValue } from './authoring/executableGraph';
 
 const edgeStyle = (color: string) => ({ stroke: color, strokeWidth: 2 });
 
@@ -659,7 +659,16 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
     // this stops two loads from interleaving their batches onto the same graph.
     const loadCancelRef = useRef<{ current: boolean } | null>(null);
 
-    const loadGraphFromJson = async (json: any) => {
+    const loadGraphFromJson = async (input: any) => {
+        // spec: every graph-level array is optional; the editor model always has them
+        const json = {
+            ...input,
+            declarations: input.declarations ?? [],
+            nodes: input.nodes ?? [],
+            variables: input.variables ?? [],
+            events: input.events ?? [],
+            types: input.types ?? [],
+        };
         if (loadCancelRef.current) { loadCancelRef.current.current = true; }
         const cancelled = { current: false };
         loadCancelRef.current = cancelled;
@@ -970,33 +979,27 @@ export const InteractivityGraphProvider = ({ children }: { children: React.React
         executable.declarations = [...graph.declarations || []];
         for (const node of graph.nodes) {
 
-            // Create runtime-only values without editor help/type-resolution fields. A static
-            // "unset" float value is
-            // authored in-model as NaN (see socketReconciler.ts / AuthoringGraphNode.tsx); JSON has
-            // no NaN/Infinity literal, and JSON.stringify silently turns them into `null` instead of
-            // erroring, which would round-trip back in as a bogus 0 rather than the spec's actual
-            // float default. Omit the socket instead so the runtime falls back to its own default.
-            const strippedValues: Record<string, AuthoredValue> = {};
-            Object.entries(node.values?.input || {}).forEach(([key, value]) => {
-                if (Array.isArray(value.value) && value.value.some((v) => typeof v === "number" && !Number.isFinite(v))) {
-                    return;
-                }
-                strippedValues[key] = toExecutableValue(value);
-            });
-
-            const strippedConfiguration = Object.fromEntries(
-                Object.entries(node.configuration || {}).map(([key, value]) => [
-                    key,
-                    toExecutableConfigurationValue(value),
-                ])
+            // Create runtime-only values without editor help/type-resolution fields; unset
+            // inputs export as spec type-defaults (see toExecutableValue).
+            const strippedValues = Object.fromEntries(
+                Object.entries(node.values?.input || {}).map(([key, value]) => [key, toExecutableValue(value)])
             );
 
+            const strippedConfiguration = Object.fromEntries(
+                Object.entries(node.configuration || {})
+                    .filter(([, value]) => !isUnsetConfigurationValue(value))
+                    .map(([key, value]) => [key, toExecutableConfigurationValue(value)])
+            );
+
+            // spec schema: values/configuration/flows must be omitted rather than empty
+            const nonEmpty = (entries: Record<string, unknown>) =>
+                Object.keys(entries).length > 0 ? entries : undefined;
             const behaveNode: any = {
                 id: node.uid,
                 declaration: getExecutableDeclarationIndex(node, executable.declarations),
-                values: strippedValues,
-                configuration: strippedConfiguration,
-                flows: node.flows?.output || {},
+                values: nonEmpty(strippedValues),
+                configuration: nonEmpty(strippedConfiguration),
+                flows: nonEmpty(toExecutableFlows(node.flows?.output)),
                 metadata: node.metadata
             };
 

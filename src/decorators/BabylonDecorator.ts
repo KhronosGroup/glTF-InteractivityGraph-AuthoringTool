@@ -12,6 +12,7 @@ import {
     Material,
     Observer,
     PointerInfo,
+    Light,
     SpotLight
 } from "@babylonjs/core";
 import {Vector3} from "@babylonjs/core/Maths/math.vector";
@@ -1569,75 +1570,46 @@ export class BabylonDecorator extends ADecorator {
             //no-op
         }, "float", true);
 
-        // Babylon 7.x stores the light pointer as /nodes/{nodeIndex}/extensions/KHR_lights_punctual
-        // (not /extensions/KHR_lights_punctual/lights/{N} as in older versions). The node→light index
-        // mapping was snapshotted from the raw glTF JSON during loading so we can sort correctly.
-        const lightPointerRegex = /^\/nodes\/\d+\/extensions\/KHR_lights_punctual$/;
+        this.bridgeLightPointers();
+    }
+
+    // Concrete per-light bindings: the JsonPtrTrie wildcards indices, which would expose the
+    // spot/* pointers on point and directional lights (they must be invalid, set -> [err]).
+    private bridgeLightPointers(): void {
+        // Babylon stores the light pointer as /nodes/{nodeIndex}/extensions/KHR_lights_punctual;
+        // the node -> light index map was snapshotted from the raw glTF JSON during loading.
+        const lightPointerRegex = /^\/nodes\/(\d+)\/extensions\/KHR_lights_punctual$/;
         const nodeToLightIndex: {[nodeIndex: number]: number} = this.scene.metadata?.khrLightsNodeToLightIndex ?? {};
-        const glTFLights = this.scene.lights
-            .filter((l: any) => l._internalMetadata?.gltf?.pointers?.some((p: string) => lightPointerRegex.test(p)))
-            .sort((a: any, b: any) => {
-                const aPointer = a._internalMetadata.gltf.pointers.find((p: string) => lightPointerRegex.test(p));
-                const bPointer = b._internalMetadata.gltf.pointers.find((p: string) => lightPointerRegex.test(p));
-                // pointer: /nodes/{nodeIndex}/extensions/KHR_lights_punctual → parts[2] = nodeIndex
-                const aNodeIdx = Number(aPointer.split("/")[2]);
-                const bNodeIdx = Number(bPointer.split("/")[2]);
-                const aLightIdx = nodeToLightIndex[aNodeIdx] ?? aNodeIdx;
-                const bLightIdx = nodeToLightIndex[bNodeIdx] ?? bNodeIdx;
-                return aLightIdx - bLightIdx;
-            });
+        const lightsByIndex = new Map<number, Light[]>();
+        for (const light of this.scene.lights as any[]) {
+            const match = light._internalMetadata?.gltf?.pointers?.map((p: string) => lightPointerRegex.exec(p)).find(Boolean);
+            if (!match) continue;
+            const lightIndex = nodeToLightIndex[Number(match[1])] ?? Number(match[1]);
+            lightsByIndex.set(lightIndex, [...(lightsByIndex.get(lightIndex) ?? []), light]);
+        }
 
-        const maxLight: number = Math.max(0, glTFLights.length - 1);
+        const bindings = new Map<string, IJsonPtrEntry>();
+        const bind = (path: string, typeName: string, get: () => number[], set: (value: any) => void): void => {
+            bindings.set(path, {typeName, readOnly: false, getValue: get, setValue: (_path, value) => set(value)});
+        };
+        lightsByIndex.forEach((lights, lightIndex) => {
+            const prefix = `/extensions/KHR_lights_punctual/lights/${lightIndex}`;
+            const light = lights[0];
+            bind(`${prefix}/color`, "float3", () => [light.diffuse.r, light.diffuse.g, light.diffuse.b],
+                value => lights.forEach(l => l.diffuse = new Color3(value[0], value[1], value[2])));
+            bind(`${prefix}/intensity`, "float", () => [light.intensity], value => lights.forEach(l => l.intensity = value));
+            bind(`${prefix}/range`, "float", () => [light.range], value => lights.forEach(l => l.range = value));
+            if (!(light instanceof SpotLight)) return;
+            const spots = lights as SpotLight[];
+            bind(`${prefix}/spot/innerConeAngle`, "float", () => [light.innerAngle / 2], value => spots.forEach(l => l.innerAngle = value * 2));
+            bind(`${prefix}/spot/outerConeAngle`, "float", () => [light.angle / 2], value => spots.forEach(l => l.angle = value * 2));
+        });
 
-        this.registerJsonPointer(`/extensions/KHR_lights_punctual/lights/${maxLight}/color`, (path) => {
-            const parts: string[] = path.split("/");
-            const color = glTFLights[Number(parts[4])]?.diffuse;
-            return color === undefined ? [NaN, NaN, NaN] : [color.r, color.g, color.b];
-        }, (path, value) => {
-            const parts: string[] = path.split("/");
-            const light = glTFLights[Number(parts[4])];
-            if (light !== undefined) light.diffuse = new Color3(value[0], value[1], value[2]);
-        }, "float3", false);
-
-        this.registerJsonPointer(`/extensions/KHR_lights_punctual/lights/${maxLight}/intensity`, (path) => {
-            const parts: string[] = path.split("/");
-            const intensity = glTFLights[Number(parts[4])]?.intensity;
-            return intensity === undefined ? [NaN] : [intensity];
-        }, (path, value) => {
-            const parts: string[] = path.split("/");
-            const light = glTFLights[Number(parts[4])];
-            if (light !== undefined) light.intensity = value;
-        }, "float", false);
-
-        this.registerJsonPointer(`/extensions/KHR_lights_punctual/lights/${maxLight}/range`, (path) => {
-            const parts: string[] = path.split("/");
-            const range = glTFLights[Number(parts[4])]?.range;
-            return range === undefined ? [NaN] : [range];
-        }, (path, value) => {
-            const parts: string[] = path.split("/");
-            const light = glTFLights[Number(parts[4])];
-            if (light !== undefined) light.range = value;
-        }, "float", false);
-
-        this.registerJsonPointer(`/extensions/KHR_lights_punctual/lights/${maxLight}/spot/innerConeAngle`, (path) => {
-            const parts: string[] = path.split("/");
-            const light = glTFLights[Number(parts[4])];
-            return light instanceof SpotLight ? [light.innerAngle / 2] : [NaN];
-        }, (path, value) => {
-            const parts: string[] = path.split("/");
-            const light = glTFLights[Number(parts[4])];
-            if (light instanceof SpotLight) light.innerAngle = value * 2;
-        }, "float", false);
-
-        this.registerJsonPointer(`/extensions/KHR_lights_punctual/lights/${maxLight}/spot/outerConeAngle`, (path) => {
-            const parts: string[] = path.split("/");
-            const light = glTFLights[Number(parts[4])];
-            return light instanceof SpotLight ? [light.angle / 2] : [NaN];
-        }, (path, value) => {
-            const parts: string[] = path.split("/");
-            const light = glTFLights[Number(parts[4])];
-            if (light instanceof SpotLight) light.angle = value * 2;
-        }, "float", false);
+        const engine = this.behaveEngine;
+        const resolve = engine.resolveJsonPtr;
+        const registered = engine.getRegisteredJsonPointers;
+        engine.resolveJsonPtr = path => path.startsWith("/extensions/KHR_lights_punctual/lights/") ? bindings.get(path) : resolve(path);
+        engine.getRegisteredJsonPointers = () => [...registered(), ...bindings.keys()].sort();
     }
 
     public extractBehaveGraphFromScene = (): any => {

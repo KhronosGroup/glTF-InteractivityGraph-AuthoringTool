@@ -84,8 +84,6 @@ const rawCatalogue: PointerCatalogueEntry[] = [
     { template: "/nodes/[node]/extensions/KHR_node_hoverability/hoverable", label: "Node · hoverable", category: "Nodes", type: t.BOOLEAN, readOnly: false, extension: "KHR_node_hoverability" },
 
     // ---- Meshes ----
-    { template: "/meshes/[mesh]/weights/[weight]", label: "Mesh · morph target weight", category: "Meshes", type: t.FLOAT, readOnly: false },
-    { template: "/meshes/[mesh]/weights.length", label: "Mesh · morph target weights count", category: "Meshes", type: t.INT, readOnly: true },
     { template: "/meshes/[mesh]/primitives.length", label: "Mesh · primitives count", category: "Meshes", type: t.INT, readOnly: true },
     { template: "/meshes/[mesh]/primitives/[primitive]/material", label: "Mesh primitive · material", category: "Meshes", type: t.REF, readOnly: true },
 

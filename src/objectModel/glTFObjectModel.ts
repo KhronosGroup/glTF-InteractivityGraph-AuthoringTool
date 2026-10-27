@@ -328,13 +328,6 @@ export class GlTFObjectModelDecorator extends ADecorator {
                     this.pointer(`/meshes/${meshIndex}/primitives/${primitiveIndex}/material`, "ref", () => [glTFObjectReference("materials", primitive.material)], ignoreSet, true);
                 }
             });
-
-            if (mesh.weights.length > 0) {
-                mesh.weights.forEach((_weight: number, weightIndex: number) => {
-                    this.scalarPointer(`/meshes/${meshIndex}/weights/${weightIndex}`, "float", () => mesh.weights[weightIndex], (value) => mesh.weights[weightIndex] = value);
-                });
-            }
-            this.scalarPointer(`/meshes/${meshIndex}/weights.length`, "int", () => mesh.weights.length, ignoreSet, true);
         });
     }
 

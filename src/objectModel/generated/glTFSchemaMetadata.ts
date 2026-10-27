@@ -4118,16 +4118,6 @@ export const glTFSchemaMetadata = {
       "readOnly": true
     },
     {
-      "template": "/meshes/{}/weights.length",
-      "typeName": "int",
-      "readOnly": true
-    },
-    {
-      "template": "/meshes/{}/weights/[]",
-      "typeName": "float",
-      "readOnly": false
-    },
-    {
       "template": "/nodes.length",
       "typeName": "int",
       "readOnly": true

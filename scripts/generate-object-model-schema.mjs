@@ -409,8 +409,6 @@ const objectModelPointers = dedupePointers([
     pointer("/nodes/{}/extensions/KHR_lights_punctual/light", "ref", true),
     pointer("/meshes/{}/primitives.length", "int", true),
     pointer("/meshes/{}/primitives/[]/material", "ref", true),
-    pointer("/meshes/{}/weights/[]", "float"),
-    pointer("/meshes/{}/weights.length", "int", true),
     pointer("/cameras/{}/perspective/aspectRatio", "float"),
     pointer("/cameras/{}/perspective/yfov", "float"),
     pointer("/cameras/{}/perspective/zfar", "float"),

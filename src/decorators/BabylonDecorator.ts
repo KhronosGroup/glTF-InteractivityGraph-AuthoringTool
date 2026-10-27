@@ -1498,28 +1498,6 @@ export class BabylonDecorator extends ADecorator {
             primitive.babylonMesh.material = this.world.materials[materialIndex];
         }, "ref", true);
 
-        const maxMeshWeight: number = Math.max(0, ...glTFMeshPrimitives.map(p => (p.babylonMesh.morphTargetManager?.numTargets ?? 0) - 1));
-        this.registerJsonPointer(`/meshes/${maxGlTFMeshIndex}/weights/${maxMeshWeight}`, (path) => {
-            const parts: string[] = path.split("/");
-            const primitive = getMeshPrimitives(Number(parts[2]))[0];
-            const target = primitive?.babylonMesh.morphTargetManager?.getTarget(Number(parts[4]));
-            return target === undefined ? [NaN] : [target.influence];
-        }, (path, value) => {
-            const parts: string[] = path.split("/");
-            for (const primitive of getMeshPrimitives(Number(parts[2]))) {
-                const target = primitive.babylonMesh.morphTargetManager?.getTarget(Number(parts[4]));
-                if (target !== undefined) target.influence = value;
-            }
-        }, "float", false);
-
-        this.registerJsonPointer(`/meshes/${maxGlTFMeshIndex}/weights.length`, (path) => {
-            const parts: string[] = path.split("/");
-            const primitive = getMeshPrimitives(Number(parts[2]))[0];
-            return [primitive?.babylonMesh.morphTargetManager?.numTargets ?? 0];
-        }, (path, value) => {
-            //no-op
-        }, "int", true);
-
         this.registerJsonPointer(`/animations/${maxAnimations}/extensions/KHR_interactivity/isPlaying`, (path) => {
             const parts: string[] = path.split("/");
             const animation: AnimationGroup = this.world.animations[Number(parts[2])];

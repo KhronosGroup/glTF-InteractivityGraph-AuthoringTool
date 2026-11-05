@@ -27,6 +27,38 @@ describe("GlTFObjectModelDecorator", () => {
         expect(decorator.getPathValue("/nodes/1/children/0")).toEqual(["/nodes/2"]);
     });
 
+    it("exposes object-model reference pointers for collections and the default scene", () => {
+        const decorator = createDecorator({
+            scene: 0,
+            scenes: [{ nodes: [0] }],
+            nodes: [{ mesh: 0, camera: 0, skin: 0 }],
+            meshes: [{ primitives: [{ attributes: { POSITION: 0 } }] }],
+            materials: [{}],
+            cameras: [{ type: "perspective", perspective: { yfov: 1, znear: 0.1 } }],
+            skins: [{ joints: [0] }],
+            extensions: {
+                KHR_lights_punctual: {
+                    lights: [{ type: "point", color: [1, 1, 1], intensity: 1 }],
+                },
+            },
+        });
+
+        expect(decorator.getPathTypeName("/scene")).toBe("ref");
+        expect(decorator.getPathValue("/scene")).toEqual(["/scenes/0"]);
+        expect(decorator.getPathTypeName("/nodes/0")).toBe("ref");
+        expect(decorator.getPathValue("/nodes/0")).toEqual(["/nodes/0"]);
+        expect(decorator.getPathValue("/meshes/0")).toEqual(["/meshes/0"]);
+        expect(decorator.getPathValue("/meshes/0/primitives/0")).toEqual(["/meshes/0/primitives/0"]);
+        expect(decorator.getPathValue("/materials/0")).toEqual(["/materials/0"]);
+        expect(decorator.getPathValue("/cameras/0")).toEqual(["/cameras/0"]);
+        expect(decorator.getPathValue("/scenes/0")).toEqual(["/scenes/0"]);
+        expect(decorator.getPathValue("/skins/0")).toEqual(["/skins/0"]);
+        expect(decorator.getPathValue("/extensions/KHR_lights_punctual/lights/0")).toEqual(["/extensions/KHR_lights_punctual/lights/0"]);
+
+        expect(decorator.isValidJsonPtr("/nodes/1")).toBe(false);
+        expect(decorator.isValidJsonPtr("/meshes/1")).toBe(false);
+    });
+
     it("uses schema-derived defaults for defaulted glTF properties", () => {
         const decorator = createDecorator({
             materials: [{}],

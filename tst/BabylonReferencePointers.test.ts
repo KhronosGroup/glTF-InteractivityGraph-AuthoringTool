@@ -114,7 +114,7 @@ describe("structural reference pointers", () => {
                 references["/meshes/0/primitives/3/material"] = "/materials/0";
                 references["/scenes/1/nodes/0"] = "/nodes/2";
                 references["/scenes/1/nodes/1"] = null;
-                expect(engine.getPathValue("/scene")).toEqual([1]);
+                expect(engine.getPathValue("/scene")).toEqual(["/scenes/1"]);
                 expect(engine.getPathValue("/scenes.length")).toEqual([2]);
                 expect(engine.getPathValue("/skins.length")).toEqual([2]);
                 expect(engine.getPathValue("/skins/0/joints.length")).toEqual([1]);

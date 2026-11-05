@@ -387,9 +387,18 @@ const objectModelPointers = dedupePointers([
     pointer("/materials.length", "int", true),
     pointer("/meshes.length", "int", true),
     pointer("/nodes.length", "int", true),
-    pointer("/scene", "int", true),
+    pointer("/scene", "ref", true),
     pointer("/scenes.length", "int", true),
     pointer("/skins.length", "int", true),
+    // Object references (KHR_interactivity Object Model, `ref` type)
+    pointer("/nodes/{}", "ref", true),
+    pointer("/cameras/{}", "ref", true),
+    pointer("/materials/{}", "ref", true),
+    pointer("/meshes/{}", "ref", true),
+    pointer("/meshes/{}/primitives/{}", "ref", true),
+    pointer("/scenes/{}", "ref", true),
+    pointer("/skins/{}", "ref", true),
+    pointer("/extensions/KHR_lights_punctual/lights/{}", "ref", true),
     pointer("/scenes/[]/nodes.length", "int", true),
     pointer("/scenes/[]/nodes/[]", "ref", true),
     pointer("/nodes/{}/translation", "float3"),
@@ -440,7 +449,7 @@ const objectModelPointers = dedupePointers([
 
 function expandPointerAddressModes(pointerDefinition) {
     const expanded = [pointerDefinition];
-    const indexTemplate = pointerDefinition.template.replace(/\/(animations|cameras|extensions\/KHR_lights_punctual\/lights|materials|meshes|nodes|skins)\/\{\}/g, "/$1/[]");
+    const indexTemplate = pointerDefinition.template.replace(/\/(animations|cameras|extensions\/KHR_lights_punctual\/lights|materials|meshes|nodes|scenes|skins)\/\{\}/g, "/$1/[]");
     if (indexTemplate !== pointerDefinition.template) {
         expanded.push({ ...pointerDefinition, template: indexTemplate });
     }

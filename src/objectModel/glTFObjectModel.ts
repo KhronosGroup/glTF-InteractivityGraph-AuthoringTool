@@ -257,12 +257,13 @@ export class GlTFObjectModelDecorator extends ADecorator {
         this.scalarPointer("/materials.length", "int", () => this.objectModel.materials.length, ignoreSet, true);
         this.scalarPointer("/meshes.length", "int", () => this.objectModel.meshes.length, ignoreSet, true);
         this.scalarPointer("/nodes.length", "int", () => this.objectModel.nodes.length, ignoreSet, true);
-        this.scalarPointer("/scene", "int", () => this.objectModel.scene, ignoreSet, true);
+        this.pointer("/scene", "ref", () => [glTFObjectReference("scenes", this.objectModel.scene)], ignoreSet, true);
         this.scalarPointer("/scenes.length", "int", () => this.objectModel.scenes.length, ignoreSet, true);
         this.scalarPointer("/skins.length", "int", () => this.objectModel.skins.length, ignoreSet, true);
 
         this.objectModel.scenes.forEach((scene, sceneIndex) => {
             const nodes = scene.nodes ?? [];
+            this.pointer(`/scenes/${sceneIndex}`, "ref", () => [glTFObjectReference("scenes", sceneIndex)], ignoreSet, true);
             this.scalarPointer(`/scenes/${sceneIndex}/nodes.length`, "int", () => nodes.length, ignoreSet, true);
             nodes.forEach((nodeIndex: number, childIndex: number) => {
                 this.pointer(`/scenes/${sceneIndex}/nodes/${childIndex}`, "ref", () => [glTFObjectReference("nodes", nodeIndex)], ignoreSet, true);
@@ -272,6 +273,7 @@ export class GlTFObjectModelDecorator extends ADecorator {
 
     private registerNodePointers(): void {
         this.objectModel.nodes.forEach((node, nodeIndex) => {
+            this.pointer(`/nodes/${nodeIndex}`, "ref", () => [glTFObjectReference("nodes", nodeIndex)], ignoreSet, true);
             this.pointer(`/nodes/${nodeIndex}/translation`, "float3", () => node.translation, (value) => node.translation = vector(value));
             if (node.matrix === undefined) {
                 this.pointer(`/nodes/${nodeIndex}/rotation`, "float4", () => node.rotation, (value) => node.rotation = vector(value));
@@ -322,8 +324,10 @@ export class GlTFObjectModelDecorator extends ADecorator {
 
     private registerMeshPointers(): void {
         this.objectModel.meshes.forEach((mesh, meshIndex) => {
+            this.pointer(`/meshes/${meshIndex}`, "ref", () => [glTFObjectReference("meshes", meshIndex)], ignoreSet, true);
             this.scalarPointer(`/meshes/${meshIndex}/primitives.length`, "int", () => mesh.primitives.length, ignoreSet, true);
             mesh.primitives.forEach((primitive: any, primitiveIndex: number) => {
+                this.pointer(`/meshes/${meshIndex}/primitives/${primitiveIndex}`, "ref", () => [glTFObjectReference(`meshes/${meshIndex}/primitives`, primitiveIndex)], ignoreSet, true);
                 if (primitive.material !== undefined) {
                     this.pointer(`/meshes/${meshIndex}/primitives/${primitiveIndex}/material`, "ref", () => [glTFObjectReference("materials", primitive.material)], ignoreSet, true);
                 }
@@ -333,6 +337,7 @@ export class GlTFObjectModelDecorator extends ADecorator {
 
     private registerMaterialPointers(): void {
         this.objectModel.materials.forEach((material, materialIndex) => {
+            this.pointer(`/materials/${materialIndex}`, "ref", () => [glTFObjectReference("materials", materialIndex)], ignoreSet, true);
             for (const pointerDefinition of MATERIAL_POINTERS) {
                 if (pointerDefinition.extension && material.extensions?.[pointerDefinition.extension] === undefined) {
                     continue;
@@ -361,6 +366,7 @@ export class GlTFObjectModelDecorator extends ADecorator {
 
     private registerCameraPointers(): void {
         this.objectModel.cameras.forEach((camera, cameraIndex) => {
+            this.pointer(`/cameras/${cameraIndex}`, "ref", () => [glTFObjectReference("cameras", cameraIndex)], ignoreSet, true);
             if (camera.perspective) {
                 for (const propertyName of ["aspectRatio", "yfov", "zfar", "znear"]) {
                     if (camera.perspective[propertyName] !== undefined) {
@@ -392,6 +398,7 @@ export class GlTFObjectModelDecorator extends ADecorator {
     private registerSkinPointers(): void {
         this.objectModel.skins.forEach((skin, skinIndex) => {
             const joints = skin.joints ?? [];
+            this.pointer(`/skins/${skinIndex}`, "ref", () => [glTFObjectReference("skins", skinIndex)], ignoreSet, true);
             this.scalarPointer(`/skins/${skinIndex}/joints.length`, "int", () => joints.length, ignoreSet, true);
             joints.forEach((jointIndex: number, index: number) => {
                 this.pointer(`/skins/${skinIndex}/joints/${index}`, "ref", () => [glTFObjectReference("nodes", jointIndex)], ignoreSet, true);
@@ -405,6 +412,7 @@ export class GlTFObjectModelDecorator extends ADecorator {
     private registerLightPointers(): void {
         this.scalarPointer("/extensions/KHR_lights_punctual/lights.length", "int", () => this.objectModel.lights.length, ignoreSet, true);
         this.objectModel.lights.forEach((light, lightIndex) => {
+            this.pointer(`/extensions/KHR_lights_punctual/lights/${lightIndex}`, "ref", () => [glTFObjectReference("extensions/KHR_lights_punctual/lights", lightIndex)], ignoreSet, true);
             this.pointer(`/extensions/KHR_lights_punctual/lights/${lightIndex}/color`, "float3", () => getDefaulted(light, ["color"], defaultFor("light.schema.json", "color", [1, 1, 1])), (value) => setPath(light, ["color"], vector(value)));
             this.scalarPointer(`/extensions/KHR_lights_punctual/lights/${lightIndex}/intensity`, "float", () => getDefaulted(light, ["intensity"], defaultFor("light.schema.json", "intensity", 1)), (value) => setPath(light, ["intensity"], value));
             this.scalarPointer(`/extensions/KHR_lights_punctual/lights/${lightIndex}/range`, "float", () => light.range ?? Infinity, (value) => light.range = value);

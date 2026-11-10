@@ -1376,6 +1376,16 @@ export class BabylonDecorator extends ADecorator {
             //no-op
         }, "int", true);
 
+        this.registerJsonPointer(`/meshes/${maxGlTFMeshIndex}`, (path) => {
+            const meshIndex = Number(path.split("/")[2]);
+            const exists = gltf !== undefined
+                ? gltf.meshes?.[meshIndex] !== undefined
+                : glTFMeshPrimitives.some(primitive => primitive.meshIndex === meshIndex);
+            return exists ? reference("meshes", meshIndex) : undefined;
+        }, (path, value) => {
+            //no-op
+        }, "ref", true);
+
         this.registerJsonPointer(`/meshes/${maxGlTFMeshIndex}/primitives.length`, (path) => {
             const parts: string[] = path.split("/");
             return [gltf !== undefined ? gltf.meshes?.[Number(parts[2])]?.primitives?.length ?? 0 : getMeshPrimitives(Number(parts[2])).length];
@@ -1383,17 +1393,29 @@ export class BabylonDecorator extends ADecorator {
             //no-op
         }, "int", true);
 
+        this.registerJsonPointer(`/meshes/${maxGlTFMeshIndex}/primitives/${maxMeshPrimitiveIndex}`, (path) => {
+            const parts: string[] = path.split("/");
+            const meshIndex = Number(parts[2]);
+            const primitiveIndex = Number(parts[4]);
+            const exists = gltf !== undefined
+                ? gltf.meshes?.[meshIndex]?.primitives?.[primitiveIndex] !== undefined
+                : glTFMeshPrimitives.some(primitive => primitive.meshIndex === meshIndex && primitive.primitiveIndex === primitiveIndex);
+            return exists ? [`/meshes/${meshIndex}/primitives/${primitiveIndex}`] : undefined;
+        }, (path, value) => {
+            //no-op
+        }, "ref", true);
+
         this.registerJsonPointer('/cameras.length', (path) => {
             return [this.world.assetModel?.cameras.length ?? this.scene.metadata?.gltfCameraDefinitions?.length ?? glTFCameras.length];
         }, (path, value) => {
             //no-op
         }, "int", true);
 
-        this.registerJsonPointer('/scene', (path) => {
-            return [gltf?.scene ?? 0];
-        }, (path, value) => {
+        this.registerJsonPointer('/scene', () => {
+            return reference("scenes", gltf?.scene ?? 0);
+        }, () => {
             //no-op
-        }, "int", true);
+        }, "ref", true);
 
         this.registerJsonPointer('/scenes.length', (path) => {
             return [gltf !== undefined ? gltf.scenes?.length ?? 0 : 1];
@@ -1402,6 +1424,13 @@ export class BabylonDecorator extends ADecorator {
         }, "int", true);
 
         const maxScene: number = Math.max(0, (gltf?.scenes?.length ?? 1) - 1);
+        this.registerJsonPointer(`/scenes/${maxScene}`, (path) => {
+            const sceneIndex = Number(path.split("/")[2]);
+            const sceneCount = gltf !== undefined ? gltf.scenes?.length ?? 0 : 1;
+            return sceneIndex >= sceneCount ? undefined : reference("scenes", sceneIndex);
+        }, (path, value) => {
+            //no-op
+        }, "ref", true);
         const getSceneNodeIndices = (sceneIndex: number): number[] => gltf !== undefined
             ? gltf.scenes?.[sceneIndex]?.nodes ?? []
             : sceneIndex === 0 ? rootLevelNodeIndices : [];
@@ -1429,6 +1458,13 @@ export class BabylonDecorator extends ADecorator {
         }, "int", true);
 
         const maxSkin: number = Math.max(0, (gltf?.skins?.length ?? 0) - 1, ...glTFSkeletons.map(skeleton => getSkinIndexForSkeleton(skeleton)!));
+        this.registerJsonPointer(`/skins/${maxSkin}`, (path) => {
+            const skinIndex = Number(path.split("/")[2]);
+            const skinCount = gltf !== undefined ? gltf.skins?.length ?? 0 : glTFSkeletons.length;
+            return skinIndex >= skinCount ? undefined : reference("skins", skinIndex);
+        }, (path, value) => {
+            //no-op
+        }, "ref", true);
         this.registerJsonPointer(`/skins/${maxSkin}/joints.length`, (path) => {
             const parts: string[] = path.split("/");
             const skeleton = getSkeleton(Number(parts[2]));
@@ -1462,6 +1498,13 @@ export class BabylonDecorator extends ADecorator {
         }, (path, value) => {
             //no-op
         }, "int", true);
+
+        this.registerJsonPointer(`/materials/${maxGlTFMaterials}`, (path) => {
+            const materialIndex = Number(path.split("/")[2]);
+            return this.world.materials[materialIndex] === undefined ? undefined : reference("materials", materialIndex);
+        }, (path, value) => {
+            //no-op
+        }, "ref", true);
 
         this.registerJsonPointer('/animations.length', (path) => {
             return [this.world.animations.length];
@@ -1573,6 +1616,7 @@ export class BabylonDecorator extends ADecorator {
         lightsByIndex.forEach((lights, lightIndex) => {
             const prefix = `/extensions/KHR_lights_punctual/lights/${lightIndex}`;
             const light = lights[0];
+            bindings.set(prefix, { typeName: "ref", readOnly: true, getValue: () => [prefix], setValue: () => undefined });
             bind(`${prefix}/color`, "float3", () => [light.diffuse.r, light.diffuse.g, light.diffuse.b],
                 value => lights.forEach(l => l.diffuse = new Color3(value[0], value[1], value[2])));
             bind(`${prefix}/intensity`, "float", () => [light.intensity], value => lights.forEach(l => l.intensity = value));

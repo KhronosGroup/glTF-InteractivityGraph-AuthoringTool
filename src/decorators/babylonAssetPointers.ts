@@ -32,6 +32,7 @@ export function createBabylonAssetNodePointers(model: BabylonAssetModel): Map<st
     model.nodes.forEach(node => {
         const prefix = `/nodes/${node.index}`;
         const target = () => node.native ?? node;
+        ref(prefix, "nodes", node.index);
         bind(`${prefix}/translation`, "float3", () => target().position.asArray(), value => target().position.copyFromFloats(value[0], value[1], value[2]));
         if (!node.definition.matrix) {
             bind(`${prefix}/rotation`, "float4", () => (target().rotationQuaternion ?? Quaternion.FromEulerVector(node.native!.rotation)).asArray(), value => {

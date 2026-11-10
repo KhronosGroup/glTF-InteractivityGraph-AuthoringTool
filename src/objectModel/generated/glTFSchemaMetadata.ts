@@ -2065,6 +2065,11 @@ export const glTFSchemaMetadata = {
       "readOnly": true
     },
     {
+      "template": "/cameras/[]",
+      "typeName": "ref",
+      "readOnly": true
+    },
+    {
       "template": "/cameras/[]/orthographic/xmag",
       "typeName": "float",
       "readOnly": false
@@ -2103,6 +2108,11 @@ export const glTFSchemaMetadata = {
       "template": "/cameras/[]/perspective/znear",
       "typeName": "float",
       "readOnly": false
+    },
+    {
+      "template": "/cameras/{}",
+      "typeName": "ref",
+      "readOnly": true
     },
     {
       "template": "/cameras/{}/orthographic/xmag",
@@ -2160,6 +2170,11 @@ export const glTFSchemaMetadata = {
       "readOnly": true
     },
     {
+      "template": "/extensions/KHR_lights_punctual/lights/[]",
+      "typeName": "ref",
+      "readOnly": true
+    },
+    {
       "template": "/extensions/KHR_lights_punctual/lights/[]/color",
       "typeName": "float3",
       "readOnly": false
@@ -2183,6 +2198,11 @@ export const glTFSchemaMetadata = {
       "template": "/extensions/KHR_lights_punctual/lights/[]/spot/outerConeAngle",
       "typeName": "float",
       "readOnly": false
+    },
+    {
+      "template": "/extensions/KHR_lights_punctual/lights/{}",
+      "typeName": "ref",
+      "readOnly": true
     },
     {
       "template": "/extensions/KHR_lights_punctual/lights/{}/color",
@@ -2212,6 +2232,11 @@ export const glTFSchemaMetadata = {
     {
       "template": "/materials.length",
       "typeName": "int",
+      "readOnly": true
+    },
+    {
+      "template": "/materials/[]",
+      "typeName": "ref",
       "readOnly": true
     },
     {
@@ -3147,6 +3172,11 @@ export const glTFSchemaMetadata = {
       "readOnly": false,
       "schemaPointer": "specification/2.0/schema/material.schema.json#/properties/pbrMetallicRoughness/properties/roughnessFactor",
       "defaultValue": 1
+    },
+    {
+      "template": "/materials/{}",
+      "typeName": "ref",
+      "readOnly": true
     },
     {
       "template": "/materials/{}/alphaCutoff",
@@ -4088,6 +4118,11 @@ export const glTFSchemaMetadata = {
       "readOnly": true
     },
     {
+      "template": "/meshes/[]",
+      "typeName": "ref",
+      "readOnly": true
+    },
+    {
       "template": "/meshes/[]/primitives.length",
       "typeName": "int",
       "readOnly": true
@@ -4098,14 +4133,14 @@ export const glTFSchemaMetadata = {
       "readOnly": true
     },
     {
-      "template": "/meshes/[]/weights.length",
-      "typeName": "int",
+      "template": "/meshes/[]/primitives/{}",
+      "typeName": "ref",
       "readOnly": true
     },
     {
-      "template": "/meshes/[]/weights/[]",
-      "typeName": "float",
-      "readOnly": false
+      "template": "/meshes/{}",
+      "typeName": "ref",
+      "readOnly": true
     },
     {
       "template": "/meshes/{}/primitives.length",
@@ -4118,8 +4153,18 @@ export const glTFSchemaMetadata = {
       "readOnly": true
     },
     {
+      "template": "/meshes/{}/primitives/{}",
+      "typeName": "ref",
+      "readOnly": true
+    },
+    {
       "template": "/nodes.length",
       "typeName": "int",
+      "readOnly": true
+    },
+    {
+      "template": "/nodes/[]",
+      "typeName": "ref",
       "readOnly": true
     },
     {
@@ -4237,6 +4282,11 @@ export const glTFSchemaMetadata = {
       "readOnly": false
     },
     {
+      "template": "/nodes/{}",
+      "typeName": "ref",
+      "readOnly": true
+    },
+    {
       "template": "/nodes/{}/camera",
       "typeName": "ref",
       "readOnly": true
@@ -4352,12 +4402,17 @@ export const glTFSchemaMetadata = {
     },
     {
       "template": "/scene",
-      "typeName": "int",
+      "typeName": "ref",
       "readOnly": true
     },
     {
       "template": "/scenes.length",
       "typeName": "int",
+      "readOnly": true
+    },
+    {
+      "template": "/scenes/[]",
+      "typeName": "ref",
       "readOnly": true
     },
     {
@@ -4371,8 +4426,18 @@ export const glTFSchemaMetadata = {
       "readOnly": true
     },
     {
+      "template": "/scenes/{}",
+      "typeName": "ref",
+      "readOnly": true
+    },
+    {
       "template": "/skins.length",
       "typeName": "int",
+      "readOnly": true
+    },
+    {
+      "template": "/skins/[]",
+      "typeName": "ref",
       "readOnly": true
     },
     {
@@ -4387,6 +4452,11 @@ export const glTFSchemaMetadata = {
     },
     {
       "template": "/skins/[]/skeleton",
+      "typeName": "ref",
+      "readOnly": true
+    },
+    {
+      "template": "/skins/{}",
       "typeName": "ref",
       "readOnly": true
     },

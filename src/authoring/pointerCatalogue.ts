@@ -67,6 +67,7 @@ const generatedTypeMap: Record<string, InteractivityValueType | undefined> = {
 // raw catalogue, templates written with named [index] / {ref} slots
 const rawCatalogue: PointerCatalogueEntry[] = [
     // ---- Nodes ----
+    { template: "/nodes/[node]", label: "Node reference", category: "Nodes", type: t.REF, readOnly: true },
     { template: "/nodes/[node]/translation", label: "Node · translation", category: "Nodes", type: t.FLOAT3, readOnly: false },
     { template: "/nodes/[node]/rotation", label: "Node · rotation (quaternion)", category: "Nodes", type: t.FLOAT4, readOnly: false },
     { template: "/nodes/[node]/scale", label: "Node · scale", category: "Nodes", type: t.FLOAT3, readOnly: false },
@@ -84,10 +85,13 @@ const rawCatalogue: PointerCatalogueEntry[] = [
     { template: "/nodes/[node]/extensions/KHR_node_hoverability/hoverable", label: "Node · hoverable", category: "Nodes", type: t.BOOLEAN, readOnly: false, extension: "KHR_node_hoverability" },
 
     // ---- Meshes ----
+    { template: "/meshes/[mesh]", label: "Mesh reference", category: "Meshes", type: t.REF, readOnly: true },
     { template: "/meshes/[mesh]/primitives.length", label: "Mesh · primitives count", category: "Meshes", type: t.INT, readOnly: true },
+    { template: "/meshes/[mesh]/primitives/[primitive]", label: "Mesh primitive reference", category: "Meshes", type: t.REF, readOnly: true },
     { template: "/meshes/[mesh]/primitives/[primitive]/material", label: "Mesh primitive · material", category: "Meshes", type: t.REF, readOnly: true },
 
     // ---- Materials (core PBR) ----
+    { template: "/materials/[material]", label: "Material reference", category: "Materials", type: t.REF, readOnly: true },
     { template: "/materials/[material]/pbrMetallicRoughness/baseColorFactor", label: "Material · base color factor", category: "Materials", type: t.FLOAT4, readOnly: false },
     { template: "/materials/[material]/pbrMetallicRoughness/metallicFactor", label: "Material · metallic factor", category: "Materials", type: t.FLOAT, readOnly: false },
     { template: "/materials/[material]/pbrMetallicRoughness/roughnessFactor", label: "Material · roughness factor", category: "Materials", type: t.FLOAT, readOnly: false },
@@ -125,6 +129,7 @@ const rawCatalogue: PointerCatalogueEntry[] = [
     ),
 
     // ---- Cameras ----
+    { template: "/cameras/[camera]", label: "Camera reference", category: "Cameras", type: t.REF, readOnly: true },
     { template: "/cameras/[camera]/perspective/yfov", label: "Camera · perspective yfov", category: "Cameras", type: t.FLOAT, readOnly: false },
     { template: "/cameras/[camera]/perspective/aspectRatio", label: "Camera · perspective aspect ratio", category: "Cameras", type: t.FLOAT, readOnly: false },
     { template: "/cameras/[camera]/perspective/znear", label: "Camera · perspective znear", category: "Cameras", type: t.FLOAT, readOnly: false },
@@ -135,6 +140,7 @@ const rawCatalogue: PointerCatalogueEntry[] = [
     { template: "/cameras/[camera]/orthographic/zfar", label: "Camera · orthographic zfar", category: "Cameras", type: t.FLOAT, readOnly: false },
 
     // ---- Lights (KHR_lights_punctual) ----
+    { template: "/extensions/KHR_lights_punctual/lights/[light]", label: "Light reference", category: "Lights", type: t.REF, readOnly: true, extension: "KHR_lights_punctual" },
     { template: "/extensions/KHR_lights_punctual/lights/[light]/color", label: "Light · color", category: "Lights", type: t.FLOAT3, readOnly: false, extension: "KHR_lights_punctual" },
     { template: "/extensions/KHR_lights_punctual/lights/[light]/intensity", label: "Light · intensity", category: "Lights", type: t.FLOAT, readOnly: false, extension: "KHR_lights_punctual" },
     { template: "/extensions/KHR_lights_punctual/lights/[light]/range", label: "Light · range", category: "Lights", type: t.FLOAT, readOnly: false, extension: "KHR_lights_punctual" },
@@ -155,11 +161,13 @@ const rawCatalogue: PointerCatalogueEntry[] = [
     { template: "/animations.length", label: "Count · animations", category: "Scene", type: t.INT, readOnly: true },
     { template: "/cameras.length", label: "Count · cameras", category: "Scene", type: t.INT, readOnly: true },
     { template: "/skins.length", label: "Count · skins", category: "Scene", type: t.INT, readOnly: true },
+    { template: "/skins/[skin]", label: "Skin reference", category: "Scene", type: t.REF, readOnly: true },
     { template: "/skins/[skin]/joints.length", label: "Skin · joints count", category: "Scene", type: t.INT, readOnly: true },
     { template: "/skins/[skin]/joints/[joint]", label: "Skin · joint", category: "Scene", type: t.REF, readOnly: true },
     { template: "/skins/[skin]/skeleton", label: "Skin · skeleton root", category: "Scene", type: t.REF, readOnly: true },
-    { template: "/scene", label: "Active scene", category: "Scene", type: t.INT, readOnly: true },
+    { template: "/scene", label: "Active scene", category: "Scene", type: t.REF, readOnly: true },
     { template: "/scenes.length", label: "Count · scenes", category: "Scene", type: t.INT, readOnly: true },
+    { template: "/scenes/[scene]", label: "Scene reference", category: "Scene", type: t.REF, readOnly: true },
     { template: "/scenes/[scene]/nodes.length", label: "Scene · root nodes count", category: "Scene", type: t.INT, readOnly: true },
     { template: "/scenes/[scene]/nodes/[node]", label: "Scene · root node", category: "Scene", type: t.REF, readOnly: true },
 

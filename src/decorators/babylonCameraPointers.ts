@@ -3,7 +3,7 @@ import type { Scene } from "@babylonjs/core";
 
 import { BabylonAssetModel } from "../components/engineViews/babylonAssetModel";
 
-type Bind = (path: string, type: string, get: () => number[], set?: (value: number[]) => void, readOnly?: boolean) => void;
+type Bind = (path: string, type: string, get: () => unknown[], set?: (value: number[]) => void, readOnly?: boolean) => void;
 interface Definition {
     perspective?: { aspectRatio?: number; yfov: number; znear: number; zfar?: number };
     orthographic?: { xmag: number; ymag: number; znear: number; zfar: number };
@@ -48,6 +48,7 @@ export function registerBabylonCameraPointers(scene: Scene, bind: Bind, assetMod
 
     const definitions: Definition[] = assetModel?.cameras ?? scene.metadata?.gltfCameraDefinitions ?? [];
     definitions.forEach((definition, index) => {
+        bind(`/cameras/${index}`, "ref", () => [`/cameras/${index}`], undefined, true);
         const cameras = (assetModel?.nativeCameras ?? scene.cameras).filter(camera => (camera as TaggedCamera)._internalMetadata?.gltf?.pointers?.includes(`/cameras/${index}`));
         const mode = definition.perspective ? "perspective" : "orthographic";
         const source = definition.perspective ?? definition.orthographic;
